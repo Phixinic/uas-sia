@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <title>Hapus Peralatan</title>
+    <script src="./vendor/react.js"></script>
+    <script src="./vendor/react-dom.js"></script>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap"
+        />
+        <style>
+          body {
+            margin: 0;
+            font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+            color: #0f1e2e;
+            background: #f4f7fa;
+          }
+          a {
+            color: #0b6e6c;
+          }
+          a:hover {
+            color: #084f4e;
+          }
+          .nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            min-height: 24px;
+            border-radius: 10px;
+            color: #c9d6e2;
+            text-decoration: none;
+            font-size: 14px;
+          }
+          .nav:hover {
+            background: #17384f;
+            color: #fff;
+          }
+          .nav.on {
+            background: #0b7a77;
+            color: #fff;
+            font-weight: 600;
+          }
+          .sec {
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #8fa6ba;
+            margin: 18px 12px 6px;
+          }
+          .card {
+            background: #fff;
+            border: 1px solid #e3e9ef;
+            border-radius: 14px;
+            padding: 20px;
+            box-sizing: border-box;
+          }
+          .lbl {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #3a4d5f;
+            margin-bottom: 6px;
+          }
+          .inp {
+            width: 100%;
+            box-sizing: border-box;
+            height: 44px;
+            border: 1px solid #cbd5df;
+            border-radius: 10px;
+            padding: 0 12px;
+            font: inherit;
+            font-size: 14px;
+            background: #fff;
+            color: #0f1e2e;
+          }
+          .seg {
+            flex: 1 1 0;
+            height: 44px;
+            border: 1px solid #cbd5df;
+            background: #fff;
+            border-radius: 10px;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            color: #3a4d5f;
+            cursor: pointer;
+          }
+          .seg.on {
+            background: #0b7a77;
+            border-color: #0b7a77;
+            color: #fff;
+          }
+          .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #e3e9ef;
+            border-radius: 12px;
+            background: #fff;
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+            color: #0f1e2e;
+          }
+          .item.on {
+            border: 2px solid #0b7a77;
+            background: #e8f5f4;
+            padding: 13px;
+          }
+          .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 44px;
+            padding: 0 18px;
+            border-radius: 10px;
+            border: 0;
+            background: #b3261e;
+            color: #fff;
+            font: inherit;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+          }
+          .btn:hover {
+            background: #8e1d17;
+          }
+          .tbl {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+          }
+          .tbl th {
+            text-align: left;
+            font-size: 12px;
+            color: #4b5e70;
+            font-weight: 600;
+            padding: 10px 12px;
+            border-bottom: 1px solid #e3e9ef;
+            background: #f8fafc;
+          }
+          .tbl td {
+            padding: 12px;
+            border-bottom: 1px solid #eef2f6;
+          }
+          .num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+          }
+        </style>
+      </helmet>
+      <div style="display: flex; flex-wrap: wrap; min-height: 960px">
+        <nav
+          aria-label="Menu utama"
+          style="
+            flex: 1 1 240px;
+            background: #0f2a3d;
+            padding: 20px 14px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              padding: 4px 10px 14px;
+            "
+          >
+            <div
+              style="
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+                background: #0b7a77;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#fff"
+                stroke-width="2"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                <circle cx="12" cy="13" r="5"></circle>
+              </svg>
+            </div>
+            <div>
+              <div style="color: #fff; font-weight: 700; font-size: 15px">
+                Sukses Mandiri
+              </div>
+              <div style="color: #9fb4c6; font-size: 12px">
+                SIA Siklus Konversi
+              </div>
+            </div>
+          </div>
+          <a class="nav" href="Dashboard.dc.html">Dashboard</a>
+          <div class="sec">Transaksi · Admin</div>
+          <a class="nav" href="BeliPeralatan.dc.html">Pembelian Peralatan</a>
+          <a class="nav" href="BeliPerlengkapan.dc.html"
+            >Pembelian Perlengkapan</a
+          >
+          <a class="nav on" href="HapusPeralatan.dc.html">Hapus Peralatan</a>
+          <a class="nav" href="SaldoPerlengkapan.dc.html"
+            >Saldo Akhir Perlengkapan</a
+          >
+          <div class="sec">Akuntansi</div>
+          <a class="nav" href="JurnalPenyesuaian.dc.html">Jurnal Penyesuaian</a>
+          <a class="nav" href="JurnalUmum.dc.html">Jurnal Umum · Owner</a>
+          <a class="nav" href="BukuBesar.dc.html">Buku Besar · Owner</a>
+          <div class="sec">Master · Owner</div>
+          <a class="nav" href="MasterData.dc.html">Master Data</a>
+          <a class="nav" href="Main.dc.html" style="margin-top: 24px">Keluar</a>
+        </nav>
+        <main
+          style="
+            flex: 999 1 560px;
+            min-width: 0;
+            padding: 28px 32px;
+            box-sizing: border-box;
+          "
+        >
+          <header style="margin-bottom: 20px">
+            <div style="font-size: 13px; color: #4b5e70">Transaksi · Admin</div>
+            <h1 style="margin: 4px 0 0; font-size: 26px; font-weight: 800">
+              Hapus Peralatan
+            </h1>
+            <p style="margin: 6px 0 0; font-size: 14px; color: #4b5e70">
+              Untuk peralatan yang dijual, rusak, atau hilang. Nilai buku
+              dihitung per 31 Oktober 2026.
+            </p>
+          </header>
+
+          <sc-if value="{{ done }}" hint-placeholder-val="{{ false }}">
+            <div
+              role="status"
+              style="
+                margin-bottom: 16px;
+                padding: 14px 16px;
+                border-radius: 12px;
+                background: #e7f6ec;
+                border: 1px solid #a7ddb8;
+                color: #145c2e;
+                font-size: 14px;
+              "
+            >
+              <b>{{ sel.nama }} dihapus.</b> Status peralatan menjadi "dihapus",
+              penyusutan dihentikan, dan jurnal penghapusan dibuat.
+            </div>
+          </sc-if>
+
+          <div
+            style="
+              display: flex;
+              flex-wrap: wrap;
+              gap: 20px;
+              align-items: flex-start;
+            "
+          >
+            <section
+              class="card"
+              style="
+                flex: 2 1 320px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+              "
+            >
+              <h2 style="margin: 0 0 4px; font-size: 16px">
+                Pilih peralatan aktif
+              </h2>
+              <sc-for list="{{ items }}" as="it" hint-placeholder-count="4">
+                <button
+                  type="button"
+                  class="{{ it.cls }}"
+                  onClick="{{ it.pick }}"
+                  aria-pressed="{{ it.pressed }}"
+                >
+                  <span
+                    ><span
+                      style="display: block; font-weight: 700; font-size: 14px"
+                      >{{ it.nama }}</span
+                    ><span style="font-size: 12px; color: #4b5e70"
+                      >{{ it.kode }} · diperoleh {{ it.tgl }}</span
+                    ></span
+                  >
+                  <span
+                    style="
+                      font-size: 13px;
+                      font-weight: 600;
+                      white-space: nowrap;
+                    "
+                    >Rp {{ it.nbFmt }}</span
+                  >
+                </button>
+              </sc-for>
+            </section>
+
+            <form
+              class="card"
+              style="
+                flex: 3 1 420px;
+                display: flex;
+                flex-direction: column;
+                gap: 18px;
+              "
+              onSubmit="{{ submit }}"
+            >
+              <h2 style="margin: 0; font-size: 16px">{{ sel.nama }}</h2>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                  gap: 12px;
+                "
+              >
+                <div
+                  style="
+                    padding: 12px;
+                    border-radius: 10px;
+                    background: #f4f7fa;
+                  "
+                >
+                  <div style="font-size: 12px; color: #4b5e70">
+                    Harga perolehan
+                  </div>
+                  <div style="font-weight: 700; margin-top: 4px">
+                    Rp {{ sel.hargaFmt }}
+                  </div>
+                </div>
+                <div
+                  style="
+                    padding: 12px;
+                    border-radius: 10px;
+                    background: #f4f7fa;
+                  "
+                >
+                  <div style="font-size: 12px; color: #4b5e70">
+                    Akumulasi penyusutan
+                  </div>
+                  <div style="font-weight: 700; margin-top: 4px">
+                    Rp {{ sel.akmFmt }}
+                  </div>
+                </div>
+                <div
+                  style="
+                    padding: 12px;
+                    border-radius: 10px;
+                    background: #e8f5f4;
+                  "
+                >
+                  <div style="font-size: 12px; color: #284b4a">Nilai buku</div>
+                  <div
+                    style="font-weight: 800; margin-top: 4px; color: #08605e"
+                  >
+                    Rp {{ sel.nbFmt }}
+                  </div>
+                </div>
+              </div>
+              <fieldset style="border: 0; padding: 0; margin: 0">
+                <legend class="lbl">Alasan penghapusan</legend>
+                <div style="display: flex; gap: 8px">
+                  <sc-for
+                    list="{{ reasons }}"
+                    as="r"
+                    hint-placeholder-count="3"
+                  >
+                    <button
+                      type="button"
+                      class="{{ r.cls }}"
+                      onClick="{{ r.pick }}"
+                      aria-pressed="{{ r.pressed }}"
+                    >
+                      {{ r.label }}
+                    </button>
+                  </sc-for>
+                </div>
+              </fieldset>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                  gap: 14px;
+                "
+              >
+                <div>
+                  <label class="lbl" for="tgl">Tanggal penghapusan</label
+                  ><input id="tgl" class="inp" type="date" value="2026-11-02" />
+                </div>
+                <sc-if value="{{ isJual }}" hint-placeholder-val="{{ true }}">
+                  <div>
+                    <label class="lbl" for="jual">Nilai jual (Rp)</label
+                    ><input
+                      id="jual"
+                      class="inp"
+                      inputmode="numeric"
+                      value="{{ jualFmt }}"
+                      onChange="{{ onJual }}"
+                    />
+                  </div>
+                </sc-if>
+              </div>
+              <div
+                style="padding: 14px 16px; border-radius: 12px; background: {{ lrBg }}; color: {{ lrColor }}; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px"
+              >
+                <span style="font-weight: 600">{{ lrLabel }}</span
+                ><span style="font-size: 20px; font-weight: 800"
+                  >Rp {{ lrFmt }}</span
+                >
+              </div>
+              <div>
+                <h3 style="margin: 0 0 8px; font-size: 14px">
+                  Jurnal penghapusan
+                </h3>
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th>Akun</th>
+                      <th class="num">Debit</th>
+                      <th class="num">Kredit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <sc-for
+                      list="{{ jurnal }}"
+                      as="j"
+                      hint-placeholder-count="3"
+                    >
+                      <tr>
+                        <td style="padding-left: {{ j.pad }}">{{ j.akun }}</td>
+                        <td class="num">{{ j.d }}</td>
+                        <td class="num">{{ j.k }}</td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </div>
+              <button type="submit" class="btn" style="align-self: flex-start">
+                Hapus peralatan
+              </button>
+            </form>
+          </div>
+        </main>
+      </div>
+    </x-dc>
+    <script
+      type="text/x-dc"
+      data-dc-script
+      data-props='{"$preview":{"width":1280,"height":960}}'
+    >
+      class Component extends DCLogic {
+        constructor(p) { super(p); this.state = { pick: 'ALT-003', alasan: 'dijual', jual: 500000, done: false }; }
+        renderVals() {
+          const s = this.state;
+          const f = (n) => Math.round(n).toLocaleString('id-ID');
+          const data = [
+            { kode: 'ALT-001', nama: 'Mesin Cuci LG 10 kg', tgl: '05/01/2026', harga: 6000000, akm: 1000000 },
+            { kode: 'ALT-002', nama: 'Mesin Pengering Electrolux', tgl: '10/02/2026', harga: 7200000, akm: 1080000 },
+            { kode: 'ALT-003', nama: 'Setrika Uap Philips', tgl: '01/03/2026', harga: 1200000, akm: 400000 },
+            { kode: 'ALT-004', nama: 'Timbangan Digital 30 kg', tgl: '01/03/2026', harga: 450000, akm: 100000 }
+          ];
+          const items = data.map(d => ({
+            ...d, nbFmt: f(d.harga - d.akm),
+            cls: s.pick === d.kode ? 'item on' : 'item', pressed: s.pick === d.kode ? 'true' : 'false',
+            pick: () => this.setState({ pick: d.kode, done: false })
+          }));
+          const d = data.find(x => x.kode === s.pick);
+          const nb = d.harga - d.akm;
+          const jual = s.alasan === 'dijual' ? s.jual : 0;
+          const lr = jual - nb;
+          const reasons = [['dijual', 'Dijual'], ['rusak', 'Rusak'], ['hilang', 'Hilang']].map(([id, label]) => ({
+            label, cls: s.alasan === id ? 'seg on' : 'seg', pressed: s.alasan === id ? 'true' : 'false',
+            pick: () => this.setState({ alasan: id, done: false })
+          }));
+          const jurnal = [{ akun: 'Akumulasi Penyusutan Peralatan', d: f(d.akm), k: '', pad: '12px' }];
+          if (jual > 0) jurnal.push({ akun: 'Kas', d: f(jual), k: '', pad: '12px' });
+          if (lr < 0) jurnal.push({ akun: 'Rugi Penghapusan Peralatan', d: f(-lr), k: '', pad: '12px' });
+          jurnal.push({ akun: 'Peralatan', d: '', k: f(d.harga), pad: '28px' });
+          if (lr > 0) jurnal.push({ akun: 'Laba Penghapusan Peralatan', d: '', k: f(lr), pad: '28px' });
+          return {
+            items, reasons, jurnal,
+            sel: { nama: d.nama, hargaFmt: f(d.harga), akmFmt: f(d.akm), nbFmt: f(nb) },
+            isJual: s.alasan === 'dijual',
+            jualFmt: f(s.jual),
+            lrLabel: lr < 0 ? 'Rugi penghapusan' : (lr > 0 ? 'Laba penghapusan' : 'Tidak ada laba/rugi'),
+            lrFmt: f(Math.abs(lr)),
+            lrBg: lr < 0 ? '#FDECEA' : '#E7F6EC',
+            lrColor: lr < 0 ? '#8E1D17' : '#145C2E',
+            done: s.done,
+            onJual: (e) => this.setState({ jual: Number(String(e.target.value).replace(/\D/g, '')) || 0, done: false }),
+            submit: (e) => { e.preventDefault(); this.setState({ done: true }); }
+          };
+        }
+      }
+    </script>
+  </body>
+</html>
