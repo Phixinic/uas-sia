@@ -27,6 +27,7 @@ function pvLepas(){
    <div><h3>Jurnal pelepasan (dibuat saat disetujui)</h3>${jTable(barisLepas(a,h))}</div>`;
 }
 async function ajukanLepas(){
+  if(!isAdmin())throw new Error('Pelepasan diajukan oleh Admin.');
   const f=S.ui.lepas;const a=byId('aset',f.aset_id);if(!a)throw new Error('Pilih peralatan.');if(a.status!=='aktif')throw new Error('Aset ini tidak aktif.');
   if(!f.tanggal||f.tanggal<a.tgl_perolehan)throw new Error('Tanggal pelepasan tidak boleh sebelum tanggal perolehan.');
   if(f.alasan==='dijual'&&!filled(f.harga_jual))throw new Error('Isi harga jual.');
@@ -38,6 +39,7 @@ async function ajukanLepas(){
   S.ui.lepas=null;toast(`${id} diajukan ke Owner.`);
 }
 async function setujuLepas(id){
+  if(!isOwner())throw new Error('Hanya Owner yang bisa menyetujui.');
   const p=byId('pelepasan',id);if(!p||p.status!=='diajukan')throw new Error('Pengajuan ini sudah diputuskan.');const a=byId('aset',p.aset_id);if(!a||a.status!=='aktif')throw new Error('Aset ini sudah tidak aktif.');
   if(pendingRows(a).length)throw new Error('Masih ada penyusutan aset ini yang belum disetujui.');
   const {akm,nb,lr}=hitLepas(a,p.harga_jual);

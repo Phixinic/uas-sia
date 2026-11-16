@@ -91,6 +91,7 @@ function validasiBeli(f){
   return '';
 }
 async function simpanBeli(post){
+  if(!isAdmin())throw new Error('Pembelian dibuat atau diubah oleh Admin.');
   const f=S.ui.beli;const err=validasiBeli(f);if(err)throw new Error(err);
   const items=f.items.map(it=>f.jenis==='peralatan'?{barang_id:it.barang_id,qty:int(it.qty),harga:int(it.harga),residu:int(it.residu),garansi_bulan:int(it.garansi_bulan),masa_manfaat_bulan:int(it.masa_manfaat_bulan),dasar_n:it.dasar_n}:{barang_id:it.barang_id,qty:int(it.qty),harga:int(it.harga)});
   const total=sum(items,it=>it.qty*it.harga);
@@ -101,6 +102,7 @@ async function simpanBeli(post){
   if(post){await postingBeli(id);toast(`${id} diposting.`)}else toast(`Draf ${id} tersimpan.`);
 }
 async function postingBeli(id){
+  if(isHrd())throw new Error('Posting pembelian dilakukan Admin atau Owner.');
   const snap=await S.db.doc('pembelian/'+id).get();if(!snap.exists)throw new Error('Pembelian tidak ditemukan.');
   const b=snap.data();if(b.status!=='draft')throw new Error(`${id} sudah diposting.`);
   if(isLocked(per(b.tanggal)))throw new Error(`Periode ${fmtPer(per(b.tanggal))} sudah dikunci.`);
@@ -120,6 +122,7 @@ async function postingBeli(id){
   await S.db.doc('pembelian/'+id).update({status:'posted',jurnal_id:jid,aset_ids:ids,diposting_oleh:S.role,diposting_pada:iso()});
 }
 async function balikBeli(id){
+  if(!isOwner())throw new Error('Pembelian dibalik oleh Owner.');
   const b=byId('pembelian',id);if(!b||b.status!=='posted')throw new Error('Hanya pembelian terposting yang bisa dibalik.');
   const alasan=S.ui.balikAlasan.trim();if(!alasan)throw new Error('Tulis alasan membalik pembelian.');
   if(b.jenis==='peralatan'){for(const aid of b.aset_ids||[]){const a=byId('aset',aid);if(!a)continue;if(a.status!=='aktif'||(a.jadwal||[]).some(r=>r.jurnal_id))throw new Error(`${aid} sudah punya penyusutan yang dijurnal atau sudah dilepas. Gunakan Pelepasan Peralatan.`)}}

@@ -51,6 +51,7 @@ async function mSave(){
   S.ui.mForm=null;toast(`${D.label} tersimpan.`);
 }
 async function quickSave(){
+  if(!isAdmin())throw new Error('Master dari form pembelian ditambah oleh Admin.');
   const q=S.ui.quick,f=S.ui.beli;const nama=(q.nama||'').trim();if(!nama)throw new Error('Isi nama.');
   if(q.type==='supplier'){const nid=await nomor('SUP');await S.db.doc('supplier/'+nid).set({kode:nid,nama,telepon:(q.telepon||'').trim(),alamat:'',email:'',npwp:'',aktif:true});f.supplier_id=nid}
   else{const t=f.jenis;if(!(q.satuan||'').trim())throw new Error('Isi satuan.');if(t==='peralatan'&&!q.kategori_id)throw new Error('Pilih kategori aset.');

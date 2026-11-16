@@ -24,6 +24,7 @@ function vSusut(){
   </div>`;
 }
 async function prosesSusut(){
+  if(!isAdmin())throw new Error('Proses penyusutan dijalankan oleh Admin.');
   const P=S.ui.susutPer;if(isLocked(P))throw new Error(`Periode ${fmtPer(P)} sudah dikunci.`);
   const aktif=S.data.aset.filter(a=>a.status==='aktif');
   if(aktif.some(a=>(a.jadwal||[]).some(r=>r.periode<P&&!r.jurnal_id)))throw new Error('Masih ada periode sebelumnya yang belum diproses.');

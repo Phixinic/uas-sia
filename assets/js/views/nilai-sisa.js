@@ -35,6 +35,7 @@ function pvOpn(){
    <h3 style="margin-top:6px">Jurnal penyesuaian (draf)</h3>${jTable([{akun:AK.BLKP,debit:tot,kredit:0},{akun:AK.LKP,debit:0,kredit:tot}])}`;
 }
 async function simpanOpn(){
+  if(!isAdmin())throw new Error('Nilai sisa perlengkapan diinput oleh Admin.');
   const P=S.ui.opn.P;if(isLocked(P))throw new Error(`Periode ${fmtPer(P)} sudah dikunci.`);
   if(S.data.opname.some(o=>o.periode===P&&o.status!=='ditolak'))throw new Error('Nilai sisa periode ini sudah diinput.');
   const rows=[];for(const {b,sb} of opnRows(P)){const v=S.ui.opn.vals[b.id];if(!filled(v))throw new Error(`${b.nama} belum dihitung.`);const s=int(v);if(s<0||s>sb)throw new Error(`${b.nama}: nilai sisa harus 0 sampai Rp${rp(sb)}.`);rows.push({barang_id:b.id,nama:b.nama,saldo_buku:sb,nilai_sisa:s,beban:sb-s})}

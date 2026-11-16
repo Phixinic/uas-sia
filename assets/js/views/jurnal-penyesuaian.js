@@ -21,10 +21,10 @@ function vJP(){
    `<div class="stack"><div class="row" role="group" aria-label="Filter status">${tabs.map(([v,l])=>`<button type="button" class="btn sm ${f===v?'on':''}" aria-pressed="${f===v}" data-act="set" data-k="jpFilter" data-v="${v}">${l} (${v==='semua'?all.length:all.filter(j=>j.status===v).length})</button>`).join('')}</div>
    ${list.length?list.map(jCard).join(''):`<div class="card empty">Tidak ada jurnal penyesuaian dengan status ini. Jurnal dibuat dari Proses Penyusutan dan Nilai Sisa Perlengkapan.</div>`}</div>`;
 }
-async function jpAjukan(id){const j=byId('jurnal',id);if(!j||j.status!=='draft')throw new Error('Jurnal ini bukan draf.');await S.db.doc('jurnal/'+id).update({status:'diajukan',diajukan_pada:iso()});toast(`${id} diajukan ke Owner.`)}
+async function jpAjukan(id){if(!isAdmin())throw new Error('Jurnal penyesuaian diajukan oleh Admin.');const j=byId('jurnal',id);if(!j||j.status!=='draft')throw new Error('Jurnal ini bukan draf.');await S.db.doc('jurnal/'+id).update({status:'diajukan',diajukan_pada:iso()});toast(`${id} diajukan ke Owner.`)}
 async function jpSetuju(id){const j=byId('jurnal',id);if(!j||j.status!=='diajukan')throw new Error('Jurnal ini belum diajukan.');if(!isOwner())throw new Error('Hanya Owner yang bisa menyetujui.');if(j.dibuat_oleh===S.role)throw new Error('Pembuat tidak boleh menyetujui jurnalnya sendiri.');if(isLocked(j.periode))throw new Error('Periode jurnal ini sudah dikunci.');
   await S.db.doc('jurnal/'+id).update({status:'disetujui',disetujui_oleh:S.role,disetujui_pada:iso()});toast(`${id} disetujui dan masuk buku besar.`)}
-async function jpTolak(id){const j=byId('jurnal',id);if(!j||j.status!=='diajukan')throw new Error('Jurnal ini belum diajukan.');const al=S.ui.tolakAlasan.trim();if(!al)throw new Error('Tulis alasan penolakan.');
+async function jpTolak(id){if(!isOwner())throw new Error('Hanya Owner yang bisa menolak.');const j=byId('jurnal',id);if(!j||j.status!=='diajukan')throw new Error('Jurnal ini belum diajukan.');const al=S.ui.tolakAlasan.trim();if(!al)throw new Error('Tulis alasan penolakan.');
   await S.db.doc('jurnal/'+id).update({status:'ditolak',alasan_tolak:al,disetujui_oleh:S.role,disetujui_pada:iso()});
   if(j.sumber_tipe==='penyusutan'){for(const a of S.data.aset){if(!(a.jadwal||[]).some(r=>r.jurnal_id===id))continue;await S.db.doc('aset/'+a.id).update({jadwal:a.jadwal.map(r=>r.jurnal_id===id?Object.assign({},r,{jurnal_id:null}):r)})}}
   if(j.sumber_tipe==='opname'&&j.sumber_id)await S.db.doc('opname/'+j.sumber_id).update({status:'ditolak'});

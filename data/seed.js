@@ -137,28 +137,6 @@ window.SEED = {
    "aktif": true
   }
  },
- "meta": {
-  "counters": {
-   "JU2026": 10,
-   "BP2026": 7,
-   "BL2026": 2,
-   "AST": 9,
-   "SUP": 3,
-   "ALT": 6,
-   "LKP": 5,
-   "KAT": 4,
-   "KRY": 5,
-   "JBT": 4,
-   "GP": 4,
-   "TNJ": 4,
-   "TM": 4,
-   "SET": 5
-  },
-  "profil": {
-   "nama": "D'Production",
-   "ket": "SIA Konversi & SDM"
-  }
- },
  "kategori": {
   "KAT-01": {
    "kode": "KAT-01",
@@ -231,7 +209,7 @@ window.SEED = {
      "beban": 241667,
      "akumulasi": 241667,
      "nilai_buku": 14258333,
-     "jurnal_id": null
+     "jurnal_id": "JP-2026-0001"
     },
     {
      "p": 2,
@@ -736,7 +714,7 @@ window.SEED = {
      "beban": 163333,
      "akumulasi": 163333,
      "nilai_buku": 9636667,
-     "jurnal_id": null
+     "jurnal_id": "JP-2026-0001"
     },
     {
      "p": 2,
@@ -1241,7 +1219,7 @@ window.SEED = {
      "beban": 39583,
      "akumulasi": 39583,
      "nilai_buku": 910417,
-     "jurnal_id": null
+     "jurnal_id": "JP-2026-0001"
     },
     {
      "p": 2,
@@ -1458,7 +1436,7 @@ window.SEED = {
      "beban": 39583,
      "akumulasi": 39583,
      "nilai_buku": 910417,
-     "jurnal_id": null
+     "jurnal_id": "JP-2026-0001"
     },
     {
      "p": 2,
@@ -1675,7 +1653,7 @@ window.SEED = {
      "beban": 39583,
      "akumulasi": 39583,
      "nilai_buku": 910417,
-     "jurnal_id": null
+     "jurnal_id": "JP-2026-0001"
     },
     {
      "p": 2,
@@ -1892,7 +1870,7 @@ window.SEED = {
      "beban": 39583,
      "akumulasi": 39583,
      "nilai_buku": 910417,
-     "jurnal_id": null
+     "jurnal_id": "JP-2026-0001"
     },
     {
      "p": 2,
@@ -2109,7 +2087,7 @@ window.SEED = {
      "beban": 385417,
      "akumulasi": 385417,
      "nilai_buku": 18114583,
-     "jurnal_id": null
+     "jurnal_id": "JP-2026-0001"
     },
     {
      "p": 2,
@@ -2518,7 +2496,7 @@ window.SEED = {
      "beban": 148333,
      "akumulasi": 148333,
      "nilai_buku": 8751667,
-     "jurnal_id": null
+     "jurnal_id": "JP-2026-0001"
     },
     {
      "p": 2,
@@ -3023,7 +3001,7 @@ window.SEED = {
      "beban": 395833,
      "akumulasi": 395833,
      "nilai_buku": 9104167,
-     "jurnal_id": null
+     "jurnal_id": "JP-2026-0001"
     },
     {
      "p": 2,
@@ -3492,13 +3470,13 @@ window.SEED = {
    "baris": [
     {
      "akun": "1-110",
-     "debit": 40000000,
+     "debit": 75000000,
      "kredit": 0
     },
     {
      "akun": "3-110",
      "debit": 0,
-     "kredit": 40000000
+     "kredit": 75000000
     }
    ],
    "sumber_tipe": "saldo_awal",
@@ -3511,6 +3489,204 @@ window.SEED = {
    "diajukan_pada": "2026-11-16T02:00:00.000Z",
    "disetujui_oleh": "owner",
    "disetujui_pada": "2026-11-16T02:00:00.000Z",
+   "alasan_tolak": null
+  },
+  "JP-2026-0001": {
+   "no": "JP-2026-0001",
+   "tanggal": "2026-10-31",
+   "periode": "2026-10",
+   "jenis": "penyesuaian",
+   "keterangan": "Penyusutan peralatan Oktober 2026",
+   "baris": [
+    {
+     "akun": "6-110",
+     "debit": 1492915,
+     "kredit": 0
+    },
+    {
+     "akun": "1-151",
+     "debit": 0,
+     "kredit": 1492915
+    }
+   ],
+   "sumber_tipe": "penyusutan",
+   "sumber_id": "2026-10",
+   "rincian": [
+    {
+     "label": "AST-0001 Speaker Aktif 15 inci (set)",
+     "info": "periode 1 dari 60",
+     "nilai": 241667
+    },
+    {
+     "label": "AST-0002 Moving Head Beam 230W",
+     "info": "periode 1 dari 60",
+     "nilai": 163333
+    },
+    {
+     "label": "AST-0003 Handy Talky (HT)",
+     "info": "periode 1 dari 24",
+     "nilai": 39583
+    },
+    {
+     "label": "AST-0004 Handy Talky (HT)",
+     "info": "periode 1 dari 24",
+     "nilai": 39583
+    },
+    {
+     "label": "AST-0005 Handy Talky (HT)",
+     "info": "periode 1 dari 24",
+     "nilai": 39583
+    },
+    {
+     "label": "AST-0006 Handy Talky (HT)",
+     "info": "periode 1 dari 24",
+     "nilai": 39583
+    },
+    {
+     "label": "AST-0007 Kamera Mirrorless",
+     "info": "periode 1 dari 48",
+     "nilai": 385417
+    },
+    {
+     "label": "AST-0008 Mixer Digital 16 Channel",
+     "info": "periode 1 dari 60",
+     "nilai": 148333
+    },
+    {
+     "label": "AST-0009 Laptop Operasional",
+     "info": "periode 1 dari 24",
+     "nilai": 395833
+    }
+   ],
+   "pembalik_dari": null,
+   "status": "disetujui",
+   "dibuat_oleh": "admin",
+   "dibuat_pada": "2026-11-02T06:00:00.000Z",
+   "diajukan_pada": "2026-11-02T06:00:00.000Z",
+   "disetujui_oleh": "owner",
+   "disetujui_pada": "2026-11-02T08:30:00.000Z",
+   "alasan_tolak": null
+  },
+  "JP-2026-0002": {
+   "no": "JP-2026-0002",
+   "tanggal": "2026-10-31",
+   "periode": "2026-10",
+   "jenis": "penyesuaian",
+   "keterangan": "Biaya perlengkapan Oktober 2026 (dari input nilai sisa)",
+   "baris": [
+    {
+     "akun": "6-120",
+     "debit": 1108000,
+     "kredit": 0
+    },
+    {
+     "akun": "1-140",
+     "debit": 0,
+     "kredit": 1108000
+    }
+   ],
+   "sumber_tipe": "opname",
+   "sumber_id": "OPN-2026-10",
+   "rincian": [
+    {
+     "label": "Gaffer Tape",
+     "info": "saldo 1.020.000 − sisa 510.000",
+     "nilai": 510000
+    },
+    {
+     "label": "Kabel Ties",
+     "info": "saldo 180.000 − sisa 162.000",
+     "nilai": 18000
+    },
+    {
+     "label": "Baterai AA",
+     "info": "saldo 270.000 − sisa 90.000",
+     "nilai": 180000
+    },
+    {
+     "label": "ID Card dan Lanyard",
+     "info": "saldo 1.250.000 − sisa 1.000.000",
+     "nilai": 250000
+    },
+    {
+     "label": "Cetak Banner/X-Banner",
+     "info": "saldo 600.000 − sisa 450.000",
+     "nilai": 150000
+    }
+   ],
+   "pembalik_dari": null,
+   "status": "disetujui",
+   "dibuat_oleh": "admin",
+   "dibuat_pada": "2026-11-02T06:30:00.000Z",
+   "diajukan_pada": "2026-11-02T06:30:00.000Z",
+   "disetujui_oleh": "owner",
+   "disetujui_pada": "2026-11-02T08:35:00.000Z",
+   "alasan_tolak": null
+  },
+  "JU-2026-0011": {
+   "no": "JU-2026-0011",
+   "tanggal": "2026-10-31",
+   "periode": "2026-10",
+   "jenis": "umum",
+   "keterangan": "Penggajian Oktober 2026 (5 karyawan), PAY-2026-0001",
+   "baris": [
+    {
+     "akun": "6-210",
+     "debit": 25904546,
+     "kredit": 0
+    },
+    {
+     "akun": "6-220",
+     "debit": 5595455,
+     "kredit": 0
+    },
+    {
+     "akun": "2-120",
+     "debit": 0,
+     "kredit": 299658
+    },
+    {
+     "akun": "1-110",
+     "debit": 0,
+     "kredit": 31200343
+    }
+   ],
+   "sumber_tipe": "penggajian",
+   "sumber_id": "PAY-2026-0001",
+   "rincian": [
+    {
+     "label": "Raka Aditya Wijaya",
+     "info": "Event Manager",
+     "nilai": 10661250
+    },
+    {
+     "label": "Nadia Putri Anggraini",
+     "info": "Admin Keuangan",
+     "nilai": 5554672
+    },
+    {
+     "label": "Bagas Setiawan",
+     "info": "Operator Sound & Lighting",
+     "nilai": 5929875
+    },
+    {
+     "label": "Dimas Prakoso",
+     "info": "Crew Produksi",
+     "nilai": 4277273
+    },
+    {
+     "label": "Fajar Ramadhan",
+     "info": "Crew Produksi",
+     "nilai": 4777273
+    }
+   ],
+   "pembalik_dari": null,
+   "status": "disetujui",
+   "dibuat_oleh": "hrd",
+   "dibuat_pada": "2026-11-03T04:00:00.000Z",
+   "diajukan_pada": "2026-11-03T04:00:00.000Z",
+   "disetujui_oleh": "owner",
+   "disetujui_pada": "2026-11-03T07:00:00.000Z",
    "alasan_tolak": null
   }
  },
@@ -3913,8 +4089,8 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-13",
    "absensi": "Hadir",
-   "jam_masuk": "06:48",
-   "jam_keluar": "16:43",
+   "jam_masuk": "04:48",
+   "jam_keluar": "14:43",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -3933,8 +4109,8 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-21",
    "absensi": "Hadir",
-   "jam_masuk": "06:46",
-   "jam_keluar": "16:38",
+   "jam_masuk": "04:46",
+   "jam_keluar": "14:38",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -3963,8 +4139,8 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-22",
    "absensi": "Hadir",
-   "jam_masuk": "05:42",
-   "jam_keluar": "18:35",
+   "jam_masuk": "05:32",
+   "jam_keluar": "18:25",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -3983,9 +4159,9 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-05",
    "absensi": "Hadir",
-   "jam_masuk": "07:22",
-   "jam_keluar": "16:05",
-   "terlambat": 22,
+   "jam_masuk": "05:22",
+   "jam_keluar": "14:05",
+   "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
@@ -3993,8 +4169,8 @@ window.SEED = {
    "karyawan_id": "KRY-03",
    "tanggal": "2026-10-22",
    "absensi": "Hadir",
-   "jam_masuk": "05:37",
-   "jam_keluar": "18:23",
+   "jam_masuk": "05:27",
+   "jam_keluar": "18:13",
    "terlambat": 0,
    "jadwal_id": "TM-03",
    "dibuat_oleh": "hrd"
@@ -4003,8 +4179,8 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-15",
    "absensi": "Hadir",
-   "jam_masuk": "06:49",
-   "jam_keluar": "16:36",
+   "jam_masuk": "04:49",
+   "jam_keluar": "14:36",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -4133,8 +4309,8 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-16",
    "absensi": "Hadir",
-   "jam_masuk": "06:52",
-   "jam_keluar": "16:36",
+   "jam_masuk": "04:52",
+   "jam_keluar": "14:36",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -4293,8 +4469,8 @@ window.SEED = {
    "karyawan_id": "KRY-04",
    "tanggal": "2026-10-23",
    "absensi": "Hadir",
-   "jam_masuk": "05:31",
-   "jam_keluar": "18:10",
+   "jam_masuk": "05:21",
+   "jam_keluar": "18:30",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -4323,8 +4499,8 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-01",
    "absensi": "Hadir",
-   "jam_masuk": "06:53",
-   "jam_keluar": "16:03",
+   "jam_masuk": "04:53",
+   "jam_keluar": "14:03",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -4333,8 +4509,8 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-09",
    "absensi": "Hadir",
-   "jam_masuk": "06:59",
-   "jam_keluar": "16:26",
+   "jam_masuk": "04:59",
+   "jam_keluar": "14:26",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -4403,8 +4579,8 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-29",
    "absensi": "Hadir",
-   "jam_masuk": "06:46",
-   "jam_keluar": "16:01",
+   "jam_masuk": "04:46",
+   "jam_keluar": "14:01",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -4413,8 +4589,8 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-12",
    "absensi": "Hadir",
-   "jam_masuk": "06:59",
-   "jam_keluar": "16:25",
+   "jam_masuk": "04:59",
+   "jam_keluar": "14:25",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -4433,8 +4609,8 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-19",
    "absensi": "Hadir",
-   "jam_masuk": "06:50",
-   "jam_keluar": "16:02",
+   "jam_masuk": "04:50",
+   "jam_keluar": "14:02",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -4453,8 +4629,8 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-06",
    "absensi": "Hadir",
-   "jam_masuk": "06:47",
-   "jam_keluar": "16:12",
+   "jam_masuk": "04:47",
+   "jam_keluar": "14:12",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -4523,8 +4699,8 @@ window.SEED = {
    "karyawan_id": "KRY-04",
    "tanggal": "2026-10-22",
    "absensi": "Hadir",
-   "jam_masuk": "05:34",
-   "jam_keluar": "18:12",
+   "jam_masuk": "05:24",
+   "jam_keluar": "18:32",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -4543,8 +4719,8 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-23",
    "absensi": "Hadir",
-   "jam_masuk": "05:37",
-   "jam_keluar": "18:18",
+   "jam_masuk": "05:27",
+   "jam_keluar": "18:38",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -4583,8 +4759,8 @@ window.SEED = {
    "karyawan_id": "KRY-03",
    "tanggal": "2026-10-23",
    "absensi": "Hadir",
-   "jam_masuk": "05:39",
-   "jam_keluar": "18:11",
+   "jam_masuk": "05:29",
+   "jam_keluar": "18:31",
    "terlambat": 0,
    "jadwal_id": "TM-03",
    "dibuat_oleh": "hrd"
@@ -4653,9 +4829,9 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-14",
    "absensi": "Hadir",
-   "jam_masuk": "07:29",
-   "jam_keluar": "16:27",
-   "terlambat": 29,
+   "jam_masuk": "05:29",
+   "jam_keluar": "14:27",
+   "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
@@ -4663,9 +4839,9 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-20",
    "absensi": "Hadir",
-   "jam_masuk": "07:17",
-   "jam_keluar": "16:00",
-   "terlambat": 17,
+   "jam_masuk": "05:17",
+   "jam_keluar": "14:00",
+   "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
@@ -4713,9 +4889,9 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-02",
    "absensi": "Hadir",
-   "jam_masuk": "07:15",
-   "jam_keluar": "16:14",
-   "terlambat": 15,
+   "jam_masuk": "05:15",
+   "jam_keluar": "14:14",
+   "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
@@ -4723,8 +4899,8 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-08",
    "absensi": "Hadir",
-   "jam_masuk": "06:59",
-   "jam_keluar": "16:27",
+   "jam_masuk": "04:59",
+   "jam_keluar": "14:27",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -4763,9 +4939,9 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-07",
    "absensi": "Hadir",
-   "jam_masuk": "07:32",
-   "jam_keluar": "16:28",
-   "terlambat": 32,
+   "jam_masuk": "05:32",
+   "jam_keluar": "14:28",
+   "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
@@ -4813,8 +4989,8 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-28",
    "absensi": "Hadir",
-   "jam_masuk": "06:48",
-   "jam_keluar": "16:33",
+   "jam_masuk": "04:48",
+   "jam_keluar": "14:33",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -4833,8 +5009,8 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-27",
    "absensi": "Hadir",
-   "jam_masuk": "06:49",
-   "jam_keluar": "16:28",
+   "jam_masuk": "04:49",
+   "jam_keluar": "14:28",
    "terlambat": 0,
    "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
@@ -5169,6 +5345,389 @@ window.SEED = {
     "TNJ-02"
    ],
    "aktif": true
+  }
+ },
+ "opname": {
+  "OPN-2026-10": {
+   "periode": "2026-10",
+   "rows": [
+    {
+     "barang_id": "LKP-01",
+     "nama": "Gaffer Tape",
+     "saldo_buku": 1020000,
+     "nilai_sisa": 510000,
+     "beban": 510000
+    },
+    {
+     "barang_id": "LKP-02",
+     "nama": "Kabel Ties",
+     "saldo_buku": 180000,
+     "nilai_sisa": 162000,
+     "beban": 18000
+    },
+    {
+     "barang_id": "LKP-03",
+     "nama": "Baterai AA",
+     "saldo_buku": 270000,
+     "nilai_sisa": 90000,
+     "beban": 180000
+    },
+    {
+     "barang_id": "LKP-04",
+     "nama": "ID Card dan Lanyard",
+     "saldo_buku": 1250000,
+     "nilai_sisa": 1000000,
+     "beban": 250000
+    },
+    {
+     "barang_id": "LKP-05",
+     "nama": "Cetak Banner/X-Banner",
+     "saldo_buku": 600000,
+     "nilai_sisa": 450000,
+     "beban": 150000
+    }
+   ],
+   "total_beban": 1108000,
+   "jurnal_id": "JP-2026-0002",
+   "status": "aktif",
+   "dibuat_oleh": "admin",
+   "dibuat_pada": "2026-11-02T06:30:00.000Z"
+  }
+ },
+ "slip": {
+  "SLP-2026-10-KRY-01": {
+   "periode": "2026-10",
+   "karyawan_id": "KRY-01",
+   "jabatan_id": "JBT-01",
+   "golongan_id": "GP-04",
+   "jadwal_id": "TM-01",
+   "akun_beban": "6-210",
+   "status_ptkp": "K/2",
+   "hari_kerja": 22,
+   "presensi": 22,
+   "hadir": 21,
+   "izin": 1,
+   "sakit": 0,
+   "cuti": 0,
+   "alpa": 0,
+   "jam_kerja": 177.55,
+   "terlambat_menit": 32,
+   "gaji_pokok": 8000000,
+   "tunj_jabatan": 1500000,
+   "tunj_keluarga": 400000,
+   "tunj_lain": [
+    {
+     "id": "TNJ-01",
+     "nama": "Transport",
+     "nominal": 300000
+    },
+    {
+     "id": "TNJ-02",
+     "nama": "Makan",
+     "nominal": 400000
+    },
+    {
+     "id": "TNJ-03",
+     "nama": "Komunikasi",
+     "nominal": 100000
+    },
+    {
+     "id": "TNJ-04",
+     "nama": "Kesehatan",
+     "nominal": 200000
+    }
+   ],
+   "potongan_absen": 0,
+   "bruto": 10900000,
+   "pajak": {
+    "setahun": 130800000,
+    "biaya": 6000000,
+    "neto": 124800000,
+    "ptkp": 67500000,
+    "pkp": 57300000,
+    "pph_setahun": 2865000,
+    "pph21": 238750
+   },
+   "pph21": 238750,
+   "thp": 10661250,
+   "status": "dibayar",
+   "ref": "PAY-2026-0001",
+   "jurnal_id": "JU-2026-0011",
+   "dihitung_pada": "2026-11-03T03:00:00.000Z",
+   "dibuat_oleh": "hrd"
+  },
+  "SLP-2026-10-KRY-02": {
+   "periode": "2026-10",
+   "karyawan_id": "KRY-02",
+   "jabatan_id": "JBT-04",
+   "golongan_id": "GP-02",
+   "jadwal_id": "TM-04",
+   "akun_beban": "6-220",
+   "status_ptkp": "TK/0",
+   "hari_kerja": 22,
+   "presensi": 22,
+   "hadir": 21,
+   "izin": 0,
+   "sakit": 0,
+   "cuti": 0,
+   "alpa": 1,
+   "jam_kerja": 174.3,
+   "terlambat_menit": 116,
+   "gaji_pokok": 4500000,
+   "tunj_jabatan": 400000,
+   "tunj_keluarga": 0,
+   "tunj_lain": [
+    {
+     "id": "TNJ-01",
+     "nama": "Transport",
+     "nominal": 300000
+    },
+    {
+     "id": "TNJ-02",
+     "nama": "Makan",
+     "nominal": 400000
+    },
+    {
+     "id": "TNJ-04",
+     "nama": "Kesehatan",
+     "nominal": 200000
+    }
+   ],
+   "potongan_absen": 204545,
+   "bruto": 5595455,
+   "pajak": {
+    "setahun": 67145460,
+    "biaya": 3357273,
+    "neto": 63788187,
+    "ptkp": 54000000,
+    "pkp": 9788000,
+    "pph_setahun": 489400,
+    "pph21": 40783
+   },
+   "pph21": 40783,
+   "thp": 5554672,
+   "status": "dibayar",
+   "ref": "PAY-2026-0001",
+   "jurnal_id": "JU-2026-0011",
+   "dihitung_pada": "2026-11-03T03:00:00.000Z",
+   "dibuat_oleh": "hrd"
+  },
+  "SLP-2026-10-KRY-03": {
+   "periode": "2026-10",
+   "karyawan_id": "KRY-03",
+   "jabatan_id": "JBT-03",
+   "golongan_id": "GP-02",
+   "jadwal_id": "TM-03",
+   "akun_beban": "6-210",
+   "status_ptkp": "K/1",
+   "hari_kerja": 22,
+   "presensi": 22,
+   "hadir": 20,
+   "izin": 0,
+   "sakit": 0,
+   "cuti": 2,
+   "alpa": 0,
+   "jam_kerja": 174.83,
+   "terlambat_menit": 109,
+   "gaji_pokok": 4500000,
+   "tunj_jabatan": 500000,
+   "tunj_keluarga": 250000,
+   "tunj_lain": [
+    {
+     "id": "TNJ-01",
+     "nama": "Transport",
+     "nominal": 300000
+    },
+    {
+     "id": "TNJ-02",
+     "nama": "Makan",
+     "nominal": 400000
+    }
+   ],
+   "potongan_absen": 0,
+   "bruto": 5950000,
+   "pajak": {
+    "setahun": 71400000,
+    "biaya": 3570000,
+    "neto": 67830000,
+    "ptkp": 63000000,
+    "pkp": 4830000,
+    "pph_setahun": 241500,
+    "pph21": 20125
+   },
+   "pph21": 20125,
+   "thp": 5929875,
+   "status": "dibayar",
+   "ref": "PAY-2026-0001",
+   "jurnal_id": "JU-2026-0011",
+   "dihitung_pada": "2026-11-03T03:00:00.000Z",
+   "dibuat_oleh": "hrd"
+  },
+  "SLP-2026-10-KRY-04": {
+   "periode": "2026-10",
+   "karyawan_id": "KRY-04",
+   "jabatan_id": "JBT-02",
+   "golongan_id": "GP-01",
+   "jadwal_id": "TM-02",
+   "akun_beban": "6-210",
+   "status_ptkp": "TK/1",
+   "hari_kerja": 22,
+   "presensi": 22,
+   "hadir": 17,
+   "izin": 0,
+   "sakit": 2,
+   "cuti": 2,
+   "alpa": 1,
+   "jam_kerja": 150.85,
+   "terlambat_menit": 0,
+   "gaji_pokok": 3800000,
+   "tunj_jabatan": 250000,
+   "tunj_keluarga": 0,
+   "tunj_lain": [
+    {
+     "id": "TNJ-02",
+     "nama": "Makan",
+     "nominal": 400000
+    }
+   ],
+   "potongan_absen": 172727,
+   "bruto": 4277273,
+   "pajak": {
+    "setahun": 51327276,
+    "biaya": 2566364,
+    "neto": 48760912,
+    "ptkp": 58500000,
+    "pkp": 0,
+    "pph_setahun": 0,
+    "pph21": 0
+   },
+   "pph21": 0,
+   "thp": 4277273,
+   "status": "dibayar",
+   "ref": "PAY-2026-0001",
+   "jurnal_id": "JU-2026-0011",
+   "dihitung_pada": "2026-11-03T03:00:00.000Z",
+   "dibuat_oleh": "hrd"
+  },
+  "SLP-2026-10-KRY-05": {
+   "periode": "2026-10",
+   "karyawan_id": "KRY-05",
+   "jabatan_id": "JBT-02",
+   "golongan_id": "GP-01",
+   "jadwal_id": "TM-02",
+   "akun_beban": "6-210",
+   "status_ptkp": "K/0",
+   "hari_kerja": 22,
+   "presensi": 22,
+   "hadir": 20,
+   "izin": 0,
+   "sakit": 0,
+   "cuti": 1,
+   "alpa": 1,
+   "jam_kerja": 174.47,
+   "terlambat_menit": 0,
+   "gaji_pokok": 3800000,
+   "tunj_jabatan": 250000,
+   "tunj_keluarga": 200000,
+   "tunj_lain": [
+    {
+     "id": "TNJ-01",
+     "nama": "Transport",
+     "nominal": 300000
+    },
+    {
+     "id": "TNJ-02",
+     "nama": "Makan",
+     "nominal": 400000
+    }
+   ],
+   "potongan_absen": 172727,
+   "bruto": 4777273,
+   "pajak": {
+    "setahun": 57327276,
+    "biaya": 2866364,
+    "neto": 54460912,
+    "ptkp": 58500000,
+    "pkp": 0,
+    "pph_setahun": 0,
+    "pph21": 0
+   },
+   "pph21": 0,
+   "thp": 4777273,
+   "status": "dibayar",
+   "ref": "PAY-2026-0001",
+   "jurnal_id": "JU-2026-0011",
+   "dihitung_pada": "2026-11-03T03:00:00.000Z",
+   "dibuat_oleh": "hrd"
+  }
+ },
+ "penggajian": {
+  "PAY-2026-0001": {
+   "no": "PAY-2026-0001",
+   "periode": "2026-10",
+   "slip_ids": [
+    "SLP-2026-10-KRY-01",
+    "SLP-2026-10-KRY-02",
+    "SLP-2026-10-KRY-03",
+    "SLP-2026-10-KRY-04",
+    "SLP-2026-10-KRY-05"
+   ],
+   "jumlah": 5,
+   "total_bruto": 31500001,
+   "total_pph": 299658,
+   "total_thp": 31200343,
+   "status": "disetujui",
+   "dibuat_oleh": "hrd",
+   "dibuat_pada": "2026-11-03T04:00:00.000Z",
+   "jurnal_id": "JU-2026-0011",
+   "alasan_tolak": null,
+   "disetujui_oleh": "owner",
+   "disetujui_pada": "2026-11-03T07:00:00.000Z"
+  }
+ },
+ "pelepasan": {
+  "PLP-2026-0001": {
+   "aset_id": "AST-0003",
+   "aset_kode": "AST-0003",
+   "nama": "Handy Talky (HT)",
+   "tanggal": "2026-11-10",
+   "alasan": "dibuang",
+   "harga_jual": 0,
+   "nilai_perolehan": 950000,
+   "akumulasi": 39583,
+   "nilai_buku": 910417,
+   "laba_rugi": -910417,
+   "status": "diajukan",
+   "dibuat_oleh": "admin",
+   "dibuat_pada": "2026-11-10T03:00:00.000Z",
+   "jurnal_id": null,
+   "alasan_tolak": null
+  }
+ },
+ "periode": {},
+ "meta": {
+  "counters": {
+   "JU2026": 11,
+   "BP2026": 7,
+   "BL2026": 2,
+   "AST": 9,
+   "SUP": 3,
+   "ALT": 6,
+   "LKP": 5,
+   "KAT": 4,
+   "KRY": 5,
+   "JBT": 4,
+   "GP": 4,
+   "TNJ": 4,
+   "TM": 4,
+   "SET": 5,
+   "JP2026": 2,
+   "PAY2026": 1,
+   "PLP2026": 1
+  },
+  "profil": {
+   "nama": "D'Production",
+   "ket": "SIA Konversi & SDM"
   }
  }
 };
