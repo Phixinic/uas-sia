@@ -24,7 +24,10 @@ cp .env.example .env
 npm run db:migrasi
 npm run db:seed
 
-# 3. Jalankan
+# 3. Sekali saja untuk uji E2E: unduh Chromium Playwright
+npx playwright install chromium
+
+# 4. Jalankan
 npm run dev            # http://localhost:3000
 ```
 
@@ -44,9 +47,23 @@ Akun demo (dibuat oleh seed, khusus pengembangan):
 |---|---|
 | `npm run uji` | Tes logika inti: angka penyusutan, gaji, PPh 21, dan neraca saldo dibandingkan dengan app lama |
 | `npm run uji:db` | Tes integrasi ke database (mengisi ulang database dengan data contoh) |
+| `npm run uji:e2e` | Uji E2E Playwright (headless) satu periode November 2026 untuk tiga peran. Memakai database terpisah `sia_dpro_e2e` (dibuat dan di-seed otomatis) dan `next start` di port 3200, jadi jalankan `npm run build` dulu. Screenshot tersimpan di `/tmp/sia-e2e/<peran>/` |
 | `npm run cek-tipe` / `npm run lint` | Pemeriksaan TypeScript dan ESLint |
 | `npm run build` | Build produksi (output standalone) |
 | `npm run db:migrasi-dev` | Membuat migrasi baru sesudah mengubah `prisma/schema.prisma` |
+
+## Struktur singkat
+
+```
+prisma/            skema, migrasi, seed data contoh Oktober 2026
+src/app/           rute Next.js (halaman, layout, api/sehat)
+src/komponen/      komponen UI per siklus (konversi, sdm, pelaporan, master) dan kerangka
+src/lib/           inti (logika murni), server (db, auth, jurnal), aksi (server action), data (kueri), skema (zod)
+tests/             tes vitest (inti, integrasi DB) dan tests/e2e (Playwright)
+versi-statis/      app lama sebagai acuan aturan bisnis
+```
+
+Gaya cetak (laporan dan slip gaji) ada di `src/app/globals.css`. Rincian konvensi di `docs/KONTRAK.md`.
 
 ## Peran
 

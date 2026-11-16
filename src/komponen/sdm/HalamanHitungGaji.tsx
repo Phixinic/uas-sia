@@ -54,7 +54,7 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
         slipDibuka.length ? <SlipGaji daftar={slipDibuka} namaUsaha={profil.nama} alamatTutup={alamatPeriode} /> : <Peringatan jenis="galat">Slip {cari.slip} tidak ditemukan.</Peringatan>
       )}
 
-      <div className={`space-y-5 ${cari.slip && slipDibuka.length ? "tidak-cetak" : ""}`}>
+      <div className={`space-y-5 ${cari.slip && slipDibuka.length ? "tanpa-cetak" : ""}`}>
         <KepalaHalaman
           judul="Hitung Gaji"
           keterangan="Gaji dihitung dari Setting Gaji dan rekap presensi. Potongan absen = gaji pokok dibagi hari kerja, dikali jumlah alpa. Hasilnya disimpan sebagai slip draf, lalu diajukan lewat Distribusi Gaji."
@@ -98,35 +98,36 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
             <Tabel label="Rincian PPh 21 per slip">
               <thead>
                 <tr>
-                  <th>Slip</th>
+                  <th className="max-md:hidden">Slip</th>
                   <th>Karyawan</th>
                   <th>PTKP</th>
                   <th className="kolom-angka">Bruto/bln</th>
-                  <th className="kolom-angka">Bruto setahun</th>
-                  <th className="kolom-angka">Biaya jabatan</th>
-                  <th className="kolom-angka">PTKP (Rp)</th>
-                  <th className="kolom-angka">PKP</th>
+                  <th className="kolom-angka max-md:hidden">Bruto setahun</th>
+                  <th className="kolom-angka max-md:hidden">Biaya jabatan</th>
+                  <th className="kolom-angka max-md:hidden">PTKP (Rp)</th>
+                  <th className="kolom-angka max-md:hidden">PKP</th>
                   <th className="kolom-angka">PPh 21/bln</th>
                 </tr>
               </thead>
               <tbody>
                 {tersimpan.map((s) => (
                   <tr key={s.no}>
-                    <td className="kode">{s.no}</td>
+                    <td className="kode max-md:hidden">{s.no}</td>
                     <td>{s.karyawan}</td>
                     <td>{labelPtkp(s.statusPtkp)}</td>
                     <td className="kolom-angka"><Rupiah nilai={s.bruto} polos /></td>
-                    <td className="kolom-angka"><Rupiah nilai={s.brutoSetahun} polos /></td>
-                    <td className="kolom-angka"><Rupiah nilai={s.biayaJabatan} polos /></td>
-                    <td className="kolom-angka"><Rupiah nilai={s.ptkp} polos /></td>
-                    <td className="kolom-angka"><Rupiah nilai={s.pkp} polos /></td>
+                    <td className="kolom-angka max-md:hidden"><Rupiah nilai={s.brutoSetahun} polos /></td>
+                    <td className="kolom-angka max-md:hidden"><Rupiah nilai={s.biayaJabatan} polos /></td>
+                    <td className="kolom-angka max-md:hidden"><Rupiah nilai={s.ptkp} polos /></td>
+                    <td className="kolom-angka max-md:hidden"><Rupiah nilai={s.pkp} polos /></td>
                     <td className="kolom-angka font-semibold"><Rupiah nilai={s.pph21} polos /></td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan={8}>Total PPh 21</td>
+                  <td colSpan={3} className="md:hidden">Total PPh 21</td>
+                  <td colSpan={8} className="max-md:hidden">Total PPh 21</td>
                   <td className="kolom-angka"><Rupiah nilai={tersimpan.reduce((x, s) => x + s.pph21, 0)} polos /></td>
                 </tr>
               </tfoot>

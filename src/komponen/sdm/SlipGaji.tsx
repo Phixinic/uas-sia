@@ -1,5 +1,5 @@
 /*
- * Slip gaji siap lihat dan cetak. Saat dicetak, sidebar, topbar, dan semua yang bertanda .tidak-cetak disembunyikan,
+ * Slip gaji siap lihat dan cetak. Saat dicetak, sidebar, topbar, dan semua yang bertanda .tanpa-cetak disembunyikan,
  * dan tiap slip mulai di halaman baru.
  */
 import { X } from "lucide-react";
@@ -11,23 +11,11 @@ import { RincianSlip } from "./RincianSlip";
 import TombolCetak from "./TombolCetak";
 import type { DataSlip } from "@/lib/data/sdm/gaji";
 
-const GAYA_CETAK = `
-@media print {
-  aside, header.sticky, .tidak-cetak { display: none !important; }
-  div[class*="lg:pl-"] { padding-left: 0 !important; }
-  main { max-width: none !important; padding: 0 !important; }
-  body { background: #fff !important; }
-  .slip-cetak { border: 0 !important; box-shadow: none !important; padding: 0 !important; break-after: page; }
-  .slip-cetak:last-child { break-after: auto; }
-  details > summary { list-style: none; }
-}`;
-
 export default function SlipGaji({ daftar, namaUsaha, alamatTutup }: { daftar: DataSlip[]; namaUsaha: string; alamatTutup: string }) {
   if (daftar.length === 0) return null;
   return (
     <div className="space-y-4">
-      <style>{GAYA_CETAK}</style>
-      <div className="tidak-cetak flex flex-wrap items-center justify-between gap-2">
+      <div className="tanpa-cetak flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-slate-600">{daftar.length > 1 ? `${daftar.length} slip ${labelPeriode(daftar[0].periode)} siap dicetak.` : "Pratinjau slip siap dicetak."}</p>
         <div className="flex gap-2">
           <TombolCetak label={daftar.length > 1 ? "Cetak semua" : "Cetak slip"} />

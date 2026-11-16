@@ -5,6 +5,8 @@
 import { db } from "@/lib/server/db";
 import { labelPtkp } from "@/lib/inti/penggajian";
 import { angka } from "@/lib/format";
+import { periodeIni } from "@/lib/inti/tanggal";
+import { saldoBukuLkp } from "@/lib/data/konversi/nilai-sisa";
 import { LABEL_TIPE_AKUN } from "@/lib/format";
 import { OPSI_STATIS, type JenisMaster, type OpsiMaster } from "@/lib/skema/master";
 
@@ -53,8 +55,9 @@ export async function daftarMaster(jenis: JenisMaster): Promise<DaftarMaster> {
       };
     }
     case "perlengkapan": {
-      const d = urut(await db.perlengkapan.findMany());
-      return { kolom: [{ judul: "Satuan" }], baris: d.map((x) => ({ kode: x.kode, nama: x.nama, aktif: x.aktif, sel: [x.satuan], nilai: { nama: x.nama, satuan: x.satuan } })) };
+      const [d, saldo] = await Promise.all([db.perlengkapan.findMany(), saldoBukuLkp(db, periodeIni())]);
+      const peta = new Map(saldo.map((x) => [x.kode, x.saldoBuku]));
+      return { kolom: [{ judul: "Satuan" }, { judul: "Saldo buku (Rp)", angka: true }], baris: urut(d).map((x) => ({ kode: x.kode, nama: x.nama, aktif: x.aktif, sel: [x.satuan, angka(peta.get(x.kode) ?? 0)], nilai: { nama: x.nama, satuan: x.satuan } })) };
     }
     case "kategori": {
       const d = urut(await db.kategoriAset.findMany());

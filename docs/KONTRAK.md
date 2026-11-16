@@ -15,7 +15,7 @@ src/lib/inti/                   logika murni tanpa DB/UI: tanggal, penyusutan, p
 src/lib/server/                 khusus server: db, auth, aksi (konvensi), nomor, periode, jurnal, log, menu, logo
 src/lib/aksi/<siklus>/          server action ("use server")
 src/lib/data/<siklus>/          kueri baca untuk komponen server
-src/lib/skema/                  skema zod (boleh diimpor klien)
+src/lib/skema/                  skema zod (boleh diimpor klien): konversi, pembelian, sdm, pelaporan, master, pengguna
 src/lib/peran.ts                peran + tabel IZIN per aksi (boleh diimpor klien)
 src/lib/format.ts               rupiah, tanggal, label enum (boleh diimpor klien)
 src/lib/menu.ts                 peta menu sidebar
@@ -180,6 +180,11 @@ Selesai mengerjakan: `npm run cek-tipe`, `npm run lint`, `npm run uji`, dan `npm
 
 ## 9. Keputusan yang perlu diketahui
 
+- `src/lib/skema/sdm.ts` (skema presensi, hitung gaji, dan distribusi) sudah disahkan sebagai berkas bersama bersama skema lain di folder itu.
+- Gaya `@media print` ada di `src/app/globals.css` (bagian "Cetak"). Tandai elemen yang tidak ikut tercetak dengan `.tanpa-cetak`, judul khusus kertas dengan `.hanya-cetak`, dan tiap slip dengan `.slip-cetak`.
+- `allowedDevOrigins: ["127.0.0.1"]` ada di `next.config.ts` supaya dev server bisa diakses lewat 127.0.0.1 (Playwright).
+- Tabel Hitung Gaji tampil sebagai kartu ringkas di layar sempit (di bawah `md`), tabel penuh di layar lebar.
+- Kolom "Saldo buku" di Master Perlengkapan memakai `saldoBukuLkp` dari bagian konversi (periode berjalan).
 - Pembelian punya nilai DIAJUKAN dan DITOLAK di enum (memenuhi audit), tetapi alur lama tidak memakainya: posting oleh Admin atau Owner langsung DISETUJUI.
 - Penggajian yang ditolak tidak lagi punya slip (slip dikembalikan ke DRAFT supaya bisa diajukan ulang). Jumlah dan total slip tetap tersimpan di header penggajian sebagai jejak.
 - Nilai rupiah kolom `Int` (maksimal Rp2.147.483.647 per nilai). Skema zod membatasi harga dan total pembelian Rp2 miliar.

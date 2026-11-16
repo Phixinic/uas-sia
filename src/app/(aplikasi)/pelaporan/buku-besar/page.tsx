@@ -11,7 +11,7 @@ import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
 import Tabel, { BarisKosong } from "@/komponen/ui/Tabel";
 import Rupiah from "@/komponen/ui/Rupiah";
 import FilterUrl from "@/komponen/pelaporan/FilterUrl";
-import { GayaCetak, KepalaCetak, TombolCetak } from "@/komponen/pelaporan/Cetak";
+import { KepalaCetak, TombolCetak } from "@/komponen/pelaporan/Cetak";
 
 export const metadata: Metadata = { title: "Buku Besar" };
 
@@ -30,7 +30,6 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
 
   return (
     <>
-      <GayaCetak />
       <KepalaHalaman
         judul="Buku Besar"
         keterangan="Saldo berjalan per akun, hanya dari jurnal yang sudah disetujui. Buku besar tidak disimpan sebagai tabel, tetapi dihitung dari baris jurnal."

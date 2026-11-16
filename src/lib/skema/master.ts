@@ -162,11 +162,13 @@ function skemaIsian(d: DefIsian): z.ZodType {
   switch (d.tipe) {
     case "angka": {
       const min = d.wajib ? 1 : (d.min ?? 0);
-      return z.coerce
+      const angka = z.coerce
         .number({ error: `${d.label} harus berupa angka.` })
         .int(`${d.label} harus bilangan bulat.`)
         .min(min, d.wajib ? `${d.label} wajib diisi dan lebih dari 0.` : `${d.label} tidak boleh kurang dari ${min}.`)
         .max(d.maks ?? MAKS_RUPIAH, `${d.label} terlalu besar (maksimal ${(d.maks ?? MAKS_RUPIAH).toLocaleString("id-ID")}).`);
+      // Isian angka opsional yang tidak disentuh form tidak terkirim sama sekali; dianggap 0, bukan NaN.
+      return d.wajib ? angka : z.preprocess((v) => (v === undefined || v === null ? 0 : v), angka);
     }
     case "waktu":
       return z.string().trim().regex(POLA_JAM, `${d.label} berbentuk HH:MM.`);

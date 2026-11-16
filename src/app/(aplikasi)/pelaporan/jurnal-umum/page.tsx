@@ -11,7 +11,7 @@ import Rupiah from "@/komponen/ui/Rupiah";
 import Lencana from "@/komponen/ui/Lencana";
 import KeadaanKosong from "@/komponen/ui/KeadaanKosong";
 import FilterUrl from "@/komponen/pelaporan/FilterUrl";
-import { GayaCetak, KepalaCetak, TombolCetak } from "@/komponen/pelaporan/Cetak";
+import { KepalaCetak, TombolCetak } from "@/komponen/pelaporan/Cetak";
 
 export const metadata: Metadata = { title: "Jurnal Umum" };
 
@@ -34,7 +34,6 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
 
   return (
     <>
-      <GayaCetak />
       <KepalaHalaman
         judul="Jurnal Umum"
         keterangan="Dibuat otomatis saat pembelian diposting, pelepasan dan penggajian disetujui, dan saat pembelian dibalik. Hanya jurnal yang sudah disetujui yang tampil."

@@ -232,3 +232,55 @@ body {
     animation: muncul 0.2s ease-out both;
   }
 }
+
+/* ---------- Cetak ---------- */
+/* Laporan dan slip gaji: kerangka (sidebar, topbar, footer) disembunyikan, isi memenuhi kertas. */
+.hanya-cetak {
+  display: none;
+}
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  aside,
+  header.sticky,
+  footer,
+  nav,
+  .tanpa-cetak {
+    display: none !important;
+  }
+  .hanya-cetak {
+    display: block;
+  }
+  body {
+    background: #fff !important;
+  }
+  div[class*="lg:pl-"] {
+    padding-left: 0 !important;
+  }
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  .kartu {
+    box-shadow: none !important;
+    border-color: #cbd5e1 !important;
+  }
+  .bungkus-tabel {
+    overflow: visible !important;
+  }
+  tr {
+    break-inside: avoid;
+  }
+  .slip-cetak {
+    border: 0 !important;
+    padding: 0 !important;
+    break-after: page;
+  }
+  .slip-cetak:last-child {
+    break-after: auto;
+  }
+  details > summary {
+    list-style: none;
+  }
+}

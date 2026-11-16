@@ -11,6 +11,8 @@ const headerKeamanan = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Akses dev server lewat 127.0.0.1 (misalnya dari Playwright) tidak diblokir.
+  allowedDevOrigins: ["127.0.0.1"],
   // Menghasilkan .next/standalone (server.js + dependensi minimum) untuk image Docker.
   output: "standalone",
   async headers() {

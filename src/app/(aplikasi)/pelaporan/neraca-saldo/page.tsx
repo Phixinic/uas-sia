@@ -12,7 +12,7 @@ import Lencana from "@/komponen/ui/Lencana";
 import Peringatan from "@/komponen/ui/Peringatan";
 import KeadaanKosong from "@/komponen/ui/KeadaanKosong";
 import FilterUrl from "@/komponen/pelaporan/FilterUrl";
-import { GayaCetak, KepalaCetak, TombolCetak } from "@/komponen/pelaporan/Cetak";
+import { KepalaCetak, TombolCetak } from "@/komponen/pelaporan/Cetak";
 import { rupiah } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Neraca Saldo" };
@@ -26,7 +26,6 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
 
   return (
     <>
-      <GayaCetak />
       <KepalaHalaman
         judul="Neraca Saldo"
         keterangan="Saldo semua akun sampai akhir periode, dari jurnal yang disetujui. Total debit harus sama dengan total kredit."
