@@ -80,7 +80,7 @@ window.SEED = {
   },
   "6-210": {
    "kode": "6-210",
-   "nama": "Biaya Gaji Tenaga Kerja Langsung",
+   "nama": "Biaya Gaji Crew & Produksi Event",
    "tipe": "Beban",
    "saldo_normal": "D",
    "aktif": true
@@ -94,45 +94,59 @@ window.SEED = {
   }
  },
  "peralatan": {
-  "ALT-03": {
-   "kode": "ALT-03",
-   "nama": "Setrika Uap",
-   "satuan": "unit",
-   "kategori_id": "KAT-02",
+  "ALT-01": {
+   "kode": "ALT-01",
+   "nama": "Speaker Aktif 15 inci (set)",
+   "satuan": "set",
+   "kategori_id": "KAT-01",
    "aktif": true
   },
   "ALT-02": {
    "kode": "ALT-02",
-   "nama": "Mesin Pengering",
+   "nama": "Moving Head Beam 230W",
+   "satuan": "unit",
+   "kategori_id": "KAT-01",
+   "aktif": true
+  },
+  "ALT-03": {
+   "kode": "ALT-03",
+   "nama": "Mixer Digital 16 Channel",
    "satuan": "unit",
    "kategori_id": "KAT-01",
    "aktif": true
   },
   "ALT-04": {
    "kode": "ALT-04",
-   "nama": "Timbangan Digital 30 kg",
+   "nama": "Kamera Mirrorless",
    "satuan": "unit",
    "kategori_id": "KAT-02",
    "aktif": true
   },
-  "ALT-01": {
-   "kode": "ALT-01",
-   "nama": "Mesin Cuci 10 kg",
+  "ALT-05": {
+   "kode": "ALT-05",
+   "nama": "Handy Talky (HT)",
    "satuan": "unit",
-   "kategori_id": "KAT-01",
+   "kategori_id": "KAT-03",
+   "aktif": true
+  },
+  "ALT-06": {
+   "kode": "ALT-06",
+   "nama": "Laptop Operasional",
+   "satuan": "unit",
+   "kategori_id": "KAT-04",
    "aktif": true
   }
  },
  "meta": {
   "counters": {
-   "JU2026": 7,
-   "BP2026": 4,
+   "JU2026": 10,
+   "BP2026": 7,
    "BL2026": 2,
-   "AST": 4,
+   "AST": 9,
    "SUP": 3,
-   "ALT": 4,
-   "LKP": 4,
-   "KAT": 3,
+   "ALT": 6,
+   "LKP": 5,
+   "KAT": 4,
    "KRY": 5,
    "JBT": 4,
    "GP": 4,
@@ -141,15 +155,15 @@ window.SEED = {
    "SET": 5
   },
   "profil": {
-   "nama": "Laundry Sukses Mandiri",
+   "nama": "D'Production",
    "ket": "SIA Konversi & SDM"
   }
  },
  "kategori": {
-  "KAT-03": {
-   "kode": "KAT-03",
-   "nama": "Perangkat Kantor",
-   "masa_manfaat_bulan": 48,
+  "KAT-01": {
+   "kode": "KAT-01",
+   "nama": "Sound & Lighting",
+   "masa_manfaat_bulan": 60,
    "persen_residu": 0,
    "akun_aset": "1-150",
    "akun_akumulasi": "1-151",
@@ -158,7 +172,17 @@ window.SEED = {
   },
   "KAT-02": {
    "kode": "KAT-02",
-   "nama": "Peralatan Kecil",
+   "nama": "Peralatan Dokumentasi",
+   "masa_manfaat_bulan": 48,
+   "persen_residu": 0,
+   "akun_aset": "1-150",
+   "akun_akumulasi": "1-151",
+   "akun_beban": "6-110",
+   "aktif": true
+  },
+  "KAT-03": {
+   "kode": "KAT-03",
+   "nama": "Peralatan Kecil Event",
    "masa_manfaat_bulan": 24,
    "persen_residu": 0,
    "akun_aset": "1-150",
@@ -166,10 +190,10 @@ window.SEED = {
    "akun_beban": "6-110",
    "aktif": true
   },
-  "KAT-01": {
-   "kode": "KAT-01",
-   "nama": "Mesin Laundry",
-   "masa_manfaat_bulan": 60,
+  "KAT-04": {
+   "kode": "KAT-04",
+   "nama": "Perangkat Kantor",
+   "masa_manfaat_bulan": 48,
    "persen_residu": 0,
    "akun_aset": "1-150",
    "akun_akumulasi": "1-151",
@@ -178,241 +202,24 @@ window.SEED = {
   }
  },
  "aset": {
-  "AST-0004": {
-   "kode": "AST-0004",
-   "pembelian_id": "BP-2026-0003",
-   "tgl_perolehan": "2026-10-15",
-   "bulan_mulai": "2026-10",
-   "status": "aktif",
-   "nama": "Setrika Uap",
-   "barang_id": "ALT-03",
-   "kategori_id": "KAT-02",
-   "nilai_perolehan": 1250000,
-   "residu": 0,
-   "garansi_bulan": 24,
-   "garansi_sampai": "2028-10-15",
-   "masa_manfaat_bulan": 24,
-   "dasar_n": "garansi",
-   "n": 24,
-   "d": 52083,
-   "terakhir": 52091,
-   "pengaman": false,
-   "akun_aset": "1-150",
-   "akun_akm": "1-151",
-   "akun_beban": "6-110",
-   "jadwal": [
-    {
-     "p": 1,
-     "periode": "2026-10",
-     "beban": 52083,
-     "akumulasi": 52083,
-     "nilai_buku": 1197917,
-     "jurnal_id": null
-    },
-    {
-     "p": 2,
-     "periode": "2026-11",
-     "beban": 52083,
-     "akumulasi": 104166,
-     "nilai_buku": 1145834,
-     "jurnal_id": null
-    },
-    {
-     "p": 3,
-     "periode": "2026-12",
-     "beban": 52083,
-     "akumulasi": 156249,
-     "nilai_buku": 1093751,
-     "jurnal_id": null
-    },
-    {
-     "p": 4,
-     "periode": "2027-01",
-     "beban": 52083,
-     "akumulasi": 208332,
-     "nilai_buku": 1041668,
-     "jurnal_id": null
-    },
-    {
-     "p": 5,
-     "periode": "2027-02",
-     "beban": 52083,
-     "akumulasi": 260415,
-     "nilai_buku": 989585,
-     "jurnal_id": null
-    },
-    {
-     "p": 6,
-     "periode": "2027-03",
-     "beban": 52083,
-     "akumulasi": 312498,
-     "nilai_buku": 937502,
-     "jurnal_id": null
-    },
-    {
-     "p": 7,
-     "periode": "2027-04",
-     "beban": 52083,
-     "akumulasi": 364581,
-     "nilai_buku": 885419,
-     "jurnal_id": null
-    },
-    {
-     "p": 8,
-     "periode": "2027-05",
-     "beban": 52083,
-     "akumulasi": 416664,
-     "nilai_buku": 833336,
-     "jurnal_id": null
-    },
-    {
-     "p": 9,
-     "periode": "2027-06",
-     "beban": 52083,
-     "akumulasi": 468747,
-     "nilai_buku": 781253,
-     "jurnal_id": null
-    },
-    {
-     "p": 10,
-     "periode": "2027-07",
-     "beban": 52083,
-     "akumulasi": 520830,
-     "nilai_buku": 729170,
-     "jurnal_id": null
-    },
-    {
-     "p": 11,
-     "periode": "2027-08",
-     "beban": 52083,
-     "akumulasi": 572913,
-     "nilai_buku": 677087,
-     "jurnal_id": null
-    },
-    {
-     "p": 12,
-     "periode": "2027-09",
-     "beban": 52083,
-     "akumulasi": 624996,
-     "nilai_buku": 625004,
-     "jurnal_id": null
-    },
-    {
-     "p": 13,
-     "periode": "2027-10",
-     "beban": 52083,
-     "akumulasi": 677079,
-     "nilai_buku": 572921,
-     "jurnal_id": null
-    },
-    {
-     "p": 14,
-     "periode": "2027-11",
-     "beban": 52083,
-     "akumulasi": 729162,
-     "nilai_buku": 520838,
-     "jurnal_id": null
-    },
-    {
-     "p": 15,
-     "periode": "2027-12",
-     "beban": 52083,
-     "akumulasi": 781245,
-     "nilai_buku": 468755,
-     "jurnal_id": null
-    },
-    {
-     "p": 16,
-     "periode": "2028-01",
-     "beban": 52083,
-     "akumulasi": 833328,
-     "nilai_buku": 416672,
-     "jurnal_id": null
-    },
-    {
-     "p": 17,
-     "periode": "2028-02",
-     "beban": 52083,
-     "akumulasi": 885411,
-     "nilai_buku": 364589,
-     "jurnal_id": null
-    },
-    {
-     "p": 18,
-     "periode": "2028-03",
-     "beban": 52083,
-     "akumulasi": 937494,
-     "nilai_buku": 312506,
-     "jurnal_id": null
-    },
-    {
-     "p": 19,
-     "periode": "2028-04",
-     "beban": 52083,
-     "akumulasi": 989577,
-     "nilai_buku": 260423,
-     "jurnal_id": null
-    },
-    {
-     "p": 20,
-     "periode": "2028-05",
-     "beban": 52083,
-     "akumulasi": 1041660,
-     "nilai_buku": 208340,
-     "jurnal_id": null
-    },
-    {
-     "p": 21,
-     "periode": "2028-06",
-     "beban": 52083,
-     "akumulasi": 1093743,
-     "nilai_buku": 156257,
-     "jurnal_id": null
-    },
-    {
-     "p": 22,
-     "periode": "2028-07",
-     "beban": 52083,
-     "akumulasi": 1145826,
-     "nilai_buku": 104174,
-     "jurnal_id": null
-    },
-    {
-     "p": 23,
-     "periode": "2028-08",
-     "beban": 52083,
-     "akumulasi": 1197909,
-     "nilai_buku": 52091,
-     "jurnal_id": null
-    },
-    {
-     "p": 24,
-     "periode": "2028-09",
-     "beban": 52091,
-     "akumulasi": 1250000,
-     "nilai_buku": 0,
-     "jurnal_id": null
-    }
-   ]
-  },
   "AST-0001": {
    "kode": "AST-0001",
    "pembelian_id": "BP-2026-0001",
    "tgl_perolehan": "2026-10-05",
    "bulan_mulai": "2026-10",
    "status": "aktif",
-   "nama": "Mesin Cuci 10 kg",
+   "nama": "Speaker Aktif 15 inci (set)",
    "barang_id": "ALT-01",
    "kategori_id": "KAT-01",
-   "nilai_perolehan": 10000000,
+   "nilai_perolehan": 14500000,
    "residu": 0,
-   "garansi_bulan": 60,
-   "garansi_sampai": "2031-10-05",
+   "garansi_bulan": 24,
+   "garansi_sampai": "2028-10-05",
    "masa_manfaat_bulan": 60,
-   "dasar_n": "garansi",
+   "dasar_n": "masa_manfaat",
    "n": 60,
-   "d": 166667,
-   "terakhir": 166647,
+   "d": 241667,
+   "terakhir": 241647,
    "pengaman": false,
    "akun_aset": "1-150",
    "akun_akm": "1-151",
@@ -421,697 +228,480 @@ window.SEED = {
     {
      "p": 1,
      "periode": "2026-10",
-     "beban": 166667,
-     "akumulasi": 166667,
-     "nilai_buku": 9833333,
+     "beban": 241667,
+     "akumulasi": 241667,
+     "nilai_buku": 14258333,
      "jurnal_id": null
     },
     {
      "p": 2,
      "periode": "2026-11",
-     "beban": 166667,
-     "akumulasi": 333334,
-     "nilai_buku": 9666666,
+     "beban": 241667,
+     "akumulasi": 483334,
+     "nilai_buku": 14016666,
      "jurnal_id": null
     },
     {
      "p": 3,
      "periode": "2026-12",
-     "beban": 166667,
-     "akumulasi": 500001,
-     "nilai_buku": 9499999,
+     "beban": 241667,
+     "akumulasi": 725001,
+     "nilai_buku": 13774999,
      "jurnal_id": null
     },
     {
      "p": 4,
      "periode": "2027-01",
-     "beban": 166667,
-     "akumulasi": 666668,
-     "nilai_buku": 9333332,
+     "beban": 241667,
+     "akumulasi": 966668,
+     "nilai_buku": 13533332,
      "jurnal_id": null
     },
     {
      "p": 5,
      "periode": "2027-02",
-     "beban": 166667,
-     "akumulasi": 833335,
-     "nilai_buku": 9166665,
+     "beban": 241667,
+     "akumulasi": 1208335,
+     "nilai_buku": 13291665,
      "jurnal_id": null
     },
     {
      "p": 6,
      "periode": "2027-03",
-     "beban": 166667,
-     "akumulasi": 1000002,
-     "nilai_buku": 8999998,
+     "beban": 241667,
+     "akumulasi": 1450002,
+     "nilai_buku": 13049998,
      "jurnal_id": null
     },
     {
      "p": 7,
      "periode": "2027-04",
-     "beban": 166667,
-     "akumulasi": 1166669,
-     "nilai_buku": 8833331,
+     "beban": 241667,
+     "akumulasi": 1691669,
+     "nilai_buku": 12808331,
      "jurnal_id": null
     },
     {
      "p": 8,
      "periode": "2027-05",
-     "beban": 166667,
-     "akumulasi": 1333336,
-     "nilai_buku": 8666664,
+     "beban": 241667,
+     "akumulasi": 1933336,
+     "nilai_buku": 12566664,
      "jurnal_id": null
     },
     {
      "p": 9,
      "periode": "2027-06",
-     "beban": 166667,
-     "akumulasi": 1500003,
-     "nilai_buku": 8499997,
+     "beban": 241667,
+     "akumulasi": 2175003,
+     "nilai_buku": 12324997,
      "jurnal_id": null
     },
     {
      "p": 10,
      "periode": "2027-07",
-     "beban": 166667,
-     "akumulasi": 1666670,
-     "nilai_buku": 8333330,
+     "beban": 241667,
+     "akumulasi": 2416670,
+     "nilai_buku": 12083330,
      "jurnal_id": null
     },
     {
      "p": 11,
      "periode": "2027-08",
-     "beban": 166667,
-     "akumulasi": 1833337,
-     "nilai_buku": 8166663,
+     "beban": 241667,
+     "akumulasi": 2658337,
+     "nilai_buku": 11841663,
      "jurnal_id": null
     },
     {
      "p": 12,
      "periode": "2027-09",
-     "beban": 166667,
-     "akumulasi": 2000004,
-     "nilai_buku": 7999996,
+     "beban": 241667,
+     "akumulasi": 2900004,
+     "nilai_buku": 11599996,
      "jurnal_id": null
     },
     {
      "p": 13,
      "periode": "2027-10",
-     "beban": 166667,
-     "akumulasi": 2166671,
-     "nilai_buku": 7833329,
+     "beban": 241667,
+     "akumulasi": 3141671,
+     "nilai_buku": 11358329,
      "jurnal_id": null
     },
     {
      "p": 14,
      "periode": "2027-11",
-     "beban": 166667,
-     "akumulasi": 2333338,
-     "nilai_buku": 7666662,
+     "beban": 241667,
+     "akumulasi": 3383338,
+     "nilai_buku": 11116662,
      "jurnal_id": null
     },
     {
      "p": 15,
      "periode": "2027-12",
-     "beban": 166667,
-     "akumulasi": 2500005,
-     "nilai_buku": 7499995,
+     "beban": 241667,
+     "akumulasi": 3625005,
+     "nilai_buku": 10874995,
      "jurnal_id": null
     },
     {
      "p": 16,
      "periode": "2028-01",
-     "beban": 166667,
-     "akumulasi": 2666672,
-     "nilai_buku": 7333328,
+     "beban": 241667,
+     "akumulasi": 3866672,
+     "nilai_buku": 10633328,
      "jurnal_id": null
     },
     {
      "p": 17,
      "periode": "2028-02",
-     "beban": 166667,
-     "akumulasi": 2833339,
-     "nilai_buku": 7166661,
+     "beban": 241667,
+     "akumulasi": 4108339,
+     "nilai_buku": 10391661,
      "jurnal_id": null
     },
     {
      "p": 18,
      "periode": "2028-03",
-     "beban": 166667,
-     "akumulasi": 3000006,
-     "nilai_buku": 6999994,
+     "beban": 241667,
+     "akumulasi": 4350006,
+     "nilai_buku": 10149994,
      "jurnal_id": null
     },
     {
      "p": 19,
      "periode": "2028-04",
-     "beban": 166667,
-     "akumulasi": 3166673,
-     "nilai_buku": 6833327,
+     "beban": 241667,
+     "akumulasi": 4591673,
+     "nilai_buku": 9908327,
      "jurnal_id": null
     },
     {
      "p": 20,
      "periode": "2028-05",
-     "beban": 166667,
-     "akumulasi": 3333340,
-     "nilai_buku": 6666660,
+     "beban": 241667,
+     "akumulasi": 4833340,
+     "nilai_buku": 9666660,
      "jurnal_id": null
     },
     {
      "p": 21,
      "periode": "2028-06",
-     "beban": 166667,
-     "akumulasi": 3500007,
-     "nilai_buku": 6499993,
+     "beban": 241667,
+     "akumulasi": 5075007,
+     "nilai_buku": 9424993,
      "jurnal_id": null
     },
     {
      "p": 22,
      "periode": "2028-07",
-     "beban": 166667,
-     "akumulasi": 3666674,
-     "nilai_buku": 6333326,
+     "beban": 241667,
+     "akumulasi": 5316674,
+     "nilai_buku": 9183326,
      "jurnal_id": null
     },
     {
      "p": 23,
      "periode": "2028-08",
-     "beban": 166667,
-     "akumulasi": 3833341,
-     "nilai_buku": 6166659,
+     "beban": 241667,
+     "akumulasi": 5558341,
+     "nilai_buku": 8941659,
      "jurnal_id": null
     },
     {
      "p": 24,
      "periode": "2028-09",
-     "beban": 166667,
-     "akumulasi": 4000008,
-     "nilai_buku": 5999992,
+     "beban": 241667,
+     "akumulasi": 5800008,
+     "nilai_buku": 8699992,
      "jurnal_id": null
     },
     {
      "p": 25,
      "periode": "2028-10",
-     "beban": 166667,
-     "akumulasi": 4166675,
-     "nilai_buku": 5833325,
+     "beban": 241667,
+     "akumulasi": 6041675,
+     "nilai_buku": 8458325,
      "jurnal_id": null
     },
     {
      "p": 26,
      "periode": "2028-11",
-     "beban": 166667,
-     "akumulasi": 4333342,
-     "nilai_buku": 5666658,
+     "beban": 241667,
+     "akumulasi": 6283342,
+     "nilai_buku": 8216658,
      "jurnal_id": null
     },
     {
      "p": 27,
      "periode": "2028-12",
-     "beban": 166667,
-     "akumulasi": 4500009,
-     "nilai_buku": 5499991,
+     "beban": 241667,
+     "akumulasi": 6525009,
+     "nilai_buku": 7974991,
      "jurnal_id": null
     },
     {
      "p": 28,
      "periode": "2029-01",
-     "beban": 166667,
-     "akumulasi": 4666676,
-     "nilai_buku": 5333324,
+     "beban": 241667,
+     "akumulasi": 6766676,
+     "nilai_buku": 7733324,
      "jurnal_id": null
     },
     {
      "p": 29,
      "periode": "2029-02",
-     "beban": 166667,
-     "akumulasi": 4833343,
-     "nilai_buku": 5166657,
+     "beban": 241667,
+     "akumulasi": 7008343,
+     "nilai_buku": 7491657,
      "jurnal_id": null
     },
     {
      "p": 30,
      "periode": "2029-03",
-     "beban": 166667,
-     "akumulasi": 5000010,
-     "nilai_buku": 4999990,
+     "beban": 241667,
+     "akumulasi": 7250010,
+     "nilai_buku": 7249990,
      "jurnal_id": null
     },
     {
      "p": 31,
      "periode": "2029-04",
-     "beban": 166667,
-     "akumulasi": 5166677,
-     "nilai_buku": 4833323,
+     "beban": 241667,
+     "akumulasi": 7491677,
+     "nilai_buku": 7008323,
      "jurnal_id": null
     },
     {
      "p": 32,
      "periode": "2029-05",
-     "beban": 166667,
-     "akumulasi": 5333344,
-     "nilai_buku": 4666656,
+     "beban": 241667,
+     "akumulasi": 7733344,
+     "nilai_buku": 6766656,
      "jurnal_id": null
     },
     {
      "p": 33,
      "periode": "2029-06",
-     "beban": 166667,
-     "akumulasi": 5500011,
-     "nilai_buku": 4499989,
+     "beban": 241667,
+     "akumulasi": 7975011,
+     "nilai_buku": 6524989,
      "jurnal_id": null
     },
     {
      "p": 34,
      "periode": "2029-07",
-     "beban": 166667,
-     "akumulasi": 5666678,
-     "nilai_buku": 4333322,
+     "beban": 241667,
+     "akumulasi": 8216678,
+     "nilai_buku": 6283322,
      "jurnal_id": null
     },
     {
      "p": 35,
      "periode": "2029-08",
-     "beban": 166667,
-     "akumulasi": 5833345,
-     "nilai_buku": 4166655,
+     "beban": 241667,
+     "akumulasi": 8458345,
+     "nilai_buku": 6041655,
      "jurnal_id": null
     },
     {
      "p": 36,
      "periode": "2029-09",
-     "beban": 166667,
-     "akumulasi": 6000012,
-     "nilai_buku": 3999988,
+     "beban": 241667,
+     "akumulasi": 8700012,
+     "nilai_buku": 5799988,
      "jurnal_id": null
     },
     {
      "p": 37,
      "periode": "2029-10",
-     "beban": 166667,
-     "akumulasi": 6166679,
-     "nilai_buku": 3833321,
+     "beban": 241667,
+     "akumulasi": 8941679,
+     "nilai_buku": 5558321,
      "jurnal_id": null
     },
     {
      "p": 38,
      "periode": "2029-11",
-     "beban": 166667,
-     "akumulasi": 6333346,
-     "nilai_buku": 3666654,
+     "beban": 241667,
+     "akumulasi": 9183346,
+     "nilai_buku": 5316654,
      "jurnal_id": null
     },
     {
      "p": 39,
      "periode": "2029-12",
-     "beban": 166667,
-     "akumulasi": 6500013,
-     "nilai_buku": 3499987,
+     "beban": 241667,
+     "akumulasi": 9425013,
+     "nilai_buku": 5074987,
      "jurnal_id": null
     },
     {
      "p": 40,
      "periode": "2030-01",
-     "beban": 166667,
-     "akumulasi": 6666680,
-     "nilai_buku": 3333320,
+     "beban": 241667,
+     "akumulasi": 9666680,
+     "nilai_buku": 4833320,
      "jurnal_id": null
     },
     {
      "p": 41,
      "periode": "2030-02",
-     "beban": 166667,
-     "akumulasi": 6833347,
-     "nilai_buku": 3166653,
+     "beban": 241667,
+     "akumulasi": 9908347,
+     "nilai_buku": 4591653,
      "jurnal_id": null
     },
     {
      "p": 42,
      "periode": "2030-03",
-     "beban": 166667,
-     "akumulasi": 7000014,
-     "nilai_buku": 2999986,
+     "beban": 241667,
+     "akumulasi": 10150014,
+     "nilai_buku": 4349986,
      "jurnal_id": null
     },
     {
      "p": 43,
      "periode": "2030-04",
-     "beban": 166667,
-     "akumulasi": 7166681,
-     "nilai_buku": 2833319,
+     "beban": 241667,
+     "akumulasi": 10391681,
+     "nilai_buku": 4108319,
      "jurnal_id": null
     },
     {
      "p": 44,
      "periode": "2030-05",
-     "beban": 166667,
-     "akumulasi": 7333348,
-     "nilai_buku": 2666652,
+     "beban": 241667,
+     "akumulasi": 10633348,
+     "nilai_buku": 3866652,
      "jurnal_id": null
     },
     {
      "p": 45,
      "periode": "2030-06",
-     "beban": 166667,
-     "akumulasi": 7500015,
-     "nilai_buku": 2499985,
+     "beban": 241667,
+     "akumulasi": 10875015,
+     "nilai_buku": 3624985,
      "jurnal_id": null
     },
     {
      "p": 46,
      "periode": "2030-07",
-     "beban": 166667,
-     "akumulasi": 7666682,
-     "nilai_buku": 2333318,
+     "beban": 241667,
+     "akumulasi": 11116682,
+     "nilai_buku": 3383318,
      "jurnal_id": null
     },
     {
      "p": 47,
      "periode": "2030-08",
-     "beban": 166667,
-     "akumulasi": 7833349,
-     "nilai_buku": 2166651,
+     "beban": 241667,
+     "akumulasi": 11358349,
+     "nilai_buku": 3141651,
      "jurnal_id": null
     },
     {
      "p": 48,
      "periode": "2030-09",
-     "beban": 166667,
-     "akumulasi": 8000016,
-     "nilai_buku": 1999984,
+     "beban": 241667,
+     "akumulasi": 11600016,
+     "nilai_buku": 2899984,
      "jurnal_id": null
     },
     {
      "p": 49,
      "periode": "2030-10",
-     "beban": 166667,
-     "akumulasi": 8166683,
-     "nilai_buku": 1833317,
+     "beban": 241667,
+     "akumulasi": 11841683,
+     "nilai_buku": 2658317,
      "jurnal_id": null
     },
     {
      "p": 50,
      "periode": "2030-11",
-     "beban": 166667,
-     "akumulasi": 8333350,
-     "nilai_buku": 1666650,
+     "beban": 241667,
+     "akumulasi": 12083350,
+     "nilai_buku": 2416650,
      "jurnal_id": null
     },
     {
      "p": 51,
      "periode": "2030-12",
-     "beban": 166667,
-     "akumulasi": 8500017,
-     "nilai_buku": 1499983,
+     "beban": 241667,
+     "akumulasi": 12325017,
+     "nilai_buku": 2174983,
      "jurnal_id": null
     },
     {
      "p": 52,
      "periode": "2031-01",
-     "beban": 166667,
-     "akumulasi": 8666684,
-     "nilai_buku": 1333316,
+     "beban": 241667,
+     "akumulasi": 12566684,
+     "nilai_buku": 1933316,
      "jurnal_id": null
     },
     {
      "p": 53,
      "periode": "2031-02",
-     "beban": 166667,
-     "akumulasi": 8833351,
-     "nilai_buku": 1166649,
+     "beban": 241667,
+     "akumulasi": 12808351,
+     "nilai_buku": 1691649,
      "jurnal_id": null
     },
     {
      "p": 54,
      "periode": "2031-03",
-     "beban": 166667,
-     "akumulasi": 9000018,
-     "nilai_buku": 999982,
+     "beban": 241667,
+     "akumulasi": 13050018,
+     "nilai_buku": 1449982,
      "jurnal_id": null
     },
     {
      "p": 55,
      "periode": "2031-04",
-     "beban": 166667,
-     "akumulasi": 9166685,
-     "nilai_buku": 833315,
+     "beban": 241667,
+     "akumulasi": 13291685,
+     "nilai_buku": 1208315,
      "jurnal_id": null
     },
     {
      "p": 56,
      "periode": "2031-05",
-     "beban": 166667,
-     "akumulasi": 9333352,
-     "nilai_buku": 666648,
+     "beban": 241667,
+     "akumulasi": 13533352,
+     "nilai_buku": 966648,
      "jurnal_id": null
     },
     {
      "p": 57,
      "periode": "2031-06",
-     "beban": 166667,
-     "akumulasi": 9500019,
-     "nilai_buku": 499981,
+     "beban": 241667,
+     "akumulasi": 13775019,
+     "nilai_buku": 724981,
      "jurnal_id": null
     },
     {
      "p": 58,
      "periode": "2031-07",
-     "beban": 166667,
-     "akumulasi": 9666686,
-     "nilai_buku": 333314,
+     "beban": 241667,
+     "akumulasi": 14016686,
+     "nilai_buku": 483314,
      "jurnal_id": null
     },
     {
      "p": 59,
      "periode": "2031-08",
-     "beban": 166667,
-     "akumulasi": 9833353,
-     "nilai_buku": 166647,
+     "beban": 241667,
+     "akumulasi": 14258353,
+     "nilai_buku": 241647,
      "jurnal_id": null
     },
     {
      "p": 60,
      "periode": "2031-09",
-     "beban": 166647,
-     "akumulasi": 10000000,
-     "nilai_buku": 0,
-     "jurnal_id": null
-    }
-   ]
-  },
-  "AST-0003": {
-   "kode": "AST-0003",
-   "pembelian_id": "BP-2026-0003",
-   "tgl_perolehan": "2026-10-15",
-   "bulan_mulai": "2026-10",
-   "status": "aktif",
-   "nama": "Setrika Uap",
-   "barang_id": "ALT-03",
-   "kategori_id": "KAT-02",
-   "nilai_perolehan": 1250000,
-   "residu": 0,
-   "garansi_bulan": 24,
-   "garansi_sampai": "2028-10-15",
-   "masa_manfaat_bulan": 24,
-   "dasar_n": "garansi",
-   "n": 24,
-   "d": 52083,
-   "terakhir": 52091,
-   "pengaman": false,
-   "akun_aset": "1-150",
-   "akun_akm": "1-151",
-   "akun_beban": "6-110",
-   "jadwal": [
-    {
-     "p": 1,
-     "periode": "2026-10",
-     "beban": 52083,
-     "akumulasi": 52083,
-     "nilai_buku": 1197917,
-     "jurnal_id": null
-    },
-    {
-     "p": 2,
-     "periode": "2026-11",
-     "beban": 52083,
-     "akumulasi": 104166,
-     "nilai_buku": 1145834,
-     "jurnal_id": null
-    },
-    {
-     "p": 3,
-     "periode": "2026-12",
-     "beban": 52083,
-     "akumulasi": 156249,
-     "nilai_buku": 1093751,
-     "jurnal_id": null
-    },
-    {
-     "p": 4,
-     "periode": "2027-01",
-     "beban": 52083,
-     "akumulasi": 208332,
-     "nilai_buku": 1041668,
-     "jurnal_id": null
-    },
-    {
-     "p": 5,
-     "periode": "2027-02",
-     "beban": 52083,
-     "akumulasi": 260415,
-     "nilai_buku": 989585,
-     "jurnal_id": null
-    },
-    {
-     "p": 6,
-     "periode": "2027-03",
-     "beban": 52083,
-     "akumulasi": 312498,
-     "nilai_buku": 937502,
-     "jurnal_id": null
-    },
-    {
-     "p": 7,
-     "periode": "2027-04",
-     "beban": 52083,
-     "akumulasi": 364581,
-     "nilai_buku": 885419,
-     "jurnal_id": null
-    },
-    {
-     "p": 8,
-     "periode": "2027-05",
-     "beban": 52083,
-     "akumulasi": 416664,
-     "nilai_buku": 833336,
-     "jurnal_id": null
-    },
-    {
-     "p": 9,
-     "periode": "2027-06",
-     "beban": 52083,
-     "akumulasi": 468747,
-     "nilai_buku": 781253,
-     "jurnal_id": null
-    },
-    {
-     "p": 10,
-     "periode": "2027-07",
-     "beban": 52083,
-     "akumulasi": 520830,
-     "nilai_buku": 729170,
-     "jurnal_id": null
-    },
-    {
-     "p": 11,
-     "periode": "2027-08",
-     "beban": 52083,
-     "akumulasi": 572913,
-     "nilai_buku": 677087,
-     "jurnal_id": null
-    },
-    {
-     "p": 12,
-     "periode": "2027-09",
-     "beban": 52083,
-     "akumulasi": 624996,
-     "nilai_buku": 625004,
-     "jurnal_id": null
-    },
-    {
-     "p": 13,
-     "periode": "2027-10",
-     "beban": 52083,
-     "akumulasi": 677079,
-     "nilai_buku": 572921,
-     "jurnal_id": null
-    },
-    {
-     "p": 14,
-     "periode": "2027-11",
-     "beban": 52083,
-     "akumulasi": 729162,
-     "nilai_buku": 520838,
-     "jurnal_id": null
-    },
-    {
-     "p": 15,
-     "periode": "2027-12",
-     "beban": 52083,
-     "akumulasi": 781245,
-     "nilai_buku": 468755,
-     "jurnal_id": null
-    },
-    {
-     "p": 16,
-     "periode": "2028-01",
-     "beban": 52083,
-     "akumulasi": 833328,
-     "nilai_buku": 416672,
-     "jurnal_id": null
-    },
-    {
-     "p": 17,
-     "periode": "2028-02",
-     "beban": 52083,
-     "akumulasi": 885411,
-     "nilai_buku": 364589,
-     "jurnal_id": null
-    },
-    {
-     "p": 18,
-     "periode": "2028-03",
-     "beban": 52083,
-     "akumulasi": 937494,
-     "nilai_buku": 312506,
-     "jurnal_id": null
-    },
-    {
-     "p": 19,
-     "periode": "2028-04",
-     "beban": 52083,
-     "akumulasi": 989577,
-     "nilai_buku": 260423,
-     "jurnal_id": null
-    },
-    {
-     "p": 20,
-     "periode": "2028-05",
-     "beban": 52083,
-     "akumulasi": 1041660,
-     "nilai_buku": 208340,
-     "jurnal_id": null
-    },
-    {
-     "p": 21,
-     "periode": "2028-06",
-     "beban": 52083,
-     "akumulasi": 1093743,
-     "nilai_buku": 156257,
-     "jurnal_id": null
-    },
-    {
-     "p": 22,
-     "periode": "2028-07",
-     "beban": 52083,
-     "akumulasi": 1145826,
-     "nilai_buku": 104174,
-     "jurnal_id": null
-    },
-    {
-     "p": 23,
-     "periode": "2028-08",
-     "beban": 52083,
-     "akumulasi": 1197909,
-     "nilai_buku": 52091,
-     "jurnal_id": null
-    },
-    {
-     "p": 24,
-     "periode": "2028-09",
-     "beban": 52091,
-     "akumulasi": 1250000,
+     "beban": 241647,
+     "akumulasi": 14500000,
      "nilai_buku": 0,
      "jurnal_id": null
     }
@@ -1123,18 +713,18 @@ window.SEED = {
    "tgl_perolehan": "2026-10-10",
    "bulan_mulai": "2026-10",
    "status": "aktif",
-   "nama": "Mesin Pengering",
+   "nama": "Moving Head Beam 230W",
    "barang_id": "ALT-02",
    "kategori_id": "KAT-01",
-   "nilai_perolehan": 7200000,
+   "nilai_perolehan": 9800000,
    "residu": 0,
    "garansi_bulan": 12,
    "garansi_sampai": "2027-10-10",
    "masa_manfaat_bulan": 60,
    "dasar_n": "masa_manfaat",
    "n": 60,
-   "d": 120000,
-   "terakhir": 120000,
+   "d": 163333,
+   "terakhir": 163353,
    "pengaman": false,
    "akun_aset": "1-150",
    "akun_akm": "1-151",
@@ -1143,480 +733,2479 @@ window.SEED = {
     {
      "p": 1,
      "periode": "2026-10",
-     "beban": 120000,
-     "akumulasi": 120000,
-     "nilai_buku": 7080000,
+     "beban": 163333,
+     "akumulasi": 163333,
+     "nilai_buku": 9636667,
      "jurnal_id": null
     },
     {
      "p": 2,
      "periode": "2026-11",
-     "beban": 120000,
-     "akumulasi": 240000,
-     "nilai_buku": 6960000,
+     "beban": 163333,
+     "akumulasi": 326666,
+     "nilai_buku": 9473334,
      "jurnal_id": null
     },
     {
      "p": 3,
      "periode": "2026-12",
-     "beban": 120000,
-     "akumulasi": 360000,
-     "nilai_buku": 6840000,
+     "beban": 163333,
+     "akumulasi": 489999,
+     "nilai_buku": 9310001,
      "jurnal_id": null
     },
     {
      "p": 4,
      "periode": "2027-01",
-     "beban": 120000,
-     "akumulasi": 480000,
-     "nilai_buku": 6720000,
+     "beban": 163333,
+     "akumulasi": 653332,
+     "nilai_buku": 9146668,
      "jurnal_id": null
     },
     {
      "p": 5,
      "periode": "2027-02",
-     "beban": 120000,
-     "akumulasi": 600000,
-     "nilai_buku": 6600000,
+     "beban": 163333,
+     "akumulasi": 816665,
+     "nilai_buku": 8983335,
      "jurnal_id": null
     },
     {
      "p": 6,
      "periode": "2027-03",
-     "beban": 120000,
-     "akumulasi": 720000,
-     "nilai_buku": 6480000,
+     "beban": 163333,
+     "akumulasi": 979998,
+     "nilai_buku": 8820002,
      "jurnal_id": null
     },
     {
      "p": 7,
      "periode": "2027-04",
-     "beban": 120000,
-     "akumulasi": 840000,
-     "nilai_buku": 6360000,
+     "beban": 163333,
+     "akumulasi": 1143331,
+     "nilai_buku": 8656669,
      "jurnal_id": null
     },
     {
      "p": 8,
      "periode": "2027-05",
-     "beban": 120000,
-     "akumulasi": 960000,
-     "nilai_buku": 6240000,
+     "beban": 163333,
+     "akumulasi": 1306664,
+     "nilai_buku": 8493336,
      "jurnal_id": null
     },
     {
      "p": 9,
      "periode": "2027-06",
-     "beban": 120000,
-     "akumulasi": 1080000,
-     "nilai_buku": 6120000,
+     "beban": 163333,
+     "akumulasi": 1469997,
+     "nilai_buku": 8330003,
      "jurnal_id": null
     },
     {
      "p": 10,
      "periode": "2027-07",
-     "beban": 120000,
-     "akumulasi": 1200000,
-     "nilai_buku": 6000000,
+     "beban": 163333,
+     "akumulasi": 1633330,
+     "nilai_buku": 8166670,
      "jurnal_id": null
     },
     {
      "p": 11,
      "periode": "2027-08",
-     "beban": 120000,
-     "akumulasi": 1320000,
-     "nilai_buku": 5880000,
+     "beban": 163333,
+     "akumulasi": 1796663,
+     "nilai_buku": 8003337,
      "jurnal_id": null
     },
     {
      "p": 12,
      "periode": "2027-09",
-     "beban": 120000,
-     "akumulasi": 1440000,
-     "nilai_buku": 5760000,
+     "beban": 163333,
+     "akumulasi": 1959996,
+     "nilai_buku": 7840004,
      "jurnal_id": null
     },
     {
      "p": 13,
      "periode": "2027-10",
-     "beban": 120000,
-     "akumulasi": 1560000,
-     "nilai_buku": 5640000,
+     "beban": 163333,
+     "akumulasi": 2123329,
+     "nilai_buku": 7676671,
      "jurnal_id": null
     },
     {
      "p": 14,
      "periode": "2027-11",
-     "beban": 120000,
-     "akumulasi": 1680000,
-     "nilai_buku": 5520000,
+     "beban": 163333,
+     "akumulasi": 2286662,
+     "nilai_buku": 7513338,
      "jurnal_id": null
     },
     {
      "p": 15,
      "periode": "2027-12",
-     "beban": 120000,
-     "akumulasi": 1800000,
-     "nilai_buku": 5400000,
+     "beban": 163333,
+     "akumulasi": 2449995,
+     "nilai_buku": 7350005,
      "jurnal_id": null
     },
     {
      "p": 16,
      "periode": "2028-01",
-     "beban": 120000,
-     "akumulasi": 1920000,
-     "nilai_buku": 5280000,
+     "beban": 163333,
+     "akumulasi": 2613328,
+     "nilai_buku": 7186672,
      "jurnal_id": null
     },
     {
      "p": 17,
      "periode": "2028-02",
-     "beban": 120000,
-     "akumulasi": 2040000,
-     "nilai_buku": 5160000,
+     "beban": 163333,
+     "akumulasi": 2776661,
+     "nilai_buku": 7023339,
      "jurnal_id": null
     },
     {
      "p": 18,
      "periode": "2028-03",
-     "beban": 120000,
-     "akumulasi": 2160000,
-     "nilai_buku": 5040000,
+     "beban": 163333,
+     "akumulasi": 2939994,
+     "nilai_buku": 6860006,
      "jurnal_id": null
     },
     {
      "p": 19,
      "periode": "2028-04",
-     "beban": 120000,
-     "akumulasi": 2280000,
-     "nilai_buku": 4920000,
+     "beban": 163333,
+     "akumulasi": 3103327,
+     "nilai_buku": 6696673,
      "jurnal_id": null
     },
     {
      "p": 20,
      "periode": "2028-05",
-     "beban": 120000,
-     "akumulasi": 2400000,
-     "nilai_buku": 4800000,
+     "beban": 163333,
+     "akumulasi": 3266660,
+     "nilai_buku": 6533340,
      "jurnal_id": null
     },
     {
      "p": 21,
      "periode": "2028-06",
-     "beban": 120000,
-     "akumulasi": 2520000,
-     "nilai_buku": 4680000,
+     "beban": 163333,
+     "akumulasi": 3429993,
+     "nilai_buku": 6370007,
      "jurnal_id": null
     },
     {
      "p": 22,
      "periode": "2028-07",
-     "beban": 120000,
-     "akumulasi": 2640000,
-     "nilai_buku": 4560000,
+     "beban": 163333,
+     "akumulasi": 3593326,
+     "nilai_buku": 6206674,
      "jurnal_id": null
     },
     {
      "p": 23,
      "periode": "2028-08",
-     "beban": 120000,
-     "akumulasi": 2760000,
-     "nilai_buku": 4440000,
+     "beban": 163333,
+     "akumulasi": 3756659,
+     "nilai_buku": 6043341,
      "jurnal_id": null
     },
     {
      "p": 24,
      "periode": "2028-09",
-     "beban": 120000,
-     "akumulasi": 2880000,
-     "nilai_buku": 4320000,
+     "beban": 163333,
+     "akumulasi": 3919992,
+     "nilai_buku": 5880008,
      "jurnal_id": null
     },
     {
      "p": 25,
      "periode": "2028-10",
-     "beban": 120000,
-     "akumulasi": 3000000,
-     "nilai_buku": 4200000,
+     "beban": 163333,
+     "akumulasi": 4083325,
+     "nilai_buku": 5716675,
      "jurnal_id": null
     },
     {
      "p": 26,
      "periode": "2028-11",
-     "beban": 120000,
-     "akumulasi": 3120000,
-     "nilai_buku": 4080000,
+     "beban": 163333,
+     "akumulasi": 4246658,
+     "nilai_buku": 5553342,
      "jurnal_id": null
     },
     {
      "p": 27,
      "periode": "2028-12",
-     "beban": 120000,
-     "akumulasi": 3240000,
-     "nilai_buku": 3960000,
+     "beban": 163333,
+     "akumulasi": 4409991,
+     "nilai_buku": 5390009,
      "jurnal_id": null
     },
     {
      "p": 28,
      "periode": "2029-01",
-     "beban": 120000,
-     "akumulasi": 3360000,
-     "nilai_buku": 3840000,
+     "beban": 163333,
+     "akumulasi": 4573324,
+     "nilai_buku": 5226676,
      "jurnal_id": null
     },
     {
      "p": 29,
      "periode": "2029-02",
-     "beban": 120000,
-     "akumulasi": 3480000,
-     "nilai_buku": 3720000,
+     "beban": 163333,
+     "akumulasi": 4736657,
+     "nilai_buku": 5063343,
      "jurnal_id": null
     },
     {
      "p": 30,
      "periode": "2029-03",
-     "beban": 120000,
-     "akumulasi": 3600000,
-     "nilai_buku": 3600000,
+     "beban": 163333,
+     "akumulasi": 4899990,
+     "nilai_buku": 4900010,
      "jurnal_id": null
     },
     {
      "p": 31,
      "periode": "2029-04",
-     "beban": 120000,
-     "akumulasi": 3720000,
-     "nilai_buku": 3480000,
+     "beban": 163333,
+     "akumulasi": 5063323,
+     "nilai_buku": 4736677,
      "jurnal_id": null
     },
     {
      "p": 32,
      "periode": "2029-05",
-     "beban": 120000,
-     "akumulasi": 3840000,
-     "nilai_buku": 3360000,
+     "beban": 163333,
+     "akumulasi": 5226656,
+     "nilai_buku": 4573344,
      "jurnal_id": null
     },
     {
      "p": 33,
      "periode": "2029-06",
-     "beban": 120000,
-     "akumulasi": 3960000,
-     "nilai_buku": 3240000,
+     "beban": 163333,
+     "akumulasi": 5389989,
+     "nilai_buku": 4410011,
      "jurnal_id": null
     },
     {
      "p": 34,
      "periode": "2029-07",
-     "beban": 120000,
-     "akumulasi": 4080000,
-     "nilai_buku": 3120000,
+     "beban": 163333,
+     "akumulasi": 5553322,
+     "nilai_buku": 4246678,
      "jurnal_id": null
     },
     {
      "p": 35,
      "periode": "2029-08",
-     "beban": 120000,
-     "akumulasi": 4200000,
-     "nilai_buku": 3000000,
+     "beban": 163333,
+     "akumulasi": 5716655,
+     "nilai_buku": 4083345,
      "jurnal_id": null
     },
     {
      "p": 36,
      "periode": "2029-09",
-     "beban": 120000,
-     "akumulasi": 4320000,
-     "nilai_buku": 2880000,
+     "beban": 163333,
+     "akumulasi": 5879988,
+     "nilai_buku": 3920012,
      "jurnal_id": null
     },
     {
      "p": 37,
      "periode": "2029-10",
-     "beban": 120000,
-     "akumulasi": 4440000,
-     "nilai_buku": 2760000,
+     "beban": 163333,
+     "akumulasi": 6043321,
+     "nilai_buku": 3756679,
      "jurnal_id": null
     },
     {
      "p": 38,
      "periode": "2029-11",
-     "beban": 120000,
-     "akumulasi": 4560000,
-     "nilai_buku": 2640000,
+     "beban": 163333,
+     "akumulasi": 6206654,
+     "nilai_buku": 3593346,
      "jurnal_id": null
     },
     {
      "p": 39,
      "periode": "2029-12",
-     "beban": 120000,
-     "akumulasi": 4680000,
-     "nilai_buku": 2520000,
+     "beban": 163333,
+     "akumulasi": 6369987,
+     "nilai_buku": 3430013,
      "jurnal_id": null
     },
     {
      "p": 40,
      "periode": "2030-01",
-     "beban": 120000,
-     "akumulasi": 4800000,
-     "nilai_buku": 2400000,
+     "beban": 163333,
+     "akumulasi": 6533320,
+     "nilai_buku": 3266680,
      "jurnal_id": null
     },
     {
      "p": 41,
      "periode": "2030-02",
-     "beban": 120000,
-     "akumulasi": 4920000,
-     "nilai_buku": 2280000,
+     "beban": 163333,
+     "akumulasi": 6696653,
+     "nilai_buku": 3103347,
      "jurnal_id": null
     },
     {
      "p": 42,
      "periode": "2030-03",
-     "beban": 120000,
-     "akumulasi": 5040000,
-     "nilai_buku": 2160000,
+     "beban": 163333,
+     "akumulasi": 6859986,
+     "nilai_buku": 2940014,
      "jurnal_id": null
     },
     {
      "p": 43,
      "periode": "2030-04",
-     "beban": 120000,
-     "akumulasi": 5160000,
-     "nilai_buku": 2040000,
+     "beban": 163333,
+     "akumulasi": 7023319,
+     "nilai_buku": 2776681,
      "jurnal_id": null
     },
     {
      "p": 44,
      "periode": "2030-05",
-     "beban": 120000,
-     "akumulasi": 5280000,
-     "nilai_buku": 1920000,
+     "beban": 163333,
+     "akumulasi": 7186652,
+     "nilai_buku": 2613348,
      "jurnal_id": null
     },
     {
      "p": 45,
      "periode": "2030-06",
-     "beban": 120000,
-     "akumulasi": 5400000,
-     "nilai_buku": 1800000,
+     "beban": 163333,
+     "akumulasi": 7349985,
+     "nilai_buku": 2450015,
      "jurnal_id": null
     },
     {
      "p": 46,
      "periode": "2030-07",
-     "beban": 120000,
-     "akumulasi": 5520000,
-     "nilai_buku": 1680000,
+     "beban": 163333,
+     "akumulasi": 7513318,
+     "nilai_buku": 2286682,
      "jurnal_id": null
     },
     {
      "p": 47,
      "periode": "2030-08",
-     "beban": 120000,
-     "akumulasi": 5640000,
-     "nilai_buku": 1560000,
+     "beban": 163333,
+     "akumulasi": 7676651,
+     "nilai_buku": 2123349,
      "jurnal_id": null
     },
     {
      "p": 48,
      "periode": "2030-09",
-     "beban": 120000,
-     "akumulasi": 5760000,
-     "nilai_buku": 1440000,
+     "beban": 163333,
+     "akumulasi": 7839984,
+     "nilai_buku": 1960016,
      "jurnal_id": null
     },
     {
      "p": 49,
      "periode": "2030-10",
-     "beban": 120000,
-     "akumulasi": 5880000,
-     "nilai_buku": 1320000,
+     "beban": 163333,
+     "akumulasi": 8003317,
+     "nilai_buku": 1796683,
      "jurnal_id": null
     },
     {
      "p": 50,
      "periode": "2030-11",
-     "beban": 120000,
-     "akumulasi": 6000000,
-     "nilai_buku": 1200000,
+     "beban": 163333,
+     "akumulasi": 8166650,
+     "nilai_buku": 1633350,
      "jurnal_id": null
     },
     {
      "p": 51,
      "periode": "2030-12",
-     "beban": 120000,
-     "akumulasi": 6120000,
-     "nilai_buku": 1080000,
+     "beban": 163333,
+     "akumulasi": 8329983,
+     "nilai_buku": 1470017,
      "jurnal_id": null
     },
     {
      "p": 52,
      "periode": "2031-01",
-     "beban": 120000,
-     "akumulasi": 6240000,
-     "nilai_buku": 960000,
+     "beban": 163333,
+     "akumulasi": 8493316,
+     "nilai_buku": 1306684,
      "jurnal_id": null
     },
     {
      "p": 53,
      "periode": "2031-02",
-     "beban": 120000,
-     "akumulasi": 6360000,
-     "nilai_buku": 840000,
+     "beban": 163333,
+     "akumulasi": 8656649,
+     "nilai_buku": 1143351,
      "jurnal_id": null
     },
     {
      "p": 54,
      "periode": "2031-03",
-     "beban": 120000,
-     "akumulasi": 6480000,
-     "nilai_buku": 720000,
+     "beban": 163333,
+     "akumulasi": 8819982,
+     "nilai_buku": 980018,
      "jurnal_id": null
     },
     {
      "p": 55,
      "periode": "2031-04",
-     "beban": 120000,
-     "akumulasi": 6600000,
-     "nilai_buku": 600000,
+     "beban": 163333,
+     "akumulasi": 8983315,
+     "nilai_buku": 816685,
      "jurnal_id": null
     },
     {
      "p": 56,
      "periode": "2031-05",
-     "beban": 120000,
-     "akumulasi": 6720000,
-     "nilai_buku": 480000,
+     "beban": 163333,
+     "akumulasi": 9146648,
+     "nilai_buku": 653352,
      "jurnal_id": null
     },
     {
      "p": 57,
      "periode": "2031-06",
-     "beban": 120000,
-     "akumulasi": 6840000,
-     "nilai_buku": 360000,
+     "beban": 163333,
+     "akumulasi": 9309981,
+     "nilai_buku": 490019,
      "jurnal_id": null
     },
     {
      "p": 58,
      "periode": "2031-07",
-     "beban": 120000,
-     "akumulasi": 6960000,
-     "nilai_buku": 240000,
+     "beban": 163333,
+     "akumulasi": 9473314,
+     "nilai_buku": 326686,
      "jurnal_id": null
     },
     {
      "p": 59,
      "periode": "2031-08",
-     "beban": 120000,
-     "akumulasi": 7080000,
-     "nilai_buku": 120000,
+     "beban": 163333,
+     "akumulasi": 9636647,
+     "nilai_buku": 163353,
      "jurnal_id": null
     },
     {
      "p": 60,
      "periode": "2031-09",
-     "beban": 120000,
-     "akumulasi": 7200000,
+     "beban": 163353,
+     "akumulasi": 9800000,
+     "nilai_buku": 0,
+     "jurnal_id": null
+    }
+   ]
+  },
+  "AST-0003": {
+   "kode": "AST-0003",
+   "pembelian_id": "BP-2026-0003",
+   "tgl_perolehan": "2026-10-15",
+   "bulan_mulai": "2026-10",
+   "status": "aktif",
+   "nama": "Handy Talky (HT)",
+   "barang_id": "ALT-05",
+   "kategori_id": "KAT-03",
+   "nilai_perolehan": 950000,
+   "residu": 0,
+   "garansi_bulan": 24,
+   "garansi_sampai": "2028-10-15",
+   "masa_manfaat_bulan": 24,
+   "dasar_n": "garansi",
+   "n": 24,
+   "d": 39583,
+   "terakhir": 39591,
+   "pengaman": false,
+   "akun_aset": "1-150",
+   "akun_akm": "1-151",
+   "akun_beban": "6-110",
+   "jadwal": [
+    {
+     "p": 1,
+     "periode": "2026-10",
+     "beban": 39583,
+     "akumulasi": 39583,
+     "nilai_buku": 910417,
+     "jurnal_id": null
+    },
+    {
+     "p": 2,
+     "periode": "2026-11",
+     "beban": 39583,
+     "akumulasi": 79166,
+     "nilai_buku": 870834,
+     "jurnal_id": null
+    },
+    {
+     "p": 3,
+     "periode": "2026-12",
+     "beban": 39583,
+     "akumulasi": 118749,
+     "nilai_buku": 831251,
+     "jurnal_id": null
+    },
+    {
+     "p": 4,
+     "periode": "2027-01",
+     "beban": 39583,
+     "akumulasi": 158332,
+     "nilai_buku": 791668,
+     "jurnal_id": null
+    },
+    {
+     "p": 5,
+     "periode": "2027-02",
+     "beban": 39583,
+     "akumulasi": 197915,
+     "nilai_buku": 752085,
+     "jurnal_id": null
+    },
+    {
+     "p": 6,
+     "periode": "2027-03",
+     "beban": 39583,
+     "akumulasi": 237498,
+     "nilai_buku": 712502,
+     "jurnal_id": null
+    },
+    {
+     "p": 7,
+     "periode": "2027-04",
+     "beban": 39583,
+     "akumulasi": 277081,
+     "nilai_buku": 672919,
+     "jurnal_id": null
+    },
+    {
+     "p": 8,
+     "periode": "2027-05",
+     "beban": 39583,
+     "akumulasi": 316664,
+     "nilai_buku": 633336,
+     "jurnal_id": null
+    },
+    {
+     "p": 9,
+     "periode": "2027-06",
+     "beban": 39583,
+     "akumulasi": 356247,
+     "nilai_buku": 593753,
+     "jurnal_id": null
+    },
+    {
+     "p": 10,
+     "periode": "2027-07",
+     "beban": 39583,
+     "akumulasi": 395830,
+     "nilai_buku": 554170,
+     "jurnal_id": null
+    },
+    {
+     "p": 11,
+     "periode": "2027-08",
+     "beban": 39583,
+     "akumulasi": 435413,
+     "nilai_buku": 514587,
+     "jurnal_id": null
+    },
+    {
+     "p": 12,
+     "periode": "2027-09",
+     "beban": 39583,
+     "akumulasi": 474996,
+     "nilai_buku": 475004,
+     "jurnal_id": null
+    },
+    {
+     "p": 13,
+     "periode": "2027-10",
+     "beban": 39583,
+     "akumulasi": 514579,
+     "nilai_buku": 435421,
+     "jurnal_id": null
+    },
+    {
+     "p": 14,
+     "periode": "2027-11",
+     "beban": 39583,
+     "akumulasi": 554162,
+     "nilai_buku": 395838,
+     "jurnal_id": null
+    },
+    {
+     "p": 15,
+     "periode": "2027-12",
+     "beban": 39583,
+     "akumulasi": 593745,
+     "nilai_buku": 356255,
+     "jurnal_id": null
+    },
+    {
+     "p": 16,
+     "periode": "2028-01",
+     "beban": 39583,
+     "akumulasi": 633328,
+     "nilai_buku": 316672,
+     "jurnal_id": null
+    },
+    {
+     "p": 17,
+     "periode": "2028-02",
+     "beban": 39583,
+     "akumulasi": 672911,
+     "nilai_buku": 277089,
+     "jurnal_id": null
+    },
+    {
+     "p": 18,
+     "periode": "2028-03",
+     "beban": 39583,
+     "akumulasi": 712494,
+     "nilai_buku": 237506,
+     "jurnal_id": null
+    },
+    {
+     "p": 19,
+     "periode": "2028-04",
+     "beban": 39583,
+     "akumulasi": 752077,
+     "nilai_buku": 197923,
+     "jurnal_id": null
+    },
+    {
+     "p": 20,
+     "periode": "2028-05",
+     "beban": 39583,
+     "akumulasi": 791660,
+     "nilai_buku": 158340,
+     "jurnal_id": null
+    },
+    {
+     "p": 21,
+     "periode": "2028-06",
+     "beban": 39583,
+     "akumulasi": 831243,
+     "nilai_buku": 118757,
+     "jurnal_id": null
+    },
+    {
+     "p": 22,
+     "periode": "2028-07",
+     "beban": 39583,
+     "akumulasi": 870826,
+     "nilai_buku": 79174,
+     "jurnal_id": null
+    },
+    {
+     "p": 23,
+     "periode": "2028-08",
+     "beban": 39583,
+     "akumulasi": 910409,
+     "nilai_buku": 39591,
+     "jurnal_id": null
+    },
+    {
+     "p": 24,
+     "periode": "2028-09",
+     "beban": 39591,
+     "akumulasi": 950000,
+     "nilai_buku": 0,
+     "jurnal_id": null
+    }
+   ]
+  },
+  "AST-0004": {
+   "kode": "AST-0004",
+   "pembelian_id": "BP-2026-0003",
+   "tgl_perolehan": "2026-10-15",
+   "bulan_mulai": "2026-10",
+   "status": "aktif",
+   "nama": "Handy Talky (HT)",
+   "barang_id": "ALT-05",
+   "kategori_id": "KAT-03",
+   "nilai_perolehan": 950000,
+   "residu": 0,
+   "garansi_bulan": 24,
+   "garansi_sampai": "2028-10-15",
+   "masa_manfaat_bulan": 24,
+   "dasar_n": "garansi",
+   "n": 24,
+   "d": 39583,
+   "terakhir": 39591,
+   "pengaman": false,
+   "akun_aset": "1-150",
+   "akun_akm": "1-151",
+   "akun_beban": "6-110",
+   "jadwal": [
+    {
+     "p": 1,
+     "periode": "2026-10",
+     "beban": 39583,
+     "akumulasi": 39583,
+     "nilai_buku": 910417,
+     "jurnal_id": null
+    },
+    {
+     "p": 2,
+     "periode": "2026-11",
+     "beban": 39583,
+     "akumulasi": 79166,
+     "nilai_buku": 870834,
+     "jurnal_id": null
+    },
+    {
+     "p": 3,
+     "periode": "2026-12",
+     "beban": 39583,
+     "akumulasi": 118749,
+     "nilai_buku": 831251,
+     "jurnal_id": null
+    },
+    {
+     "p": 4,
+     "periode": "2027-01",
+     "beban": 39583,
+     "akumulasi": 158332,
+     "nilai_buku": 791668,
+     "jurnal_id": null
+    },
+    {
+     "p": 5,
+     "periode": "2027-02",
+     "beban": 39583,
+     "akumulasi": 197915,
+     "nilai_buku": 752085,
+     "jurnal_id": null
+    },
+    {
+     "p": 6,
+     "periode": "2027-03",
+     "beban": 39583,
+     "akumulasi": 237498,
+     "nilai_buku": 712502,
+     "jurnal_id": null
+    },
+    {
+     "p": 7,
+     "periode": "2027-04",
+     "beban": 39583,
+     "akumulasi": 277081,
+     "nilai_buku": 672919,
+     "jurnal_id": null
+    },
+    {
+     "p": 8,
+     "periode": "2027-05",
+     "beban": 39583,
+     "akumulasi": 316664,
+     "nilai_buku": 633336,
+     "jurnal_id": null
+    },
+    {
+     "p": 9,
+     "periode": "2027-06",
+     "beban": 39583,
+     "akumulasi": 356247,
+     "nilai_buku": 593753,
+     "jurnal_id": null
+    },
+    {
+     "p": 10,
+     "periode": "2027-07",
+     "beban": 39583,
+     "akumulasi": 395830,
+     "nilai_buku": 554170,
+     "jurnal_id": null
+    },
+    {
+     "p": 11,
+     "periode": "2027-08",
+     "beban": 39583,
+     "akumulasi": 435413,
+     "nilai_buku": 514587,
+     "jurnal_id": null
+    },
+    {
+     "p": 12,
+     "periode": "2027-09",
+     "beban": 39583,
+     "akumulasi": 474996,
+     "nilai_buku": 475004,
+     "jurnal_id": null
+    },
+    {
+     "p": 13,
+     "periode": "2027-10",
+     "beban": 39583,
+     "akumulasi": 514579,
+     "nilai_buku": 435421,
+     "jurnal_id": null
+    },
+    {
+     "p": 14,
+     "periode": "2027-11",
+     "beban": 39583,
+     "akumulasi": 554162,
+     "nilai_buku": 395838,
+     "jurnal_id": null
+    },
+    {
+     "p": 15,
+     "periode": "2027-12",
+     "beban": 39583,
+     "akumulasi": 593745,
+     "nilai_buku": 356255,
+     "jurnal_id": null
+    },
+    {
+     "p": 16,
+     "periode": "2028-01",
+     "beban": 39583,
+     "akumulasi": 633328,
+     "nilai_buku": 316672,
+     "jurnal_id": null
+    },
+    {
+     "p": 17,
+     "periode": "2028-02",
+     "beban": 39583,
+     "akumulasi": 672911,
+     "nilai_buku": 277089,
+     "jurnal_id": null
+    },
+    {
+     "p": 18,
+     "periode": "2028-03",
+     "beban": 39583,
+     "akumulasi": 712494,
+     "nilai_buku": 237506,
+     "jurnal_id": null
+    },
+    {
+     "p": 19,
+     "periode": "2028-04",
+     "beban": 39583,
+     "akumulasi": 752077,
+     "nilai_buku": 197923,
+     "jurnal_id": null
+    },
+    {
+     "p": 20,
+     "periode": "2028-05",
+     "beban": 39583,
+     "akumulasi": 791660,
+     "nilai_buku": 158340,
+     "jurnal_id": null
+    },
+    {
+     "p": 21,
+     "periode": "2028-06",
+     "beban": 39583,
+     "akumulasi": 831243,
+     "nilai_buku": 118757,
+     "jurnal_id": null
+    },
+    {
+     "p": 22,
+     "periode": "2028-07",
+     "beban": 39583,
+     "akumulasi": 870826,
+     "nilai_buku": 79174,
+     "jurnal_id": null
+    },
+    {
+     "p": 23,
+     "periode": "2028-08",
+     "beban": 39583,
+     "akumulasi": 910409,
+     "nilai_buku": 39591,
+     "jurnal_id": null
+    },
+    {
+     "p": 24,
+     "periode": "2028-09",
+     "beban": 39591,
+     "akumulasi": 950000,
+     "nilai_buku": 0,
+     "jurnal_id": null
+    }
+   ]
+  },
+  "AST-0005": {
+   "kode": "AST-0005",
+   "pembelian_id": "BP-2026-0003",
+   "tgl_perolehan": "2026-10-15",
+   "bulan_mulai": "2026-10",
+   "status": "aktif",
+   "nama": "Handy Talky (HT)",
+   "barang_id": "ALT-05",
+   "kategori_id": "KAT-03",
+   "nilai_perolehan": 950000,
+   "residu": 0,
+   "garansi_bulan": 24,
+   "garansi_sampai": "2028-10-15",
+   "masa_manfaat_bulan": 24,
+   "dasar_n": "garansi",
+   "n": 24,
+   "d": 39583,
+   "terakhir": 39591,
+   "pengaman": false,
+   "akun_aset": "1-150",
+   "akun_akm": "1-151",
+   "akun_beban": "6-110",
+   "jadwal": [
+    {
+     "p": 1,
+     "periode": "2026-10",
+     "beban": 39583,
+     "akumulasi": 39583,
+     "nilai_buku": 910417,
+     "jurnal_id": null
+    },
+    {
+     "p": 2,
+     "periode": "2026-11",
+     "beban": 39583,
+     "akumulasi": 79166,
+     "nilai_buku": 870834,
+     "jurnal_id": null
+    },
+    {
+     "p": 3,
+     "periode": "2026-12",
+     "beban": 39583,
+     "akumulasi": 118749,
+     "nilai_buku": 831251,
+     "jurnal_id": null
+    },
+    {
+     "p": 4,
+     "periode": "2027-01",
+     "beban": 39583,
+     "akumulasi": 158332,
+     "nilai_buku": 791668,
+     "jurnal_id": null
+    },
+    {
+     "p": 5,
+     "periode": "2027-02",
+     "beban": 39583,
+     "akumulasi": 197915,
+     "nilai_buku": 752085,
+     "jurnal_id": null
+    },
+    {
+     "p": 6,
+     "periode": "2027-03",
+     "beban": 39583,
+     "akumulasi": 237498,
+     "nilai_buku": 712502,
+     "jurnal_id": null
+    },
+    {
+     "p": 7,
+     "periode": "2027-04",
+     "beban": 39583,
+     "akumulasi": 277081,
+     "nilai_buku": 672919,
+     "jurnal_id": null
+    },
+    {
+     "p": 8,
+     "periode": "2027-05",
+     "beban": 39583,
+     "akumulasi": 316664,
+     "nilai_buku": 633336,
+     "jurnal_id": null
+    },
+    {
+     "p": 9,
+     "periode": "2027-06",
+     "beban": 39583,
+     "akumulasi": 356247,
+     "nilai_buku": 593753,
+     "jurnal_id": null
+    },
+    {
+     "p": 10,
+     "periode": "2027-07",
+     "beban": 39583,
+     "akumulasi": 395830,
+     "nilai_buku": 554170,
+     "jurnal_id": null
+    },
+    {
+     "p": 11,
+     "periode": "2027-08",
+     "beban": 39583,
+     "akumulasi": 435413,
+     "nilai_buku": 514587,
+     "jurnal_id": null
+    },
+    {
+     "p": 12,
+     "periode": "2027-09",
+     "beban": 39583,
+     "akumulasi": 474996,
+     "nilai_buku": 475004,
+     "jurnal_id": null
+    },
+    {
+     "p": 13,
+     "periode": "2027-10",
+     "beban": 39583,
+     "akumulasi": 514579,
+     "nilai_buku": 435421,
+     "jurnal_id": null
+    },
+    {
+     "p": 14,
+     "periode": "2027-11",
+     "beban": 39583,
+     "akumulasi": 554162,
+     "nilai_buku": 395838,
+     "jurnal_id": null
+    },
+    {
+     "p": 15,
+     "periode": "2027-12",
+     "beban": 39583,
+     "akumulasi": 593745,
+     "nilai_buku": 356255,
+     "jurnal_id": null
+    },
+    {
+     "p": 16,
+     "periode": "2028-01",
+     "beban": 39583,
+     "akumulasi": 633328,
+     "nilai_buku": 316672,
+     "jurnal_id": null
+    },
+    {
+     "p": 17,
+     "periode": "2028-02",
+     "beban": 39583,
+     "akumulasi": 672911,
+     "nilai_buku": 277089,
+     "jurnal_id": null
+    },
+    {
+     "p": 18,
+     "periode": "2028-03",
+     "beban": 39583,
+     "akumulasi": 712494,
+     "nilai_buku": 237506,
+     "jurnal_id": null
+    },
+    {
+     "p": 19,
+     "periode": "2028-04",
+     "beban": 39583,
+     "akumulasi": 752077,
+     "nilai_buku": 197923,
+     "jurnal_id": null
+    },
+    {
+     "p": 20,
+     "periode": "2028-05",
+     "beban": 39583,
+     "akumulasi": 791660,
+     "nilai_buku": 158340,
+     "jurnal_id": null
+    },
+    {
+     "p": 21,
+     "periode": "2028-06",
+     "beban": 39583,
+     "akumulasi": 831243,
+     "nilai_buku": 118757,
+     "jurnal_id": null
+    },
+    {
+     "p": 22,
+     "periode": "2028-07",
+     "beban": 39583,
+     "akumulasi": 870826,
+     "nilai_buku": 79174,
+     "jurnal_id": null
+    },
+    {
+     "p": 23,
+     "periode": "2028-08",
+     "beban": 39583,
+     "akumulasi": 910409,
+     "nilai_buku": 39591,
+     "jurnal_id": null
+    },
+    {
+     "p": 24,
+     "periode": "2028-09",
+     "beban": 39591,
+     "akumulasi": 950000,
+     "nilai_buku": 0,
+     "jurnal_id": null
+    }
+   ]
+  },
+  "AST-0006": {
+   "kode": "AST-0006",
+   "pembelian_id": "BP-2026-0003",
+   "tgl_perolehan": "2026-10-15",
+   "bulan_mulai": "2026-10",
+   "status": "aktif",
+   "nama": "Handy Talky (HT)",
+   "barang_id": "ALT-05",
+   "kategori_id": "KAT-03",
+   "nilai_perolehan": 950000,
+   "residu": 0,
+   "garansi_bulan": 24,
+   "garansi_sampai": "2028-10-15",
+   "masa_manfaat_bulan": 24,
+   "dasar_n": "garansi",
+   "n": 24,
+   "d": 39583,
+   "terakhir": 39591,
+   "pengaman": false,
+   "akun_aset": "1-150",
+   "akun_akm": "1-151",
+   "akun_beban": "6-110",
+   "jadwal": [
+    {
+     "p": 1,
+     "periode": "2026-10",
+     "beban": 39583,
+     "akumulasi": 39583,
+     "nilai_buku": 910417,
+     "jurnal_id": null
+    },
+    {
+     "p": 2,
+     "periode": "2026-11",
+     "beban": 39583,
+     "akumulasi": 79166,
+     "nilai_buku": 870834,
+     "jurnal_id": null
+    },
+    {
+     "p": 3,
+     "periode": "2026-12",
+     "beban": 39583,
+     "akumulasi": 118749,
+     "nilai_buku": 831251,
+     "jurnal_id": null
+    },
+    {
+     "p": 4,
+     "periode": "2027-01",
+     "beban": 39583,
+     "akumulasi": 158332,
+     "nilai_buku": 791668,
+     "jurnal_id": null
+    },
+    {
+     "p": 5,
+     "periode": "2027-02",
+     "beban": 39583,
+     "akumulasi": 197915,
+     "nilai_buku": 752085,
+     "jurnal_id": null
+    },
+    {
+     "p": 6,
+     "periode": "2027-03",
+     "beban": 39583,
+     "akumulasi": 237498,
+     "nilai_buku": 712502,
+     "jurnal_id": null
+    },
+    {
+     "p": 7,
+     "periode": "2027-04",
+     "beban": 39583,
+     "akumulasi": 277081,
+     "nilai_buku": 672919,
+     "jurnal_id": null
+    },
+    {
+     "p": 8,
+     "periode": "2027-05",
+     "beban": 39583,
+     "akumulasi": 316664,
+     "nilai_buku": 633336,
+     "jurnal_id": null
+    },
+    {
+     "p": 9,
+     "periode": "2027-06",
+     "beban": 39583,
+     "akumulasi": 356247,
+     "nilai_buku": 593753,
+     "jurnal_id": null
+    },
+    {
+     "p": 10,
+     "periode": "2027-07",
+     "beban": 39583,
+     "akumulasi": 395830,
+     "nilai_buku": 554170,
+     "jurnal_id": null
+    },
+    {
+     "p": 11,
+     "periode": "2027-08",
+     "beban": 39583,
+     "akumulasi": 435413,
+     "nilai_buku": 514587,
+     "jurnal_id": null
+    },
+    {
+     "p": 12,
+     "periode": "2027-09",
+     "beban": 39583,
+     "akumulasi": 474996,
+     "nilai_buku": 475004,
+     "jurnal_id": null
+    },
+    {
+     "p": 13,
+     "periode": "2027-10",
+     "beban": 39583,
+     "akumulasi": 514579,
+     "nilai_buku": 435421,
+     "jurnal_id": null
+    },
+    {
+     "p": 14,
+     "periode": "2027-11",
+     "beban": 39583,
+     "akumulasi": 554162,
+     "nilai_buku": 395838,
+     "jurnal_id": null
+    },
+    {
+     "p": 15,
+     "periode": "2027-12",
+     "beban": 39583,
+     "akumulasi": 593745,
+     "nilai_buku": 356255,
+     "jurnal_id": null
+    },
+    {
+     "p": 16,
+     "periode": "2028-01",
+     "beban": 39583,
+     "akumulasi": 633328,
+     "nilai_buku": 316672,
+     "jurnal_id": null
+    },
+    {
+     "p": 17,
+     "periode": "2028-02",
+     "beban": 39583,
+     "akumulasi": 672911,
+     "nilai_buku": 277089,
+     "jurnal_id": null
+    },
+    {
+     "p": 18,
+     "periode": "2028-03",
+     "beban": 39583,
+     "akumulasi": 712494,
+     "nilai_buku": 237506,
+     "jurnal_id": null
+    },
+    {
+     "p": 19,
+     "periode": "2028-04",
+     "beban": 39583,
+     "akumulasi": 752077,
+     "nilai_buku": 197923,
+     "jurnal_id": null
+    },
+    {
+     "p": 20,
+     "periode": "2028-05",
+     "beban": 39583,
+     "akumulasi": 791660,
+     "nilai_buku": 158340,
+     "jurnal_id": null
+    },
+    {
+     "p": 21,
+     "periode": "2028-06",
+     "beban": 39583,
+     "akumulasi": 831243,
+     "nilai_buku": 118757,
+     "jurnal_id": null
+    },
+    {
+     "p": 22,
+     "periode": "2028-07",
+     "beban": 39583,
+     "akumulasi": 870826,
+     "nilai_buku": 79174,
+     "jurnal_id": null
+    },
+    {
+     "p": 23,
+     "periode": "2028-08",
+     "beban": 39583,
+     "akumulasi": 910409,
+     "nilai_buku": 39591,
+     "jurnal_id": null
+    },
+    {
+     "p": 24,
+     "periode": "2028-09",
+     "beban": 39591,
+     "akumulasi": 950000,
+     "nilai_buku": 0,
+     "jurnal_id": null
+    }
+   ]
+  },
+  "AST-0007": {
+   "kode": "AST-0007",
+   "pembelian_id": "BP-2026-0004",
+   "tgl_perolehan": "2026-10-20",
+   "bulan_mulai": "2026-10",
+   "status": "aktif",
+   "nama": "Kamera Mirrorless",
+   "barang_id": "ALT-04",
+   "kategori_id": "KAT-02",
+   "nilai_perolehan": 18500000,
+   "residu": 0,
+   "garansi_bulan": 12,
+   "garansi_sampai": "2027-10-20",
+   "masa_manfaat_bulan": 48,
+   "dasar_n": "masa_manfaat",
+   "n": 48,
+   "d": 385417,
+   "terakhir": 385401,
+   "pengaman": false,
+   "akun_aset": "1-150",
+   "akun_akm": "1-151",
+   "akun_beban": "6-110",
+   "jadwal": [
+    {
+     "p": 1,
+     "periode": "2026-10",
+     "beban": 385417,
+     "akumulasi": 385417,
+     "nilai_buku": 18114583,
+     "jurnal_id": null
+    },
+    {
+     "p": 2,
+     "periode": "2026-11",
+     "beban": 385417,
+     "akumulasi": 770834,
+     "nilai_buku": 17729166,
+     "jurnal_id": null
+    },
+    {
+     "p": 3,
+     "periode": "2026-12",
+     "beban": 385417,
+     "akumulasi": 1156251,
+     "nilai_buku": 17343749,
+     "jurnal_id": null
+    },
+    {
+     "p": 4,
+     "periode": "2027-01",
+     "beban": 385417,
+     "akumulasi": 1541668,
+     "nilai_buku": 16958332,
+     "jurnal_id": null
+    },
+    {
+     "p": 5,
+     "periode": "2027-02",
+     "beban": 385417,
+     "akumulasi": 1927085,
+     "nilai_buku": 16572915,
+     "jurnal_id": null
+    },
+    {
+     "p": 6,
+     "periode": "2027-03",
+     "beban": 385417,
+     "akumulasi": 2312502,
+     "nilai_buku": 16187498,
+     "jurnal_id": null
+    },
+    {
+     "p": 7,
+     "periode": "2027-04",
+     "beban": 385417,
+     "akumulasi": 2697919,
+     "nilai_buku": 15802081,
+     "jurnal_id": null
+    },
+    {
+     "p": 8,
+     "periode": "2027-05",
+     "beban": 385417,
+     "akumulasi": 3083336,
+     "nilai_buku": 15416664,
+     "jurnal_id": null
+    },
+    {
+     "p": 9,
+     "periode": "2027-06",
+     "beban": 385417,
+     "akumulasi": 3468753,
+     "nilai_buku": 15031247,
+     "jurnal_id": null
+    },
+    {
+     "p": 10,
+     "periode": "2027-07",
+     "beban": 385417,
+     "akumulasi": 3854170,
+     "nilai_buku": 14645830,
+     "jurnal_id": null
+    },
+    {
+     "p": 11,
+     "periode": "2027-08",
+     "beban": 385417,
+     "akumulasi": 4239587,
+     "nilai_buku": 14260413,
+     "jurnal_id": null
+    },
+    {
+     "p": 12,
+     "periode": "2027-09",
+     "beban": 385417,
+     "akumulasi": 4625004,
+     "nilai_buku": 13874996,
+     "jurnal_id": null
+    },
+    {
+     "p": 13,
+     "periode": "2027-10",
+     "beban": 385417,
+     "akumulasi": 5010421,
+     "nilai_buku": 13489579,
+     "jurnal_id": null
+    },
+    {
+     "p": 14,
+     "periode": "2027-11",
+     "beban": 385417,
+     "akumulasi": 5395838,
+     "nilai_buku": 13104162,
+     "jurnal_id": null
+    },
+    {
+     "p": 15,
+     "periode": "2027-12",
+     "beban": 385417,
+     "akumulasi": 5781255,
+     "nilai_buku": 12718745,
+     "jurnal_id": null
+    },
+    {
+     "p": 16,
+     "periode": "2028-01",
+     "beban": 385417,
+     "akumulasi": 6166672,
+     "nilai_buku": 12333328,
+     "jurnal_id": null
+    },
+    {
+     "p": 17,
+     "periode": "2028-02",
+     "beban": 385417,
+     "akumulasi": 6552089,
+     "nilai_buku": 11947911,
+     "jurnal_id": null
+    },
+    {
+     "p": 18,
+     "periode": "2028-03",
+     "beban": 385417,
+     "akumulasi": 6937506,
+     "nilai_buku": 11562494,
+     "jurnal_id": null
+    },
+    {
+     "p": 19,
+     "periode": "2028-04",
+     "beban": 385417,
+     "akumulasi": 7322923,
+     "nilai_buku": 11177077,
+     "jurnal_id": null
+    },
+    {
+     "p": 20,
+     "periode": "2028-05",
+     "beban": 385417,
+     "akumulasi": 7708340,
+     "nilai_buku": 10791660,
+     "jurnal_id": null
+    },
+    {
+     "p": 21,
+     "periode": "2028-06",
+     "beban": 385417,
+     "akumulasi": 8093757,
+     "nilai_buku": 10406243,
+     "jurnal_id": null
+    },
+    {
+     "p": 22,
+     "periode": "2028-07",
+     "beban": 385417,
+     "akumulasi": 8479174,
+     "nilai_buku": 10020826,
+     "jurnal_id": null
+    },
+    {
+     "p": 23,
+     "periode": "2028-08",
+     "beban": 385417,
+     "akumulasi": 8864591,
+     "nilai_buku": 9635409,
+     "jurnal_id": null
+    },
+    {
+     "p": 24,
+     "periode": "2028-09",
+     "beban": 385417,
+     "akumulasi": 9250008,
+     "nilai_buku": 9249992,
+     "jurnal_id": null
+    },
+    {
+     "p": 25,
+     "periode": "2028-10",
+     "beban": 385417,
+     "akumulasi": 9635425,
+     "nilai_buku": 8864575,
+     "jurnal_id": null
+    },
+    {
+     "p": 26,
+     "periode": "2028-11",
+     "beban": 385417,
+     "akumulasi": 10020842,
+     "nilai_buku": 8479158,
+     "jurnal_id": null
+    },
+    {
+     "p": 27,
+     "periode": "2028-12",
+     "beban": 385417,
+     "akumulasi": 10406259,
+     "nilai_buku": 8093741,
+     "jurnal_id": null
+    },
+    {
+     "p": 28,
+     "periode": "2029-01",
+     "beban": 385417,
+     "akumulasi": 10791676,
+     "nilai_buku": 7708324,
+     "jurnal_id": null
+    },
+    {
+     "p": 29,
+     "periode": "2029-02",
+     "beban": 385417,
+     "akumulasi": 11177093,
+     "nilai_buku": 7322907,
+     "jurnal_id": null
+    },
+    {
+     "p": 30,
+     "periode": "2029-03",
+     "beban": 385417,
+     "akumulasi": 11562510,
+     "nilai_buku": 6937490,
+     "jurnal_id": null
+    },
+    {
+     "p": 31,
+     "periode": "2029-04",
+     "beban": 385417,
+     "akumulasi": 11947927,
+     "nilai_buku": 6552073,
+     "jurnal_id": null
+    },
+    {
+     "p": 32,
+     "periode": "2029-05",
+     "beban": 385417,
+     "akumulasi": 12333344,
+     "nilai_buku": 6166656,
+     "jurnal_id": null
+    },
+    {
+     "p": 33,
+     "periode": "2029-06",
+     "beban": 385417,
+     "akumulasi": 12718761,
+     "nilai_buku": 5781239,
+     "jurnal_id": null
+    },
+    {
+     "p": 34,
+     "periode": "2029-07",
+     "beban": 385417,
+     "akumulasi": 13104178,
+     "nilai_buku": 5395822,
+     "jurnal_id": null
+    },
+    {
+     "p": 35,
+     "periode": "2029-08",
+     "beban": 385417,
+     "akumulasi": 13489595,
+     "nilai_buku": 5010405,
+     "jurnal_id": null
+    },
+    {
+     "p": 36,
+     "periode": "2029-09",
+     "beban": 385417,
+     "akumulasi": 13875012,
+     "nilai_buku": 4624988,
+     "jurnal_id": null
+    },
+    {
+     "p": 37,
+     "periode": "2029-10",
+     "beban": 385417,
+     "akumulasi": 14260429,
+     "nilai_buku": 4239571,
+     "jurnal_id": null
+    },
+    {
+     "p": 38,
+     "periode": "2029-11",
+     "beban": 385417,
+     "akumulasi": 14645846,
+     "nilai_buku": 3854154,
+     "jurnal_id": null
+    },
+    {
+     "p": 39,
+     "periode": "2029-12",
+     "beban": 385417,
+     "akumulasi": 15031263,
+     "nilai_buku": 3468737,
+     "jurnal_id": null
+    },
+    {
+     "p": 40,
+     "periode": "2030-01",
+     "beban": 385417,
+     "akumulasi": 15416680,
+     "nilai_buku": 3083320,
+     "jurnal_id": null
+    },
+    {
+     "p": 41,
+     "periode": "2030-02",
+     "beban": 385417,
+     "akumulasi": 15802097,
+     "nilai_buku": 2697903,
+     "jurnal_id": null
+    },
+    {
+     "p": 42,
+     "periode": "2030-03",
+     "beban": 385417,
+     "akumulasi": 16187514,
+     "nilai_buku": 2312486,
+     "jurnal_id": null
+    },
+    {
+     "p": 43,
+     "periode": "2030-04",
+     "beban": 385417,
+     "akumulasi": 16572931,
+     "nilai_buku": 1927069,
+     "jurnal_id": null
+    },
+    {
+     "p": 44,
+     "periode": "2030-05",
+     "beban": 385417,
+     "akumulasi": 16958348,
+     "nilai_buku": 1541652,
+     "jurnal_id": null
+    },
+    {
+     "p": 45,
+     "periode": "2030-06",
+     "beban": 385417,
+     "akumulasi": 17343765,
+     "nilai_buku": 1156235,
+     "jurnal_id": null
+    },
+    {
+     "p": 46,
+     "periode": "2030-07",
+     "beban": 385417,
+     "akumulasi": 17729182,
+     "nilai_buku": 770818,
+     "jurnal_id": null
+    },
+    {
+     "p": 47,
+     "periode": "2030-08",
+     "beban": 385417,
+     "akumulasi": 18114599,
+     "nilai_buku": 385401,
+     "jurnal_id": null
+    },
+    {
+     "p": 48,
+     "periode": "2030-09",
+     "beban": 385401,
+     "akumulasi": 18500000,
+     "nilai_buku": 0,
+     "jurnal_id": null
+    }
+   ]
+  },
+  "AST-0008": {
+   "kode": "AST-0008",
+   "pembelian_id": "BP-2026-0005",
+   "tgl_perolehan": "2026-10-22",
+   "bulan_mulai": "2026-10",
+   "status": "aktif",
+   "nama": "Mixer Digital 16 Channel",
+   "barang_id": "ALT-03",
+   "kategori_id": "KAT-01",
+   "nilai_perolehan": 8900000,
+   "residu": 0,
+   "garansi_bulan": 12,
+   "garansi_sampai": "2027-10-22",
+   "masa_manfaat_bulan": 60,
+   "dasar_n": "masa_manfaat",
+   "n": 60,
+   "d": 148333,
+   "terakhir": 148353,
+   "pengaman": false,
+   "akun_aset": "1-150",
+   "akun_akm": "1-151",
+   "akun_beban": "6-110",
+   "jadwal": [
+    {
+     "p": 1,
+     "periode": "2026-10",
+     "beban": 148333,
+     "akumulasi": 148333,
+     "nilai_buku": 8751667,
+     "jurnal_id": null
+    },
+    {
+     "p": 2,
+     "periode": "2026-11",
+     "beban": 148333,
+     "akumulasi": 296666,
+     "nilai_buku": 8603334,
+     "jurnal_id": null
+    },
+    {
+     "p": 3,
+     "periode": "2026-12",
+     "beban": 148333,
+     "akumulasi": 444999,
+     "nilai_buku": 8455001,
+     "jurnal_id": null
+    },
+    {
+     "p": 4,
+     "periode": "2027-01",
+     "beban": 148333,
+     "akumulasi": 593332,
+     "nilai_buku": 8306668,
+     "jurnal_id": null
+    },
+    {
+     "p": 5,
+     "periode": "2027-02",
+     "beban": 148333,
+     "akumulasi": 741665,
+     "nilai_buku": 8158335,
+     "jurnal_id": null
+    },
+    {
+     "p": 6,
+     "periode": "2027-03",
+     "beban": 148333,
+     "akumulasi": 889998,
+     "nilai_buku": 8010002,
+     "jurnal_id": null
+    },
+    {
+     "p": 7,
+     "periode": "2027-04",
+     "beban": 148333,
+     "akumulasi": 1038331,
+     "nilai_buku": 7861669,
+     "jurnal_id": null
+    },
+    {
+     "p": 8,
+     "periode": "2027-05",
+     "beban": 148333,
+     "akumulasi": 1186664,
+     "nilai_buku": 7713336,
+     "jurnal_id": null
+    },
+    {
+     "p": 9,
+     "periode": "2027-06",
+     "beban": 148333,
+     "akumulasi": 1334997,
+     "nilai_buku": 7565003,
+     "jurnal_id": null
+    },
+    {
+     "p": 10,
+     "periode": "2027-07",
+     "beban": 148333,
+     "akumulasi": 1483330,
+     "nilai_buku": 7416670,
+     "jurnal_id": null
+    },
+    {
+     "p": 11,
+     "periode": "2027-08",
+     "beban": 148333,
+     "akumulasi": 1631663,
+     "nilai_buku": 7268337,
+     "jurnal_id": null
+    },
+    {
+     "p": 12,
+     "periode": "2027-09",
+     "beban": 148333,
+     "akumulasi": 1779996,
+     "nilai_buku": 7120004,
+     "jurnal_id": null
+    },
+    {
+     "p": 13,
+     "periode": "2027-10",
+     "beban": 148333,
+     "akumulasi": 1928329,
+     "nilai_buku": 6971671,
+     "jurnal_id": null
+    },
+    {
+     "p": 14,
+     "periode": "2027-11",
+     "beban": 148333,
+     "akumulasi": 2076662,
+     "nilai_buku": 6823338,
+     "jurnal_id": null
+    },
+    {
+     "p": 15,
+     "periode": "2027-12",
+     "beban": 148333,
+     "akumulasi": 2224995,
+     "nilai_buku": 6675005,
+     "jurnal_id": null
+    },
+    {
+     "p": 16,
+     "periode": "2028-01",
+     "beban": 148333,
+     "akumulasi": 2373328,
+     "nilai_buku": 6526672,
+     "jurnal_id": null
+    },
+    {
+     "p": 17,
+     "periode": "2028-02",
+     "beban": 148333,
+     "akumulasi": 2521661,
+     "nilai_buku": 6378339,
+     "jurnal_id": null
+    },
+    {
+     "p": 18,
+     "periode": "2028-03",
+     "beban": 148333,
+     "akumulasi": 2669994,
+     "nilai_buku": 6230006,
+     "jurnal_id": null
+    },
+    {
+     "p": 19,
+     "periode": "2028-04",
+     "beban": 148333,
+     "akumulasi": 2818327,
+     "nilai_buku": 6081673,
+     "jurnal_id": null
+    },
+    {
+     "p": 20,
+     "periode": "2028-05",
+     "beban": 148333,
+     "akumulasi": 2966660,
+     "nilai_buku": 5933340,
+     "jurnal_id": null
+    },
+    {
+     "p": 21,
+     "periode": "2028-06",
+     "beban": 148333,
+     "akumulasi": 3114993,
+     "nilai_buku": 5785007,
+     "jurnal_id": null
+    },
+    {
+     "p": 22,
+     "periode": "2028-07",
+     "beban": 148333,
+     "akumulasi": 3263326,
+     "nilai_buku": 5636674,
+     "jurnal_id": null
+    },
+    {
+     "p": 23,
+     "periode": "2028-08",
+     "beban": 148333,
+     "akumulasi": 3411659,
+     "nilai_buku": 5488341,
+     "jurnal_id": null
+    },
+    {
+     "p": 24,
+     "periode": "2028-09",
+     "beban": 148333,
+     "akumulasi": 3559992,
+     "nilai_buku": 5340008,
+     "jurnal_id": null
+    },
+    {
+     "p": 25,
+     "periode": "2028-10",
+     "beban": 148333,
+     "akumulasi": 3708325,
+     "nilai_buku": 5191675,
+     "jurnal_id": null
+    },
+    {
+     "p": 26,
+     "periode": "2028-11",
+     "beban": 148333,
+     "akumulasi": 3856658,
+     "nilai_buku": 5043342,
+     "jurnal_id": null
+    },
+    {
+     "p": 27,
+     "periode": "2028-12",
+     "beban": 148333,
+     "akumulasi": 4004991,
+     "nilai_buku": 4895009,
+     "jurnal_id": null
+    },
+    {
+     "p": 28,
+     "periode": "2029-01",
+     "beban": 148333,
+     "akumulasi": 4153324,
+     "nilai_buku": 4746676,
+     "jurnal_id": null
+    },
+    {
+     "p": 29,
+     "periode": "2029-02",
+     "beban": 148333,
+     "akumulasi": 4301657,
+     "nilai_buku": 4598343,
+     "jurnal_id": null
+    },
+    {
+     "p": 30,
+     "periode": "2029-03",
+     "beban": 148333,
+     "akumulasi": 4449990,
+     "nilai_buku": 4450010,
+     "jurnal_id": null
+    },
+    {
+     "p": 31,
+     "periode": "2029-04",
+     "beban": 148333,
+     "akumulasi": 4598323,
+     "nilai_buku": 4301677,
+     "jurnal_id": null
+    },
+    {
+     "p": 32,
+     "periode": "2029-05",
+     "beban": 148333,
+     "akumulasi": 4746656,
+     "nilai_buku": 4153344,
+     "jurnal_id": null
+    },
+    {
+     "p": 33,
+     "periode": "2029-06",
+     "beban": 148333,
+     "akumulasi": 4894989,
+     "nilai_buku": 4005011,
+     "jurnal_id": null
+    },
+    {
+     "p": 34,
+     "periode": "2029-07",
+     "beban": 148333,
+     "akumulasi": 5043322,
+     "nilai_buku": 3856678,
+     "jurnal_id": null
+    },
+    {
+     "p": 35,
+     "periode": "2029-08",
+     "beban": 148333,
+     "akumulasi": 5191655,
+     "nilai_buku": 3708345,
+     "jurnal_id": null
+    },
+    {
+     "p": 36,
+     "periode": "2029-09",
+     "beban": 148333,
+     "akumulasi": 5339988,
+     "nilai_buku": 3560012,
+     "jurnal_id": null
+    },
+    {
+     "p": 37,
+     "periode": "2029-10",
+     "beban": 148333,
+     "akumulasi": 5488321,
+     "nilai_buku": 3411679,
+     "jurnal_id": null
+    },
+    {
+     "p": 38,
+     "periode": "2029-11",
+     "beban": 148333,
+     "akumulasi": 5636654,
+     "nilai_buku": 3263346,
+     "jurnal_id": null
+    },
+    {
+     "p": 39,
+     "periode": "2029-12",
+     "beban": 148333,
+     "akumulasi": 5784987,
+     "nilai_buku": 3115013,
+     "jurnal_id": null
+    },
+    {
+     "p": 40,
+     "periode": "2030-01",
+     "beban": 148333,
+     "akumulasi": 5933320,
+     "nilai_buku": 2966680,
+     "jurnal_id": null
+    },
+    {
+     "p": 41,
+     "periode": "2030-02",
+     "beban": 148333,
+     "akumulasi": 6081653,
+     "nilai_buku": 2818347,
+     "jurnal_id": null
+    },
+    {
+     "p": 42,
+     "periode": "2030-03",
+     "beban": 148333,
+     "akumulasi": 6229986,
+     "nilai_buku": 2670014,
+     "jurnal_id": null
+    },
+    {
+     "p": 43,
+     "periode": "2030-04",
+     "beban": 148333,
+     "akumulasi": 6378319,
+     "nilai_buku": 2521681,
+     "jurnal_id": null
+    },
+    {
+     "p": 44,
+     "periode": "2030-05",
+     "beban": 148333,
+     "akumulasi": 6526652,
+     "nilai_buku": 2373348,
+     "jurnal_id": null
+    },
+    {
+     "p": 45,
+     "periode": "2030-06",
+     "beban": 148333,
+     "akumulasi": 6674985,
+     "nilai_buku": 2225015,
+     "jurnal_id": null
+    },
+    {
+     "p": 46,
+     "periode": "2030-07",
+     "beban": 148333,
+     "akumulasi": 6823318,
+     "nilai_buku": 2076682,
+     "jurnal_id": null
+    },
+    {
+     "p": 47,
+     "periode": "2030-08",
+     "beban": 148333,
+     "akumulasi": 6971651,
+     "nilai_buku": 1928349,
+     "jurnal_id": null
+    },
+    {
+     "p": 48,
+     "periode": "2030-09",
+     "beban": 148333,
+     "akumulasi": 7119984,
+     "nilai_buku": 1780016,
+     "jurnal_id": null
+    },
+    {
+     "p": 49,
+     "periode": "2030-10",
+     "beban": 148333,
+     "akumulasi": 7268317,
+     "nilai_buku": 1631683,
+     "jurnal_id": null
+    },
+    {
+     "p": 50,
+     "periode": "2030-11",
+     "beban": 148333,
+     "akumulasi": 7416650,
+     "nilai_buku": 1483350,
+     "jurnal_id": null
+    },
+    {
+     "p": 51,
+     "periode": "2030-12",
+     "beban": 148333,
+     "akumulasi": 7564983,
+     "nilai_buku": 1335017,
+     "jurnal_id": null
+    },
+    {
+     "p": 52,
+     "periode": "2031-01",
+     "beban": 148333,
+     "akumulasi": 7713316,
+     "nilai_buku": 1186684,
+     "jurnal_id": null
+    },
+    {
+     "p": 53,
+     "periode": "2031-02",
+     "beban": 148333,
+     "akumulasi": 7861649,
+     "nilai_buku": 1038351,
+     "jurnal_id": null
+    },
+    {
+     "p": 54,
+     "periode": "2031-03",
+     "beban": 148333,
+     "akumulasi": 8009982,
+     "nilai_buku": 890018,
+     "jurnal_id": null
+    },
+    {
+     "p": 55,
+     "periode": "2031-04",
+     "beban": 148333,
+     "akumulasi": 8158315,
+     "nilai_buku": 741685,
+     "jurnal_id": null
+    },
+    {
+     "p": 56,
+     "periode": "2031-05",
+     "beban": 148333,
+     "akumulasi": 8306648,
+     "nilai_buku": 593352,
+     "jurnal_id": null
+    },
+    {
+     "p": 57,
+     "periode": "2031-06",
+     "beban": 148333,
+     "akumulasi": 8454981,
+     "nilai_buku": 445019,
+     "jurnal_id": null
+    },
+    {
+     "p": 58,
+     "periode": "2031-07",
+     "beban": 148333,
+     "akumulasi": 8603314,
+     "nilai_buku": 296686,
+     "jurnal_id": null
+    },
+    {
+     "p": 59,
+     "periode": "2031-08",
+     "beban": 148333,
+     "akumulasi": 8751647,
+     "nilai_buku": 148353,
+     "jurnal_id": null
+    },
+    {
+     "p": 60,
+     "periode": "2031-09",
+     "beban": 148353,
+     "akumulasi": 8900000,
+     "nilai_buku": 0,
+     "jurnal_id": null
+    }
+   ]
+  },
+  "AST-0009": {
+   "kode": "AST-0009",
+   "pembelian_id": "BP-2026-0006",
+   "tgl_perolehan": "2026-10-26",
+   "bulan_mulai": "2026-10",
+   "status": "aktif",
+   "nama": "Laptop Operasional",
+   "barang_id": "ALT-06",
+   "kategori_id": "KAT-04",
+   "nilai_perolehan": 9500000,
+   "residu": 0,
+   "garansi_bulan": 24,
+   "garansi_sampai": "2028-10-26",
+   "masa_manfaat_bulan": 48,
+   "dasar_n": "garansi",
+   "n": 24,
+   "d": 395833,
+   "terakhir": 395841,
+   "pengaman": false,
+   "akun_aset": "1-150",
+   "akun_akm": "1-151",
+   "akun_beban": "6-110",
+   "jadwal": [
+    {
+     "p": 1,
+     "periode": "2026-10",
+     "beban": 395833,
+     "akumulasi": 395833,
+     "nilai_buku": 9104167,
+     "jurnal_id": null
+    },
+    {
+     "p": 2,
+     "periode": "2026-11",
+     "beban": 395833,
+     "akumulasi": 791666,
+     "nilai_buku": 8708334,
+     "jurnal_id": null
+    },
+    {
+     "p": 3,
+     "periode": "2026-12",
+     "beban": 395833,
+     "akumulasi": 1187499,
+     "nilai_buku": 8312501,
+     "jurnal_id": null
+    },
+    {
+     "p": 4,
+     "periode": "2027-01",
+     "beban": 395833,
+     "akumulasi": 1583332,
+     "nilai_buku": 7916668,
+     "jurnal_id": null
+    },
+    {
+     "p": 5,
+     "periode": "2027-02",
+     "beban": 395833,
+     "akumulasi": 1979165,
+     "nilai_buku": 7520835,
+     "jurnal_id": null
+    },
+    {
+     "p": 6,
+     "periode": "2027-03",
+     "beban": 395833,
+     "akumulasi": 2374998,
+     "nilai_buku": 7125002,
+     "jurnal_id": null
+    },
+    {
+     "p": 7,
+     "periode": "2027-04",
+     "beban": 395833,
+     "akumulasi": 2770831,
+     "nilai_buku": 6729169,
+     "jurnal_id": null
+    },
+    {
+     "p": 8,
+     "periode": "2027-05",
+     "beban": 395833,
+     "akumulasi": 3166664,
+     "nilai_buku": 6333336,
+     "jurnal_id": null
+    },
+    {
+     "p": 9,
+     "periode": "2027-06",
+     "beban": 395833,
+     "akumulasi": 3562497,
+     "nilai_buku": 5937503,
+     "jurnal_id": null
+    },
+    {
+     "p": 10,
+     "periode": "2027-07",
+     "beban": 395833,
+     "akumulasi": 3958330,
+     "nilai_buku": 5541670,
+     "jurnal_id": null
+    },
+    {
+     "p": 11,
+     "periode": "2027-08",
+     "beban": 395833,
+     "akumulasi": 4354163,
+     "nilai_buku": 5145837,
+     "jurnal_id": null
+    },
+    {
+     "p": 12,
+     "periode": "2027-09",
+     "beban": 395833,
+     "akumulasi": 4749996,
+     "nilai_buku": 4750004,
+     "jurnal_id": null
+    },
+    {
+     "p": 13,
+     "periode": "2027-10",
+     "beban": 395833,
+     "akumulasi": 5145829,
+     "nilai_buku": 4354171,
+     "jurnal_id": null
+    },
+    {
+     "p": 14,
+     "periode": "2027-11",
+     "beban": 395833,
+     "akumulasi": 5541662,
+     "nilai_buku": 3958338,
+     "jurnal_id": null
+    },
+    {
+     "p": 15,
+     "periode": "2027-12",
+     "beban": 395833,
+     "akumulasi": 5937495,
+     "nilai_buku": 3562505,
+     "jurnal_id": null
+    },
+    {
+     "p": 16,
+     "periode": "2028-01",
+     "beban": 395833,
+     "akumulasi": 6333328,
+     "nilai_buku": 3166672,
+     "jurnal_id": null
+    },
+    {
+     "p": 17,
+     "periode": "2028-02",
+     "beban": 395833,
+     "akumulasi": 6729161,
+     "nilai_buku": 2770839,
+     "jurnal_id": null
+    },
+    {
+     "p": 18,
+     "periode": "2028-03",
+     "beban": 395833,
+     "akumulasi": 7124994,
+     "nilai_buku": 2375006,
+     "jurnal_id": null
+    },
+    {
+     "p": 19,
+     "periode": "2028-04",
+     "beban": 395833,
+     "akumulasi": 7520827,
+     "nilai_buku": 1979173,
+     "jurnal_id": null
+    },
+    {
+     "p": 20,
+     "periode": "2028-05",
+     "beban": 395833,
+     "akumulasi": 7916660,
+     "nilai_buku": 1583340,
+     "jurnal_id": null
+    },
+    {
+     "p": 21,
+     "periode": "2028-06",
+     "beban": 395833,
+     "akumulasi": 8312493,
+     "nilai_buku": 1187507,
+     "jurnal_id": null
+    },
+    {
+     "p": 22,
+     "periode": "2028-07",
+     "beban": 395833,
+     "akumulasi": 8708326,
+     "nilai_buku": 791674,
+     "jurnal_id": null
+    },
+    {
+     "p": 23,
+     "periode": "2028-08",
+     "beban": 395833,
+     "akumulasi": 9104159,
+     "nilai_buku": 395841,
+     "jurnal_id": null
+    },
+    {
+     "p": 24,
+     "periode": "2028-09",
+     "beban": 395841,
+     "akumulasi": 9500000,
      "nilai_buku": 0,
      "jurnal_id": null
     }
@@ -1624,36 +3213,6 @@ window.SEED = {
   }
  },
  "jurnal": {
-  "JU-2026-0002": {
-   "no": "JU-2026-0002",
-   "tanggal": "2026-10-05",
-   "periode": "2026-10",
-   "jenis": "umum",
-   "keterangan": "Pembelian peralatan BP-2026-0001, CV Sumber Elektronik Malang (Kredit)",
-   "baris": [
-    {
-     "akun": "1-150",
-     "debit": 10000000,
-     "kredit": 0
-    },
-    {
-     "akun": "2-110",
-     "debit": 0,
-     "kredit": 10000000
-    }
-   ],
-   "sumber_tipe": "pembelian",
-   "sumber_id": "BP-2026-0001",
-   "rincian": null,
-   "pembalik_dari": null,
-   "status": "disetujui",
-   "dibuat_oleh": "admin",
-   "dibuat_pada": "2026-11-02T05:00:00.000Z",
-   "diajukan_pada": "2026-11-02T05:00:00.000Z",
-   "disetujui_oleh": "admin",
-   "disetujui_pada": "2026-11-02T05:00:00.000Z",
-   "alasan_tolak": null
-  },
   "JU-2026-0001": {
    "no": "JU-2026-0001",
    "tanggal": "2026-10-01",
@@ -1684,22 +3243,52 @@ window.SEED = {
    "disetujui_pada": "2026-11-02T05:00:00.000Z",
    "alasan_tolak": null
   },
+  "JU-2026-0002": {
+   "no": "JU-2026-0002",
+   "tanggal": "2026-10-05",
+   "periode": "2026-10",
+   "jenis": "umum",
+   "keterangan": "Pembelian peralatan BP-2026-0001, CV Sinar Audio Malang (Kredit)",
+   "baris": [
+    {
+     "akun": "1-150",
+     "debit": 14500000,
+     "kredit": 0
+    },
+    {
+     "akun": "2-110",
+     "debit": 0,
+     "kredit": 14500000
+    }
+   ],
+   "sumber_tipe": "pembelian",
+   "sumber_id": "BP-2026-0001",
+   "rincian": null,
+   "pembalik_dari": null,
+   "status": "disetujui",
+   "dibuat_oleh": "admin",
+   "dibuat_pada": "2026-11-02T05:00:00.000Z",
+   "diajukan_pada": "2026-11-02T05:00:00.000Z",
+   "disetujui_oleh": "admin",
+   "disetujui_pada": "2026-11-02T05:00:00.000Z",
+   "alasan_tolak": null
+  },
   "JU-2026-0003": {
    "no": "JU-2026-0003",
    "tanggal": "2026-10-10",
    "periode": "2026-10",
    "jenis": "umum",
-   "keterangan": "Pembelian peralatan BP-2026-0002, CV Sumber Elektronik Malang (Tunai)",
+   "keterangan": "Pembelian peralatan BP-2026-0002, CV Sinar Audio Malang (Tunai)",
    "baris": [
     {
      "akun": "1-150",
-     "debit": 7200000,
+     "debit": 9800000,
      "kredit": 0
     },
     {
      "akun": "1-110",
      "debit": 0,
-     "kredit": 7200000
+     "kredit": 9800000
     }
    ],
    "sumber_tipe": "pembelian",
@@ -1723,13 +3312,13 @@ window.SEED = {
    "baris": [
     {
      "akun": "1-150",
-     "debit": 2500000,
+     "debit": 3800000,
      "kredit": 0
     },
     {
      "akun": "3-110",
      "debit": 0,
-     "kredit": 2500000
+     "kredit": 3800000
     }
    ],
    "sumber_tipe": "pembelian",
@@ -1746,20 +3335,110 @@ window.SEED = {
   },
   "JU-2026-0005": {
    "no": "JU-2026-0005",
-   "tanggal": "2026-10-12",
+   "tanggal": "2026-10-20",
    "periode": "2026-10",
    "jenis": "umum",
-   "keterangan": "Pembelian perlengkapan BL-2026-0001, UD Bersih Abadi (Tunai)",
+   "keterangan": "Pembelian peralatan BP-2026-0004, Toko Kamera Ijen (Kredit)",
    "baris": [
     {
-     "akun": "1-140",
-     "debit": 740000,
+     "akun": "1-150",
+     "debit": 18500000,
+     "kredit": 0
+    },
+    {
+     "akun": "2-110",
+     "debit": 0,
+     "kredit": 18500000
+    }
+   ],
+   "sumber_tipe": "pembelian",
+   "sumber_id": "BP-2026-0004",
+   "rincian": null,
+   "pembalik_dari": null,
+   "status": "disetujui",
+   "dibuat_oleh": "admin",
+   "dibuat_pada": "2026-11-02T05:00:00.000Z",
+   "diajukan_pada": "2026-11-02T05:00:00.000Z",
+   "disetujui_oleh": "admin",
+   "disetujui_pada": "2026-11-02T05:00:00.000Z",
+   "alasan_tolak": null
+  },
+  "JU-2026-0006": {
+   "no": "JU-2026-0006",
+   "tanggal": "2026-10-22",
+   "periode": "2026-10",
+   "jenis": "umum",
+   "keterangan": "Pembelian peralatan BP-2026-0005, CV Sinar Audio Malang (Tunai)",
+   "baris": [
+    {
+     "akun": "1-150",
+     "debit": 8900000,
      "kredit": 0
     },
     {
      "akun": "1-110",
      "debit": 0,
-     "kredit": 740000
+     "kredit": 8900000
+    }
+   ],
+   "sumber_tipe": "pembelian",
+   "sumber_id": "BP-2026-0005",
+   "rincian": null,
+   "pembalik_dari": null,
+   "status": "disetujui",
+   "dibuat_oleh": "admin",
+   "dibuat_pada": "2026-11-02T05:00:00.000Z",
+   "diajukan_pada": "2026-11-02T05:00:00.000Z",
+   "disetujui_oleh": "admin",
+   "disetujui_pada": "2026-11-02T05:00:00.000Z",
+   "alasan_tolak": null
+  },
+  "JU-2026-0007": {
+   "no": "JU-2026-0007",
+   "tanggal": "2026-10-26",
+   "periode": "2026-10",
+   "jenis": "umum",
+   "keterangan": "Pembelian peralatan BP-2026-0006, Toko Kamera Ijen (Tunai)",
+   "baris": [
+    {
+     "akun": "1-150",
+     "debit": 9500000,
+     "kredit": 0
+    },
+    {
+     "akun": "1-110",
+     "debit": 0,
+     "kredit": 9500000
+    }
+   ],
+   "sumber_tipe": "pembelian",
+   "sumber_id": "BP-2026-0006",
+   "rincian": null,
+   "pembalik_dari": null,
+   "status": "disetujui",
+   "dibuat_oleh": "admin",
+   "dibuat_pada": "2026-11-02T05:00:00.000Z",
+   "diajukan_pada": "2026-11-02T05:00:00.000Z",
+   "disetujui_oleh": "admin",
+   "disetujui_pada": "2026-11-02T05:00:00.000Z",
+   "alasan_tolak": null
+  },
+  "JU-2026-0008": {
+   "no": "JU-2026-0008",
+   "tanggal": "2026-10-12",
+   "periode": "2026-10",
+   "jenis": "umum",
+   "keterangan": "Pembelian perlengkapan BL-2026-0001, UD Event Supply Malang (Tunai)",
+   "baris": [
+    {
+     "akun": "1-140",
+     "debit": 1290000,
+     "kredit": 0
+    },
+    {
+     "akun": "1-110",
+     "debit": 0,
+     "kredit": 1290000
     }
    ],
    "sumber_tipe": "pembelian",
@@ -1774,22 +3453,22 @@ window.SEED = {
    "disetujui_pada": "2026-11-02T05:00:00.000Z",
    "alasan_tolak": null
   },
-  "JU-2026-0006": {
-   "no": "JU-2026-0006",
+  "JU-2026-0009": {
+   "no": "JU-2026-0009",
    "tanggal": "2026-10-28",
    "periode": "2026-10",
    "jenis": "umum",
-   "keterangan": "Pembelian perlengkapan BL-2026-0002, Toko Sinar Jaya (Kredit)",
+   "keterangan": "Pembelian perlengkapan BL-2026-0002, UD Event Supply Malang (Kredit)",
    "baris": [
     {
      "akun": "1-140",
-     "debit": 290000,
+     "debit": 2030000,
      "kredit": 0
     },
     {
      "akun": "2-110",
      "debit": 0,
-     "kredit": 290000
+     "kredit": 2030000
     }
    ],
    "sumber_tipe": "pembelian",
@@ -1804,8 +3483,8 @@ window.SEED = {
    "disetujui_pada": "2026-11-02T05:00:00.000Z",
    "alasan_tolak": null
   },
-  "JU-2026-0007": {
-   "no": "JU-2026-0007",
+  "JU-2026-0010": {
+   "no": "JU-2026-0010",
    "tanggal": "2026-10-01",
    "periode": "2026-10",
    "jenis": "umum",
@@ -1836,30 +3515,35 @@ window.SEED = {
   }
  },
  "pembelian": {
-  "BP-2026-0004": {
-   "no": "BP-2026-0004",
+  "BP-2026-0001": {
+   "no": "BP-2026-0001",
    "jenis": "peralatan",
-   "tanggal": "2026-11-02",
-   "supplier_id": "SUP-02",
-   "cara_bayar": "tunai",
-   "jatuh_tempo": "",
+   "tanggal": "2026-10-05",
+   "supplier_id": "SUP-01",
+   "cara_bayar": "kredit",
+   "jatuh_tempo": "2026-11-05",
    "keterangan": "",
    "items": [
     {
-     "barang_id": "ALT-04",
+     "barang_id": "ALT-01",
      "qty": 1,
-     "harga": 450000,
+     "harga": 14500000,
      "residu": 0,
-     "garansi_bulan": 12,
-     "masa_manfaat_bulan": 36,
+     "garansi_bulan": 24,
+     "masa_manfaat_bulan": 60,
      "dasar_n": "masa_manfaat"
     }
    ],
-   "total": 450000,
-   "status": "draft",
-   "jurnal_id": null,
+   "total": 14500000,
+   "status": "posted",
+   "jurnal_id": "JU-2026-0002",
    "dibuat_oleh": "admin",
-   "diubah_pada": "2026-11-02T05:00:00.000Z"
+   "diubah_pada": "2026-11-02T05:00:00.000Z",
+   "aset_ids": [
+    "AST-0001"
+   ],
+   "diposting_oleh": "admin",
+   "diposting_pada": "2026-11-02T05:00:00.000Z"
   },
   "BP-2026-0002": {
    "no": "BP-2026-0002",
@@ -1873,14 +3557,14 @@ window.SEED = {
     {
      "barang_id": "ALT-02",
      "qty": 1,
-     "harga": 7200000,
+     "harga": 9800000,
      "residu": 0,
      "garansi_bulan": 12,
      "masa_manfaat_bulan": 60,
      "dasar_n": "masa_manfaat"
     }
    ],
-   "total": 7200000,
+   "total": 9800000,
    "status": "posted",
    "jurnal_id": "JU-2026-0003",
    "dibuat_oleh": "admin",
@@ -1888,65 +3572,6 @@ window.SEED = {
    "aset_ids": [
     "AST-0002"
    ],
-   "diposting_oleh": "admin",
-   "diposting_pada": "2026-11-02T05:00:00.000Z"
-  },
-  "BP-2026-0001": {
-   "no": "BP-2026-0001",
-   "jenis": "peralatan",
-   "tanggal": "2026-10-05",
-   "supplier_id": "SUP-01",
-   "cara_bayar": "kredit",
-   "jatuh_tempo": "2026-11-05",
-   "keterangan": "",
-   "items": [
-    {
-     "barang_id": "ALT-01",
-     "qty": 1,
-     "harga": 10000000,
-     "residu": 0,
-     "garansi_bulan": 60,
-     "masa_manfaat_bulan": 60,
-     "dasar_n": "garansi"
-    }
-   ],
-   "total": 10000000,
-   "status": "posted",
-   "jurnal_id": "JU-2026-0002",
-   "dibuat_oleh": "admin",
-   "diubah_pada": "2026-11-02T05:00:00.000Z",
-   "aset_ids": [
-    "AST-0001"
-   ],
-   "diposting_oleh": "admin",
-   "diposting_pada": "2026-11-02T05:00:00.000Z"
-  },
-  "BL-2026-0002": {
-   "no": "BL-2026-0002",
-   "jenis": "perlengkapan",
-   "tanggal": "2026-10-28",
-   "supplier_id": "SUP-02",
-   "cara_bayar": "kredit",
-   "jatuh_tempo": "2026-11-28",
-   "keterangan": "",
-   "items": [
-    {
-     "barang_id": "LKP-03",
-     "qty": 10,
-     "harga": 25000
-    },
-    {
-     "barang_id": "LKP-04",
-     "qty": 2,
-     "harga": 20000
-    }
-   ],
-   "total": 290000,
-   "status": "posted",
-   "jurnal_id": "JU-2026-0006",
-   "dibuat_oleh": "admin",
-   "diubah_pada": "2026-11-02T05:00:00.000Z",
-   "aset_ids": [],
    "diposting_oleh": "admin",
    "diposting_pada": "2026-11-02T05:00:00.000Z"
   },
@@ -1960,23 +3585,115 @@ window.SEED = {
    "keterangan": "",
    "items": [
     {
-     "barang_id": "ALT-03",
-     "qty": 2,
-     "harga": 1250000,
+     "barang_id": "ALT-05",
+     "qty": 4,
+     "harga": 950000,
      "residu": 0,
      "garansi_bulan": 24,
      "masa_manfaat_bulan": 24,
      "dasar_n": "garansi"
     }
    ],
-   "total": 2500000,
+   "total": 3800000,
    "status": "posted",
    "jurnal_id": "JU-2026-0004",
    "dibuat_oleh": "admin",
    "diubah_pada": "2026-11-02T05:00:00.000Z",
    "aset_ids": [
     "AST-0003",
-    "AST-0004"
+    "AST-0004",
+    "AST-0005",
+    "AST-0006"
+   ],
+   "diposting_oleh": "admin",
+   "diposting_pada": "2026-11-02T05:00:00.000Z"
+  },
+  "BP-2026-0004": {
+   "no": "BP-2026-0004",
+   "jenis": "peralatan",
+   "tanggal": "2026-10-20",
+   "supplier_id": "SUP-02",
+   "cara_bayar": "kredit",
+   "jatuh_tempo": "2026-11-20",
+   "keterangan": "",
+   "items": [
+    {
+     "barang_id": "ALT-04",
+     "qty": 1,
+     "harga": 18500000,
+     "residu": 0,
+     "garansi_bulan": 12,
+     "masa_manfaat_bulan": 48,
+     "dasar_n": "masa_manfaat"
+    }
+   ],
+   "total": 18500000,
+   "status": "posted",
+   "jurnal_id": "JU-2026-0005",
+   "dibuat_oleh": "admin",
+   "diubah_pada": "2026-11-02T05:00:00.000Z",
+   "aset_ids": [
+    "AST-0007"
+   ],
+   "diposting_oleh": "admin",
+   "diposting_pada": "2026-11-02T05:00:00.000Z"
+  },
+  "BP-2026-0005": {
+   "no": "BP-2026-0005",
+   "jenis": "peralatan",
+   "tanggal": "2026-10-22",
+   "supplier_id": "SUP-01",
+   "cara_bayar": "tunai",
+   "jatuh_tempo": "",
+   "keterangan": "",
+   "items": [
+    {
+     "barang_id": "ALT-03",
+     "qty": 1,
+     "harga": 8900000,
+     "residu": 0,
+     "garansi_bulan": 12,
+     "masa_manfaat_bulan": 60,
+     "dasar_n": "masa_manfaat"
+    }
+   ],
+   "total": 8900000,
+   "status": "posted",
+   "jurnal_id": "JU-2026-0006",
+   "dibuat_oleh": "admin",
+   "diubah_pada": "2026-11-02T05:00:00.000Z",
+   "aset_ids": [
+    "AST-0008"
+   ],
+   "diposting_oleh": "admin",
+   "diposting_pada": "2026-11-02T05:00:00.000Z"
+  },
+  "BP-2026-0006": {
+   "no": "BP-2026-0006",
+   "jenis": "peralatan",
+   "tanggal": "2026-10-26",
+   "supplier_id": "SUP-02",
+   "cara_bayar": "tunai",
+   "jatuh_tempo": "",
+   "keterangan": "",
+   "items": [
+    {
+     "barang_id": "ALT-06",
+     "qty": 1,
+     "harga": 9500000,
+     "residu": 0,
+     "garansi_bulan": 24,
+     "masa_manfaat_bulan": 48,
+     "dasar_n": "garansi"
+    }
+   ],
+   "total": 9500000,
+   "status": "posted",
+   "jurnal_id": "JU-2026-0007",
+   "dibuat_oleh": "admin",
+   "diubah_pada": "2026-11-02T05:00:00.000Z",
+   "aset_ids": [
+    "AST-0009"
    ],
    "diposting_oleh": "admin",
    "diposting_pada": "2026-11-02T05:00:00.000Z"
@@ -1991,31 +3708,99 @@ window.SEED = {
    "keterangan": "",
    "items": [
     {
-     "barang_id": "LKP-02",
-     "qty": 6,
-     "harga": 30000
+     "barang_id": "LKP-01",
+     "qty": 12,
+     "harga": 85000
     },
     {
-     "barang_id": "LKP-01",
-     "qty": 20,
-     "harga": 28000
+     "barang_id": "LKP-03",
+     "qty": 6,
+     "harga": 45000
     }
    ],
-   "total": 740000,
+   "total": 1290000,
    "status": "posted",
-   "jurnal_id": "JU-2026-0005",
+   "jurnal_id": "JU-2026-0008",
    "dibuat_oleh": "admin",
    "diubah_pada": "2026-11-02T05:00:00.000Z",
    "aset_ids": [],
    "diposting_oleh": "admin",
    "diposting_pada": "2026-11-02T05:00:00.000Z"
+  },
+  "BL-2026-0002": {
+   "no": "BL-2026-0002",
+   "jenis": "perlengkapan",
+   "tanggal": "2026-10-28",
+   "supplier_id": "SUP-03",
+   "cara_bayar": "kredit",
+   "jatuh_tempo": "2026-11-28",
+   "keterangan": "",
+   "items": [
+    {
+     "barang_id": "LKP-02",
+     "qty": 10,
+     "harga": 18000
+    },
+    {
+     "barang_id": "LKP-04",
+     "qty": 100,
+     "harga": 12500
+    },
+    {
+     "barang_id": "LKP-05",
+     "qty": 4,
+     "harga": 150000
+    }
+   ],
+   "total": 2030000,
+   "status": "posted",
+   "jurnal_id": "JU-2026-0009",
+   "dibuat_oleh": "admin",
+   "diubah_pada": "2026-11-02T05:00:00.000Z",
+   "aset_ids": [],
+   "diposting_oleh": "admin",
+   "diposting_pada": "2026-11-02T05:00:00.000Z"
+  },
+  "BP-2026-0007": {
+   "no": "BP-2026-0007",
+   "jenis": "peralatan",
+   "tanggal": "2026-11-02",
+   "supplier_id": "SUP-03",
+   "cara_bayar": "tunai",
+   "jatuh_tempo": "",
+   "keterangan": "",
+   "items": [
+    {
+     "barang_id": "ALT-05",
+     "qty": 2,
+     "harga": 950000,
+     "residu": 0,
+     "garansi_bulan": 24,
+     "masa_manfaat_bulan": 24,
+     "dasar_n": "garansi"
+    }
+   ],
+   "total": 1900000,
+   "status": "draft",
+   "jurnal_id": null,
+   "dibuat_oleh": "admin",
+   "diubah_pada": "2026-11-02T05:00:00.000Z"
   }
  },
  "supplier": {
+  "SUP-01": {
+   "kode": "SUP-01",
+   "nama": "CV Sinar Audio Malang",
+   "alamat": "Jl. Letjen Sutoyo, Malang",
+   "telepon": "",
+   "email": "",
+   "npwp": "",
+   "aktif": true
+  },
   "SUP-02": {
    "kode": "SUP-02",
-   "nama": "Toko Sinar Jaya",
-   "alamat": "Jl. Raya Singosari, Malang",
+   "nama": "Toko Kamera Ijen",
+   "alamat": "Jl. Ijen, Malang",
    "telepon": "",
    "email": "",
    "npwp": "",
@@ -2023,17 +3808,8 @@ window.SEED = {
   },
   "SUP-03": {
    "kode": "SUP-03",
-   "nama": "UD Bersih Abadi",
-   "alamat": "Jl. Soekarno Hatta, Malang",
-   "telepon": "",
-   "email": "",
-   "npwp": "",
-   "aktif": true
-  },
-  "SUP-01": {
-   "kode": "SUP-01",
-   "nama": "CV Sumber Elektronik Malang",
-   "alamat": "Jl. Letjen Sutoyo, Malang",
+   "nama": "UD Event Supply Malang",
+   "alamat": "Jl. Raya Singosari, Malang",
    "telepon": "",
    "email": "",
    "npwp": "",
@@ -2041,28 +3817,34 @@ window.SEED = {
   }
  },
  "perlengkapan": {
-  "LKP-02": {
-   "kode": "LKP-02",
-   "nama": "Pewangi",
-   "satuan": "liter",
-   "aktif": true
-  },
   "LKP-01": {
    "kode": "LKP-01",
-   "nama": "Deterjen Cair",
-   "satuan": "liter",
+   "nama": "Gaffer Tape",
+   "satuan": "roll",
    "aktif": true
   },
-  "LKP-04": {
-   "kode": "LKP-04",
-   "nama": "Hanger",
-   "satuan": "lusin",
+  "LKP-02": {
+   "kode": "LKP-02",
+   "nama": "Kabel Ties",
+   "satuan": "pak",
    "aktif": true
   },
   "LKP-03": {
    "kode": "LKP-03",
-   "nama": "Plastik Kemasan",
+   "nama": "Baterai AA",
    "satuan": "pak",
+   "aktif": true
+  },
+  "LKP-04": {
+   "kode": "LKP-04",
+   "nama": "ID Card dan Lanyard",
+   "satuan": "pcs",
+   "aktif": true
+  },
+  "LKP-05": {
+   "kode": "LKP-05",
+   "nama": "Cetak Banner/X-Banner",
+   "satuan": "lembar",
    "aktif": true
   }
  },
@@ -2094,7 +3876,7 @@ window.SEED = {
    "jam_masuk": "07:56",
    "jam_keluar": "17:04",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261028": {
@@ -2104,7 +3886,7 @@ window.SEED = {
    "jam_masuk": "07:53",
    "jam_keluar": "17:11",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261019": {
@@ -2114,7 +3896,7 @@ window.SEED = {
    "jam_masuk": "",
    "jam_keluar": "",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-01-20261029": {
@@ -2131,10 +3913,10 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-13",
    "absensi": "Hadir",
-   "jam_masuk": "07:48",
-   "jam_keluar": "17:43",
+   "jam_masuk": "06:48",
+   "jam_keluar": "16:43",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261001": {
@@ -2144,17 +3926,17 @@ window.SEED = {
    "jam_masuk": "08:27",
    "jam_keluar": "17:28",
    "terlambat": 27,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-05-20261021": {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-21",
    "absensi": "Hadir",
-   "jam_masuk": "07:46",
-   "jam_keluar": "17:38",
+   "jam_masuk": "06:46",
+   "jam_keluar": "16:38",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261026": {
@@ -2164,7 +3946,7 @@ window.SEED = {
    "jam_masuk": "07:48",
    "jam_keluar": "17:23",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-01-20261028": {
@@ -2181,10 +3963,10 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-22",
    "absensi": "Hadir",
-   "jam_masuk": "08:17",
-   "jam_keluar": "17:25",
-   "terlambat": 17,
-   "jadwal_id": "TM-04",
+   "jam_masuk": "05:42",
+   "jam_keluar": "18:35",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261023": {
@@ -2194,25 +3976,25 @@ window.SEED = {
    "jam_masuk": "07:55",
    "jam_keluar": "17:39",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-05-20261005": {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-05",
    "absensi": "Hadir",
-   "jam_masuk": "08:22",
-   "jam_keluar": "17:05",
+   "jam_masuk": "07:22",
+   "jam_keluar": "16:05",
    "terlambat": 22,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-03-20261022": {
    "karyawan_id": "KRY-03",
    "tanggal": "2026-10-22",
    "absensi": "Hadir",
-   "jam_masuk": "06:57",
-   "jam_keluar": "16:43",
+   "jam_masuk": "05:37",
+   "jam_keluar": "18:23",
    "terlambat": 0,
    "jadwal_id": "TM-03",
    "dibuat_oleh": "hrd"
@@ -2221,10 +4003,10 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-15",
    "absensi": "Hadir",
-   "jam_masuk": "07:49",
-   "jam_keluar": "17:36",
+   "jam_masuk": "06:49",
+   "jam_keluar": "16:36",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261029": {
@@ -2234,7 +4016,7 @@ window.SEED = {
    "jam_masuk": "07:50",
    "jam_keluar": "17:08",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261030": {
@@ -2244,7 +4026,7 @@ window.SEED = {
    "jam_masuk": "07:54",
    "jam_keluar": "17:11",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261028": {
@@ -2254,7 +4036,7 @@ window.SEED = {
    "jam_masuk": "06:51",
    "jam_keluar": "16:00",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-03-20261015": {
@@ -2284,7 +4066,7 @@ window.SEED = {
    "jam_masuk": "08:06",
    "jam_keluar": "17:03",
    "terlambat": 6,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-03-20261030": {
@@ -2304,7 +4086,7 @@ window.SEED = {
    "jam_masuk": "07:55",
    "jam_keluar": "17:13",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-03-20261006": {
@@ -2344,17 +4126,17 @@ window.SEED = {
    "jam_masuk": "08:26",
    "jam_keluar": "17:15",
    "terlambat": 26,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-05-20261016": {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-16",
    "absensi": "Hadir",
-   "jam_masuk": "07:52",
-   "jam_keluar": "17:36",
+   "jam_masuk": "06:52",
+   "jam_keluar": "16:36",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261013": {
@@ -2364,7 +4146,7 @@ window.SEED = {
    "jam_masuk": "",
    "jam_keluar": "",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261005": {
@@ -2374,7 +4156,7 @@ window.SEED = {
    "jam_masuk": "07:50",
    "jam_keluar": "17:26",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-03-20261005": {
@@ -2394,7 +4176,7 @@ window.SEED = {
    "jam_masuk": "08:00",
    "jam_keluar": "17:17",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261026": {
@@ -2404,7 +4186,7 @@ window.SEED = {
    "jam_masuk": "06:50",
    "jam_keluar": "16:39",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261005": {
@@ -2414,7 +4196,7 @@ window.SEED = {
    "jam_masuk": "",
    "jam_keluar": "",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-01-20261006": {
@@ -2444,7 +4226,7 @@ window.SEED = {
    "jam_masuk": "06:48",
    "jam_keluar": "16:22",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261030": {
@@ -2454,7 +4236,7 @@ window.SEED = {
    "jam_masuk": "06:49",
    "jam_keluar": "16:37",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261008": {
@@ -2464,7 +4246,7 @@ window.SEED = {
    "jam_masuk": "07:57",
    "jam_keluar": "17:01",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261027": {
@@ -2474,7 +4256,7 @@ window.SEED = {
    "jam_masuk": "06:46",
    "jam_keluar": "16:16",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261016": {
@@ -2484,7 +4266,7 @@ window.SEED = {
    "jam_masuk": "06:54",
    "jam_keluar": "16:18",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-03-20261027": {
@@ -2504,17 +4286,17 @@ window.SEED = {
    "jam_masuk": "07:00",
    "jam_keluar": "16:21",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261023": {
    "karyawan_id": "KRY-04",
    "tanggal": "2026-10-23",
    "absensi": "Hadir",
-   "jam_masuk": "06:51",
-   "jam_keluar": "16:00",
+   "jam_masuk": "05:31",
+   "jam_keluar": "18:10",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-03-20261026": {
@@ -2541,20 +4323,20 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-01",
    "absensi": "Hadir",
-   "jam_masuk": "07:53",
-   "jam_keluar": "17:03",
+   "jam_masuk": "06:53",
+   "jam_keluar": "16:03",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-05-20261009": {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-09",
    "absensi": "Hadir",
-   "jam_masuk": "07:59",
-   "jam_keluar": "17:26",
+   "jam_masuk": "06:59",
+   "jam_keluar": "16:26",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261007": {
@@ -2564,7 +4346,7 @@ window.SEED = {
    "jam_masuk": "07:56",
    "jam_keluar": "17:12",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261020": {
@@ -2574,7 +4356,7 @@ window.SEED = {
    "jam_masuk": "06:59",
    "jam_keluar": "16:33",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261009": {
@@ -2584,7 +4366,7 @@ window.SEED = {
    "jam_masuk": "08:32",
    "jam_keluar": "17:37",
    "terlambat": 32,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261022": {
@@ -2594,7 +4376,7 @@ window.SEED = {
    "jam_masuk": "07:58",
    "jam_keluar": "17:37",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261006": {
@@ -2604,7 +4386,7 @@ window.SEED = {
    "jam_masuk": "08:03",
    "jam_keluar": "17:16",
    "terlambat": 3,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-01-20261002": {
@@ -2621,20 +4403,20 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-29",
    "absensi": "Hadir",
-   "jam_masuk": "07:46",
-   "jam_keluar": "17:01",
+   "jam_masuk": "06:46",
+   "jam_keluar": "16:01",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-05-20261012": {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-12",
    "absensi": "Hadir",
-   "jam_masuk": "07:59",
-   "jam_keluar": "17:25",
+   "jam_masuk": "06:59",
+   "jam_keluar": "16:25",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261021": {
@@ -2644,17 +4426,17 @@ window.SEED = {
    "jam_masuk": "07:47",
    "jam_keluar": "17:17",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-05-20261019": {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-19",
    "absensi": "Hadir",
-   "jam_masuk": "07:50",
-   "jam_keluar": "17:02",
+   "jam_masuk": "06:50",
+   "jam_keluar": "16:02",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261008": {
@@ -2664,17 +4446,17 @@ window.SEED = {
    "jam_masuk": "06:49",
    "jam_keluar": "16:00",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-05-20261006": {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-06",
    "absensi": "Hadir",
-   "jam_masuk": "07:47",
-   "jam_keluar": "17:12",
+   "jam_masuk": "06:47",
+   "jam_keluar": "16:12",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261029": {
@@ -2684,7 +4466,7 @@ window.SEED = {
    "jam_masuk": "",
    "jam_keluar": "",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261013": {
@@ -2694,7 +4476,7 @@ window.SEED = {
    "jam_masuk": "",
    "jam_keluar": "",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-03-20261008": {
@@ -2724,7 +4506,7 @@ window.SEED = {
    "jam_masuk": "06:53",
    "jam_keluar": "16:13",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-03-20261016": {
@@ -2741,10 +4523,10 @@ window.SEED = {
    "karyawan_id": "KRY-04",
    "tanggal": "2026-10-22",
    "absensi": "Hadir",
-   "jam_masuk": "07:19",
-   "jam_keluar": "16:32",
-   "terlambat": 19,
-   "jadwal_id": "TM-03",
+   "jam_masuk": "05:34",
+   "jam_keluar": "18:12",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-01-20261012": {
@@ -2761,10 +4543,10 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-23",
    "absensi": "Hadir",
-   "jam_masuk": "07:47",
-   "jam_keluar": "17:38",
+   "jam_masuk": "05:37",
+   "jam_keluar": "18:18",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261020": {
@@ -2774,7 +4556,7 @@ window.SEED = {
    "jam_masuk": "07:50",
    "jam_keluar": "17:35",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261007": {
@@ -2784,7 +4566,7 @@ window.SEED = {
    "jam_masuk": "06:49",
    "jam_keluar": "16:09",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261015": {
@@ -2794,15 +4576,15 @@ window.SEED = {
    "jam_masuk": "07:00",
    "jam_keluar": "16:00",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-03-20261023": {
    "karyawan_id": "KRY-03",
    "tanggal": "2026-10-23",
    "absensi": "Hadir",
-   "jam_masuk": "06:59",
-   "jam_keluar": "16:01",
+   "jam_masuk": "05:39",
+   "jam_keluar": "18:11",
    "terlambat": 0,
    "jadwal_id": "TM-03",
    "dibuat_oleh": "hrd"
@@ -2814,7 +4596,7 @@ window.SEED = {
    "jam_masuk": "06:58",
    "jam_keluar": "16:35",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261006": {
@@ -2824,7 +4606,7 @@ window.SEED = {
    "jam_masuk": "06:56",
    "jam_keluar": "16:07",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-03-20261021": {
@@ -2844,7 +4626,7 @@ window.SEED = {
    "jam_masuk": "06:58",
    "jam_keluar": "16:44",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-03-20261001": {
@@ -2871,20 +4653,20 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-14",
    "absensi": "Hadir",
-   "jam_masuk": "08:29",
-   "jam_keluar": "17:27",
+   "jam_masuk": "07:29",
+   "jam_keluar": "16:27",
    "terlambat": 29,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-05-20261020": {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-20",
    "absensi": "Hadir",
-   "jam_masuk": "08:17",
-   "jam_keluar": "17:00",
+   "jam_masuk": "07:17",
+   "jam_keluar": "16:00",
    "terlambat": 17,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-03-20261014": {
@@ -2904,7 +4686,7 @@ window.SEED = {
    "jam_masuk": "08:22",
    "jam_keluar": "17:25",
    "terlambat": 22,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-02-20261027": {
@@ -2914,7 +4696,7 @@ window.SEED = {
    "jam_masuk": "07:50",
    "jam_keluar": "17:15",
    "terlambat": 0,
-   "jadwal_id": "TM-02",
+   "jadwal_id": "TM-04",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-04-20261002": {
@@ -2924,27 +4706,27 @@ window.SEED = {
    "jam_masuk": "",
    "jam_keluar": "",
    "terlambat": 0,
-   "jadwal_id": "TM-03",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-05-20261002": {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-02",
    "absensi": "Hadir",
-   "jam_masuk": "08:15",
-   "jam_keluar": "17:14",
+   "jam_masuk": "07:15",
+   "jam_keluar": "16:14",
    "terlambat": 15,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-05-20261008": {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-08",
    "absensi": "Hadir",
-   "jam_masuk": "07:59",
-   "jam_keluar": "17:27",
+   "jam_masuk": "06:59",
+   "jam_keluar": "16:27",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-03-20261019": {
@@ -2974,17 +4756,17 @@ window.SEED = {
    "jam_masuk": "",
    "jam_keluar": "",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-05-20261007": {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-07",
    "absensi": "Hadir",
-   "jam_masuk": "08:32",
-   "jam_keluar": "17:28",
+   "jam_masuk": "07:32",
+   "jam_keluar": "16:28",
    "terlambat": 32,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-03-20261013": {
@@ -3024,17 +4806,17 @@ window.SEED = {
    "jam_masuk": "",
    "jam_keluar": "",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-05-20261028": {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-28",
    "absensi": "Hadir",
-   "jam_masuk": "07:48",
-   "jam_keluar": "17:33",
+   "jam_masuk": "06:48",
+   "jam_keluar": "16:33",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-01-20261013": {
@@ -3051,10 +4833,10 @@ window.SEED = {
    "karyawan_id": "KRY-05",
    "tanggal": "2026-10-27",
    "absensi": "Hadir",
-   "jam_masuk": "07:49",
-   "jam_keluar": "17:28",
+   "jam_masuk": "06:49",
+   "jam_keluar": "16:28",
    "terlambat": 0,
-   "jadwal_id": "TM-04",
+   "jadwal_id": "TM-02",
    "dibuat_oleh": "hrd"
   },
   "PRS-KRY-01-20261016": {
@@ -3171,51 +4953,51 @@ window.SEED = {
  "jabatan": {
   "JBT-01": {
    "kode": "JBT-01",
-   "nama": "Kepala Toko",
-   "tunj_jabatan": 750000,
-   "tunj_keluarga": 300000,
-   "akun_beban": "6-220",
-   "aktif": true
-  },
-  "JBT-04": {
-   "kode": "JBT-04",
-   "nama": "Kurir Antar-Jemput",
-   "tunj_jabatan": 200000,
-   "tunj_keluarga": 200000,
+   "nama": "Event Manager",
+   "tunj_jabatan": 1500000,
+   "tunj_keluarga": 400000,
    "akun_beban": "6-210",
    "aktif": true
   },
   "JBT-02": {
    "kode": "JBT-02",
-   "nama": "Kasir / Admin",
-   "tunj_jabatan": 300000,
-   "tunj_keluarga": 200000,
-   "akun_beban": "6-220",
-   "aktif": true
-  },
-  "JBT-03": {
-   "kode": "JBT-03",
-   "nama": "Operator Cuci & Setrika",
+   "nama": "Crew Produksi",
    "tunj_jabatan": 250000,
    "tunj_keluarga": 200000,
    "akun_beban": "6-210",
    "aktif": true
+  },
+  "JBT-03": {
+   "kode": "JBT-03",
+   "nama": "Operator Sound & Lighting",
+   "tunj_jabatan": 500000,
+   "tunj_keluarga": 250000,
+   "akun_beban": "6-210",
+   "aktif": true
+  },
+  "JBT-04": {
+   "kode": "JBT-04",
+   "nama": "Admin Keuangan",
+   "tunj_jabatan": 400000,
+   "tunj_keluarga": 250000,
+   "akun_beban": "6-220",
+   "aktif": true
   }
  },
  "jadwal": {
-  "TM-02": {
-   "kode": "TM-02",
-   "jabatan_id": "JBT-02",
+  "TM-01": {
+   "kode": "TM-01",
+   "jabatan_id": "JBT-01",
    "jam_masuk": "08:00",
    "jam_keluar": "17:00",
    "hari_kerja": 22,
    "aktif": true
   },
-  "TM-04": {
-   "kode": "TM-04",
-   "jabatan_id": "JBT-04",
-   "jam_masuk": "08:00",
-   "jam_keluar": "17:00",
+  "TM-02": {
+   "kode": "TM-02",
+   "jabatan_id": "JBT-02",
+   "jam_masuk": "07:00",
+   "jam_keluar": "16:00",
    "hari_kerja": 22,
    "aktif": true
   },
@@ -3227,9 +5009,9 @@ window.SEED = {
    "hari_kerja": 22,
    "aktif": true
   },
-  "TM-01": {
-   "kode": "TM-01",
-   "jabatan_id": "JBT-01",
+  "TM-04": {
+   "kode": "TM-04",
+   "jabatan_id": "JBT-04",
    "jam_masuk": "08:00",
    "jam_keluar": "17:00",
    "hari_kerja": 22,
@@ -3240,67 +5022,67 @@ window.SEED = {
   "GP-01": {
    "kode": "GP-01",
    "nama": "Golongan I",
-   "jumlah": 3550000,
-   "aktif": true
-  },
-  "GP-04": {
-   "kode": "GP-04",
-   "nama": "Golongan IV",
-   "jumlah": 5500000,
-   "aktif": true
-  },
-  "GP-03": {
-   "kode": "GP-03",
-   "nama": "Golongan III",
-   "jumlah": 4500000,
+   "jumlah": 3800000,
    "aktif": true
   },
   "GP-02": {
    "kode": "GP-02",
    "nama": "Golongan II",
-   "jumlah": 3800000,
+   "jumlah": 4500000,
+   "aktif": true
+  },
+  "GP-03": {
+   "kode": "GP-03",
+   "nama": "Golongan III",
+   "jumlah": 5800000,
+   "aktif": true
+  },
+  "GP-04": {
+   "kode": "GP-04",
+   "nama": "Golongan IV",
+   "jumlah": 8000000,
    "aktif": true
   }
  },
  "karyawan": {
-  "KRY-04": {
-   "kode": "KRY-04",
-   "nama": "Dewi Lestari",
-   "status_ptkp": "TK/0",
-   "bank": "BNI",
-   "no_rek": "0987654321",
-   "aktif": true
-  },
-  "KRY-02": {
-   "kode": "KRY-02",
-   "nama": "Siti Rahmawati",
-   "status_ptkp": "TK/0",
-   "bank": "Mandiri",
-   "no_rek": "1370012345678",
-   "aktif": true
-  },
   "KRY-01": {
    "kode": "KRY-01",
-   "nama": "Andi Pratama",
+   "nama": "Raka Aditya Wijaya",
    "status_ptkp": "K/2",
    "bank": "BCA",
    "no_rek": "1234567890",
    "aktif": true
   },
-  "KRY-05": {
-   "kode": "KRY-05",
-   "nama": "Rizky Maulana",
-   "status_ptkp": "K/0",
-   "bank": "BCA",
-   "no_rek": "5550001234",
+  "KRY-02": {
+   "kode": "KRY-02",
+   "nama": "Nadia Putri Anggraini",
+   "status_ptkp": "TK/0",
+   "bank": "Mandiri",
+   "no_rek": "1370012345678",
    "aktif": true
   },
   "KRY-03": {
    "kode": "KRY-03",
-   "nama": "Budi Santoso",
+   "nama": "Bagas Setiawan",
    "status_ptkp": "K/1",
    "bank": "BRI",
    "no_rek": "002101009876",
+   "aktif": true
+  },
+  "KRY-04": {
+   "kode": "KRY-04",
+   "nama": "Dimas Prakoso",
+   "status_ptkp": "TK/1",
+   "bank": "BNI",
+   "no_rek": "0987654321",
+   "aktif": true
+  },
+  "KRY-05": {
+   "kode": "KRY-05",
+   "nama": "Fajar Ramadhan",
+   "status_ptkp": "K/0",
+   "bank": "BCA",
+   "no_rek": "5550001234",
    "aktif": true
   }
  },
@@ -3331,27 +5113,6 @@ window.SEED = {
   }
  },
  "setgaji": {
-  "SET-04": {
-   "kode": "SET-04",
-   "karyawan_id": "KRY-04",
-   "jabatan_id": "JBT-03",
-   "golongan_id": "GP-01",
-   "tunjangan_ids": [
-    "TNJ-02"
-   ],
-   "aktif": true
-  },
-  "SET-05": {
-   "kode": "SET-05",
-   "karyawan_id": "KRY-05",
-   "jabatan_id": "JBT-04",
-   "golongan_id": "GP-01",
-   "tunjangan_ids": [
-    "TNJ-01",
-    "TNJ-02"
-   ],
-   "aktif": true
-  },
   "SET-01": {
    "kode": "SET-01",
    "karyawan_id": "KRY-01",
@@ -3365,26 +5126,47 @@ window.SEED = {
    ],
    "aktif": true
   },
+  "SET-02": {
+   "kode": "SET-02",
+   "karyawan_id": "KRY-02",
+   "jabatan_id": "JBT-04",
+   "golongan_id": "GP-02",
+   "tunjangan_ids": [
+    "TNJ-01",
+    "TNJ-02",
+    "TNJ-04"
+   ],
+   "aktif": true
+  },
   "SET-03": {
    "kode": "SET-03",
    "karyawan_id": "KRY-03",
    "jabatan_id": "JBT-03",
-   "golongan_id": "GP-01",
+   "golongan_id": "GP-02",
    "tunjangan_ids": [
     "TNJ-01",
     "TNJ-02"
    ],
    "aktif": true
   },
-  "SET-02": {
-   "kode": "SET-02",
-   "karyawan_id": "KRY-02",
+  "SET-04": {
+   "kode": "SET-04",
+   "karyawan_id": "KRY-04",
    "jabatan_id": "JBT-02",
-   "golongan_id": "GP-02",
+   "golongan_id": "GP-01",
+   "tunjangan_ids": [
+    "TNJ-02"
+   ],
+   "aktif": true
+  },
+  "SET-05": {
+   "kode": "SET-05",
+   "karyawan_id": "KRY-05",
+   "jabatan_id": "JBT-02",
+   "golongan_id": "GP-01",
    "tunjangan_ids": [
     "TNJ-01",
-    "TNJ-02",
-    "TNJ-04"
+    "TNJ-02"
    ],
    "aktif": true
   }

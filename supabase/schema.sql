@@ -1,4 +1,4 @@
--- Skema database Supabase untuk SIA Laundry Sukses Mandiri.
+-- Skema database Supabase untuk SIA D'Production.
 -- Satu tabel dokumen: setiap koleksi aplikasi (jurnal, aset, slip, ...) disimpan sebagai baris dengan kolom `col`.
 create table if not exists public.docs (
   col text not null,

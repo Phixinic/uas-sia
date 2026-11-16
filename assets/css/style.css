@@ -1,4 +1,4 @@
-/* Gaya tampilan SIA Laundry Sukses Mandiri: token warna (terang & gelap), layout, tabel, form */
+/* Gaya tampilan SIA D'Production: token warna (terang & gelap), layout, tabel, form */
 /* Layout: sidebar navigasi (menjadi baris geser di ponsel) + area kerja; kartu hanya untuk form, tabel, dan jurnal */
 :root{
   --bg:#F2F5F7; --surface:#FFFFFF; --surface-2:#F6F9FA; --line:#DCE4E9; --fg:#0F1F2C; --muted:#4A5D6D;
@@ -27,7 +27,13 @@ a{color:var(--accent-ink)}
 .logo{width:38px;height:38px;border-radius:10px;background:var(--nav-on);display:grid;place-items:center;flex:none}
 .brand b{display:block;color:#fff;font-size:15px}
 .brand span{font-size:12px;color:var(--nav-muted)}
-.grp{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--nav-muted);margin:16px 10px 6px}
+.grp{display:flex;align-items:center;gap:8px;width:100%;font:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--nav-muted);background:none;border:0;border-radius:8px;margin:10px 0 2px;padding:8px 10px;min-height:36px;cursor:pointer;text-align:left}
+.grp>span:first-child{flex:1}
+.grp:hover{background:var(--nav-hover);color:#fff}
+.grp:focus-visible{outline:2px solid #fff;outline-offset:-2px}
+.grp .car{width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin-right:3px;transition:transform .15s}
+.ng.cl .car{transform:rotate(-45deg)}
+.ng.cl .nl{display:none}
 .nl{display:flex;flex-direction:column;gap:2px}
 .nl a{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;border-radius:9px;color:var(--nav-fg);text-decoration:none;font-size:14px;min-height:40px}
 .nl a:hover{background:var(--nav-hover);color:#fff}
@@ -36,9 +42,11 @@ a{color:var(--accent-ink)}
 .mainwrap{flex:1 1 560px;min-width:0;padding-block:18px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 @media (min-width:900px){.mainwrap{padding-left:32px;padding-right:max(32px,env(safe-area-inset-right,0px))}}
 @media (max-width:820px){
-  .side{flex:1 1 100%;padding-block:12px;padding-right:max(14px,env(safe-area-inset-right,0px))}
+  .side{min-width:0;flex:1 1 100%;padding-block:12px;padding-right:max(14px,env(safe-area-inset-right,0px))}
   .brand{padding-bottom:10px}
+  .ng{display:contents}
   .grp{display:none}
+  .ng.cl .nl{display:flex}
   #nav{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px}
   .nl{flex-direction:row}
   .nl a{white-space:nowrap}
@@ -118,3 +126,12 @@ details summary{cursor:pointer;font-weight:600;font-size:13.5px;color:var(--acce
 #toast{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;max-width:min(420px,calc(100vw - 32px))}
 .tst{padding:12px 16px;border-radius:10px;font-size:14px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.18)}
 @media (prefers-reduced-motion:no-preference){.tst{animation:up .2s ease-out}@keyframes up{from{transform:translateY(8px);opacity:0}}}
+
+.lip{border-top:1px solid var(--line)}
+.lip>summary{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;padding:11px 18px;min-height:44px;color:var(--accent-ink)}
+.lip>summary:hover{background:var(--surface-2)}
+.lip>.lb2{padding:0}
+.card:not(.flush)>.lip{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card:not(.flush)>.lip>.lb2{padding:0 12px 12px}
+.sumr{display:flex;flex-wrap:wrap;gap:6px 22px;padding:2px 18px 14px;font-size:13.5px}
+.sumr b{font-variant-numeric:tabular-nums}

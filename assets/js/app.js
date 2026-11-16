@@ -6,7 +6,7 @@ let rq=0;function render(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;doRen
 function doRender(){
   const ae=document.activeElement;const fid=ae&&ae.id;let ss=null;try{ss=ae.selectionStart}catch(e){}
   document.getElementById('nav').innerHTML=navHtml();document.getElementById('rolebar').innerHTML=roleHtml();
-  {const pf=profil();document.getElementById('brand').innerHTML=`<b>${esc(pf.nama||'Laundry Sukses Mandiri')}</b><span>${esc(pf.ket||'SIA Konversi & SDM')}</span>`}
+  {const pf=profil();document.getElementById('brand').innerHTML=`<b>${esc(pf.nama||"D'Production")}</b><span>${esc(pf.ket||'SIA Konversi & SDM')}</span>`}
   let html='';try{html=(VIEWS[S.view]||vDashboard)()}catch(e){console.error(e);html=`<div class="alert bad">Halaman gagal ditampilkan: ${esc(e.message)}</div>`}
   document.getElementById('main').innerHTML=(S.dbState==='none'?'<div class="alert warn" style="margin-bottom:16px">Database tidak tersedia di tampilan ini, jadi data tidak bisa dimuat atau disimpan. Buka halaman ini langsung dari claude.ai.</div>':'')+html;
   if(fid){const el=document.getElementById(fid);if(el&&el!==document.activeElement){el.focus({preventScroll:true});if(ss!=null)try{el.setSelectionRange(ss,ss)}catch(e){}}}

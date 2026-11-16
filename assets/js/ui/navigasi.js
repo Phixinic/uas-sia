@@ -15,7 +15,22 @@ function badge(id){
   if(id==='penyusutan'&&isAdmin()){const P=per(today());return S.data.aset.some(a=>a.status==='aktif'&&(a.jadwal||[]).some(r=>r.periode<P&&!r.jurnal_id))?'!':0}
   return 0;
 }
-function navHtml(){return NAV.map(([g,items])=>`<div class="grp">${g}</div><div class="nl">${items.map(([id,l])=>{const b=badge(id);return `<a href="#${id}" class="${S.view===id?'on':''}"${S.view===id?' aria-current="page"':''}><span>${l}</span>${b?`<span class="bdg">${b}</span>`:''}</a>`}).join('')}</div>`).join('')}
+/* Grup menu bisa dilipat. Pilihan pengguna disimpan di localStorage; tanpa pilihan, hanya grup yang berisi halaman aktif yang terbuka. */
+const NAVKEY='sia-nav-open';
+const navPref=(()=>{try{return JSON.parse(localStorage.getItem(NAVKEY))||{}}catch(e){return {}}})();
+let navLast=null;
+function navSimpan(){try{localStorage.setItem(NAVKEY,JSON.stringify(navPref))}catch(e){}}
+function navHtml(){
+  const aktif=(NAV.find(g=>g[1].some(x=>x[0]===S.view))||[])[0];
+  if(navLast!==S.view){navLast=S.view;if(aktif&&navPref[aktif]===false){delete navPref[aktif];navSimpan()}}
+  return NAV.map(([g,items],i)=>{
+    const open=navPref[g]!==undefined?navPref[g]:g===aktif;
+    const tunda=open?0:items.reduce((n,[id])=>{const b=badge(id);return n+(b==='!'?1:+b||0)},0);
+    return `<div class="ng${open?'':' cl'}"><button type="button" class="grp" id="ngb-${i}" data-ng="${esc(g)}" aria-expanded="${open}" aria-controls="ng-${i}"><span>${g}</span>${tunda?`<span class="bdg">${tunda}</span>`:''}<span class="car" aria-hidden="true"></span></button><div class="nl" id="ng-${i}">${items.map(([id,l])=>{const b=badge(id);return `<a href="#${id}" class="${S.view===id?'on':''}"${S.view===id?' aria-current="page"':''}><span>${l}</span>${b?`<span class="bdg">${b}</span>`:''}</a>`}).join('')}</div></div>`}).join('')}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-ng]');if(!b)return;
+  const g=b.dataset.ng;navPref[g]=b.getAttribute('aria-expanded')!=='true';navSimpan();render();
+});
 function roleHtml(){
   const load=S.dbState==='ok'&&S.loaded.size<COLS.length?'<span class="small muted">Memuat data…</span>':'';
   return `<div class="role"><span>Masuk sebagai</span><div class="seg" role="group" aria-label="Peran">${['admin','hrd','owner'].map(r=>`<button type="button" class="${S.role===r?'on':''}" aria-pressed="${S.role===r}" data-act="role" data-v="${r}">${ROLE[r]}</button>`).join('')}</div><span class="small">Peran demo, di sistem nyata ditentukan oleh login.</span></div>${load}${modeNote()}`;

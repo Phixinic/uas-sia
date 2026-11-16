@@ -1,6 +1,6 @@
-# SIA Laundry Sukses Mandiri — Siklus Konversi & SDM
+# SIA D'Production: Siklus Konversi & SDM
 
-Aplikasi web Sistem Informasi Akuntansi untuk dua siklus pada studi kasus Laundry Sukses Mandiri:
+Aplikasi web Sistem Informasi Akuntansi untuk dua siklus pada studi kasus D'Production (DPRO), event organizer dan production house di Malang:
 
 - **Siklus konversi**: pembelian peralatan dan perlengkapan, penyusutan, nilai sisa perlengkapan, pelepasan peralatan.
 - **Siklus SDM**: presensi, hitung gaji, PPh 21, dan distribusi beban gaji.
@@ -88,7 +88,7 @@ Peran dipilih lewat tombol di bagian atas (mode demo, belum ada login).
 | Penyusutan bulanan | Biaya Penyusutan Peralatan | Akumulasi Penyusutan Peralatan |
 | Pemakaian perlengkapan | Biaya Perlengkapan | Perlengkapan |
 | Pelepasan peralatan | Akumulasi Penyusutan, Kas, Rugi | Peralatan, Laba |
-| Penggajian | Biaya Gaji Tenaga Kerja Langsung, Biaya Gaji Administrasi & Umum | Utang PPh 21, Kas |
+| Penggajian | Biaya Gaji Crew & Produksi Event, Biaya Gaji Administrasi & Umum | Utang PPh 21, Kas |
 
 ## Mengganti studi kasus
 

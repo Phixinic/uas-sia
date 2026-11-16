@@ -4,7 +4,7 @@
  */
 /* ---------- Mode 1: localStorage (tanpa server) ---------- */
 const LocalDB=(function(){
-  const KEY='sia-laundry-db-v2';
+  const KEY='sia-dpro-db-v1';
   const subs={};
   let data=read();
   function read(){try{const s=localStorage.getItem(KEY);if(s)return JSON.parse(s)}catch(e){}return clone(window.SEED||{})}

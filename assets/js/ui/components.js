@@ -9,3 +9,10 @@ const opt=(v,l,sel)=>`<option value="${esc(v)}"${v===sel?' selected':''}>${esc(l
 const perOpts=(list,sel)=>list.slice().reverse().map(p=>opt(p,fmtPer(p)+(isLocked(p)?' (terkunci)':''),sel)).join('');
 function fld(label,inner,hint){return `<div class="fld"><label>${label}</label>${inner}${hint?`<div class="hint">${hint}</div>`:''}</div>`}
 const inp=(id,bind,val,attrs)=>`<input class="in" id="${id}" data-bind="${bind}" value="${esc(val)}" ${attrs||''}>`;
+
+/* Bagian lipat. Status buka/tutup disimpan di S.ui.lip supaya bertahan setelah render ulang. */
+function lip(key,label,body,info,def){
+  const o=(S.ui.lip=S.ui.lip||{});const open=o[key]!==undefined?o[key]:!!def;
+  return `<details class="lip" data-lip="${esc(key)}"${open?' open':''}><summary><span>${label}</span>${info?`<span class="small muted">${info}</span>`:''}</summary><div class="lb2">${body}</div></details>`;
+}
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.lip!==undefined){(S.ui.lip=S.ui.lip||{})[d.dataset.lip]=d.open}},true);
