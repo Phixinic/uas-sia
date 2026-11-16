@@ -20,7 +20,8 @@ import { TautanTombol } from "@/komponen/ui/Tombol";
 import KeadaanKosong from "@/komponen/ui/KeadaanKosong";
 import Peringatan from "@/komponen/ui/Peringatan";
 import KartuRingkasan from "@/komponen/ui/KartuRingkasan";
-import FormPembelian, { formKosong, type NilaiAwalForm } from "./FormPembelian";
+import FormPembelian from "./FormPembelian";
+import { formKosong, type NilaiAwalForm } from "./nilai-awal";
 import AksiPembelian from "./AksiPembelian";
 import DetailPembelian from "./DetailPembelian";
 import type { JenisPembelian } from "@/generated/prisma/enums";
@@ -62,7 +63,7 @@ export default async function HalamanPembelian({ jenis, cari }: { jenis: JenisPe
             })),
           }
         : formKosong(hariIni());
-      form = <FormPembelian key={cari.form} jenis={jenis} awal={awal} supplier={opsi.supplier} barang={opsi.barang} namaAkun={namaAkun} periodeTerkunci={terkunci} alamatKembali={alamat} />;
+      form = <FormPembelian key={cari.form} jenis={jenis} awal={awal} supplier={opsi.supplier} barang={opsi.barang} kategori={opsi.kategori} bolehTambahCepat={boleh(pengguna.peran, "master-konversi.tambah-cepat")} namaAkun={namaAkun} periodeTerkunci={terkunci} alamatKembali={alamat} />;
     }
   }
 

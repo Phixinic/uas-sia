@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { wajibMasuk } from "@/lib/server/auth";
-import HalamanBelumJadi from "@/komponen/ui/HalamanBelumJadi";
+import HalamanPelepasan from "@/komponen/konversi/pelepasan/HalamanPelepasan";
 
 export const metadata: Metadata = { title: "Pelepasan Peralatan" };
 
-export default async function Halaman() {
-  await wajibMasuk();
-  return <HalamanBelumJadi judul="Pelepasan Peralatan" keterangan="Peralatan yang dijual, dibuang, atau hilang. Diajukan Admin, diputuskan Owner." pemilik="konversi" />;
+export default async function Halaman({ searchParams }: { searchParams: Promise<{ form?: string; lihat?: string; aset?: string }> }) {
+  return <HalamanPelepasan cari={await searchParams} />;
 }

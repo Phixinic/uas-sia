@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { wajibMasuk } from "@/lib/server/auth";
-import HalamanBelumJadi from "@/komponen/ui/HalamanBelumJadi";
+import HalamanKartuAset from "@/komponen/konversi/aset/HalamanKartuAset";
 
 export const metadata: Metadata = { title: "Kartu Aset" };
 
-export default async function Halaman() {
-  await wajibMasuk();
-  return <HalamanBelumJadi judul="Kartu Aset" keterangan="Satu kartu untuk setiap unit peralatan, lengkap dengan rumus dan jadwal penyusutan." pemilik="konversi" />;
+export default async function Halaman({ searchParams }: { searchParams: Promise<{ status?: string; aset?: string }> }) {
+  return <HalamanKartuAset cari={await searchParams} />;
 }
