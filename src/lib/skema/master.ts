@@ -1,0 +1,220 @@
+/*
+ * Definisi data master dan skema validasinya (zod). Aman diimpor komponen klien.
+ * Satu definisi dipakai tiga tempat: form (isian apa saja), server action (validasi), dan daftar (label).
+ * Aturan sama dengan MDEF di versi-statis/assets/js/views/master.js.
+ */
+import { z } from "zod";
+import type { KunciIzin } from "@/lib/peran";
+
+export const JENIS_MASTER = ["supplier", "peralatan", "perlengkapan", "kategori", "akun", "karyawan", "jabatan", "golongan", "tunjangan", "jadwal", "setgaji"] as const;
+export type JenisMaster = (typeof JENIS_MASTER)[number];
+export type KelompokMaster = "konversi" | "sdm";
+
+export type TipeIsian = "teks" | "email" | "angka" | "waktu" | "pilih" | "banyak";
+
+export type DefIsian = {
+  kunci: string;
+  label: string;
+  tipe: TipeIsian;
+  wajib?: boolean;
+  /** Kunci sumber pilihan: statis (lihat OPSI_STATIS) atau dinamis (dikirim server lewat OpsiMaster). */
+  sumber?: string;
+  min?: number;
+  maks?: number;
+  petunjuk?: string;
+  /** Tidak bisa diubah sesudah data dibuat. */
+  tetap?: boolean;
+};
+
+export type DefMaster = {
+  jenis: JenisMaster;
+  label: string;
+  kelompok: KelompokMaster;
+  izin: KunciIzin;
+  /** Awalan kode otomatis; kosong bila kode diketik pengguna (akun). */
+  isian: DefIsian[];
+  petunjuk?: string;
+};
+
+export type OpsiPilihan = { nilai: string; label: string; nonaktif?: boolean };
+export type OpsiMaster = Record<string, OpsiPilihan[]>;
+
+export const OPSI_STATIS: OpsiMaster = {
+  tipe: [
+    { nilai: "ASET", label: "Aset" }, { nilai: "KONTRA_ASET", label: "Kontra aset" }, { nilai: "LIABILITAS", label: "Liabilitas" },
+    { nilai: "EKUITAS", label: "Ekuitas" }, { nilai: "PENDAPATAN", label: "Pendapatan" }, { nilai: "BEBAN", label: "Beban" },
+  ],
+  saldoNormal: [{ nilai: "D", label: "Debit" }, { nilai: "K", label: "Kredit" }],
+  ptkp: ["TK0", "TK1", "TK2", "TK3", "K0", "K1", "K2", "K3"].map((k) => ({ nilai: k, label: k.replace(/^(TK|K)(\d)$/, "$1/$2") })),
+  bank: ["BCA", "Mandiri", "BRI", "BNI", "BSI"].map((b) => ({ nilai: b, label: b })),
+};
+
+export const DEF_MASTER: Record<JenisMaster, DefMaster> = {
+  supplier: {
+    jenis: "supplier", label: "Supplier", kelompok: "konversi", izin: "master-konversi.ubah",
+    isian: [
+      { kunci: "nama", label: "Nama supplier", tipe: "teks", wajib: true },
+      { kunci: "alamat", label: "Alamat", tipe: "teks" },
+      { kunci: "telepon", label: "Telepon", tipe: "teks" },
+      { kunci: "email", label: "Email", tipe: "email" },
+      { kunci: "npwp", label: "NPWP", tipe: "teks", petunjuk: "Kosongkan bila tidak ada. Tidak boleh sama dengan supplier lain." },
+    ],
+  },
+  peralatan: {
+    jenis: "peralatan", label: "Peralatan", kelompok: "konversi", izin: "master-konversi.ubah",
+    isian: [
+      { kunci: "nama", label: "Nama peralatan", tipe: "teks", wajib: true },
+      { kunci: "satuan", label: "Satuan", tipe: "teks", wajib: true },
+      { kunci: "kategoriKode", label: "Kategori aset", tipe: "pilih", sumber: "kategori", wajib: true },
+    ],
+  },
+  perlengkapan: {
+    jenis: "perlengkapan", label: "Perlengkapan", kelompok: "konversi", izin: "master-konversi.ubah",
+    isian: [
+      { kunci: "nama", label: "Nama perlengkapan", tipe: "teks", wajib: true },
+      { kunci: "satuan", label: "Satuan", tipe: "teks", wajib: true },
+    ],
+  },
+  kategori: {
+    jenis: "kategori", label: "Kategori aset", kelompok: "konversi", izin: "master.akun-kategori",
+    petunjuk: "Kategori dan bagan akun dikelola Owner, dan dipakai bersama oleh siklus konversi dan SDM.",
+    isian: [
+      { kunci: "nama", label: "Nama kategori", tipe: "teks", wajib: true },
+      { kunci: "masaManfaatBulan", label: "Masa manfaat (bulan)", tipe: "angka", wajib: true, maks: 600 },
+      { kunci: "persenResidu", label: "Residu (%)", tipe: "angka", maks: 99, petunjuk: "0 sampai 99." },
+      { kunci: "akunAsetKode", label: "Akun aset", tipe: "pilih", sumber: "akun", wajib: true },
+      { kunci: "akunAkumulasiKode", label: "Akun akumulasi", tipe: "pilih", sumber: "akun", wajib: true },
+      { kunci: "akunBebanKode", label: "Akun biaya", tipe: "pilih", sumber: "akun", wajib: true },
+    ],
+  },
+  akun: {
+    jenis: "akun", label: "Bagan akun", kelompok: "konversi", izin: "master.akun-kategori",
+    petunjuk: "Kode akun tidak bisa diubah sesudah dibuat. Tipe dan saldo normal hanya bisa diubah selama akun belum dipakai di jurnal.",
+    isian: [
+      { kunci: "kode", label: "Kode akun", tipe: "teks", wajib: true, tetap: true, petunjuk: "Huruf, angka, titik, dan tanda minus, contoh 1-110." },
+      { kunci: "nama", label: "Nama akun", tipe: "teks", wajib: true },
+      { kunci: "tipe", label: "Tipe", tipe: "pilih", sumber: "tipe", wajib: true },
+      { kunci: "saldoNormal", label: "Saldo normal", tipe: "pilih", sumber: "saldoNormal", wajib: true },
+    ],
+  },
+  karyawan: {
+    jenis: "karyawan", label: "Karyawan", kelompok: "sdm", izin: "master-sdm.ubah",
+    isian: [
+      { kunci: "nama", label: "Nama", tipe: "teks", wajib: true },
+      { kunci: "statusPtkp", label: "Status PTKP", tipe: "pilih", sumber: "ptkp", wajib: true },
+      { kunci: "bank", label: "Bank", tipe: "pilih", sumber: "bank", wajib: true },
+      { kunci: "noRek", label: "No. rekening", tipe: "teks", wajib: true },
+    ],
+  },
+  jabatan: {
+    jenis: "jabatan", label: "Jabatan", kelompok: "sdm", izin: "master-sdm.ubah",
+    isian: [
+      { kunci: "nama", label: "Nama jabatan", tipe: "teks", wajib: true },
+      { kunci: "tunjJabatan", label: "Tunjangan jabatan (Rp)", tipe: "angka" },
+      { kunci: "tunjKeluarga", label: "Tunj. istri/anak (Rp)", tipe: "angka", petunjuk: "Hanya untuk karyawan berstatus PTKP K/*." },
+      { kunci: "akunBebanKode", label: "Akun biaya gaji", tipe: "pilih", sumber: "akun", wajib: true },
+    ],
+  },
+  golongan: {
+    jenis: "golongan", label: "Gaji pokok", kelompok: "sdm", izin: "master-sdm.ubah",
+    isian: [
+      { kunci: "nama", label: "Golongan", tipe: "teks", wajib: true },
+      { kunci: "jumlah", label: "Gaji pokok (Rp)", tipe: "angka", wajib: true },
+    ],
+  },
+  tunjangan: {
+    jenis: "tunjangan", label: "Tunjangan", kelompok: "sdm", izin: "master-sdm.ubah",
+    isian: [
+      { kunci: "nama", label: "Nama tunjangan", tipe: "teks", wajib: true },
+      { kunci: "nominal", label: "Nominal per bulan (Rp)", tipe: "angka", wajib: true },
+    ],
+  },
+  jadwal: {
+    jenis: "jadwal", label: "Jadwal kerja", kelompok: "sdm", izin: "master-sdm.ubah",
+    isian: [
+      { kunci: "jabatanKode", label: "Jabatan", tipe: "pilih", sumber: "jabatan", wajib: true },
+      { kunci: "jamMasuk", label: "Jam masuk", tipe: "waktu", wajib: true },
+      { kunci: "jamKeluar", label: "Jam keluar", tipe: "waktu", wajib: true },
+      { kunci: "hariKerja", label: "Hari kerja per bulan", tipe: "angka", wajib: true, maks: 31 },
+    ],
+  },
+  setgaji: {
+    jenis: "setgaji", label: "Setting gaji", kelompok: "sdm", izin: "master-sdm.ubah",
+    isian: [
+      { kunci: "karyawanKode", label: "Karyawan", tipe: "pilih", sumber: "karyawan", wajib: true },
+      { kunci: "jabatanKode", label: "Jabatan", tipe: "pilih", sumber: "jabatan", wajib: true },
+      { kunci: "golonganKode", label: "Gaji pokok", tipe: "pilih", sumber: "golongan", wajib: true },
+      { kunci: "tunjanganKodes", label: "Tunjangan", tipe: "banyak", sumber: "tunjangan" },
+    ],
+  },
+};
+
+export const DAFTAR_KELOMPOK: Record<KelompokMaster, JenisMaster[]> = {
+  konversi: JENIS_MASTER.filter((j) => DEF_MASTER[j].kelompok === "konversi"),
+  sdm: JENIS_MASTER.filter((j) => DEF_MASTER[j].kelompok === "sdm"),
+};
+
+const MAKS_RUPIAH = 2_000_000_000;
+const POLA_JAM = /^([01]\d|2[0-3]):[0-5]\d$/;
+const POLA_KODE_AKUN = /^[0-9A-Za-z.\-]{1,20}$/;
+
+function skemaIsian(d: DefIsian): z.ZodType {
+  switch (d.tipe) {
+    case "angka": {
+      const min = d.wajib ? 1 : (d.min ?? 0);
+      return z.coerce
+        .number({ error: `${d.label} harus berupa angka.` })
+        .int(`${d.label} harus bilangan bulat.`)
+        .min(min, d.wajib ? `${d.label} wajib diisi dan lebih dari 0.` : `${d.label} tidak boleh kurang dari ${min}.`)
+        .max(d.maks ?? MAKS_RUPIAH, `${d.label} terlalu besar (maksimal ${(d.maks ?? MAKS_RUPIAH).toLocaleString("id-ID")}).`);
+    }
+    case "waktu":
+      return z.string().trim().regex(POLA_JAM, `${d.label} berbentuk HH:MM.`);
+    case "banyak":
+      return z.array(z.string()).default([]);
+    case "email":
+      return z.string().trim().max(120, `${d.label} maksimal 120 karakter.`).refine((v) => v === "" || z.email().safeParse(v).success, `${d.label} tidak valid.`).default("");
+    case "pilih":
+      return d.wajib ? z.string().trim().min(1, `Pilih ${d.label.toLowerCase()}.`) : z.string().trim().default("");
+    default: {
+      const s = z.string().trim().max(200, `${d.label} maksimal 200 karakter.`);
+      return d.wajib ? s.min(1, `${d.label} wajib diisi.`) : s.default("");
+    }
+  }
+}
+
+/** Skema isi satu jenis master, lengkap dengan aturan lintas isian (sama dengan validate/mSave di app lama). */
+export function skemaIsiMaster(jenis: JenisMaster) {
+  const def = DEF_MASTER[jenis];
+  const bentuk = Object.fromEntries(def.isian.map((d) => [d.kunci, skemaIsian(d)]));
+  return z.object(bentuk).superRefine((v, ctx) => {
+    const x = v as Record<string, unknown>;
+    const galat = (path: string, message: string) => ctx.addIssue({ code: "custom", path: [path], message });
+    for (const d of def.isian) {
+      const statis = d.sumber ? OPSI_STATIS[d.sumber] : undefined;
+      if (statis && x[d.kunci] && !statis.some((o) => o.nilai === x[d.kunci])) galat(d.kunci, `${d.label} tidak valid.`);
+    }
+    if (jenis === "akun" && !POLA_KODE_AKUN.test(String(x.kode))) galat("kode", "Kode akun hanya boleh huruf, angka, titik, dan tanda minus.");
+    if (jenis === "jadwal" && POLA_JAM.test(String(x.jamMasuk)) && POLA_JAM.test(String(x.jamKeluar)) && String(x.jamKeluar) <= String(x.jamMasuk)) {
+      galat("jamKeluar", "Jam keluar harus setelah jam masuk.");
+    }
+  });
+}
+
+export const skemaSimpanMaster = z.object({
+  jenis: z.enum(JENIS_MASTER, { error: "Jenis master tidak dikenal." }),
+  /** Kode data yang diubah; kosong untuk data baru. */
+  kode: z.string().trim().optional().nullable(),
+  nilai: z.record(z.string(), z.unknown()),
+});
+
+export const skemaStatusMaster = z.object({
+  jenis: z.enum(JENIS_MASTER, { error: "Jenis master tidak dikenal." }),
+  kode: z.string().trim().min(1, "Kode kosong."),
+  aktif: z.boolean(),
+});
+
+export const skemaProfil = z.object({
+  nama: z.string().trim().min(1, "Nama usaha wajib diisi.").max(80, "Nama usaha maksimal 80 karakter."),
+  keterangan: z.string().trim().max(120, "Keterangan maksimal 120 karakter.").default(""),
+});

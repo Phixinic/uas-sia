@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { wajibMasuk } from "@/lib/server/auth";
-import HalamanBelumJadi from "@/komponen/ui/HalamanBelumJadi";
+import HalamanMaster from "@/komponen/master/HalamanMaster";
 
 export const metadata: Metadata = { title: "Master SDM" };
 
-export default async function Halaman() {
-  await wajibMasuk();
-  return <HalamanBelumJadi judul="Master SDM" keterangan="Karyawan, jabatan, gaji pokok, tunjangan, jadwal kerja, dan setting gaji." pemilik="pelaporan dan master" />;
+export default async function Halaman({ searchParams }: { searchParams: Promise<{ tab?: string; form?: string }> }) {
+  return <HalamanMaster kelompok="sdm" cari={await searchParams} />;
 }
