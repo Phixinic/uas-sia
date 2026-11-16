@@ -1,0 +1,75 @@
+# SIA D'Production untuk VPS kecil (1 vCPU): aplikasi + PostgreSQL 16 dengan volume dan batas memori.
+#   cp .env.docker.example .env.docker   (isi DB_PASSWORD)
+#   docker compose --env-file .env.docker up -d --build
+#   docker compose --env-file .env.docker run --rm migrasi npm run db:seed   (sekali, isi data contoh)
+# Aplikasi hanya dibuka di 127.0.0.1:${APP_PORT}; pasang reverse proxy (Caddy/Nginx/Traefik) untuk HTTPS.
+name: sia-dpro
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sia_dpro
+      POSTGRES_USER: sia
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?isi DB_PASSWORD di .env.docker}
+      TZ: Asia/Jakarta
+    # Setelan hemat memori untuk batas 384 MB
+    command: ["postgres", "-c", "shared_buffers=64MB", "-c", "effective_cache_size=192MB", "-c", "work_mem=2MB", "-c", "maintenance_work_mem=32MB", "-c", "max_connections=30"]
+    volumes:
+      - sia-dpro-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sia -d sia_dpro"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    networks: [internal]
+
+  migrasi:
+    build:
+      context: .
+      target: build
+    command: npx prisma migrate deploy
+    environment:
+      DATABASE_URL: postgresql://sia:${DB_PASSWORD}@db:5432/sia_dpro?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    networks: [internal]
+
+  app:
+    build:
+      context: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://sia:${DB_PASSWORD}@db:5432/sia_dpro?schema=public
+      DB_POOL_MAX: "5"
+      NODE_OPTIONS: --max-old-space-size=384
+      TZ: Asia/Jakarta
+      # Isi 1 hanya bila situs dibuka lewat HTTP biasa (tanpa HTTPS); cookie sesi lalu tidak ditandai Secure.
+      COOKIE_TIDAK_AMAN: ${COOKIE_TIDAK_AMAN:-0}
+    ports:
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+    depends_on:
+      migrasi:
+        condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    networks: [internal]
+
+networks:
+  internal: {}
+
+volumes:
+  sia-dpro-data: {}

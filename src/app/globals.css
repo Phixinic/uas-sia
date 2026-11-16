@@ -1,0 +1,234 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens SIA D'Production. Satu tema terang, gaya kartu putih di atas kanvas abu-abu muda
+ * (mengikuti Produksia), dengan warna merek dari app lama: navy untuk navigasi, teal untuk aksi utama.
+ * Sinyal status: emerald = selesai/disetujui, amber = draf/menunggu, rose = ditolak/bahaya, sky = info.
+ * Komponen React di src/komponen/ui memakai kelas di bawah; halaman sebaiknya memakai komponennya, bukan kelas mentah.
+ */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --color-kanvas: #f4f6f8;
+  --color-merek: #0f2a3d;
+  --color-merek-terang: #17384f;
+  --color-merek-lembut: #c9d6e2;
+  --color-aksen: #0b7a77;
+  --color-aksen-gelap: #075553;
+  --color-aksen-lembut: #e2f2f1;
+
+  --shadow-kartu: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+  --shadow-melayang: 0 10px 30px -8px rgb(15 23 42 / 0.25);
+  --radius-kartu: 0.875rem;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-kanvas);
+  color: #1e293b;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 6px;
+}
+
+@layer components {
+  /* ---------- Tipografi ---------- */
+  .judul-halaman {
+    @apply text-xl font-bold tracking-tight text-slate-900 sm:text-2xl;
+  }
+  .subjudul-halaman {
+    @apply mt-1 max-w-3xl text-sm text-slate-500;
+  }
+  .judul-kartu {
+    @apply text-base font-semibold text-slate-900;
+  }
+  .teks-redup {
+    @apply text-sm text-slate-500;
+  }
+  .teks-label {
+    @apply text-[11px] font-semibold uppercase tracking-wider text-slate-500;
+  }
+  .angka {
+    @apply tabular-nums;
+  }
+  .kode {
+    @apply font-mono text-[12px] text-slate-600;
+  }
+
+  /* ---------- Kartu ---------- */
+  .kartu {
+    @apply border border-slate-200/80 bg-white p-5;
+    border-radius: var(--radius-kartu);
+    box-shadow: var(--shadow-kartu);
+  }
+  .kartu-rapat {
+    @apply overflow-hidden p-0;
+  }
+  .kepala-kartu {
+    @apply flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4;
+  }
+
+  /* ---------- Tombol ---------- */
+  .tombol {
+    @apply inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3.5 text-[13px] font-semibold whitespace-nowrap transition-colors select-none;
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aksen disabled:cursor-not-allowed disabled:opacity-55;
+  }
+  .tombol-utama {
+    @apply bg-aksen text-white hover:bg-aksen-gelap;
+  }
+  .tombol-gelap {
+    @apply bg-merek text-white hover:bg-merek-terang;
+  }
+  .tombol-garis {
+    @apply border border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50;
+  }
+  .tombol-bahaya {
+    @apply border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100;
+  }
+  .tombol-hantu {
+    @apply text-slate-600 hover:bg-slate-100 hover:text-slate-900;
+  }
+  .tombol-kecil {
+    @apply h-8 px-2.5 text-[12px];
+  }
+
+  /* ---------- Form ---------- */
+  .bidang {
+    @apply flex min-w-0 flex-col gap-1;
+  }
+  .label {
+    @apply text-[13px] font-medium text-slate-700;
+  }
+  .petunjuk {
+    @apply text-[12px] text-slate-500;
+  }
+  .galat-isian {
+    @apply text-[12px] font-medium text-rose-600;
+  }
+  .isian {
+    @apply h-9 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 transition-colors placeholder:text-slate-400;
+    @apply focus:border-aksen focus:ring-2 focus:ring-aksen/20 focus:outline-none;
+    @apply disabled:cursor-not-allowed disabled:bg-slate-50 read-only:bg-slate-50;
+  }
+  .isian[aria-invalid="true"] {
+    @apply border-rose-400 ring-2 ring-rose-100;
+  }
+  textarea.isian {
+    @apply h-auto min-h-20 py-2;
+  }
+  select.isian {
+    @apply appearance-none bg-no-repeat pr-8;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-position: right 0.5rem center;
+  }
+  .isian-angka {
+    @apply text-right tabular-nums;
+  }
+
+  /* ---------- Tabel ---------- */
+  .bungkus-tabel {
+    @apply overflow-x-auto;
+  }
+  .tabel {
+    @apply w-full border-collapse text-left text-[13px] text-slate-700;
+  }
+  .tabel thead tr {
+    @apply border-b border-slate-200 bg-slate-50/80;
+  }
+  .tabel th {
+    @apply px-3 py-2.5 text-[11px] font-semibold tracking-wider whitespace-nowrap text-slate-500 uppercase first:pl-5 last:pr-5;
+  }
+  .tabel td {
+    @apply px-3 py-2.5 align-middle first:pl-5 last:pr-5;
+  }
+  .tabel tbody tr {
+    @apply border-b border-slate-100 last:border-b-0;
+  }
+  .tabel tbody tr:hover {
+    @apply bg-slate-50/70;
+  }
+  .tabel tfoot tr {
+    @apply border-t-2 border-slate-200 bg-slate-50 font-semibold text-slate-900;
+  }
+  .tabel tfoot td {
+    @apply px-3 py-2.5 first:pl-5 last:pr-5;
+  }
+  .tabel .kolom-angka {
+    @apply text-right tabular-nums whitespace-nowrap;
+  }
+
+  /* ---------- Lencana ---------- */
+  .lencana {
+    @apply inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap;
+  }
+  .lencana-hijau {
+    @apply border-emerald-200 bg-emerald-50 text-emerald-700;
+  }
+  .lencana-kuning {
+    @apply border-amber-200 bg-amber-50 text-amber-800;
+  }
+  .lencana-merah {
+    @apply border-rose-200 bg-rose-50 text-rose-700;
+  }
+  .lencana-biru {
+    @apply border-sky-200 bg-sky-50 text-sky-700;
+  }
+  .lencana-abu {
+    @apply border-slate-200 bg-slate-100 text-slate-600;
+  }
+  .lencana-teal {
+    @apply border-teal-200 bg-aksen-lembut text-aksen-gelap;
+  }
+
+  /* ---------- Pesan di halaman ---------- */
+  .peringatan {
+    @apply flex items-start gap-2 rounded-lg border px-3.5 py-2.5 text-[13px];
+  }
+  .peringatan-info {
+    @apply border-sky-200 bg-sky-50 text-sky-900;
+  }
+  .peringatan-awas {
+    @apply border-amber-200 bg-amber-50 text-amber-900;
+  }
+  .peringatan-galat {
+    @apply border-rose-200 bg-rose-50 text-rose-900;
+  }
+  .peringatan-sukses {
+    @apply border-emerald-200 bg-emerald-50 text-emerald-900;
+  }
+
+  /* Blok rumus (penyusutan, PPh 21) */
+  .rumus {
+    @apply overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-[12px] leading-6 whitespace-pre text-slate-700;
+  }
+}
+
+@keyframes muncul {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .animasi-muncul {
+    animation: muncul 0.2s ease-out both;
+  }
+}

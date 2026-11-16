@@ -1,0 +1,22 @@
+# dependensi
+/node_modules
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# klien Prisma hasil generate
+/src/generated/
+
+# env (contoh boleh masuk repo)
+.env
+.env.*
+!.env.example
+!.env.docker.example
+
+# lain-lain
+.DS_Store
+*.log
+/coverage
