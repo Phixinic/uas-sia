@@ -1,0 +1,10 @@
+[Unit]
+Description=Backup harian database SIA D'Production
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+RandomizedDelaySec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

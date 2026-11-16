@@ -1,0 +1,7 @@
+[Unit]
+Description=Backup database SIA D'Production
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/sia-dpro/deploy/sia-dpro-backup.sh
