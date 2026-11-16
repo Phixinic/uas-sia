@@ -15,6 +15,8 @@ import { Bidang, Isian, IsianRupiah, Pilihan } from "@/komponen/ui/Isian";
 import Peringatan from "@/komponen/ui/Peringatan";
 import DialogKonfirmasi from "@/komponen/ui/DialogKonfirmasi";
 import TabelJurnal from "@/komponen/ui/TabelJurnal";
+import { barisKosong, type Baris, type NilaiAwalForm } from "./nilai-awal";
+import { TambahBarangCepat, TambahSupplierCepat, type KategoriForm } from "./TambahCepat";
 import { AKUN } from "@/lib/inti/akun";
 import { barisPembelian } from "@/lib/inti/jurnal";
 import { hitungJadwal, nDariDasar, type DasarN } from "@/lib/inti/penyusutan";
@@ -23,30 +25,21 @@ import { rupiah, LABEL_CARA_BAYAR } from "@/lib/format";
 import type { BarangForm } from "@/lib/data/konversi/pembelian";
 import type { CaraBayar, JenisPembelian } from "@/generated/prisma/enums";
 
-type Baris = { barangKode: string; qty: string; harga: string; residu: string; garansiBulan: string; masaManfaatBulan: string; dasarN: DasarN };
-export type NilaiAwalForm = {
-  no: string | null;
-  tanggal: string;
-  caraBayar: CaraBayar;
-  jatuhTempo: string;
-  supplierKode: string;
-  keterangan: string;
-  baris: Baris[];
-};
 
-const barisKosong = (): Baris => ({ barangKode: "", qty: "1", harga: "", residu: "0", garansiBulan: "", masaManfaatBulan: "", dasarN: "GARANSI" });
-export const formKosong = (tanggal: string): NilaiAwalForm => ({ no: null, tanggal, caraBayar: "TUNAI", jatuhTempo: "", supplierKode: "", keterangan: "", baris: [barisKosong()] });
 
 const int = (v: string) => {
   const n = parseInt(String(v).replace(/[^\d-]/g, ""), 10);
   return Number.isFinite(n) ? n : 0;
 };
 
-export default function FormPembelian({ jenis, awal, supplier, barang, namaAkun, periodeTerkunci, alamatKembali }: {
+export default function FormPembelian({ jenis, awal, supplier: supplierAwal, barang: barangAwal, kategori, bolehTambahCepat, namaAkun, periodeTerkunci, alamatKembali }: {
   jenis: JenisPembelian;
   awal: NilaiAwalForm;
   supplier: { kode: string; nama: string }[];
   barang: BarangForm[];
+  kategori: KategoriForm[];
+  /** true bila peran boleh tambah cepat master (IZIN["master-konversi.tambah-cepat"]). */
+  bolehTambahCepat: boolean;
   namaAkun: Record<string, string>;
   periodeTerkunci: string[];
   alamatKembali: string;
@@ -54,18 +47,21 @@ export default function FormPembelian({ jenis, awal, supplier, barang, namaAkun,
   const router = useRouter();
   const { jalankan, memuat } = useAksi();
   const [f, setF] = useState<NilaiAwalForm>(awal);
+  // Daftar pilihan disalin ke state supaya master yang baru ditambah langsung bisa dipilih tanpa menunggu muat ulang.
+  const [supplier, setSupplier] = useState(supplierAwal);
+  const [barang, setBarang] = useState(barangAwal);
   const [galat, setGalat] = useState<Record<string, string>>({});
   const [konfirmasiPosting, setKonfirmasiPosting] = useState(false);
   const peralatan = jenis === "PERALATAN";
   const label = peralatan ? "peralatan" : "perlengkapan";
 
   const ubah = (sebagian: Partial<NilaiAwalForm>) => setF((x) => ({ ...x, ...sebagian }));
-  const ubahBaris = (i: number, sebagian: Partial<Baris>) =>
+  const ubahBaris = (i: number, sebagian: Partial<Baris>, daftar: BarangForm[] = barang) =>
     setF((x) => {
       const baris = x.baris.map((b, j) => (j === i ? { ...b, ...sebagian } : b));
       // Memilih peralatan mengisi masa manfaat dan residu dari kategori asetnya (seperti app lama).
       if (peralatan && sebagian.barangKode !== undefined) {
-        const kat = barang.find((y) => y.kode === sebagian.barangKode)?.kategori;
+        const kat = daftar.find((y) => y.kode === sebagian.barangKode)?.kategori;
         if (kat) {
           baris[i].masaManfaatBulan = String(kat.masaManfaatBulan || "");
           if (kat.persenResidu > 0 && int(baris[i].harga) > 0) baris[i].residu = String(Math.round((int(baris[i].harga) * kat.persenResidu) / 100));
@@ -73,6 +69,13 @@ export default function FormPembelian({ jenis, awal, supplier, barang, namaAkun,
       }
       return { ...x, baris };
     });
+
+  const barangBaru = (b: BarangForm) => {
+    setBarang((x) => [...x, b]);
+    // Barang baru mengisi baris pertama yang masih kosong, atau baris terakhir bila semua sudah terisi.
+    const i = Math.max(0, f.baris.findIndex((r) => !r.barangKode) === -1 ? f.baris.length - 1 : f.baris.findIndex((r) => !r.barangKode));
+    ubahBaris(i, { barangKode: b.kode }, [...barang, b]);
+  };
 
   const pratinjau = useMemo(() => {
     const debit: Record<string, number> = {};
@@ -158,6 +161,11 @@ export default function FormPembelian({ jenis, awal, supplier, barang, namaAkun,
               ))}
             </Pilihan>
           </Bidang>
+          {bolehTambahCepat && f.caraBayar !== "INVESTASI" && (
+            <div className="flex items-end sm:col-span-2 lg:col-span-3">
+              <TambahSupplierCepat saatSelesai={(s) => { setSupplier((x) => [...x, s]); ubah({ supplierKode: s.kode }); }} />
+            </div>
+          )}
           <Bidang label="Keterangan" htmlFor="keterangan" galat={g("keterangan")}>
             <Isian id="keterangan" value={f.keterangan} placeholder="opsional" maxLength={200} onChange={(e) => ubah({ keterangan: e.target.value })} />
           </Bidang>
@@ -226,9 +234,12 @@ export default function FormPembelian({ jenis, awal, supplier, barang, namaAkun,
               </div>
             );
           })}
-          <Tombol kecil ikon={<Plus className="size-4" />} onClick={() => ubah({ baris: [...f.baris, barisKosong()] })} disabled={f.baris.length >= 50}>
-            Tambah baris barang
-          </Tombol>
+          <div className="flex flex-wrap items-start gap-2">
+            <Tombol kecil ikon={<Plus className="size-4" />} onClick={() => ubah({ baris: [...f.baris, barisKosong()] })} disabled={f.baris.length >= 50}>
+              Tambah baris barang
+            </Tombol>
+            {bolehTambahCepat && <TambahBarangCepat jenis={jenis} kategori={kategori} saatSelesai={barangBaru} />}
+          </div>
         </fieldset>
 
         <div className="space-y-4 rounded-xl border border-slate-200 p-4">

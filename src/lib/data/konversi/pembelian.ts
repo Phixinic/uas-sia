@@ -52,7 +52,7 @@ export async function opsiFormPembelian(jenis: JenisPembelian, noDraf?: string) 
     ? await db.pembelian.findUnique({ where: { no: noDraf }, include: { detail: { orderBy: { noUrut: "asc" } } } })
     : null;
   const kodeDraf = draf?.detail.map((d) => d.peralatanKode ?? d.perlengkapanKode ?? "") ?? [];
-  const [supplier, barang] = await Promise.all([
+  const [supplier, barang, kategori] = await Promise.all([
     db.supplier.findMany({ where: { OR: [{ aktif: true }, { kode: draf?.supplierKode ?? "" }] }, orderBy: { kode: "asc" }, select: { kode: true, nama: true } }),
     jenis === "PERALATAN"
       ? db.peralatan
@@ -61,7 +61,12 @@ export async function opsiFormPembelian(jenis: JenisPembelian, noDraf?: string) 
       : db.perlengkapan
           .findMany({ where: { OR: [{ aktif: true }, { kode: { in: kodeDraf } }] }, orderBy: { kode: "asc" } })
           .then((x) => x.map((p) => ({ kode: p.kode, nama: p.nama, satuan: p.satuan, kategori: null }))),
+    jenis === "PERALATAN"
+      ? db.kategoriAset
+          .findMany({ where: { aktif: true }, orderBy: { kode: "asc" } })
+          .then((x) => x.map((k) => ({ kode: k.kode, nama: k.nama, masaManfaatBulan: k.masaManfaatBulan, persenResidu: k.persenResidu, akunAset: k.akunAsetKode })))
+      : Promise.resolve([]),
   ]);
-  return { supplier, barang, draf };
+  return { supplier, barang, kategori, draf };
 }
 export type BarangForm = Awaited<ReturnType<typeof opsiFormPembelian>>["barang"][number];
