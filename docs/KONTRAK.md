@@ -72,7 +72,7 @@ Sumber kebenaran: `IZIN` di `src/lib/peran.ts`. Semua peran boleh **membuka** se
 | `penggajian.putuskan` | Owner | setujui (jurnal + bayar) atau tolak |
 | `jurnal-penyesuaian.ajukan` | Admin | ajukan jurnal penyesuaian draf |
 | `jurnal-penyesuaian.putuskan` | Owner | setujui atau tolak; pembuat tidak boleh menyetujui jurnalnya sendiri |
-| `periode.kunci` | Owner | kunci dan buka kunci periode (alasan wajib saat buka) |
+| `periode.kunci` | Owner | tutup periode (mengunci periode, tanpa jurnal penutup) dan buka kunci periode (alasan wajib saat buka) |
 | `master-konversi.ubah` | Admin, Owner | tambah/ubah supplier, peralatan, perlengkapan |
 | `master-konversi.tambah-cepat` | Admin | tambah supplier/barang langsung dari form pembelian (extend) |
 | `master-sdm.ubah` | HRD, Owner | tambah/ubah master SDM |

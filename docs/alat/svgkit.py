@@ -86,6 +86,38 @@ class Perute:
         self.hor = [[0] * self.nx for _ in range(self.ny)]
         self.ver = [[0] * self.nx for _ in range(self.ny)]
         self.ujung = []  # titik ujung terpakai (cx, cy)
+        for j in range(self.ny):
+            for i in range(self.nx):
+                if i < 2 or j < 2 or i >= self.nx - 2 or j >= self.ny - 2:
+                    self.blok[j][i] = True
+        self.simbol = set()  # sel yang tertutup simbol kardinalitas garis yang sudah dirutekan
+
+    def sel_simbol(self, titik, arah, dalam=11.5, lebar=4.5):
+        """Sel di depan sebuah ujung garis yang ditempati simbol kardinalitas (dan celah di sekitarnya)."""
+        (ex, ey), (ux, uy) = titik, arah
+        vx, vy = -uy, ux
+        hasil = set()
+        d = 0.0
+        while d <= dalam:
+            s = -lebar
+            while s <= lebar:
+                hasil.add(self.c(ex + ux * d + vx * s, ey + uy * d + vy * s))
+                s += self.g / 2
+            d += self.g / 2
+        return hasil
+
+    def daftarkan_simbol(self, titik, arah):
+        self.simbol |= self.sel_simbol(titik, arah)
+
+    def _port_bebas(self, p):
+        """Port ditolak bila simbolnya akan menimpa garis lain atau simbol lain."""
+        _, (dx, dy), (ex, ey), _, _ = p
+        for (i, j) in self.sel_simbol((ex, ey), (dx, dy), 9.5, 3.5):
+            if not (0 <= i < self.nx and 0 <= j < self.ny):
+                return False
+            if self.hor[j][i] or self.ver[j][i] or (i, j) in self.simbol:
+                return False
+        return True
 
     def c(self, x, y):
         return int(round(x / self.g)), int(round(y / self.g))
@@ -139,9 +171,11 @@ class Perute:
                 return False
         return True
 
-    def rute(self, ka, kb, tangkai=10.0, tekuk=7, tumpang=28, silang=6):
+    def rute(self, ka, kb, tangkai=10.0, tekuk=7, tumpang=28, silang=6, penalti_simbol=400):
         awal = [p for p in self._port(ka, tangkai) if self._lorong_bebas(p, None, tangkai) and not self._ujung_dekat(p[2])]
         akhir = [p for p in self._port(kb, tangkai) if self._lorong_bebas(p, None, tangkai) and not self._ujung_dekat(p[2])]
+        awal = [p for p in awal if self._port_bebas(p)] or awal
+        akhir = [p for p in akhir if self._port_bebas(p)] or akhir
         if not awal or not akhir:
             raise RuntimeError("tidak ada port bebas")
         tujuan = {}
@@ -182,6 +216,8 @@ class Perute:
                 if not (0 <= ni < self.nx and 0 <= nj < self.ny) or self.blok[nj][ni]:
                     continue
                 b = 1
+                if (ni, nj) in self.simbol:
+                    b += penalti_simbol
                 if nd != d:
                     b += tekuk
                 horiz = nd[1] == 0

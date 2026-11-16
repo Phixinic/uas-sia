@@ -33,6 +33,19 @@ KELOMPOK = [
 # Tabel yang rujukannya hanya ditulis di kolom (tanpa garis). "akun" tetap digambar dari detail_jurnal.
 TANPA_GARIS = {"pengguna": set(), "akun": {"detail_jurnal"}}
 
+# Relasi header ke detail yang oleh aturan aplikasi wajib berisi minimal satu baris, jadi sisi anaknya digambar 1..N
+# (bukan 0..N seperti hasil penurunan dari skema). Kunci: (tabel anak, tabel induk). Sumber kebenaran: validasi di src/lib.
+SATU_BANYAK = {
+    # skemaPembelian: baris z.array(...).min(1, "Isi minimal satu baris barang.")
+    ("detail_pembelian", "pembelian"): "skema pembelian: baris minimal satu (src/lib/skema/pembelian.ts)",
+    # validasiBaris: jurnal tidak disimpan bila kurang dari dua baris atau tidak seimbang (src/lib/inti/jurnal.ts)
+    ("detail_jurnal", "jurnal"): "validasiBaris: minimal dua baris detail (src/lib/inti/jurnal.ts)",
+    # nilai-sisa: ditolak bila tidak ada perlengkapan, dan setiap perlengkapan wajib dihitung lalu disimpan sebagai detail
+    ("detail_opname", "opname"): "nilai-sisa: semua perlengkapan wajib dihitung, kosong ditolak (src/lib/aksi/konversi/nilai-sisa.ts)",
+    # ajukanPenggajian: ditolak bila tidak ada slip draf, jumlah_slip = slip yang dikaitkan (src/lib/aksi/sdm/distribusi.ts)
+    ("slip_gaji", "penggajian"): "ajukanPenggajian: tanpa slip draf pengajuan ditolak (src/lib/aksi/sdm/distribusi.ts)",
+}
+
 # Stempel waktu audit yang tidak digambar (disebut di keterangan gambar).
 KOLOM_WAKTU = {"dibuat_pada", "diubah_pada", "diajukan_pada", "dihitung_pada", "dibalik_pada"}
 
@@ -259,7 +272,8 @@ def hitung_posisi(model, t2i):
         pos[t] = [xx, yb, uk[t][0], uk[t][1]]
         xx += uk[t][0] + 10
     TATA["x_legenda"] = xx + 6
-    TATA["y_legenda"] = yb - 2
+    # legenda tepat di bawah kolom pelaporan dan SDM (kolom ke-4 dst.), bukan di baris bawah
+    TATA["y_legenda"] = max(pos[t][1] + pos[t][3] for k in range(3, 7) for t in TATA["kolom"][k]) + 14
     return isi, uk, pos
 
 
@@ -279,6 +293,10 @@ def simbol(svg, titik, arah, jenis, warna="#333"):
     elif jenis == "nol_satu":
         svg.garis([P(2.6, -2.8), P(2.6, 2.8)], warna, 0.7)
         svg.circle(*P(6.3), 1.8, "#FFFFFF", warna, 0.7)
+    elif jenis == "satu_banyak":
+        for sgn in (-3.2, 0, 3.2):
+            svg.garis([P(0, sgn), P(5.0, 0)], warna, 0.7)
+        svg.garis([P(7.0, -2.8), P(7.0, 2.8)], warna, 0.7)
     elif jenis == "nol_banyak":
         for sgn in (-3.2, 0, 3.2):
             svg.garis([P(0, sgn), P(5.0, 0)], warna, 0.7)
@@ -368,6 +386,7 @@ def gambar(model, t2i, path_svg, path_png):
             xr = x0 + w0; y1 = y0 + h0 - 44; y2 = y1 + 15
             pts = [(xr, y1), (xr + 15, y1), (xr + 15, y2), (xr, y2)]
             rt.ujung.extend([pts[0], pts[-1]]); rt.tandai_polyline(pts)
+            rt.daftarkan_simbol(pts[0], (1, 0)); rt.daftarkan_simbol(pts[-1], (1, 0))
             hasil.append((a, b, r, pts, "R", "R"))
             continue
         try:
@@ -375,6 +394,7 @@ def gambar(model, t2i, path_svg, path_png):
             pts, sisi_a, sisi_b = d if d else rt.rute(tuple(pos[a]), tuple(pos[b]), tangkai=10.0)
         except RuntimeError as e:
             print("GAGAL rute", a, b, e); continue
+        rt.daftarkan_simbol(pts[0], arah_sisi(sisi_a)); rt.daftarkan_simbol(pts[-1], arah_sisi(sisi_b))
         hasil.append((a, b, r, pts, sisi_a, sisi_b))
     warna_grup = {"konv": "#9C2F25", "sdm": "#1B5E94", "lap": "#6B5B00", "sis": "#2F6B2A"}
     grup_tabel = {t: kode for kode, _, _, tabs in KELOMPOK for t in tabs}
@@ -394,7 +414,8 @@ def gambar(model, t2i, path_svg, path_png):
             yy += LH
     # simbol kardinalitas dan label
     for a, b, r, pts, sa, sb in hasil:
-        simbol(svg, pts[0], arah_sisi(sa), "nol_satu" if r["unik"] else "nol_banyak", wr(a))
+        anak = "nol_satu" if r["unik"] else "satu_banyak" if (a, b) in SATU_BANYAK else "nol_banyak"
+        simbol(svg, pts[0], arah_sisi(sa), anak, wr(a))
         simbol(svg, pts[-1], arah_sisi(sb), "satu" if r["wajib"] else "nol_satu", wr(a))
         if ganda[(a, b)] > 1 or a == b:
             label = ", ".join(t2i[a]["nm2db"][k] for k in r["kol"])
@@ -425,7 +446,7 @@ def gambar(model, t2i, path_svg, path_png):
                         continue
                     if any(not (kotak[0] + kotak[2] + 1 < q[0] or kotak[0] - 1 > q[0] + q[2] or kotak[1] + kotak[3] < q[1] or kotak[1] > q[1] + q[3]) for q in pos.values()):
                         continue
-                    if any(_potong(kotak, s0, s1) for _, _, _, pp, _, _ in hasil for s0, s1 in zip(pp, pp[1:])):
+                    if any(_potong((kotak[0] - 2.5, kotak[1] - 2.5, kotak[2] + 5, kotak[3] + 5), s0, s1) for _, _, _, pp, _, _ in hasil for s0, s1 in zip(pp, pp[1:])):
                         continue
                     if any(not (kotak[0] + kotak[2] < gx or kotak[0] > gx + gw or kotak[1] + kotak[3] < gy or kotak[1] > gy + 12) for (gx, gy, gw, gh) in grp.values()):
                         continue
@@ -453,7 +474,7 @@ def gambar(model, t2i, path_svg, path_png):
 def legenda(svg, W, H):
     x, y = TATA["x_legenda"], TATA["y_legenda"]
     lebar_box = W - x - 6
-    svg.rect(x, y, lebar_box, 4 * LH + 19.5 + 16, "#FFFFFF", "#9a9a9a", 0.6, 3)
+    svg.rect(x, y, lebar_box, 4 * LH + 19.5 + 16 + 11, "#FFFFFF", "#9a9a9a", 0.6, 3)
     svg.teks(x + 5, y + 9.5, [("Keterangan", "b")], 7.4)
     baris = [
         [("PK", "b"), (" kunci utama, ", "r"), ("FK", "b"), (" kunci tamu. Garis menghubungkan FK ke tabel induknya; FK ke ", "r"), ("pengguna", "b"), (" dan ", "r"), ("akun", "b")],
@@ -466,12 +487,41 @@ def legenda(svg, W, H):
         svg.teks(x + 5, yy, b, UK); yy += LH
     # contoh simbol kardinalitas
     xs = x + 14; ys = yy + 5
-    contoh = [("satu", "tepat satu (1)"), ("nol_satu", "nol atau satu (0..1)"), ("nol_banyak", "nol atau banyak (0..N)")]
-    for jenis, ket in contoh:
+    contoh = [("satu", "tepat satu (1)"), ("nol_satu", "nol atau satu (0..1)"), ("nol_banyak", "nol atau banyak (0..N)"), ("satu_banyak", "satu atau banyak (1..N)")]
+    for n, (jenis, ket) in enumerate(contoh):
+        if n == 2:
+            xs = x + 14; ys += 11
         svg.garis([(xs, ys), (xs + 16, ys)], "#444", 0.7)
         simbol(svg, (xs + 16, ys), (-1, 0), jenis, "#444")
         svg.teks(xs + 21, ys + 2.3, ket, UK)
         xs += 21 + lebar_teks(ket, UK) + 14
+
+
+def periksa_simbol(hasil, pos):
+    """Periksa geometri: tidak ada garis yang melewati simbol kardinalitas garis lain, dan tidak ada garis yang
+    menembus kotak tabel selain di ujungnya. Mengembalikan daftar pelanggaran (teks)."""
+    masalah = []
+    zona = []
+    for n, (a, b, r, pts, sa, sb) in enumerate(hasil):
+        for ttk, sisi in ((pts[0], sa), (pts[-1], sb)):
+            ux, uy = arah_sisi(sisi)
+            x0, x1 = sorted((ttk[0], ttk[0] + ux * 10.5)) if ux else (ttk[0] - 4.0, ttk[0] + 4.0)
+            y0, y1 = sorted((ttk[1], ttk[1] + uy * 10.5)) if uy else (ttk[1] - 4.0, ttk[1] + 4.0)
+            zona.append((n, a, b, ttk, (x0, y0, x1, y1)))
+    for n, (a, b, r, pts, sa, sb) in enumerate(hasil):
+        for p0, p1 in zip(pts, pts[1:]):
+            sx0, sx1 = sorted((p0[0], p1[0])); sy0, sy1 = sorted((p0[1], p1[1]))
+            for n2, a2, b2, ttk, (x0, y0, x1, y1) in zona:
+                if n2 == n:
+                    continue
+                if not (sx1 < x0 or sx0 > x1 or sy1 < y0 or sy0 > y1):
+                    masalah.append(f"garis {a}->{b} melewati simbol {a2}->{b2} di {ttk[0]:.0f},{ttk[1]:.0f}")
+        for t, (x, y, w, h) in pos.items():
+            for p0, p1 in zip(pts, pts[1:]):
+                sx0, sx1 = sorted((p0[0], p1[0])); sy0, sy1 = sorted((p0[1], p1[1]))
+                if sx1 > x + 0.8 and sx0 < x + w - 0.8 and sy1 > y + 0.8 and sy0 < y + h - 0.8:
+                    masalah.append(f"garis {a}->{b} menembus kotak {t}")
+    return masalah
 
 
 def tulis_mermaid(model, path):
@@ -491,7 +541,7 @@ def tulis_mermaid(model, path):
     for info in sorted(model.values(), key=lambda i: i["tabel"]):
         for r in info["relasi"]:
             kiri = "||" if r["wajib"] else "|o"
-            kanan = "o|" if r["unik"] else "o{"
+            kanan = "o|" if r["unik"] else "|{" if (info["tabel"], model[r["induk"]]["tabel"]) in SATU_BANYAK else "o{"
             o.append(f"  {model[r['induk']]['tabel']} {kiri}--{kanan} {info['tabel']} : \"{', '.join(info['nm2db'][k] for k in r['kol'])}\"")
     open(path, "w", encoding="utf-8").write("\n".join(o) + "\n")
 
@@ -504,5 +554,11 @@ if __name__ == "__main__":
     ok = cek_db(t2i) if "--cek-db" in sys.argv else True
     pos, grp, hasil = gambar(model, t2i, os.path.join(KELUAR, "logical-database.svg"), os.path.join(KELUAR, "logical-database.png"))
     tulis_mermaid(model, os.path.join(KELUAR, "logical-database.mmd"))
+    masalah = periksa_simbol(hasil, pos)
+    for m in masalah:
+        print("PERIKSA:", m)
+    ok = ok and not masalah
+    panjang = sum(abs(p[0] - q[0]) + abs(p[1] - q[1]) for *_, pts, _, _ in hasil for p, q in zip(pts, pts[1:]))
+    print(f"panjang garis total {panjang:.0f} pt")
     print(f"{len(t2i)} tabel; {len(hasil)} garis; kanvas {LEBAR_KANVAS}x{TINGGI_KANVAS} pt")
     print("OK" if ok else "TIDAK COCOK dengan database")

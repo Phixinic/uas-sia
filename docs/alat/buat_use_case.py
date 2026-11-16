@@ -15,18 +15,23 @@ sys.path.insert(0, os.path.dirname(__file__))
 from svgkit import Svg, lebar_teks
 
 AKAR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-W, H = 785.0, 432.0
+W, H = 785.0, 440.0
 UK = 7.6            # huruf use case (pt cetak)
 UK_AKTOR = 8.6
-RX, RY = 58.0, 13.5  # elips seragam
+RX, RY = 52.0, 12.5  # elips seragam
 KOLOM, BARIS = 5, 7
-X0, Y0, X1, Y1 = 86.0, 52.0, 700.0, 384.0   # kotak batas sistem
+X0, Y0, X1, Y1 = 64.0, 52.0, 721.0, 388.0   # kotak batas sistem
 
 # kunci: (label, kunci IZIN atau None, aktor). Aktor: A Admin, H HRD, O Owner, P semua peran.
 UC = {
     "masuk":   ("Masuk ke aplikasi\ndengan akun per peran", None, "P"),
     "dash":    ("Lihat dashboard", None, "P"),
-    "lap":     ("Lihat laporan jurnal\ndan kartu aset", None, "P"),
+    "umum":    ("Lihat jurnal umum", None, "P"),
+    "bb":      ("Lihat buku besar", None, "P"),
+    "ns":      ("Lihat neraca saldo", None, "P"),
+    "kartu":   ("Lihat kartu aset", None, "P"),
+    "cetak":   ("Cetak laporan", None, "P"),
+    "cetakslip": ("Cetak slip gaji", None, "P"),
     "draf":    ("Kelola draf pembelian\nperalatan, perlengkapan", "pembelian.kelola-draf", "A"),
     "cepat":   ("Tambah supplier atau\nbarang dari form", "master-konversi.tambah-cepat", "A"),
     "posting": ("Posting pembelian", "pembelian.posting", "AO"),
@@ -45,16 +50,19 @@ UC = {
     "dist":    ("Ajukan distribusi\ngaji", "penggajian.ajukan", "H"),
     "setgaji": ("Setujui atau tolak\npenggajian", "penggajian.putuskan", "O"),
     "msdm":    ("Kelola master SDM", "master-sdm.ubah", "HO"),
-    "kunci":   ("Kunci atau buka\nperiode", "periode.kunci", "O"),
+    "kunci":   ("Tutup periode (mengunci\nperiode) dan buka kunci", "periode.kunci", "O"),
     "katakun": ("Kelola akun, kategori,\nprofil, status master", "master.akun-kategori+master.nonaktifkan+profil.ubah", "O"),
     "pengguna": ("Kelola pengguna", "pengguna.kelola", "O"),
 }
 # Relasi antar use case: (dari, ke, jenis, catatan). Panah dari use case yang menyertai/memperluas.
 REL = [
     ("susut", "drafjp", "include", ""),
-    ("drafjp", "sisa", "extend", "Kondisi: total biaya\nlebih dari nol"),
-    ("cepat", "draf", "extend", "Kondisi: supplier atau\nbarang belum ada"),
-    ("aset", "posting", "extend", "Kondisi: pembelian\nperalatan"),
+    ("drafjp", "sisa", "extend", "[total biaya\nlebih dari nol]"),
+    ("cepat", "draf", "extend", "[supplier atau\nbarang belum ada]"),
+    ("aset", "posting", "extend", "[pembelian\nperalatan]"),
+    ("cetak", "umum", "extend", ""),
+    ("cetak", "bb", "extend", ""),
+    ("cetak", "ns", "extend", ""),
 ]
 NAMA_AKTOR = {"A": "Admin", "H": "HRD", "O": "Owner"}
 WARNA_AKTOR = {"A": "#8B1A1A", "H": "#1F5F99", "O": "#2E6B3A", "P": "#555555"}
@@ -62,14 +70,14 @@ WARNA_UC = {  # per siklus
     "masuk": "#EEEEEE", "dash": "#EEEEEE", "lap": "#EEEEEE", "kartu": "#EEEEEE",
 }
 SIKLUS = {"k": "#FDE7E4", "s": "#E3EFFA", "l": "#FFF3C4", "p": "#EEEEEE"}
-GRUP = {"masuk": "p", "dash": "p", "lap": "p",
+GRUP = {"masuk": "p", "dash": "p", "umum": "l", "bb": "l", "ns": "l", "kartu": "k", "cetak": "l", "cetakslip": "s",
         "draf": "k", "cepat": "k", "posting": "k", "aset": "k", "balik": "k", "sisa": "k", "susut": "k", "drafjp": "l", "ajujp": "l",
         "ajulepas": "k", "setlepas": "k", "setjp": "l", "mkonv": "k", "presensi": "s", "gaji": "s", "dist": "s", "setgaji": "s", "msdm": "s",
         "kunci": "l", "katakun": "l", "pengguna": "l"}
 
 # Tata letak hasil pencarian: kunci -> (kolom, baris); aktor -> (sisi, posisi 0..1 sepanjang sisi).
-TATA_LETAK = {'masuk': (377.0, 88.0), 'dash': (248.3, 91.2), 'lap': (571.6, 126.8), 'draf': (306.1, 278.7), 'cepat': (160.5, 275.7), 'posting': (449.6, 129.1), 'aset': (305.6, 135.9), 'balik': (619.1, 163.8), 'sisa': (205.8, 219.0), 'susut': (196.6, 174.2), 'drafjp': (329.6, 194.7), 'ajujp': (154.6, 328.4), 'ajulepas': (150.4, 135.1), 'setlepas': (480.3, 324.5), 'setjp': (633.5, 91.8), 'mkonv': (448.5, 252.0), 'presensi': (230.8, 365.4), 'gaji': (357.5, 362.2), 'dist': (483.3, 365.2), 'setgaji': (521.0, 216.5), 'msdm': (632.8, 364.0), 'kunci': (485.5, 288.6), 'katakun': (473.1, 176.8), 'pengguna': (610.7, 307.9)}
-AKTOR_LETAK = {'P': ('T', 0.45), 'A': ('L', 0.63), 'H': ('B', 0.587), 'O': ('R', 0.629)}
+TATA_LETAK = {'masuk': (454.9, 122.5), 'dash': (158.5, 90.9), 'umum': (338.1, 119.7), 'bb': (147.1, 134.8), 'ns': (423.8, 156.9), 'kartu': (572.2, 133.0), 'cetak': (260.1, 160.2), 'cetakslip': (535.6, 88.3), 'draf': (373.7, 325.8), 'cepat': (188.8, 294.2), 'posting': (425.8, 232.8), 'aset': (337.9, 270.0), 'balik': (620.4, 206.5), 'sisa': (171.9, 332.4), 'susut': (123.5, 368.9), 'drafjp': (265.4, 367.0), 'ajujp': (127.0, 200.0), 'ajulepas': (201.1, 249.8), 'setlepas': (636.9, 171.0), 'setjp': (661.7, 97.4), 'mkonv': (283.6, 199.6), 'presensi': (382.0, 362.4), 'gaji': (494.1, 345.2), 'dist': (644.4, 368.2), 'setgaji': (484.3, 306.1), 'msdm': (628.0, 333.9), 'kunci': (493.8, 267.9), 'katakun': (463.0, 195.5), 'pengguna': (607.3, 299.4)}
+AKTOR_LETAK = {'P': ('T', 0.385), 'A': ('L', 0.59), 'H': ('B', 0.42), 'O': ('R', 0.666)}
 
 
 def cek_izin():
@@ -190,11 +198,12 @@ def biaya(tata, ak, rinci=False):
     parts["tembus"] += 60 * float(np.clip(1.0 - Q.min(axis=1), 0, None).sum())
     for a, k, s, e in ga:
         parts["panjang"] += 0.004 * math.dist(s, e)
-    for d, ke, s, e in rel:
+    for (d, ke, s, e), (_, _, _, cat_) in zip(rel, REL):
         ln = math.dist(s, e)
         parts["panjang"] += 0.02 * ln
-        if ln < 30:
-            parts["pref"] += (30 - ln) / 4
+        min_ln = 38 + (22 if cat_ else 0)
+        if ln < min_ln:
+            parts["pref"] += (min_ln - ln) / 4
     # persilangan dan garis aktor yang hampir berimpit (vektor)
     S = np.array([g[2] for g in ga]); E = np.array([g[3] for g in ga])
     who = np.array([g[0] for g in ga]); kk = np.array([g[1] for g in ga])
@@ -213,11 +222,15 @@ def biaya(tata, ak, rinci=False):
     parts["impit"] += 3.0 * float(np.triu(sama & (dang < math.radians(7)), 1).sum())
     if rel:
         SR = np.array([r[2] for r in rel]); ER = np.array([r[3] for r in rel])
-        parts["silang"] += 1.0 * float(silang_mat(S, E, SR, ER).sum())
+        parts["silang"] += 8.0 * float(silang_mat(S, E, SR, ER).sum())
+        n_r = len(rel)
+        if n_r > 1:
+            M2 = silang_mat(SR, ER, SR, ER)
+            parts["silang"] += 8.0 * float(np.triu(M2, 1).sum())
     # elips tidak boleh bertumpuk atau keluar dari kotak sistem (vektor)
-    kel = np.maximum.reduce([X0 + 6 - (cx - RX), (cx + RX) - (X1 - 6), (Y0 + 22) - (cy - RY), (cy + RY) - (Y1 - 5)])
+    kel = np.maximum.reduce([X0 + 6 - (cx - RX), (cx + RX) - (X1 - 6), (Y0 + 22) - (cy - RY), (cy + RY) - (Y1 - 5)]) + 1.0
     parts["pref"] += float(np.where(kel > 0, 5 + kel / 5, 0.0).sum())
-    OX = 2 * RX + 6 - np.abs(cx[:, None] - cx[None, :]); OY = 2 * RY + 8 - np.abs(cy[:, None] - cy[None, :])
+    OX = 2 * RX + 7 - np.abs(cx[:, None] - cx[None, :]); OY = 2 * RY + 9 - np.abs(cy[:, None] - cy[None, :])
     tum = np.triu((OX > 0) & (OY > 0), 1)
     parts["pref"] += float(np.where(tum, 5 + np.minimum(OX, OY) / 4, 0.0).sum())
     # aktor tidak boleh berdekatan satu sama lain
@@ -276,6 +289,8 @@ def cari(seed=7, langkah=60000, T0=8.0, sig0=45.0, mulai=None):
     ak = {"P": ("T", 0.5), "A": ("L", 0.45), "H": ("B", 0.45), "O": ("R", 0.45)}
     if mulai:
         tata, ak = dict(mulai[0]), dict(mulai[1])
+        if ak["H"][0] == "B":
+            ak["H"] = ("B", min(ak["H"][1], 0.42))
     cur = biaya(tata, ak)
     best = (cur, dict(tata), dict(ak))
     for it in range(langkah):
@@ -293,12 +308,12 @@ def cari(seed=7, langkah=60000, T0=8.0, sig0=45.0, mulai=None):
             tata2[a], tata2[b] = tata2[b], tata2[a]
         elif r < 0.985:
             a = rnd.choice(list(ak2)); sisi, tt = ak2[a]
-            bts = (0.0, 0.62) if (a == "H" and sisi == "B") else (0.0, 1.0)
+            bts = (0.0, 0.42) if (a == "H" and sisi == "B") else (0.0, 1.0)
             ak2[a] = (sisi, min(max(tt + rnd.uniform(-0.15, 0.15), bts[0]), bts[1]))
         else:
             a = rnd.choice(list(ak2))
             if a == "H":
-                ak2[a] = (rnd.choice("LB"), rnd.random() * 0.6)
+                ak2[a] = (rnd.choice("LB"), rnd.random() * 0.4)
         n = biaya(tata2, ak2)
         if n < cur or rnd.random() < math.exp((cur - n) / T):
             tata, ak, cur = tata2, ak2, n
@@ -381,14 +396,27 @@ def _konektor_bebas(kotak, dekat, pusat):
     return True
 
 
-def cari_tempat(w, h, dekat, pusat, segmen, terpakai, maks=170, konektor=False):
+def cari_tempat(w, h, dekat, pusat, segmen, terpakai, maks=170, konektor=False, syarat=None):
     """Persegi w x h terdekat dari titik `dekat` yang bebas."""
     kandidat = sorted(((dx, dy) for dx in range(-maks, maks + 1, 4) for dy in range(-maks // 2, maks // 2 + 1, 3)), key=lambda d: d[0] ** 2 + (1.6 * d[1]) ** 2)
     for dx, dy in kandidat:
         kotak = (dekat[0] + dx - w / 2, dekat[1] + dy - h / 2, w, h)
-        if bebas(kotak, pusat, segmen, terpakai) and (not konektor or _konektor_bebas(kotak, dekat, pusat)):
+        if bebas(kotak, pusat, segmen, terpakai) and (not konektor or _konektor_bebas(kotak, dekat, pusat)) and (syarat is None or syarat(kotak)):
             return kotak
     return None
+
+
+def jarak_titik_segmen(pt, a, b):
+    ax, ay = a; bx, by = b
+    dx, dy = bx - ax, by - ay
+    t = 0.0 if dx == dy == 0 else max(0.0, min(1.0, ((pt[0] - ax) * dx + (pt[1] - ay) * dy) / (dx * dx + dy * dy)))
+    return math.dist(pt, (ax + t * dx, ay + t * dy))
+
+
+def jarak_kotak_segmen(kotak, a, b):
+    x, y, w, h = kotak
+    pts = [(x + w * i / 6, y + h * j / 2) for i in range(7) for j in range(3)]
+    return min(jarak_titik_segmen(q, a, b) for q in pts)
 
 
 def catatan(svg, kotak, baris):
@@ -439,31 +467,24 @@ def gambar(tata, ak, path_svg, path_png):
     for s_, e_, jenis, cat in rels:
         svg.garis([s_, e_], "#222", 0.9, dash="3 2")
         panah_terbuka(svg, s_, e_)
-    for s_, e_, jenis, cat in rels:
+    for n_rel, (s_, e_, jenis, cat) in enumerate(rels):
         mid = ((s_[0] + e_[0]) / 2, (s_[1] + e_[1]) / 2)
         st = f"\u00ab{jenis}\u00bb"
-        wst = lebar_teks(st, 7.5, "i") + 3
-        kotak = cari_tempat(wst, 10.0, mid, pusat, segmen, terpakai, 60)
+        baris = [(st, "i")] + [(b_, "r") for b_ in cat.split("\n")] if cat else [(st, "i")]
+        wst = max(lebar_teks(t_, 7.5, g_) for t_, g_ in baris) + 3
+        hst = len(baris) * 8.6 + 1.5
+        lain = [(a_, b_) for m_, (a_, b_, _, _) in enumerate(rels) if m_ != n_rel]
+        def milik_sendiri(kotak, s_=s_, e_=e_, lain=lain):
+            # label harus jelas milik garisnya: dekat garis sendiri dan lebih jauh dari garis relasi lain
+            d_sendiri = jarak_kotak_segmen(kotak, s_, e_)
+            return d_sendiri <= 11 and all(jarak_kotak_segmen(kotak, a_, b_) > d_sendiri + 5 for a_, b_ in lain)
+        kotak = cari_tempat(wst, hst, mid, pusat, segmen, terpakai, 120, syarat=milik_sendiri)
         if kotak is None:
-            print("stereotip tidak muat:", st)
+            print("label relasi tidak muat:", st, cat.replace("\n", " "), "(garis", s_, e_, ")")
         else:
             terpakai.append(kotak)
-            svg.teks(kotak[0] + wst / 2, kotak[1] + 8, [(st, "i")], 7.5, "#222", "middle")
-        if cat:
-            kc = None
-            for baris in (cat.split("\n"), [cat.replace("\n", " ")]):
-                wc = max(lebar_teks(b_, 7.5) for b_ in baris) + 13
-                hc = len(baris) * 8.6 + 3
-                kc = cari_tempat(wc, hc, mid, pusat, segmen, terpakai, 260, True)
-                if kc is not None:
-                    break
-            if kc is None:
-                print("catatan tidak muat:", cat)
-            else:
-                terpakai.append(kc)
-                tx = min(max(mid[0], kc[0]), kc[0] + kc[2]); ty = min(max(mid[1], kc[1]), kc[1] + kc[3])
-                svg.garis([(tx, ty), mid], "#8a8a8a", 0.7, dash="1.5 1.5")
-                catatan(svg, kc, baris)
+            for i_, (t_, g_) in enumerate(baris):
+                svg.teks(kotak[0] + wst / 2, kotak[1] + 8 + i_ * 8.6, [(t_, g_)], 7.5, "#222", "middle")
     for k, (lab, kunci, akt) in UC.items():
         cx, cy = pusat[k]
         svg.ellipse(cx, cy, RX, RY, SIKLUS[GRUP[k]], "#444", 0.8)
@@ -482,8 +503,8 @@ def gambar(tata, ak, path_svg, path_png):
             svg.teks(x + 14, y + 6, [(nama, "b")], UK_AKTOR, WARNA_AKTOR[a])
         else:
             svg.teks(x, y + 32, [(nama, "b")], UK_AKTOR, WARNA_AKTOR[a], "middle")
-    # keterangan di kanan bawah (di luar kotak sistem)
-    lx = W - 232; ly = Y1 + 12
+    # keterangan di kanan bawah (di luar kotak sistem): simbol garis di kolom kiri, arti warna elips di kolom kanan
+    lx = W - 300; ly = Y1 + 12
     svg.teks(lx, ly, [("Keterangan", "b")], 7.5, "#333")
     svg.garis([(lx, ly + 9), (lx + 18, ly + 9)], "#222", 0.9, dash="3 2"); panah_terbuka(svg, (lx, ly + 9), (lx + 18, ly + 9))
     svg.teks(lx + 23, ly + 12, "include atau extend", 7.5, "#333")
@@ -491,6 +512,12 @@ def gambar(tata, ak, path_svg, path_png):
     svg.teks(lx + 25, ly + 23, "Admin, HRD, Owner mewarisi Pengguna", 7.5, "#333")
     svg.garis([(lx, ly + 31), (lx + 18, ly + 31)], "#8B1A1A", 0.9)
     svg.teks(lx + 23, ly + 34, "garis aktor ke use case", 7.5, "#333")
+    cx0 = W - 118
+    svg.teks(cx0, ly, [("Warna elips", "b")], 7.5, "#333")
+    for n_, (kode, ket) in enumerate((("k", "Siklus konversi"), ("s", "Siklus SDM"), ("l", "Pelaporan, pengaturan"), ("p", "Umum (semua peran)"))):
+        yy = ly + 5.5 + n_ * 9.2
+        svg.ellipse(cx0 + 6, yy + 1.5, 6, 3.6, SIKLUS[kode], "#444", 0.6)
+        svg.teks(cx0 + 16, yy + 4, ket, 7.5, "#333")
     svg.simpan(path_svg, path_png)
 
 
