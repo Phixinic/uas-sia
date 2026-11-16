@@ -1,0 +1,282 @@
+@startuml
+skinparam dpi 200
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam nodesep 14
+skinparam ranksep 30
+skinparam ArrowColor #555555
+skinparam entity {
+  BackgroundColor<<konv>> #FFE9E6
+  BorderColor<<konv>> #8B1A1A
+  BackgroundColor<<lap>> #FFF4CC
+  BorderColor<<lap>> #8A6D00
+  BackgroundColor<<sdm>> #E3EFFA
+  BorderColor<<sdm>> #1F5F99
+  StereotypeFontSize 9
+  BackgroundColor White
+  BorderColor #444444
+  HeaderBackgroundColor #F3E1DE
+}
+hide circle
+hide methods
+
+entity supplier <<konv>> #FFE9E6 {
+  * id_supplier : PK
+  --
+  nama
+  alamat
+}
+
+entity kategori_aset <<konv>> #FFE9E6 {
+  * id_kategori : PK
+  --
+  # akun_aset : FK
+  # akun_akumulasi : FK
+  # akun_beban : FK
+  nama
+  masa_manfaat_bulan
+}
+
+entity peralatan <<konv>> #FFE9E6 {
+  * id_peralatan : PK
+  --
+  # id_kategori : FK
+  nama
+  satuan
+}
+
+entity perlengkapan <<konv>> #FFE9E6 {
+  * id_perlengkapan : PK
+  --
+  nama
+  satuan
+}
+
+entity pembelian <<konv>> #FFE9E6 {
+  * no_pembelian : PK
+  --
+  # id_supplier : FK
+  # jurnal_no : FK
+  jenis
+  tanggal
+}
+
+entity detail_pembelian <<konv>> #FFE9E6 {
+  * no_pembelian : PK, FK
+  * no_urut : PK
+  --
+  # id_peralatan : FK
+  # id_perlengkapan : FK
+  qty
+  harga
+}
+
+entity aset <<konv>> #FFE9E6 {
+  * id_aset : PK
+  --
+  # no_pembelian : FK
+  # id_peralatan : FK
+  # id_kategori : FK
+  tgl_perolehan
+  nilai_perolehan
+}
+
+entity jadwal_penyusutan <<konv>> #FFE9E6 {
+  * id_aset : PK, FK
+  * periode_ke : PK
+  --
+  # jurnal_no : FK
+  periode
+  beban
+}
+
+entity opname <<konv>> #FFE9E6 {
+  * id_opname : PK
+  --
+  # periode : FK
+  # jurnal_no : FK
+  total_beban
+  status
+}
+
+entity detail_opname <<konv>> #FFE9E6 {
+  * id_opname : PK, FK
+  * id_perlengkapan : PK, FK
+  --
+  saldo_buku
+  nilai_sisa
+}
+
+entity pelepasan <<konv>> #FFE9E6 {
+  * no_pelepasan : PK
+  --
+  # id_aset : FK
+  # jurnal_no : FK
+  tanggal
+  alasan
+}
+
+entity akun <<lap>> #FFF4CC {
+  * kode_akun : PK
+  --
+  nama
+  tipe
+}
+
+entity jurnal <<lap>> #FFF4CC {
+  * no_jurnal : PK
+  --
+  # periode : FK
+  # pembalik_dari : FK
+  # dibuat_oleh : FK
+  tanggal
+  jenis
+}
+
+entity detail_jurnal <<lap>> #FFF4CC {
+  * no_jurnal : PK, FK
+  * no_urut : PK
+  --
+  # kode_akun : FK
+  debit
+  kredit
+}
+
+entity periode <<lap>> #FFF4CC {
+  * periode : PK
+  --
+  status
+  dikunci_oleh
+}
+
+entity peran <<lap>> #FFF4CC {
+  * kode_peran : PK
+  --
+  nama
+}
+
+entity karyawan <<sdm>> #E3EFFA {
+  * id_karyawan : PK
+  --
+  nama
+  status_ptkp
+}
+
+entity jabatan <<sdm>> #E3EFFA {
+  * id_jabatan : PK
+  --
+  # akun_beban : FK
+  nama
+  tunj_jabatan
+}
+
+entity golongan <<sdm>> #E3EFFA {
+  * id_golongan : PK
+  --
+  nama
+  gaji_pokok
+}
+
+entity tunjangan <<sdm>> #E3EFFA {
+  * id_tunjangan : PK
+  --
+  nama
+  nominal
+}
+
+entity jadwal_kerja <<sdm>> #E3EFFA {
+  * id_jadwal : PK
+  --
+  # id_jabatan : FK
+  jam_masuk
+  jam_keluar
+}
+
+entity setting_gaji <<sdm>> #E3EFFA {
+  * id_setting : PK
+  --
+  # id_karyawan : FK
+  # id_jabatan : FK
+  # id_golongan : FK
+}
+
+entity setting_tunjangan <<sdm>> #E3EFFA {
+  * id_setting : PK, FK
+  * id_tunjangan : PK, FK
+  --
+}
+
+entity presensi <<sdm>> #E3EFFA {
+  * id_presensi : PK
+  --
+  # id_karyawan : FK
+  # id_jadwal : FK
+  tanggal
+  absensi
+}
+
+entity slip_gaji <<sdm>> #E3EFFA {
+  * id_slip : PK
+  --
+  # id_karyawan : FK
+  # periode : FK
+  # no_penggajian : FK
+  # jurnal_no : FK
+  gaji_pokok
+  potongan_absen
+}
+
+entity penggajian <<sdm>> #E3EFFA {
+  * no_penggajian : PK
+  --
+  # periode : FK
+  # jurnal_no : FK
+  total_bruto
+  total_pph
+}
+
+supplier ||--o{ pembelian
+kategori_aset ||--o{ peralatan
+kategori_aset ||--o{ aset
+peralatan ||--o{ detail_pembelian
+perlengkapan ||--o{ detail_pembelian
+pembelian ||--|{ detail_pembelian
+pembelian ||--o{ aset
+peralatan ||--o{ aset
+aset ||--|{ jadwal_penyusutan
+aset ||--o{ pelepasan
+opname ||--|{ detail_opname
+perlengkapan ||--o{ detail_opname
+akun ||--o{ detail_jurnal
+akun ||--o{ kategori_aset
+akun ||--o{ jabatan
+jurnal ||--|{ detail_jurnal
+jurnal |o--o| jurnal : membalik
+periode ||--o{ jurnal
+periode ||--o{ opname
+periode ||--o{ slip_gaji
+periode ||--o{ penggajian
+jurnal |o--o{ pembelian
+jurnal |o--o{ jadwal_penyusutan
+jurnal |o--o| opname
+jurnal |o--o| pelepasan
+jurnal |o--o{ slip_gaji
+jurnal |o--o| penggajian
+peran ||--o{ jurnal
+jabatan ||--o{ jadwal_kerja
+jabatan ||--o{ setting_gaji
+golongan ||--o{ setting_gaji
+karyawan ||--o| setting_gaji
+setting_gaji ||--o{ setting_tunjangan
+tunjangan ||--o{ setting_tunjangan
+karyawan ||--o{ presensi
+jadwal_kerja |o--o{ presensi
+karyawan ||--o{ slip_gaji
+penggajian |o--|{ slip_gaji
+legend right
+  Merah muda: siklus konversi
+  Kuning: pelaporan
+  Biru: siklus SDM
+endlegend
+@enduml

@@ -53,7 +53,7 @@ Catatan keamanan: skema ini membuka baca dan tulis untuk siapa pun yang punya al
 │       └── app.js                   Render, routing, koneksi database
 ├── data/seed.js                     Data contoh awal
 ├── supabase/schema.sql              Skema tabel Supabase
-└── docs/                            Diagram use case dan logical database (siklus konversi)
+└── docs/                            Diagram use case, sitemap, dan logical database (kedua siklus)
 ```
 
 ## Peran
