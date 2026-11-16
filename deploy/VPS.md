@@ -40,16 +40,16 @@ VPS hanya 1 vCPU dan berbagi dengan Bejoban, jadi image dibangun di Mac untuk `l
 ```bash
 # Di Mac, dari folder repo, branch nextjs
 git archive --format=tar nextjs | ssh root@76.13.219.108 'cd /opt/sia-dpro && tar -x'
-docker build --platform linux/amd64 --target build -t sia-dpro-migrasi:latest .
-docker build --platform linux/amd64 -t sia-dpro-app:latest .
-docker save sia-dpro-migrasi:latest sia-dpro-app:latest | gzip | ssh root@76.13.219.108 'gunzip | docker load'
+docker buildx build --platform linux/amd64 --target build -t sia-dpro-migrasi:latest --load .
+docker buildx build --platform linux/amd64 -t sia-dpro-app:latest --load .
+docker save --platform linux/amd64 sia-dpro-migrasi:latest sia-dpro-app:latest | gzip | ssh root@76.13.219.108 'gunzip | docker load'
 
 # Di VPS
 cd /opt/sia-dpro
 $C up -d --no-build     # migrasi (prisma migrate deploy) jalan otomatis sebelum app
 ```
 
-Catatan untuk Mac dengan Colima: bila `docker build --platform linux/amd64` menolak image dasar arm64, jalankan dulu `docker pull --platform linux/amd64 node:22-alpine`.
+Catatan untuk Mac dengan Colima: `docker build` biasa gagal untuk `--platform linux/amd64` (builder lama dengan image store containerd), jadi pakai `docker buildx` (`brew install docker-buildx`, lalu tautkan plugin ke `~/.docker/cli-plugins`). Build penuh lewat emulasi memakan sekitar 15 menit.
 
 Membangun langsung di VPS (`$C build`) juga bisa, tetapi berat untuk 1 vCPU dan RAM bersama Bejoban. Pakai hanya bila perlu.
 
