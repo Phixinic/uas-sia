@@ -1,5 +1,5 @@
 /*
- * Use case: Kelola (CRUD) Pembelian Peralatan & Perlengkapan.
+ * Siklus konversi. Use case: Kelola (CRUD) Pembelian Peralatan & Perlengkapan.
  * include: Insert tabel transaksi, Hitung Penyusutan (jadwal dibuat saat posting)
  * extend : Kelola Master Supplier / Peralatan / Perlengkapan (tambah cepat dari form)
  */
@@ -12,7 +12,7 @@ function vBeli(jenis){
   const rows=list.map(b=>{
     const items=(b.items||[]).map(it=>`${esc((byId(jenis,it.barang_id)||{}).nama||it.barang_id)} × ${it.qty}`).join('<br>');
     let acts='';
-    if(b.status==='draft'){if(isAdmin())acts+=`<button type="button" class="btn sm" data-act="beli-edit" data-id="${b.id}">Ubah</button>`+cbtn('beli-del',b.id,'Hapus','Yakin hapus?','sm dng');acts+=cbtn('beli-post',b.id,'Posting','Klik lagi untuk posting','sm pri')}
+    if(b.status==='draft'){if(isAdmin())acts+=`<button type="button" class="btn sm" data-act="beli-edit" data-id="${b.id}">Ubah</button>`+cbtn('beli-del',b.id,'Hapus','Yakin hapus?','sm dng');if(!isHrd())acts+=cbtn('beli-post',b.id,'Posting','Klik lagi untuk posting','sm pri')}
     else if(b.status==='posted'){acts+=`<span class="small muted code">${esc(b.jurnal_id||'')}</span>`;if(isOwner()&&S.ui.balik!==b.id)acts+=`<button type="button" class="btn sm dng" data-act="balik-open" data-id="${b.id}">Balik</button>`}
     else if(b.status==='dibalik')acts+=`<span class="small muted">${esc(b.alasan_balik||'')}</span>`;
     let extra='';

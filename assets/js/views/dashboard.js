@@ -1,12 +1,12 @@
 /*
- * Halaman Dashboard: ringkasan nilai buku, penyusutan, saldo perlengkapan, dan daftar pekerjaan.
+ * Halaman Dashboard: ringkasan dan daftar pekerjaan yang tertunda.
  */
 function vDashboard(){
   const P=per(today());const aktif=S.data.aset.filter(a=>a.status==='aktif');
   const perol=sum(aktif,a=>a.nilai_perolehan),akm=sum(aktif,a=>akmOk(a));
   const susutP=sum(aktif,a=>((a.jadwal||[]).find(r=>r.periode===P)||{beban:0}).beban);
   const lkp=saldo(AK.LKP,null);
-  const wait=S.data.jurnal.filter(j=>j.status==='diajukan').length+S.data.pelepasan.filter(p=>p.status==='diajukan').length;
+  const wait=S.data.jurnal.filter(j=>j.status==='diajukan').length+S.data.pelepasan.filter(p=>p.status==='diajukan').length+S.data.penggajian.filter(g=>g.status==='diajukan').length;
   const todos=[];
   const draftB=S.data.pembelian.filter(b=>b.status==='draft');
   if(draftB.length)todos.push([`${draftB.length} pembelian masih draf`,'Posting supaya masuk jurnal umum dan kartu aset.',draftB[0].jenis==='peralatan'?'#beli-peralatan':'#beli-perlengkapan']);
@@ -15,6 +15,8 @@ function vDashboard(){
   const jd=S.data.jurnal.filter(j=>j.status==='draft');if(jd.length)todos.push([`${jd.length} jurnal penyesuaian masih draf`,'Admin perlu mengajukannya ke Owner.','#jurnal-penyesuaian']);
   const ja=S.data.jurnal.filter(j=>j.status==='diajukan');if(ja.length)todos.push([`${ja.length} jurnal penyesuaian menunggu persetujuan`,'Owner menyetujui atau menolak dengan alasan.','#jurnal-penyesuaian']);
   const la=S.data.pelepasan.filter(p=>p.status==='diajukan');if(la.length)todos.push([`${la.length} pengajuan pelepasan peralatan`,'Menunggu keputusan Owner.','#pelepasan']);
+  const sdraft=S.data.slip.filter(x=>x.status==='draft');if(sdraft.length)todos.push([`${sdraft.length} slip gaji masih draf`,'HRD mengajukan distribusinya ke Owner.','#distribusi-gaji']);
+  const pga=S.data.penggajian.filter(g=>g.status==='diajukan');if(pga.length)todos.push([`${pga.length} pengajuan penggajian menunggu persetujuan`,'Owner menyetujui supaya gaji dijurnal dan dibayar.','#distribusi-gaji']);
   const gar=aktif.filter(a=>a.garansi_sampai&&a.garansi_sampai>=today()&&a.garansi_sampai<=addDays(today(),30));
   gar.forEach(a=>todos.push([`Garansi ${a.nama} habis ${fmtTgl(a.garansi_sampai)}`,`${a.kode}: cek kondisi sebelum garansi berakhir.`,'#aset']));
   const recent=S.data.jurnal.slice().sort((a,b)=>(b.dibuat_pada||'').localeCompare(a.dibuat_pada||'')).slice(0,6);
@@ -23,7 +25,8 @@ function vDashboard(){
     <div class="card tile"><div class="lb">Nilai buku peralatan</div><div class="v">Rp${rp(perol-akm)}</div><div class="s">${aktif.length} unit aktif · perolehan Rp${rp(perol)}</div></div>
     <div class="card tile"><div class="lb">Penyusutan ${fmtPer(P)}</div><div class="v">Rp${rp(susutP)}</div><div class="s">Dari jadwal kartu aset</div></div>
     <div class="card tile"><div class="lb">Saldo perlengkapan</div><div class="v">Rp${rp(lkp)}</div><div class="s">Menurut buku besar</div></div>
-    <div class="card tile"><div class="lb">Menunggu persetujuan</div><div class="v">${wait}</div><div class="s">Jurnal dan pelepasan</div></div>
+    <div class="card tile"><div class="lb">Menunggu persetujuan</div><div class="v">${wait}</div><div class="s">Jurnal, pelepasan, penggajian</div></div>
+    <div class="card tile"><div class="lb">Saldo kas</div><div class="v">Rp${rp(saldo(AK.KAS,null))}</div><div class="s">${S.data.karyawan.filter(k=>k.aktif!==false).length} karyawan aktif</div></div>
   </div>
   <section class="card"><h2>Perlu tindakan</h2>${todos.length?todos.map(t=>`<div class="todo"><div><b>${esc(t[0])}</b><div class="small muted">${esc(t[1])}</div></div><a class="btn sm" href="${t[2]}">Buka</a></div>`).join(''):`<p class="muted small" style="margin:8px 0 0">Tidak ada pekerjaan yang tertunda.</p>`}</section>
   <section class="card flush"><div class="ch"><h2>Jurnal terbaru</h2></div>${recent.length?`<div class="tw"><table class="t"><thead><tr><th>No.</th><th>Tanggal</th><th>Keterangan</th><th>Jenis</th><th class="num">Jumlah (Rp)</th><th>Status</th></tr></thead><tbody>${recent.map(j=>`<tr><td class="code">${esc(j.no)}</td><td>${fmtTgl(j.tanggal)}</td><td>${esc(j.keterangan)}</td><td>${esc(j.jenis)}</td><td class="num">${rp(sum(j.baris||[],b=>b.debit))}</td><td>${pill(j.status)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Belum ada jurnal. Mulai dari Pembelian Peralatan atau Pembelian Perlengkapan.</div>'}</section>

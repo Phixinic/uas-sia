@@ -1,4 +1,4 @@
-/* Data contoh awal (Oktober 2026). Dipakai saat localStorage masih kosong atau saat "Reset data contoh". */
+/* Data contoh awal (Oktober 2026) untuk siklus konversi dan SDM. Dipakai saat database masih kosong. */
 window.SEED = {
  "akun": {
   "6-110": {
@@ -70,6 +70,27 @@ window.SEED = {
    "tipe": "Aset",
    "saldo_normal": "D",
    "aktif": true
+  },
+  "2-120": {
+   "kode": "2-120",
+   "nama": "Utang PPh 21",
+   "tipe": "Liabilitas",
+   "saldo_normal": "K",
+   "aktif": true
+  },
+  "6-210": {
+   "kode": "6-210",
+   "nama": "Biaya Gaji Tenaga Kerja Langsung",
+   "tipe": "Beban",
+   "saldo_normal": "D",
+   "aktif": true
+  },
+  "6-220": {
+   "kode": "6-220",
+   "nama": "Biaya Gaji Administrasi & Umum",
+   "tipe": "Beban",
+   "saldo_normal": "D",
+   "aktif": true
   }
  },
  "peralatan": {
@@ -104,14 +125,24 @@ window.SEED = {
  },
  "meta": {
   "counters": {
-   "JU2026": 6,
+   "JU2026": 7,
    "BP2026": 4,
    "BL2026": 2,
    "AST": 4,
    "SUP": 3,
    "ALT": 4,
    "LKP": 4,
-   "KAT": 3
+   "KAT": 3,
+   "KRY": 5,
+   "JBT": 4,
+   "GP": 4,
+   "TNJ": 4,
+   "TM": 4,
+   "SET": 5
+  },
+  "profil": {
+   "nama": "Laundry Sukses Mandiri",
+   "ket": "SIA Konversi & SDM"
   }
  },
  "kategori": {
@@ -1772,6 +1803,36 @@ window.SEED = {
    "disetujui_oleh": "admin",
    "disetujui_pada": "2026-11-02T05:00:00.000Z",
    "alasan_tolak": null
+  },
+  "JU-2026-0007": {
+   "no": "JU-2026-0007",
+   "tanggal": "2026-10-01",
+   "periode": "2026-10",
+   "jenis": "umum",
+   "keterangan": "Setoran modal tambahan untuk kas operasional dan gaji (data contoh)",
+   "baris": [
+    {
+     "akun": "1-110",
+     "debit": 40000000,
+     "kredit": 0
+    },
+    {
+     "akun": "3-110",
+     "debit": 0,
+     "kredit": 40000000
+    }
+   ],
+   "sumber_tipe": "saldo_awal",
+   "sumber_id": null,
+   "rincian": null,
+   "pembalik_dari": null,
+   "status": "disetujui",
+   "dibuat_oleh": "owner",
+   "dibuat_pada": "2026-11-16T02:00:00.000Z",
+   "diajukan_pada": "2026-11-16T02:00:00.000Z",
+   "disetujui_oleh": "owner",
+   "disetujui_pada": "2026-11-16T02:00:00.000Z",
+   "alasan_tolak": null
   }
  },
  "pembelian": {
@@ -2002,6 +2063,1329 @@ window.SEED = {
    "kode": "LKP-03",
    "nama": "Plastik Kemasan",
    "satuan": "pak",
+   "aktif": true
+  }
+ },
+ "presensi": {
+  "PRS-KRY-03-20261002": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-02",
+   "absensi": "Hadir",
+   "jam_masuk": "06:52",
+   "jam_keluar": "16:41",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261027": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-27",
+   "absensi": "Hadir",
+   "jam_masuk": "07:48",
+   "jam_keluar": "17:26",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261016": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-16",
+   "absensi": "Hadir",
+   "jam_masuk": "07:56",
+   "jam_keluar": "17:04",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261028": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-28",
+   "absensi": "Hadir",
+   "jam_masuk": "07:53",
+   "jam_keluar": "17:11",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261019": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-19",
+   "absensi": "Cuti",
+   "jam_masuk": "",
+   "jam_keluar": "",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261029": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-29",
+   "absensi": "Hadir",
+   "jam_masuk": "07:50",
+   "jam_keluar": "17:21",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261013": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-13",
+   "absensi": "Hadir",
+   "jam_masuk": "07:48",
+   "jam_keluar": "17:43",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261001": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-01",
+   "absensi": "Hadir",
+   "jam_masuk": "08:27",
+   "jam_keluar": "17:28",
+   "terlambat": 27,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261021": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-21",
+   "absensi": "Hadir",
+   "jam_masuk": "07:46",
+   "jam_keluar": "17:38",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261026": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-26",
+   "absensi": "Hadir",
+   "jam_masuk": "07:48",
+   "jam_keluar": "17:23",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261028": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-28",
+   "absensi": "Hadir",
+   "jam_masuk": "07:56",
+   "jam_keluar": "17:43",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261022": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-22",
+   "absensi": "Hadir",
+   "jam_masuk": "08:17",
+   "jam_keluar": "17:25",
+   "terlambat": 17,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261023": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-23",
+   "absensi": "Hadir",
+   "jam_masuk": "07:55",
+   "jam_keluar": "17:39",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261005": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-05",
+   "absensi": "Hadir",
+   "jam_masuk": "08:22",
+   "jam_keluar": "17:05",
+   "terlambat": 22,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261022": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-22",
+   "absensi": "Hadir",
+   "jam_masuk": "06:57",
+   "jam_keluar": "16:43",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261015": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-15",
+   "absensi": "Hadir",
+   "jam_masuk": "07:49",
+   "jam_keluar": "17:36",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261029": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-29",
+   "absensi": "Hadir",
+   "jam_masuk": "07:50",
+   "jam_keluar": "17:08",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261030": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-30",
+   "absensi": "Hadir",
+   "jam_masuk": "07:54",
+   "jam_keluar": "17:11",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261028": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-28",
+   "absensi": "Hadir",
+   "jam_masuk": "06:51",
+   "jam_keluar": "16:00",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261015": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-15",
+   "absensi": "Hadir",
+   "jam_masuk": "06:59",
+   "jam_keluar": "16:04",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261012": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-12",
+   "absensi": "Hadir",
+   "jam_masuk": "07:30",
+   "jam_keluar": "16:33",
+   "terlambat": 30,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261019": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-19",
+   "absensi": "Hadir",
+   "jam_masuk": "08:06",
+   "jam_keluar": "17:03",
+   "terlambat": 6,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261030": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-30",
+   "absensi": "Hadir",
+   "jam_masuk": "06:54",
+   "jam_keluar": "16:26",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261012": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-12",
+   "absensi": "Hadir",
+   "jam_masuk": "07:55",
+   "jam_keluar": "17:13",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261006": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-06",
+   "absensi": "Hadir",
+   "jam_masuk": "07:09",
+   "jam_keluar": "16:33",
+   "terlambat": 9,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261028": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-28",
+   "absensi": "Cuti",
+   "jam_masuk": "",
+   "jam_keluar": "",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261022": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-22",
+   "absensi": "Hadir",
+   "jam_masuk": "07:58",
+   "jam_keluar": "17:30",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261015": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-15",
+   "absensi": "Hadir",
+   "jam_masuk": "08:26",
+   "jam_keluar": "17:15",
+   "terlambat": 26,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261016": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-16",
+   "absensi": "Hadir",
+   "jam_masuk": "07:52",
+   "jam_keluar": "17:36",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261013": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-13",
+   "absensi": "Alpa",
+   "jam_masuk": "",
+   "jam_keluar": "",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261005": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-05",
+   "absensi": "Hadir",
+   "jam_masuk": "07:50",
+   "jam_keluar": "17:26",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261005": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-05",
+   "absensi": "Hadir",
+   "jam_masuk": "07:00",
+   "jam_keluar": "16:10",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261014": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-14",
+   "absensi": "Hadir",
+   "jam_masuk": "08:00",
+   "jam_keluar": "17:17",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261026": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-26",
+   "absensi": "Hadir",
+   "jam_masuk": "06:50",
+   "jam_keluar": "16:39",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261005": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-05",
+   "absensi": "Sakit",
+   "jam_masuk": "",
+   "jam_keluar": "",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261006": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-06",
+   "absensi": "Izin",
+   "jam_masuk": "",
+   "jam_keluar": "",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261009": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-09",
+   "absensi": "Hadir",
+   "jam_masuk": "07:56",
+   "jam_keluar": "17:19",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261009": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-09",
+   "absensi": "Hadir",
+   "jam_masuk": "06:48",
+   "jam_keluar": "16:22",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261030": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-30",
+   "absensi": "Hadir",
+   "jam_masuk": "06:49",
+   "jam_keluar": "16:37",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261008": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-08",
+   "absensi": "Hadir",
+   "jam_masuk": "07:57",
+   "jam_keluar": "17:01",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261027": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-27",
+   "absensi": "Hadir",
+   "jam_masuk": "06:46",
+   "jam_keluar": "16:16",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261016": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-16",
+   "absensi": "Hadir",
+   "jam_masuk": "06:54",
+   "jam_keluar": "16:18",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261027": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-27",
+   "absensi": "Hadir",
+   "jam_masuk": "07:22",
+   "jam_keluar": "16:27",
+   "terlambat": 22,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261014": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-14",
+   "absensi": "Hadir",
+   "jam_masuk": "07:00",
+   "jam_keluar": "16:21",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261023": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-23",
+   "absensi": "Hadir",
+   "jam_masuk": "06:51",
+   "jam_keluar": "16:00",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261026": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-26",
+   "absensi": "Hadir",
+   "jam_masuk": "06:55",
+   "jam_keluar": "16:12",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261030": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-30",
+   "absensi": "Hadir",
+   "jam_masuk": "07:54",
+   "jam_keluar": "17:44",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261001": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-01",
+   "absensi": "Hadir",
+   "jam_masuk": "07:53",
+   "jam_keluar": "17:03",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261009": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-09",
+   "absensi": "Hadir",
+   "jam_masuk": "07:59",
+   "jam_keluar": "17:26",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261007": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-07",
+   "absensi": "Hadir",
+   "jam_masuk": "07:56",
+   "jam_keluar": "17:12",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261020": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-20",
+   "absensi": "Hadir",
+   "jam_masuk": "06:59",
+   "jam_keluar": "16:33",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261009": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-09",
+   "absensi": "Hadir",
+   "jam_masuk": "08:32",
+   "jam_keluar": "17:37",
+   "terlambat": 32,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261022": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-22",
+   "absensi": "Hadir",
+   "jam_masuk": "07:58",
+   "jam_keluar": "17:37",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261006": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-06",
+   "absensi": "Hadir",
+   "jam_masuk": "08:03",
+   "jam_keluar": "17:16",
+   "terlambat": 3,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261002": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-02",
+   "absensi": "Hadir",
+   "jam_masuk": "07:58",
+   "jam_keluar": "17:14",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261029": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-29",
+   "absensi": "Hadir",
+   "jam_masuk": "07:46",
+   "jam_keluar": "17:01",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261012": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-12",
+   "absensi": "Hadir",
+   "jam_masuk": "07:59",
+   "jam_keluar": "17:25",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261021": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-21",
+   "absensi": "Hadir",
+   "jam_masuk": "07:47",
+   "jam_keluar": "17:17",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261019": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-19",
+   "absensi": "Hadir",
+   "jam_masuk": "07:50",
+   "jam_keluar": "17:02",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261008": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-08",
+   "absensi": "Hadir",
+   "jam_masuk": "06:49",
+   "jam_keluar": "16:00",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261006": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-06",
+   "absensi": "Hadir",
+   "jam_masuk": "07:47",
+   "jam_keluar": "17:12",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261029": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-29",
+   "absensi": "Sakit",
+   "jam_masuk": "",
+   "jam_keluar": "",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261013": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-13",
+   "absensi": "Cuti",
+   "jam_masuk": "",
+   "jam_keluar": "",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261008": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-08",
+   "absensi": "Hadir",
+   "jam_masuk": "07:26",
+   "jam_keluar": "16:01",
+   "terlambat": 26,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261007": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-07",
+   "absensi": "Hadir",
+   "jam_masuk": "06:52",
+   "jam_keluar": "16:40",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261021": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-21",
+   "absensi": "Hadir",
+   "jam_masuk": "06:53",
+   "jam_keluar": "16:13",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261016": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-16",
+   "absensi": "Hadir",
+   "jam_masuk": "06:55",
+   "jam_keluar": "16:22",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261022": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-22",
+   "absensi": "Hadir",
+   "jam_masuk": "07:19",
+   "jam_keluar": "16:32",
+   "terlambat": 19,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261012": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-12",
+   "absensi": "Hadir",
+   "jam_masuk": "07:51",
+   "jam_keluar": "17:33",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261023": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-23",
+   "absensi": "Hadir",
+   "jam_masuk": "07:47",
+   "jam_keluar": "17:38",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261020": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-20",
+   "absensi": "Hadir",
+   "jam_masuk": "07:50",
+   "jam_keluar": "17:35",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261007": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-07",
+   "absensi": "Hadir",
+   "jam_masuk": "06:49",
+   "jam_keluar": "16:09",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261015": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-15",
+   "absensi": "Hadir",
+   "jam_masuk": "07:00",
+   "jam_keluar": "16:00",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261023": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-23",
+   "absensi": "Hadir",
+   "jam_masuk": "06:59",
+   "jam_keluar": "16:01",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261012": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-12",
+   "absensi": "Hadir",
+   "jam_masuk": "06:58",
+   "jam_keluar": "16:35",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261006": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-06",
+   "absensi": "Hadir",
+   "jam_masuk": "06:56",
+   "jam_keluar": "16:07",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261021": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-21",
+   "absensi": "Hadir",
+   "jam_masuk": "07:22",
+   "jam_keluar": "16:23",
+   "terlambat": 22,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261001": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-01",
+   "absensi": "Hadir",
+   "jam_masuk": "06:58",
+   "jam_keluar": "16:44",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261001": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-01",
+   "absensi": "Cuti",
+   "jam_masuk": "",
+   "jam_keluar": "",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261020": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-20",
+   "absensi": "Hadir",
+   "jam_masuk": "07:56",
+   "jam_keluar": "17:09",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261014": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-14",
+   "absensi": "Hadir",
+   "jam_masuk": "08:29",
+   "jam_keluar": "17:27",
+   "terlambat": 29,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261020": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-20",
+   "absensi": "Hadir",
+   "jam_masuk": "08:17",
+   "jam_keluar": "17:00",
+   "terlambat": 17,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261014": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-14",
+   "absensi": "Hadir",
+   "jam_masuk": "06:59",
+   "jam_keluar": "16:42",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261002": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-02",
+   "absensi": "Hadir",
+   "jam_masuk": "08:22",
+   "jam_keluar": "17:25",
+   "terlambat": 22,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-02-20261027": {
+   "karyawan_id": "KRY-02",
+   "tanggal": "2026-10-27",
+   "absensi": "Hadir",
+   "jam_masuk": "07:50",
+   "jam_keluar": "17:15",
+   "terlambat": 0,
+   "jadwal_id": "TM-02",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-04-20261002": {
+   "karyawan_id": "KRY-04",
+   "tanggal": "2026-10-02",
+   "absensi": "Alpa",
+   "jam_masuk": "",
+   "jam_keluar": "",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261002": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-02",
+   "absensi": "Hadir",
+   "jam_masuk": "08:15",
+   "jam_keluar": "17:14",
+   "terlambat": 15,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261008": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-08",
+   "absensi": "Hadir",
+   "jam_masuk": "07:59",
+   "jam_keluar": "17:27",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261019": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-19",
+   "absensi": "Hadir",
+   "jam_masuk": "06:56",
+   "jam_keluar": "16:28",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261009": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-09",
+   "absensi": "Hadir",
+   "jam_masuk": "06:46",
+   "jam_keluar": "16:08",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261026": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-26",
+   "absensi": "Alpa",
+   "jam_masuk": "",
+   "jam_keluar": "",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261007": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-07",
+   "absensi": "Hadir",
+   "jam_masuk": "08:32",
+   "jam_keluar": "17:28",
+   "terlambat": 32,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261013": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-13",
+   "absensi": "Hadir",
+   "jam_masuk": "06:46",
+   "jam_keluar": "16:25",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261023": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-23",
+   "absensi": "Hadir",
+   "jam_masuk": "08:02",
+   "jam_keluar": "17:32",
+   "terlambat": 2,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261008": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-08",
+   "absensi": "Hadir",
+   "jam_masuk": "07:48",
+   "jam_keluar": "17:05",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261030": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-30",
+   "absensi": "Cuti",
+   "jam_masuk": "",
+   "jam_keluar": "",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261028": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-28",
+   "absensi": "Hadir",
+   "jam_masuk": "07:48",
+   "jam_keluar": "17:33",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261013": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-13",
+   "absensi": "Hadir",
+   "jam_masuk": "08:02",
+   "jam_keluar": "17:02",
+   "terlambat": 2,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-05-20261027": {
+   "karyawan_id": "KRY-05",
+   "tanggal": "2026-10-27",
+   "absensi": "Hadir",
+   "jam_masuk": "07:49",
+   "jam_keluar": "17:28",
+   "terlambat": 0,
+   "jadwal_id": "TM-04",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261016": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-16",
+   "absensi": "Hadir",
+   "jam_masuk": "07:50",
+   "jam_keluar": "17:13",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261026": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-26",
+   "absensi": "Hadir",
+   "jam_masuk": "07:48",
+   "jam_keluar": "17:15",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261029": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-29",
+   "absensi": "Hadir",
+   "jam_masuk": "06:46",
+   "jam_keluar": "16:34",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261001": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-01",
+   "absensi": "Hadir",
+   "jam_masuk": "08:11",
+   "jam_keluar": "17:04",
+   "terlambat": 11,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261005": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-05",
+   "absensi": "Hadir",
+   "jam_masuk": "07:51",
+   "jam_keluar": "17:37",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261015": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-15",
+   "absensi": "Hadir",
+   "jam_masuk": "08:14",
+   "jam_keluar": "17:34",
+   "terlambat": 14,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-03-20261020": {
+   "karyawan_id": "KRY-03",
+   "tanggal": "2026-10-20",
+   "absensi": "Hadir",
+   "jam_masuk": "06:47",
+   "jam_keluar": "16:29",
+   "terlambat": 0,
+   "jadwal_id": "TM-03",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261021": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-21",
+   "absensi": "Hadir",
+   "jam_masuk": "07:55",
+   "jam_keluar": "17:22",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261007": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-07",
+   "absensi": "Hadir",
+   "jam_masuk": "07:54",
+   "jam_keluar": "17:20",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261014": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-14",
+   "absensi": "Hadir",
+   "jam_masuk": "08:03",
+   "jam_keluar": "17:35",
+   "terlambat": 3,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  },
+  "PRS-KRY-01-20261019": {
+   "karyawan_id": "KRY-01",
+   "tanggal": "2026-10-19",
+   "absensi": "Hadir",
+   "jam_masuk": "07:48",
+   "jam_keluar": "17:28",
+   "terlambat": 0,
+   "jadwal_id": "TM-01",
+   "dibuat_oleh": "hrd"
+  }
+ },
+ "jabatan": {
+  "JBT-01": {
+   "kode": "JBT-01",
+   "nama": "Kepala Toko",
+   "tunj_jabatan": 750000,
+   "tunj_keluarga": 300000,
+   "akun_beban": "6-220",
+   "aktif": true
+  },
+  "JBT-04": {
+   "kode": "JBT-04",
+   "nama": "Kurir Antar-Jemput",
+   "tunj_jabatan": 200000,
+   "tunj_keluarga": 200000,
+   "akun_beban": "6-210",
+   "aktif": true
+  },
+  "JBT-02": {
+   "kode": "JBT-02",
+   "nama": "Kasir / Admin",
+   "tunj_jabatan": 300000,
+   "tunj_keluarga": 200000,
+   "akun_beban": "6-220",
+   "aktif": true
+  },
+  "JBT-03": {
+   "kode": "JBT-03",
+   "nama": "Operator Cuci & Setrika",
+   "tunj_jabatan": 250000,
+   "tunj_keluarga": 200000,
+   "akun_beban": "6-210",
+   "aktif": true
+  }
+ },
+ "jadwal": {
+  "TM-02": {
+   "kode": "TM-02",
+   "jabatan_id": "JBT-02",
+   "jam_masuk": "08:00",
+   "jam_keluar": "17:00",
+   "hari_kerja": 22,
+   "aktif": true
+  },
+  "TM-04": {
+   "kode": "TM-04",
+   "jabatan_id": "JBT-04",
+   "jam_masuk": "08:00",
+   "jam_keluar": "17:00",
+   "hari_kerja": 22,
+   "aktif": true
+  },
+  "TM-03": {
+   "kode": "TM-03",
+   "jabatan_id": "JBT-03",
+   "jam_masuk": "07:00",
+   "jam_keluar": "16:00",
+   "hari_kerja": 22,
+   "aktif": true
+  },
+  "TM-01": {
+   "kode": "TM-01",
+   "jabatan_id": "JBT-01",
+   "jam_masuk": "08:00",
+   "jam_keluar": "17:00",
+   "hari_kerja": 22,
+   "aktif": true
+  }
+ },
+ "golongan": {
+  "GP-01": {
+   "kode": "GP-01",
+   "nama": "Golongan I",
+   "jumlah": 3550000,
+   "aktif": true
+  },
+  "GP-04": {
+   "kode": "GP-04",
+   "nama": "Golongan IV",
+   "jumlah": 5500000,
+   "aktif": true
+  },
+  "GP-03": {
+   "kode": "GP-03",
+   "nama": "Golongan III",
+   "jumlah": 4500000,
+   "aktif": true
+  },
+  "GP-02": {
+   "kode": "GP-02",
+   "nama": "Golongan II",
+   "jumlah": 3800000,
+   "aktif": true
+  }
+ },
+ "karyawan": {
+  "KRY-04": {
+   "kode": "KRY-04",
+   "nama": "Dewi Lestari",
+   "status_ptkp": "TK/0",
+   "bank": "BNI",
+   "no_rek": "0987654321",
+   "aktif": true
+  },
+  "KRY-02": {
+   "kode": "KRY-02",
+   "nama": "Siti Rahmawati",
+   "status_ptkp": "TK/0",
+   "bank": "Mandiri",
+   "no_rek": "1370012345678",
+   "aktif": true
+  },
+  "KRY-01": {
+   "kode": "KRY-01",
+   "nama": "Andi Pratama",
+   "status_ptkp": "K/2",
+   "bank": "BCA",
+   "no_rek": "1234567890",
+   "aktif": true
+  },
+  "KRY-05": {
+   "kode": "KRY-05",
+   "nama": "Rizky Maulana",
+   "status_ptkp": "K/0",
+   "bank": "BCA",
+   "no_rek": "5550001234",
+   "aktif": true
+  },
+  "KRY-03": {
+   "kode": "KRY-03",
+   "nama": "Budi Santoso",
+   "status_ptkp": "K/1",
+   "bank": "BRI",
+   "no_rek": "002101009876",
+   "aktif": true
+  }
+ },
+ "tunjangan": {
+  "TNJ-03": {
+   "kode": "TNJ-03",
+   "nama": "Komunikasi",
+   "nominal": 100000,
+   "aktif": true
+  },
+  "TNJ-02": {
+   "kode": "TNJ-02",
+   "nama": "Makan",
+   "nominal": 400000,
+   "aktif": true
+  },
+  "TNJ-01": {
+   "kode": "TNJ-01",
+   "nama": "Transport",
+   "nominal": 300000,
+   "aktif": true
+  },
+  "TNJ-04": {
+   "kode": "TNJ-04",
+   "nama": "Kesehatan",
+   "nominal": 200000,
+   "aktif": true
+  }
+ },
+ "setgaji": {
+  "SET-04": {
+   "kode": "SET-04",
+   "karyawan_id": "KRY-04",
+   "jabatan_id": "JBT-03",
+   "golongan_id": "GP-01",
+   "tunjangan_ids": [
+    "TNJ-02"
+   ],
+   "aktif": true
+  },
+  "SET-05": {
+   "kode": "SET-05",
+   "karyawan_id": "KRY-05",
+   "jabatan_id": "JBT-04",
+   "golongan_id": "GP-01",
+   "tunjangan_ids": [
+    "TNJ-01",
+    "TNJ-02"
+   ],
+   "aktif": true
+  },
+  "SET-01": {
+   "kode": "SET-01",
+   "karyawan_id": "KRY-01",
+   "jabatan_id": "JBT-01",
+   "golongan_id": "GP-04",
+   "tunjangan_ids": [
+    "TNJ-01",
+    "TNJ-02",
+    "TNJ-03",
+    "TNJ-04"
+   ],
+   "aktif": true
+  },
+  "SET-03": {
+   "kode": "SET-03",
+   "karyawan_id": "KRY-03",
+   "jabatan_id": "JBT-03",
+   "golongan_id": "GP-01",
+   "tunjangan_ids": [
+    "TNJ-01",
+    "TNJ-02"
+   ],
+   "aktif": true
+  },
+  "SET-02": {
+   "kode": "SET-02",
+   "karyawan_id": "KRY-02",
+   "jabatan_id": "JBT-02",
+   "golongan_id": "GP-02",
+   "tunjangan_ids": [
+    "TNJ-01",
+    "TNJ-02",
+    "TNJ-04"
+   ],
    "aktif": true
   }
  }

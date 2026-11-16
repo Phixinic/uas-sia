@@ -17,7 +17,7 @@ function vJP(){
   const f=S.ui.jpFilter;const all=S.data.jurnal.filter(j=>j.jenis==='penyesuaian');
   const list=all.filter(j=>f==='semua'||j.status===f).sort((a,b)=>(b.tanggal+b.no).localeCompare(a.tanggal+a.no));
   const tabs=[['draft','Draf'],['diajukan','Diajukan'],['disetujui','Disetujui'],['ditolak','Ditolak'],['semua','Semua']];
-  return head('Jurnal Penyesuaian',`Admin mengajukan, Owner menyetujui atau menolak dengan alasan. Hanya jurnal yang disetujui masuk buku besar. ${isOwner()?'Kamu masuk sebagai Owner.':'Kamu masuk sebagai Admin.'}`)+
+  return head('Jurnal Penyesuaian',`Admin mengajukan, Owner menyetujui atau menolak dengan alasan. Hanya jurnal yang disetujui masuk buku besar. Kamu masuk sebagai ${ROLE[S.role]}.`)+
    `<div class="stack"><div class="row" role="group" aria-label="Filter status">${tabs.map(([v,l])=>`<button type="button" class="btn sm ${f===v?'on':''}" aria-pressed="${f===v}" data-act="set" data-k="jpFilter" data-v="${v}">${l} (${v==='semua'?all.length:all.filter(j=>j.status===v).length})</button>`).join('')}</div>
    ${list.length?list.map(jCard).join(''):`<div class="card empty">Tidak ada jurnal penyesuaian dengan status ini. Jurnal dibuat dari Proses Penyusutan dan Nilai Sisa Perlengkapan.</div>`}</div>`;
 }

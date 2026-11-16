@@ -1,71 +1,56 @@
 <!doctype html>
 <html lang="id">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width,initial-scale=1,viewport-fit=cover"
-    />
-    <title>SIA Laundry Sukses Mandiri</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
-    />
-    <link rel="stylesheet" href="assets/css/style.css" />
-  </head>
-  <body>
-    <div class="app">
-      <aside class="side">
-        <div class="brand">
-          <div class="logo">
-            <svg
-              width="21"
-              height="21"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#fff"
-              stroke-width="2"
-              stroke-linecap="round"
-              aria-hidden="true"
-            >
-              <rect x="4" y="2" width="16" height="20" rx="2" />
-              <circle cx="12" cy="13" r="5" />
-              <path d="M8 6h.01M11 6h.01" />
-            </svg>
-          </div>
-          <div><b>Sukses Mandiri</b><span>SIA Siklus Konversi</span></div>
-        </div>
-        <nav id="nav" aria-label="Menu utama"></nav>
-      </aside>
-      <div class="mainwrap">
-        <div class="topbar" id="rolebar"></div>
-        <main id="main"><div class="empty">Memuat aplikasi…</div></main>
-      </div>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SIA Laundry Sukses Mandiri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="logo"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="13" r="5"/><path d="M8 6h.01M11 6h.01"/></svg></div>
+      <div id="brand"><b>Laundry Sukses Mandiri</b><span>SIA Konversi &amp; SDM</span></div>
     </div>
-    <div id="toast" role="status" aria-live="polite"></div>
+    <nav id="nav" aria-label="Menu utama"></nav>
+  </aside>
+  <div class="mainwrap">
+    <div class="topbar" id="rolebar"></div>
+    <main id="main"><div class="empty">Memuat aplikasi…</div></main>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
 
-    <script src="data/seed.js"></script>
-    <script src="assets/js/core/config.js"></script>
-    <script src="assets/js/core/utils.js"></script>
-    <script src="assets/js/core/state.js"></script>
-    <script src="assets/js/core/db-adapter.js"></script>
-    <script src="assets/js/core/penyusutan.js"></script>
-    <script src="assets/js/core/ledger.js"></script>
-    <script src="assets/js/core/jurnal.js"></script>
-    <script src="assets/js/ui/components.js"></script>
-    <script src="assets/js/ui/navigasi.js"></script>
-    <script src="assets/js/views/dashboard.js"></script>
-    <script src="assets/js/views/pembelian.js"></script>
-    <script src="assets/js/views/nilai-sisa.js"></script>
-    <script src="assets/js/views/penyusutan.js"></script>
-    <script src="assets/js/views/aset.js"></script>
-    <script src="assets/js/views/jurnal-penyesuaian.js"></script>
-    <script src="assets/js/views/pelepasan.js"></script>
-    <script src="assets/js/views/laporan.js"></script>
-    <script src="assets/js/views/periode.js"></script>
-    <script src="assets/js/views/master.js"></script>
-    <script src="assets/js/actions.js"></script>
-    <script src="assets/js/app.js"></script>
-  </body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="data/seed.js"></script>
+<script src="assets/js/core/supabase-config.js"></script>
+<script src="assets/js/core/config.js"></script>
+<script src="assets/js/core/utils.js"></script>
+<script src="assets/js/core/state.js"></script>
+<script src="assets/js/core/db-adapter.js"></script>
+<script src="assets/js/core/penyusutan.js"></script>
+<script src="assets/js/core/ledger.js"></script>
+<script src="assets/js/core/jurnal.js"></script>
+<script src="assets/js/core/penggajian.js"></script>
+<script src="assets/js/ui/components.js"></script>
+<script src="assets/js/ui/navigasi.js"></script>
+<script src="assets/js/views/dashboard.js"></script>
+<script src="assets/js/views/pembelian.js"></script>
+<script src="assets/js/views/nilai-sisa.js"></script>
+<script src="assets/js/views/penyusutan.js"></script>
+<script src="assets/js/views/aset.js"></script>
+<script src="assets/js/views/pelepasan.js"></script>
+<script src="assets/js/views/presensi.js"></script>
+<script src="assets/js/views/gaji.js"></script>
+<script src="assets/js/views/distribusi.js"></script>
+<script src="assets/js/views/jurnal-penyesuaian.js"></script>
+<script src="assets/js/views/laporan.js"></script>
+<script src="assets/js/views/periode.js"></script>
+<script src="assets/js/views/master.js"></script>
+<script src="assets/js/actions.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
 </html>

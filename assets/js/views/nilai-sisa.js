@@ -1,5 +1,5 @@
 /*
- * Use case: Input Nilai Sisa (Saldo Akhir) Perlengkapan -> jurnal penyesuaian biaya perlengkapan.
+ * Siklus konversi. Use case: Input Nilai Sisa (Saldo Akhir) Perlengkapan -> jurnal penyesuaian biaya perlengkapan.
  */
 function defaultOpnP(){const cur=per(today());const first=S.data.pembelian.filter(b=>b.jenis==='perlengkapan'&&b.status==='posted').map(b=>per(b.tanggal)).sort()[0];if(!first)return cur;for(const p of months(first,cur))if(!S.data.opname.some(o=>o.periode===p&&o.status!=='ditolak'))return p;return cur}
 function opnRows(P){return S.data.perlengkapan.map(b=>({b,sb:saldoBukuLkp(b.id,P)})).filter(x=>x.sb>0).sort((a,b)=>a.b.kode.localeCompare(b.b.kode))}

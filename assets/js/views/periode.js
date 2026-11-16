@@ -8,7 +8,7 @@ function cekPeriode(P){
   const pendL=S.data.pelepasan.filter(p=>p.status==='diajukan'&&per(p.tanggal)===P).length;
   const needOp=S.data.pembelian.some(b=>b.jenis==='perlengkapan'&&b.status==='posted'&&per(b.tanggal)<=P);const op=S.data.opname.some(o=>o.periode===P&&o.status!=='ditolak');
   const ns=neraca(P);
-  return [['Semua pembelian periode ini sudah diposting',draftB===0,draftB?draftB+' draf':''],['Penyusutan sudah diproses sampai periode ini',unproc===0,unproc?unproc+' baris belum':''],['Nilai sisa perlengkapan sudah diinput',!needOp||op,''],['Jurnal penyesuaian sudah diputuskan',pendJ===0,pendJ?pendJ+' menunggu':''],['Pengajuan pelepasan sudah diputuskan',pendL===0,pendL?pendL+' menunggu':''],['Neraca saldo seimbang',ns.d===ns.c,'']];
+  return [['Semua pembelian periode ini sudah diposting',draftB===0,draftB?draftB+' draf':''],['Penyusutan sudah diproses sampai periode ini',unproc===0,unproc?unproc+' baris belum':''],['Nilai sisa perlengkapan sudah diinput',!needOp||op,''],['Jurnal penyesuaian sudah diputuskan',pendJ===0,pendJ?pendJ+' menunggu':''],['Pengajuan pelepasan sudah diputuskan',pendL===0,pendL?pendL+' menunggu':''],['Pengajuan penggajian sudah diputuskan',!S.data.penggajian.some(g=>g.periode===P&&g.status==='diajukan'),''],['Neraca saldo seimbang',ns.d===ns.c,'']];
 }
 function vPeriode(){
   const ps=allPer().slice().reverse();

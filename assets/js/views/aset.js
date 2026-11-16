@@ -1,5 +1,5 @@
 /*
- * Kartu aset per unit: rumus dengan angka asli dan jadwal penyusutan lengkap.
+ * Siklus konversi. Kartu aset per unit: rumus dengan angka asli dan jadwal penyusutan lengkap.
  */
 function vAset(){
   const f=S.ui.asetFilter;const list=S.data.aset.filter(a=>f==='semua'||a.status===f).sort((a,b)=>a.kode.localeCompare(b.kode));

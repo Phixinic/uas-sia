@@ -1,5 +1,5 @@
 /*
- * Use case: Melihat Jurnal Umum, Melihat Buku Besar, dan Neraca Saldo.
+ * Laporan bersama kedua siklus: Jurnal Umum, Buku Besar, dan Neraca Saldo.
  */
 function allPer(){const s=new Set([per(today())]);S.data.jurnal.forEach(j=>s.add(j.periode));S.data.pembelian.forEach(b=>s.add(per(b.tanggal)));S.data.periode.forEach(p=>s.add(p.id));return [...s].filter(Boolean).sort()}
 function vJU(){

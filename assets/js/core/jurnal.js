@@ -1,5 +1,5 @@
 /*
- * Penomoran dokumen otomatis dan pembuatan jurnal (dengan validasi seimbang & periode terkunci).
+ * Penomoran dokumen otomatis dan pembuatan jurnal (validasi seimbang & periode terkunci). Dipakai siklus konversi dan SDM.
  */
 async function nomor(prefix,tanggal,width){
   const year=tanggal?tanggal.slice(0,4):'';const key=prefix+year;const ref=S.db.doc('meta/counters');

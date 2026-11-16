@@ -1,5 +1,5 @@
 /*
- * Proses penyusutan bulanan -> satu jurnal penyesuaian per periode.
+ * Siklus konversi. Proses penyusutan bulanan -> satu jurnal penyesuaian per periode.
  */
 function defaultSusutP(){const cur=per(today());const all=S.data.aset.filter(a=>a.status==='aktif').flatMap(a=>(a.jadwal||[]).filter(r=>!r.jurnal_id&&r.periode<=cur).map(r=>r.periode)).sort();return all[0]||cur}
 function vSusut(){

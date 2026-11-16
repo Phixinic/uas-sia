@@ -1,5 +1,5 @@
 /*
- * Use case: Hapus Peralatan (pelepasan: dijual / dibuang / hilang), diajukan Admin dan disetujui Owner.
+ * Siklus konversi. Use case: Hapus Peralatan (dijual / dibuang / hilang), diajukan Admin dan disetujui Owner.
  */
 function hitLepas(a,harga){const akm=akmOk(a);const nb=a.nilai_perolehan-akm;return {akm,nb,lr:harga-nb}}
 function barisLepas(a,h){const {akm,lr}=hitLepas(a,h);return [{akun:a.akun_akm||AK.AKM,debit:akm,kredit:0},{akun:AK.KAS,debit:h,kredit:0},{akun:AK.RUGI,debit:lr<0?-lr:0,kredit:0},{akun:a.akun_aset||AK.ALT,debit:0,kredit:a.nilai_perolehan},{akun:AK.LABA,debit:0,kredit:lr>0?lr:0}]}
