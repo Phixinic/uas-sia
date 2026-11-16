@@ -1,11 +1,19 @@
 @startuml
+' Satu sumber untuk empat gambar. Pilih tampilan lewat variabel lingkungan ERD:
+'   ERD=konv | sdm | lap  -> satu siklus (entitas siklus lain tampil tanpa atribut)
+'   ERD kosong            -> semua entitas (dipakai untuk ringkasan)
+' Perlu PLANTUML_SECURITY_PROFILE=UNSECURE supaya getenv jalan.
+' Contoh: PLANTUML_SECURITY_PROFILE=UNSECURE ERD=konv plantuml -tpng -o /tmp/out logical-database.puml
+!$v = %getenv("ERD")
 skinparam dpi 200
 skinparam defaultFontName Helvetica
 skinparam defaultFontSize 12
 skinparam shadowing false
-skinparam nodesep 14
-skinparam ranksep 30
+skinparam nodesep 22
+skinparam ranksep 34
 skinparam ArrowColor #555555
+skinparam ArrowFontSize 10
+skinparam ArrowFontColor #333333
 skinparam entity {
   BackgroundColor<<konv>> #FFE9E6
   BorderColor<<konv>> #8B1A1A
@@ -18,14 +26,20 @@ skinparam entity {
   BorderColor #444444
   HeaderBackgroundColor #F3E1DE
 }
+left to right direction
 hide circle
 hide methods
+hide stereotype
 
+' ---------------- Siklus konversi ----------------
+!if ($v == "" || $v == "konv")
 entity supplier <<konv>> #FFE9E6 {
   * id_supplier : PK
   --
   nama
   alamat
+  telepon
+  npwp
 }
 
 entity kategori_aset <<konv>> #FFE9E6 {
@@ -36,6 +50,7 @@ entity kategori_aset <<konv>> #FFE9E6 {
   # akun_beban : FK
   nama
   masa_manfaat_bulan
+  persen_residu
 }
 
 entity peralatan <<konv>> #FFE9E6 {
@@ -58,8 +73,15 @@ entity pembelian <<konv>> #FFE9E6 {
   --
   # id_supplier : FK
   # jurnal_no : FK
+  # jurnal_pembalik : FK
   jenis
   tanggal
+  cara_bayar
+  jatuh_tempo
+  total
+  status
+  alasan_balik
+  dibuat_oleh
 }
 
 entity detail_pembelian <<konv>> #FFE9E6 {
@@ -70,24 +92,32 @@ entity detail_pembelian <<konv>> #FFE9E6 {
   # id_perlengkapan : FK
   qty
   harga
+  residu
+  garansi_bulan
+  masa_manfaat_bulan
+  dasar_n
 }
 
 entity aset <<konv>> #FFE9E6 {
   * id_aset : PK
   --
   # no_pembelian : FK
-  # id_peralatan : FK
-  # id_kategori : FK
+  # no_urut : FK
   tgl_perolehan
   nilai_perolehan
+  garansi_sampai
+  n
+  d
+  terakhir
+  status
 }
 
 entity jadwal_penyusutan <<konv>> #FFE9E6 {
   * id_aset : PK, FK
   * periode_ke : PK
   --
+  # periode : FK
   # jurnal_no : FK
-  periode
   beban
 }
 
@@ -98,6 +128,7 @@ entity opname <<konv>> #FFE9E6 {
   # jurnal_no : FK
   total_beban
   status
+  dibuat_oleh
 }
 
 entity detail_opname <<konv>> #FFE9E6 {
@@ -115,13 +146,56 @@ entity pelepasan <<konv>> #FFE9E6 {
   # jurnal_no : FK
   tanggal
   alasan
+  harga_jual
+  nilai_buku
+  laba_rugi
+  status
+  alasan_tolak
+  dibuat_oleh
+  disetujui_oleh
 }
+!elseif ($v == "lap")
+entity pembelian <<konv>> #FFE9E6
+entity jadwal_penyusutan <<konv>> #FFE9E6
+entity opname <<konv>> #FFE9E6
+entity pelepasan <<konv>> #FFE9E6
+entity kategori_aset <<konv>> #FFE9E6
+!endif
 
+' ---------------- Pelaporan ----------------
+!if ($v == "" || $v == "lap" || $v == "konv" || $v == "sdm")
+!if ($v == "konv" || $v == "sdm")
 entity akun <<lap>> #FFF4CC {
   * kode_akun : PK
   --
   nama
   tipe
+  saldo_normal
+}
+entity jurnal <<lap>> #FFF4CC {
+  * no_jurnal : PK
+  --
+  # periode : FK
+  # pembalik_dari : FK
+  tanggal
+  jenis
+  status
+  dibuat_oleh
+  disetujui_oleh
+}
+entity periode <<lap>> #FFF4CC {
+  * periode : PK
+  --
+  status
+  dikunci_oleh
+}
+!else
+entity akun <<lap>> #FFF4CC {
+  * kode_akun : PK
+  --
+  nama
+  tipe
+  saldo_normal
 }
 
 entity jurnal <<lap>> #FFF4CC {
@@ -129,9 +203,13 @@ entity jurnal <<lap>> #FFF4CC {
   --
   # periode : FK
   # pembalik_dari : FK
-  # dibuat_oleh : FK
   tanggal
   jenis
+  keterangan
+  status
+  alasan_tolak
+  dibuat_oleh
+  disetujui_oleh
 }
 
 entity detail_jurnal <<lap>> #FFF4CC {
@@ -149,18 +227,18 @@ entity periode <<lap>> #FFF4CC {
   status
   dikunci_oleh
 }
+!endif
+!endif
 
-entity peran <<lap>> #FFF4CC {
-  * kode_peran : PK
-  --
-  nama
-}
-
+' ---------------- Siklus SDM ----------------
+!if ($v == "" || $v == "sdm")
 entity karyawan <<sdm>> #E3EFFA {
   * id_karyawan : PK
   --
   nama
   status_ptkp
+  bank
+  no_rek
 }
 
 entity jabatan <<sdm>> #E3EFFA {
@@ -169,13 +247,14 @@ entity jabatan <<sdm>> #E3EFFA {
   # akun_beban : FK
   nama
   tunj_jabatan
+  tunj_keluarga
 }
 
 entity golongan <<sdm>> #E3EFFA {
   * id_golongan : PK
   --
   nama
-  gaji_pokok
+  jumlah
 }
 
 entity tunjangan <<sdm>> #E3EFFA {
@@ -191,6 +270,7 @@ entity jadwal_kerja <<sdm>> #E3EFFA {
   # id_jabatan : FK
   jam_masuk
   jam_keluar
+  hari_kerja
 }
 
 entity setting_gaji <<sdm>> #E3EFFA {
@@ -214,6 +294,9 @@ entity presensi <<sdm>> #E3EFFA {
   # id_jadwal : FK
   tanggal
   absensi
+  jam_masuk
+  jam_keluar
+  terlambat
 }
 
 entity slip_gaji <<sdm>> #E3EFFA {
@@ -222,9 +305,18 @@ entity slip_gaji <<sdm>> #E3EFFA {
   # id_karyawan : FK
   # periode : FK
   # no_penggajian : FK
-  # jurnal_no : FK
+  # akun_beban : FK
+  hari_kerja
+  alpa
   gaji_pokok
+  tunj_jabatan
+  tunj_keluarga
+  tunj_lain
   potongan_absen
+  bruto
+  pph21
+  thp
+  status
 }
 
 entity penggajian <<sdm>> #E3EFFA {
@@ -234,49 +326,74 @@ entity penggajian <<sdm>> #E3EFFA {
   # jurnal_no : FK
   total_bruto
   total_pph
+  total_thp
+  status
+  alasan_tolak
+  dibuat_oleh
+  disetujui_oleh
 }
+!elseif ($v == "lap")
+entity slip_gaji <<sdm>> #E3EFFA
+entity penggajian <<sdm>> #E3EFFA
+entity jabatan <<sdm>> #E3EFFA
+!endif
 
-supplier ||--o{ pembelian
+' ---------------- Relasi ----------------
+!if ($v == "" || $v == "konv")
+supplier |o--o{ pembelian
 kategori_aset ||--o{ peralatan
-kategori_aset ||--o{ aset
-peralatan ||--o{ detail_pembelian
-perlengkapan ||--o{ detail_pembelian
+peralatan |o--o{ detail_pembelian
+perlengkapan |o--o{ detail_pembelian
 pembelian ||--|{ detail_pembelian
-pembelian ||--o{ aset
-peralatan ||--o{ aset
+detail_pembelian ||--o{ aset
 aset ||--|{ jadwal_penyusutan
 aset ||--o{ pelepasan
 opname ||--|{ detail_opname
 perlengkapan ||--o{ detail_opname
-akun ||--o{ detail_jurnal
-akun ||--o{ kategori_aset
-akun ||--o{ jabatan
-jurnal ||--|{ detail_jurnal
-jurnal |o--o| jurnal : membalik
-periode ||--o{ jurnal
+periode ||--o{ jadwal_penyusutan
 periode ||--o{ opname
-periode ||--o{ slip_gaji
-periode ||--o{ penggajian
-jurnal |o--o{ pembelian
-jurnal |o--o{ jadwal_penyusutan
-jurnal |o--o| opname
-jurnal |o--o| pelepasan
-jurnal |o--o{ slip_gaji
-jurnal |o--o| penggajian
-peran ||--o{ jurnal
-jabatan ||--o{ jadwal_kerja
+jurnal |o--o{ jadwal_penyusutan : jurnal_no
+jurnal |o--o| opname : jurnal_no
+jurnal |o--o| pelepasan : jurnal_no
+jurnal |o--o| pembelian : jurnal_no
+jurnal |o--o| pembelian : jurnal_pembalik
+akun ||--o{ kategori_aset : akun_aset
+akun ||--o{ kategori_aset : akun_akumulasi
+akun ||--o{ kategori_aset : akun_beban
+!endif
+!if ($v == "" || $v == "sdm")
+karyawan ||--o| setting_gaji
 jabatan ||--o{ setting_gaji
 golongan ||--o{ setting_gaji
-karyawan ||--o| setting_gaji
 setting_gaji ||--o{ setting_tunjangan
 tunjangan ||--o{ setting_tunjangan
+jabatan ||--o| jadwal_kerja
+jadwal_kerja ||--o{ presensi
 karyawan ||--o{ presensi
-jadwal_kerja |o--o{ presensi
 karyawan ||--o{ slip_gaji
-penggajian |o--|{ slip_gaji
-legend right
-  Merah muda: siklus konversi
-  Kuning: pelaporan
-  Biru: siklus SDM
-endlegend
+penggajian |o--o{ slip_gaji
+periode ||--o{ slip_gaji
+periode ||--o{ penggajian
+jurnal |o--o| penggajian : jurnal_no
+akun ||--o{ jabatan : akun_beban
+akun ||--o{ slip_gaji : akun_beban
+!endif
+!if ($v == "" || $v == "lap")
+jurnal ||--|{ detail_jurnal
+akun ||--o{ detail_jurnal
+periode ||--o{ jurnal
+jurnal |o--o| jurnal : membalik
+jurnal |o--o| pembelian : jurnal_no
+jurnal |o--o| pembelian : jurnal_pembalik
+jurnal |o--o{ jadwal_penyusutan : jurnal_no
+jurnal |o--o| opname : jurnal_no
+jurnal |o--o| pelepasan : jurnal_no
+jurnal |o--o| penggajian : jurnal_no
+akun ||--o{ kategori_aset : akun_aset, akun_akumulasi, akun_beban
+akun ||--o{ jabatan : akun_beban
+akun ||--o{ slip_gaji : akun_beban
+!endif
+
+' Warna: merah muda siklus konversi, kuning pelaporan, biru siklus SDM.
+' Kolom dibuat_oleh, disetujui_oleh, dikunci_oleh berisi peran (Admin, HRD, Owner), bukan tabel.
 @enduml
