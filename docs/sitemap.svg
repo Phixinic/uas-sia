@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="785.0pt" height="440.0pt" viewBox="0 0 785.0 440.0" font-family="Helvetica, Arial, sans-serif">
+<rect x="0" y="0" width="785.0" height="440.0" fill="#FFFFFF"/>
+<rect x="317.50" y="6.00" width="150.00" height="24.00" rx="3" fill="#8B1A1A" stroke="#8B1A1A" stroke-width="0.8"/>
+<text x="392.50" y="21.57" font-size="10.5" fill="#FFFFFF" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">SIA D’Production</tspan></text>
+<rect x="14.00" y="6.00" width="128.00" height="24.00" rx="3" fill="#FFFFFF" stroke="#444" stroke-width="0.8"/>
+<text x="78.00" y="21.13" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Masuk (halaman publik)</tspan></text>
+<polyline points="317.50,18.00 142.00,18.00" fill="none" stroke="#555" stroke-width="0.9" stroke-linejoin="round"/>
+<text x="78.00" y="41.00" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/masuk</tspan></text>
+<text x="491.50" y="22.00" font-size="8.0" fill="#444" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="italic">Setelah masuk, pengguna tiba di Dashboard. Keluar tersedia di bilah atas.</tspan></text>
+<polyline points="392.50,30.00 392.50,54.00" fill="none" stroke="#555" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="80.90,54.00 704.10,54.00" fill="none" stroke="#555" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="80.90,54.00 80.90,64.00" fill="none" stroke="#555" stroke-width="0.9" stroke-linejoin="round"/>
+<rect x="8.00" y="64.00" width="145.80" height="24.00" rx="3" fill="#EEEEEE" stroke="#555555" stroke-width="1.1"/>
+<text x="80.90" y="79.54" font-size="10.4" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Ringkasan</tspan></text>
+<polyline points="16.00,109.50 25.00,109.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="25.00" y="96.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#555555" stroke-width="0.9"/>
+<text x="89.40" y="107.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Dashboard</tspan></text>
+<text x="89.40" y="117.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/</tspan></text>
+<polyline points="16.00,88.00 16.00,109.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<polyline points="236.70,54.00 236.70,64.00" fill="none" stroke="#555" stroke-width="0.9" stroke-linejoin="round"/>
+<rect x="163.80" y="64.00" width="145.80" height="24.00" rx="3" fill="#FDE7E4" stroke="#8B1A1A" stroke-width="1.1"/>
+<text x="236.70" y="79.54" font-size="10.4" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Siklus konversi</tspan></text>
+<polyline points="171.80,109.50 180.80,109.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="180.80" y="96.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#8B1A1A" stroke-width="0.9"/>
+<text x="245.20" y="107.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Pembelian Peralatan</tspan></text>
+<text x="245.20" y="117.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/konversi/pembelian-peralatan</tspan></text>
+<polyline points="171.80,144.50 180.80,144.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="180.80" y="131.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#8B1A1A" stroke-width="0.9"/>
+<text x="245.20" y="142.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Pembelian Perlengkapan</tspan></text>
+<text x="245.20" y="152.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/konversi/pembelian-perlengkapan</tspan></text>
+<polyline points="171.80,179.50 180.80,179.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="180.80" y="166.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#8B1A1A" stroke-width="0.9"/>
+<text x="245.20" y="177.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Nilai Sisa Perlengkapan</tspan></text>
+<text x="245.20" y="187.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/konversi/nilai-sisa</tspan></text>
+<polyline points="171.80,214.50 180.80,214.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="180.80" y="201.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#8B1A1A" stroke-width="0.9"/>
+<text x="245.20" y="212.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Proses Penyusutan</tspan></text>
+<text x="245.20" y="222.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/konversi/penyusutan</tspan></text>
+<polyline points="171.80,249.50 180.80,249.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="180.80" y="236.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#8B1A1A" stroke-width="0.9"/>
+<text x="245.20" y="247.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kartu Aset</tspan></text>
+<text x="245.20" y="257.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/konversi/kartu-aset</tspan></text>
+<polyline points="171.80,284.50 180.80,284.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="180.80" y="271.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#8B1A1A" stroke-width="0.9"/>
+<text x="245.20" y="282.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Pelepasan Peralatan</tspan></text>
+<text x="245.20" y="292.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/konversi/pelepasan</tspan></text>
+<polyline points="171.80,88.00 171.80,284.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<polyline points="392.50,54.00 392.50,64.00" fill="none" stroke="#555" stroke-width="0.9" stroke-linejoin="round"/>
+<rect x="319.60" y="64.00" width="145.80" height="24.00" rx="3" fill="#E3EFFA" stroke="#1F5F99" stroke-width="1.1"/>
+<text x="392.50" y="79.54" font-size="10.4" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Siklus SDM</tspan></text>
+<polyline points="327.60,109.50 336.60,109.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="336.60" y="96.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#1F5F99" stroke-width="0.9"/>
+<text x="401.00" y="107.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Presensi</tspan></text>
+<text x="401.00" y="117.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/sdm/presensi</tspan></text>
+<polyline points="345.60,133.00 353.60,133.00" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<rect x="353.60" y="126.00" width="111.80" height="14.00" rx="2.5" fill="#F7F7F7" stroke="#888" stroke-width="0.7" stroke-dasharray="3 2"/>
+<text x="409.50" y="135.92" font-size="8.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Rekap</tspan></text>
+<polyline points="345.60,149.50 353.60,149.50" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<rect x="353.60" y="142.50" width="111.80" height="14.00" rx="2.5" fill="#F7F7F7" stroke="#888" stroke-width="0.7" stroke-dasharray="3 2"/>
+<text x="409.50" y="152.42" font-size="8.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Harian</tspan></text>
+<polyline points="345.60,123.00 345.60,149.50" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="327.60,181.50 336.60,181.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="336.60" y="168.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#1F5F99" stroke-width="0.9"/>
+<text x="401.00" y="179.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Hitung Gaji</tspan></text>
+<text x="401.00" y="189.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/sdm/hitung-gaji</tspan></text>
+<polyline points="327.60,216.50 336.60,216.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="336.60" y="203.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#1F5F99" stroke-width="0.9"/>
+<text x="401.00" y="214.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Distribusi Gaji</tspan></text>
+<text x="401.00" y="224.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/sdm/distribusi</tspan></text>
+<polyline points="327.60,88.00 327.60,216.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<polyline points="548.30,54.00 548.30,64.00" fill="none" stroke="#555" stroke-width="0.9" stroke-linejoin="round"/>
+<rect x="475.40" y="64.00" width="145.80" height="24.00" rx="3" fill="#FFF3C4" stroke="#8A6D00" stroke-width="1.1"/>
+<text x="548.30" y="79.54" font-size="10.4" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Jurnal &amp; laporan</tspan></text>
+<polyline points="483.40,109.50 492.40,109.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="492.40" y="96.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#8A6D00" stroke-width="0.9"/>
+<text x="556.80" y="107.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Jurnal Penyesuaian</tspan></text>
+<text x="556.80" y="117.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/pelaporan/jurnal-penyesuaian</tspan></text>
+<polyline points="483.40,144.50 492.40,144.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="492.40" y="131.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#8A6D00" stroke-width="0.9"/>
+<text x="556.80" y="142.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Jurnal Umum</tspan></text>
+<text x="556.80" y="152.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/pelaporan/jurnal-umum</tspan></text>
+<polyline points="483.40,179.50 492.40,179.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="492.40" y="166.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#8A6D00" stroke-width="0.9"/>
+<text x="556.80" y="177.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Buku Besar</tspan></text>
+<text x="556.80" y="187.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/pelaporan/buku-besar</tspan></text>
+<polyline points="483.40,214.50 492.40,214.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="492.40" y="201.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#8A6D00" stroke-width="0.9"/>
+<text x="556.80" y="212.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Neraca Saldo</tspan></text>
+<text x="556.80" y="222.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/pelaporan/neraca-saldo</tspan></text>
+<polyline points="483.40,249.50 492.40,249.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="492.40" y="236.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#8A6D00" stroke-width="0.9"/>
+<text x="556.80" y="247.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Tutup Periode</tspan></text>
+<text x="556.80" y="257.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/pelaporan/tutup-periode</tspan></text>
+<polyline points="483.40,88.00 483.40,249.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<polyline points="704.10,54.00 704.10,64.00" fill="none" stroke="#555" stroke-width="0.9" stroke-linejoin="round"/>
+<rect x="631.20" y="64.00" width="145.80" height="24.00" rx="3" fill="#E6F2E4" stroke="#2E6B3A" stroke-width="1.1"/>
+<text x="704.10" y="79.54" font-size="10.4" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Pengaturan</tspan></text>
+<polyline points="639.20,109.50 648.20,109.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="648.20" y="96.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#2E6B3A" stroke-width="0.9"/>
+<text x="712.60" y="107.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Master Konversi</tspan></text>
+<text x="712.60" y="117.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/master/konversi</tspan></text>
+<polyline points="657.20,133.00 665.20,133.00" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<rect x="665.20" y="126.00" width="111.80" height="14.00" rx="2.5" fill="#F7F7F7" stroke="#888" stroke-width="0.7" stroke-dasharray="3 2"/>
+<text x="721.10" y="135.92" font-size="8.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Supplier</tspan></text>
+<polyline points="657.20,149.50 665.20,149.50" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<rect x="665.20" y="142.50" width="111.80" height="14.00" rx="2.5" fill="#F7F7F7" stroke="#888" stroke-width="0.7" stroke-dasharray="3 2"/>
+<text x="721.10" y="152.42" font-size="8.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Peralatan</tspan></text>
+<polyline points="657.20,166.00 665.20,166.00" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<rect x="665.20" y="159.00" width="111.80" height="14.00" rx="2.5" fill="#F7F7F7" stroke="#888" stroke-width="0.7" stroke-dasharray="3 2"/>
+<text x="721.10" y="168.92" font-size="8.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Perlengkapan</tspan></text>
+<polyline points="657.20,182.50 665.20,182.50" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<rect x="665.20" y="175.50" width="111.80" height="14.00" rx="2.5" fill="#F7F7F7" stroke="#888" stroke-width="0.7" stroke-dasharray="3 2"/>
+<text x="721.10" y="185.42" font-size="8.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kategori aset</tspan></text>
+<polyline points="657.20,199.00 665.20,199.00" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<rect x="665.20" y="192.00" width="111.80" height="14.00" rx="2.5" fill="#F7F7F7" stroke="#888" stroke-width="0.7" stroke-dasharray="3 2"/>
+<text x="721.10" y="201.92" font-size="8.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Bagan akun</tspan></text>
+<polyline points="657.20,215.50 665.20,215.50" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<rect x="665.20" y="208.50" width="111.80" height="14.00" rx="2.5" fill="#F7F7F7" stroke="#888" stroke-width="0.7" stroke-dasharray="3 2"/>
+<text x="721.10" y="218.42" font-size="8.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Profil usaha (Owner)</tspan></text>
+<polyline points="657.20,123.00 657.20,215.50" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="639.20,247.50 648.20,247.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="648.20" y="234.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#2E6B3A" stroke-width="0.9"/>
+<text x="712.60" y="245.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Master SDM</tspan></text>
+<text x="712.60" y="255.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/master/sdm</tspan></text>
+<polyline points="657.20,271.00 665.20,271.00" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<rect x="665.20" y="264.00" width="111.80" height="14.00" rx="2.5" fill="#F7F7F7" stroke="#888" stroke-width="0.7" stroke-dasharray="3 2"/>
+<text x="721.10" y="273.92" font-size="8.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Karyawan</tspan></text>
+<polyline points="657.20,287.50 665.20,287.50" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<rect x="665.20" y="280.50" width="111.80" height="14.00" rx="2.5" fill="#F7F7F7" stroke="#888" stroke-width="0.7" stroke-dasharray="3 2"/>
+<text x="721.10" y="290.42" font-size="8.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Jabatan</tspan></text>
+<polyline points="657.20,304.00 665.20,304.00" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<rect x="665.20" y="297.00" width="111.80" height="14.00" rx="2.5" fill="#F7F7F7" stroke="#888" stroke-width="0.7" stroke-dasharray="3 2"/>
+<text x="721.10" y="306.92" font-size="8.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Gaji pokok</tspan></text>
+<polyline points="657.20,320.50 665.20,320.50" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<rect x="665.20" y="313.50" width="111.80" height="14.00" rx="2.5" fill="#F7F7F7" stroke="#888" stroke-width="0.7" stroke-dasharray="3 2"/>
+<text x="721.10" y="323.42" font-size="8.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Tunjangan</tspan></text>
+<polyline points="657.20,337.00 665.20,337.00" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<rect x="665.20" y="330.00" width="111.80" height="14.00" rx="2.5" fill="#F7F7F7" stroke="#888" stroke-width="0.7" stroke-dasharray="3 2"/>
+<text x="721.10" y="339.92" font-size="8.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Jadwal kerja</tspan></text>
+<polyline points="657.20,353.50 665.20,353.50" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<rect x="665.20" y="346.50" width="111.80" height="14.00" rx="2.5" fill="#F7F7F7" stroke="#888" stroke-width="0.7" stroke-dasharray="3 2"/>
+<text x="721.10" y="356.42" font-size="8.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Setting gaji</tspan></text>
+<polyline points="657.20,261.00 657.20,353.50" fill="none" stroke="#999" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="639.20,385.50 648.20,385.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="648.20" y="372.00" width="128.80" height="27.00" rx="3" fill="#FFFFFF" stroke="#2E6B3A" stroke-width="0.9"/>
+<text x="712.60" y="383.20" font-size="9.2" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Pengguna (Owner)</tspan></text>
+<text x="712.60" y="393.40" font-size="7.5" fill="#666" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">/pengguna</tspan></text>
+<polyline points="639.20,88.00 639.20,385.50" fill="none" stroke="#777" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="10.00" y="422.00" width="20.00" height="11.00" rx="3" fill="#FFFFFF" stroke="#555" stroke-width="0.9"/>
+<text x="35.00" y="431.00" font-size="8.0" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">halaman (menu samping)</tspan></text>
+<rect x="141.71" y="422.00" width="20.00" height="11.00" rx="3" fill="#F7F7F7" stroke="#888" stroke-width="0.7" stroke-dasharray="3 2"/>
+<text x="166.71" y="431.00" font-size="8.0" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">tab atau bagian di dalam halaman</tspan></text>
+<text x="303.25" y="431.00" font-size="8.0" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Semua peran membuka semua halaman kecuali Pengguna; tombol aksi dibatasi per peran.</tspan></text>
+</svg>

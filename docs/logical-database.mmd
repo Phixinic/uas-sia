@@ -1,0 +1,405 @@
+%% DIBANGKITKAN dari prisma/schema.prisma oleh docs/alat/buat_logical_database.py. Jangan diubah manual.
+erDiagram
+  akun {
+    string kode_akun PK
+    string nama
+    string tipe
+    string saldo_normal
+    boolean aktif
+  }
+  aset {
+    string id_aset PK
+    string no_pembelian FK
+    int no_urut FK
+    string id_peralatan FK
+    string id_kategori FK
+    string nama
+    datetime tgl_perolehan
+    string bulan_mulai
+    int nilai_perolehan
+    int residu
+    int garansi_bulan
+    datetime garansi_sampai
+    int masa_manfaat_bulan
+    string dasar_n
+    int n
+    int d
+    int terakhir
+    boolean pengaman
+    string akun_aset FK
+    string akun_akumulasi FK
+    string akun_beban FK
+    string status
+    datetime tanggal_lepas
+  }
+  detail_jurnal {
+    string no_jurnal PK, FK
+    int no_urut PK
+    string kode_akun FK
+    int debit
+    int kredit
+  }
+  detail_opname {
+    string id_opname PK, FK
+    string id_perlengkapan PK, FK
+    int saldo_buku
+    int nilai_sisa
+  }
+  detail_pembelian {
+    string no_pembelian PK, FK
+    int no_urut PK
+    string id_peralatan FK
+    string id_perlengkapan FK
+    int qty
+    int harga
+    int residu
+    int garansi_bulan
+    int masa_manfaat_bulan
+    string dasar_n
+  }
+  golongan {
+    string id_golongan PK
+    string nama
+    int jumlah
+    boolean aktif
+  }
+  jabatan {
+    string id_jabatan PK
+    string nama
+    int tunj_jabatan
+    int tunj_keluarga
+    string akun_beban FK
+    boolean aktif
+  }
+  jadwal_kerja {
+    string id_jadwal PK
+    string id_jabatan FK
+    string jam_masuk
+    string jam_keluar
+    int hari_kerja
+    boolean aktif
+  }
+  jadwal_penyusutan {
+    string id_aset PK, FK
+    int periode_ke PK
+    string periode FK
+    int beban
+    int akumulasi
+    int nilai_buku
+    string jurnal_no FK
+  }
+  jurnal {
+    string no_jurnal PK
+    datetime tanggal
+    string periode FK
+    string jenis
+    string keterangan
+    string status
+    string alasan_tolak
+    string sumber_tipe
+    string sumber_id
+    string pembalik_dari FK
+    int dibuat_oleh FK
+    datetime dibuat_pada
+    datetime diajukan_pada
+    int disetujui_oleh FK
+    datetime disetujui_pada
+  }
+  karyawan {
+    string id_karyawan PK
+    string nama
+    string status_ptkp
+    string bank
+    string no_rek
+    boolean aktif
+  }
+  kategori_aset {
+    string id_kategori PK
+    string nama
+    int masa_manfaat_bulan
+    int persen_residu
+    string akun_aset FK
+    string akun_akumulasi FK
+    string akun_beban FK
+    boolean aktif
+  }
+  log_aktivitas {
+    int id PK
+    datetime waktu
+    int pengguna_id FK
+    string aksi
+    string entitas
+    string entitas_id
+    string keterangan
+  }
+  opname {
+    string id_opname PK
+    string periode FK
+    int total_beban
+    string status
+    string alasan_tolak
+    string jurnal_no FK
+    int dibuat_oleh FK
+    datetime dibuat_pada
+    int disetujui_oleh FK
+    datetime disetujui_pada
+  }
+  pelepasan {
+    string no_pelepasan PK
+    string id_aset FK
+    datetime tanggal
+    string alasan
+    int harga_jual
+    int nilai_perolehan
+    int akumulasi
+    int nilai_buku
+    int laba_rugi
+    string status
+    string alasan_tolak
+    string jurnal_no FK
+    int dibuat_oleh FK
+    datetime dibuat_pada
+    int disetujui_oleh FK
+    datetime disetujui_pada
+  }
+  pembelian {
+    string no_pembelian PK
+    string jenis
+    datetime tanggal
+    string id_supplier FK
+    string cara_bayar
+    datetime jatuh_tempo
+    string keterangan
+    int total
+    string status
+    string alasan_tolak
+    string jurnal_no FK
+    string jurnal_pembalik FK
+    string alasan_balik
+    int dibuat_oleh FK
+    datetime dibuat_pada
+    datetime diubah_pada
+    int disetujui_oleh FK
+    datetime disetujui_pada
+    int dibalik_oleh FK
+    datetime dibalik_pada
+  }
+  penggajian {
+    string no_penggajian PK
+    string periode FK
+    int jumlah_slip
+    int total_bruto
+    int total_pph
+    int total_thp
+    string status
+    string alasan_tolak
+    string jurnal_no FK
+    int dibuat_oleh FK
+    datetime dibuat_pada
+    int disetujui_oleh FK
+    datetime disetujui_pada
+  }
+  pengguna {
+    int id PK
+    string nama_pengguna
+    string nama
+    string kata_sandi_hash
+    string peran
+    boolean aktif
+    datetime dibuat_pada
+  }
+  penghitung {
+    string kunci PK
+    int nilai
+  }
+  peralatan {
+    string id_peralatan PK
+    string nama
+    string satuan
+    string id_kategori FK
+    boolean aktif
+  }
+  periode {
+    string periode PK
+    string status
+    int dikunci_oleh FK
+    datetime dikunci_pada
+  }
+  perlengkapan {
+    string id_perlengkapan PK
+    string nama
+    string satuan
+    boolean aktif
+  }
+  presensi {
+    int id_presensi PK
+    string id_karyawan FK
+    datetime tanggal
+    string id_jadwal FK
+    string absensi
+    string jam_masuk
+    string jam_keluar
+    int terlambat
+    int dibuat_oleh FK
+    datetime dibuat_pada
+  }
+  profil_usaha {
+    int id PK
+    string nama
+    string keterangan
+  }
+  riwayat_periode {
+    int id PK
+    string periode FK
+    string aksi
+    int oleh FK
+    datetime waktu
+    string alasan
+  }
+  sesi {
+    int id PK
+    string token_hash
+    int pengguna_id FK
+    datetime kedaluwarsa
+    datetime dibuat_pada
+  }
+  setting_gaji {
+    string id_setting PK
+    string id_karyawan FK
+    string id_jabatan FK
+    string id_golongan FK
+    boolean aktif
+  }
+  setting_tunjangan {
+    string id_setting PK, FK
+    string id_tunjangan PK, FK
+  }
+  slip_gaji {
+    string id_slip PK
+    string periode FK
+    string id_karyawan FK
+    string id_jabatan FK
+    string id_golongan FK
+    string id_jadwal FK
+    string akun_beban FK
+    string status_ptkp
+    int hari_kerja
+    int jumlah_presensi
+    int hadir
+    int izin
+    int sakit
+    int cuti
+    int alpa
+    float jam_kerja
+    int terlambat_menit
+    int gaji_pokok
+    int tunj_jabatan
+    int tunj_keluarga
+    int tunj_lain
+    int potongan_absen
+    int bruto
+    int bruto_setahun
+    int biaya_jabatan
+    int neto_setahun
+    int ptkp
+    int pkp
+    int pph_setahun
+    int pph21
+    int thp
+    string status
+    string alasan_tolak
+    string no_penggajian FK
+    int dibuat_oleh FK
+    datetime dihitung_pada
+    int disetujui_oleh FK
+    datetime disetujui_pada
+  }
+  slip_tunjangan {
+    string id_slip PK, FK
+    string id_tunjangan PK, FK
+    string nama
+    int nominal
+  }
+  supplier {
+    string id_supplier PK
+    string nama
+    string alamat
+    string telepon
+    string email
+    string npwp
+    boolean aktif
+  }
+  tunjangan {
+    string id_tunjangan PK
+    string nama
+    int nominal
+    boolean aktif
+  }
+  detail_pembelian ||--o{ aset : "no_pembelian, no_urut"
+  peralatan ||--o{ aset : "id_peralatan"
+  kategori_aset ||--o{ aset : "id_kategori"
+  akun ||--o{ aset : "akun_aset"
+  akun ||--o{ aset : "akun_akumulasi"
+  akun ||--o{ aset : "akun_beban"
+  jurnal ||--o{ detail_jurnal : "no_jurnal"
+  akun ||--o{ detail_jurnal : "kode_akun"
+  opname ||--o{ detail_opname : "id_opname"
+  perlengkapan ||--o{ detail_opname : "id_perlengkapan"
+  pembelian ||--o{ detail_pembelian : "no_pembelian"
+  peralatan |o--o{ detail_pembelian : "id_peralatan"
+  perlengkapan |o--o{ detail_pembelian : "id_perlengkapan"
+  akun ||--o{ jabatan : "akun_beban"
+  jabatan ||--o| jadwal_kerja : "id_jabatan"
+  aset ||--o{ jadwal_penyusutan : "id_aset"
+  periode ||--o{ jadwal_penyusutan : "periode"
+  jurnal |o--o{ jadwal_penyusutan : "jurnal_no"
+  periode ||--o{ jurnal : "periode"
+  jurnal |o--o| jurnal : "pembalik_dari"
+  pengguna ||--o{ jurnal : "dibuat_oleh"
+  pengguna |o--o{ jurnal : "disetujui_oleh"
+  akun ||--o{ kategori_aset : "akun_aset"
+  akun ||--o{ kategori_aset : "akun_akumulasi"
+  akun ||--o{ kategori_aset : "akun_beban"
+  pengguna |o--o{ log_aktivitas : "pengguna_id"
+  periode ||--o| opname : "periode"
+  jurnal |o--o| opname : "jurnal_no"
+  pengguna ||--o{ opname : "dibuat_oleh"
+  pengguna |o--o{ opname : "disetujui_oleh"
+  aset ||--o{ pelepasan : "id_aset"
+  jurnal |o--o| pelepasan : "jurnal_no"
+  pengguna ||--o{ pelepasan : "dibuat_oleh"
+  pengguna |o--o{ pelepasan : "disetujui_oleh"
+  supplier |o--o{ pembelian : "id_supplier"
+  jurnal |o--o| pembelian : "jurnal_no"
+  jurnal |o--o| pembelian : "jurnal_pembalik"
+  pengguna ||--o{ pembelian : "dibuat_oleh"
+  pengguna |o--o{ pembelian : "disetujui_oleh"
+  pengguna |o--o{ pembelian : "dibalik_oleh"
+  periode ||--o{ penggajian : "periode"
+  jurnal |o--o| penggajian : "jurnal_no"
+  pengguna ||--o{ penggajian : "dibuat_oleh"
+  pengguna |o--o{ penggajian : "disetujui_oleh"
+  kategori_aset ||--o{ peralatan : "id_kategori"
+  pengguna |o--o{ periode : "dikunci_oleh"
+  karyawan ||--o{ presensi : "id_karyawan"
+  jadwal_kerja ||--o{ presensi : "id_jadwal"
+  pengguna ||--o{ presensi : "dibuat_oleh"
+  periode ||--o{ riwayat_periode : "periode"
+  pengguna ||--o{ riwayat_periode : "oleh"
+  pengguna ||--o{ sesi : "pengguna_id"
+  karyawan ||--o| setting_gaji : "id_karyawan"
+  jabatan ||--o{ setting_gaji : "id_jabatan"
+  golongan ||--o{ setting_gaji : "id_golongan"
+  setting_gaji ||--o{ setting_tunjangan : "id_setting"
+  tunjangan ||--o{ setting_tunjangan : "id_tunjangan"
+  periode ||--o{ slip_gaji : "periode"
+  karyawan ||--o{ slip_gaji : "id_karyawan"
+  jabatan ||--o{ slip_gaji : "id_jabatan"
+  golongan ||--o{ slip_gaji : "id_golongan"
+  jadwal_kerja |o--o{ slip_gaji : "id_jadwal"
+  akun ||--o{ slip_gaji : "akun_beban"
+  penggajian |o--o{ slip_gaji : "no_penggajian"
+  pengguna ||--o{ slip_gaji : "dibuat_oleh"
+  pengguna |o--o{ slip_gaji : "disetujui_oleh"
+  slip_gaji ||--o{ slip_tunjangan : "id_slip"
+  tunjangan ||--o{ slip_tunjangan : "id_tunjangan"
