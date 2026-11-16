@@ -88,7 +88,7 @@ export async function dataPelepasan() {
         tglPerolehan: dariDate(a.tglPerolehan),
         nilaiPerolehan: a.nilaiPerolehan,
         akumulasi: r.akumulasi,
-        menunggu: r.menunggu.map((x) => x.jurnalNo!).filter((v, i, s) => s.indexOf(v) === i),
+        jadwal: a.jadwal.map((x) => ({ periodeKe: x.periodeKe, periode: x.periodeId, beban: x.beban, jurnalNo: x.jurnalNo, statusJurnal: x.jurnal?.status ?? null })),
         sudahDiajukan: diajukan.has(a.kode),
         akunAset: a.akunAsetKode,
         akunAkumulasi: a.akunAkumulasiKode,

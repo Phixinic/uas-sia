@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { akumulasiDisetujui, jadwalMenunggu, saldoBukuPerlengkapan } from "@/lib/data/konversi/hitung";
+import { akumulasiDisetujui, cekJadwalPelepasan, jadwalMenunggu, saldoBukuPerlengkapan } from "@/lib/data/konversi/hitung";
 import { skemaAjukanPelepasan, skemaNilaiSisa } from "@/lib/skema/konversi";
 
 describe("saldo buku perlengkapan", () => {
@@ -42,5 +42,29 @@ describe("skema konversi", () => {
     expect(skemaAjukanPelepasan.safeParse({ ...dasar, alasan: "DIJUAL", hargaJual: "0" }).success).toBe(true);
     expect(skemaAjukanPelepasan.safeParse({ ...dasar, alasan: "DIBUANG", hargaJual: "" }).success).toBe(true);
     expect(skemaAjukanPelepasan.safeParse({ ...dasar, alasan: "DIJUAL", hargaJual: -5 }).success).toBe(false);
+  });
+});
+
+describe("cekJadwalPelepasan", () => {
+  const ok = (periode: string) => ({ periodeKe: 1, periode, beban: 100, jurnalNo: "JU-1", statusJurnal: "DISETUJUI" });
+  const draf = (periode: string) => ({ periodeKe: 1, periode, beban: 100, jurnalNo: "JU-2", statusJurnal: "DIAJUKAN" });
+  const kosong = (periode: string) => ({ periodeKe: 1, periode, beban: 100, jurnalNo: null, statusJurnal: null });
+
+  it("AST-0001 dilepas 16 November saat Oktober belum diproses ditolak", () => {
+    expect(cekJadwalPelepasan([kosong("2026-10"), kosong("2026-11"), kosong("2026-12")], "2026-11-16")).toContain("2026-10");
+  });
+  it("Oktober disetujui, November belum dijurnal: boleh (November tidak disusutkan)", () => {
+    expect(cekJadwalPelepasan([ok("2026-10"), kosong("2026-11")], "2026-11-16")).toBeNull();
+  });
+  it("bulan sebelumnya masih menunggu persetujuan ditolak", () => {
+    expect(cekJadwalPelepasan([draf("2026-10"), kosong("2026-11")], "2026-11-16")).toContain("2026-10");
+  });
+  it("bulan pelepasan sudah dijurnal: harus disetujui dulu", () => {
+    expect(cekJadwalPelepasan([ok("2026-10"), draf("2026-11")], "2026-11-16")).toContain("JU-2");
+    expect(cekJadwalPelepasan([ok("2026-10"), ok("2026-11")], "2026-11-16")).toBeNull();
+  });
+  it("pelepasan mundur tanggal ditolak bila bulan sesudahnya sudah dijurnal", () => {
+    expect(cekJadwalPelepasan([ok("2026-10"), ok("2026-11")], "2026-10-20")).toContain("2026-11");
+    expect(cekJadwalPelepasan([ok("2026-10"), kosong("2026-11")], "2026-10-20")).toBeNull();
   });
 });

@@ -43,6 +43,18 @@ describe.runIf(aktif)("alur pembelian lewat server action", async () => {
 
   const inputHT = { jenis: "PERALATAN", tanggal: "2026-11-05", caraBayar: "TUNAI", supplierKode: "SUP-03", baris: [{ barangKode: "ALT-05", qty: 2, harga: 950_000, residu: 0, garansiBulan: 24, masaManfaatBulan: 24, dasarN: "GARANSI" }] };
 
+  it("supplier nonaktif ditolak untuk draf baru", async () => {
+    await masukSebagai("admin");
+    await db.supplier.update({ where: { kode: "SUP-03" }, data: { aktif: false } });
+    try {
+      const h = await aksi.simpanPembelian(inputHT);
+      expect(h.ok).toBe(false);
+      if (!h.ok) expect(h.galat).toContain("dinonaktifkan");
+    } finally {
+      await db.supplier.update({ where: { kode: "SUP-03" }, data: { aktif: true } });
+    }
+  });
+
   it("HRD tidak boleh membuat pembelian", async () => {
     await masukSebagai("hrd");
     const h = await aksi.simpanPembelian(inputHT);

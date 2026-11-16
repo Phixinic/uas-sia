@@ -34,9 +34,9 @@ export async function simpanPembelian(input: unknown): Promise<HasilAksi<{ no: s
     const peralatan = d.jenis === "PERALATAN";
 
     const no = await db.$transaction(async (tx) => {
-      let lama: { status: string; jenis: string; detail: { peralatanKode: string | null; perlengkapanKode: string | null }[] } | null = null;
+      let lama: { status: string; jenis: string; supplierKode: string | null; detail: { peralatanKode: string | null; perlengkapanKode: string | null }[] } | null = null;
       if (d.no) {
-        lama = await tx.pembelian.findUnique({ where: { no: d.no }, select: { status: true, jenis: true, detail: { select: { peralatanKode: true, perlengkapanKode: true } } } });
+        lama = await tx.pembelian.findUnique({ where: { no: d.no }, select: { status: true, jenis: true, supplierKode: true, detail: { select: { peralatanKode: true, perlengkapanKode: true } } } });
         if (!lama) throw new GalatAksi(`Pembelian ${d.no} tidak ditemukan.`);
         if (lama.status !== "DRAFT") throw new GalatAksi(`${d.no} sudah diposting, jadi tidak bisa diubah.`);
         if (lama.jenis !== d.jenis) throw new GalatAksi("Jenis pembelian tidak boleh diubah.");
@@ -46,6 +46,7 @@ export async function simpanPembelian(input: unknown): Promise<HasilAksi<{ no: s
       if (d.supplierKode) {
         const s = await tx.supplier.findUnique({ where: { kode: d.supplierKode }, select: { aktif: true } });
         if (!s) throw new GalatAksi("Supplier tidak ditemukan.", { supplierKode: "Supplier tidak ditemukan." });
+        if (!s.aktif && lama?.supplierKode !== d.supplierKode) throw new GalatAksi("Supplier ini sudah dinonaktifkan.", { supplierKode: "Supplier nonaktif." });
       }
       const kodeBarang = [...new Set(d.baris.map((b) => b.barangKode))];
       const sudahDipakai = new Set((lama?.detail ?? []).map((x) => x.peralatanKode ?? x.perlengkapanKode));

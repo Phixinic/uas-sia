@@ -3,8 +3,8 @@
 /*
  * Server action Pelepasan Peralatan (use case: Hapus Peralatan, dijual / dibuang / hilang).
  *   ajukan : Admin; setujui atau tolak : Owner.
- * Nilai buku memakai penyusutan yang sudah DISETUJUI. Selama ada penyusutan aset itu yang jurnalnya belum
- * disetujui, pengajuan dan persetujuan ditahan. Saat disetujui: jurnal umum langsung DISETUJUI, aset DILEPAS,
+ * Nilai buku memakai penyusutan yang sudah DISETUJUI. Pengajuan dan persetujuan ditolak bila jadwal aset belum lengkap
+ * (lihat cekJadwalPelepasan: bulan sebelum pelepasan wajib sudah disetujui, bulan sesudahnya tidak boleh sudah dijurnal). Saat disetujui: jurnal umum langsung DISETUJUI, aset DILEPAS,
  * dan baris jadwal yang belum dijurnal dihapus.
  */
 import { db, type Tx } from "@/lib/server/db";
@@ -20,14 +20,14 @@ import { dariDate, keDate, labelPeriode, periodeDari } from "@/lib/inti/tanggal"
 import { LABEL_ALASAN_PELEPASAN } from "@/lib/format";
 import { skemaAjukanPelepasan, skemaNoPelepasan } from "@/lib/skema/konversi";
 import { skemaNoDanAlasan } from "@/lib/skema/pembelian";
-import { akumulasiDisetujui, jadwalMenunggu } from "@/lib/data/konversi/hitung";
+import { akumulasiDisetujui, cekJadwalPelepasan } from "@/lib/data/konversi/hitung";
 
-/** Akumulasi yang sudah disetujui dan daftar jurnal penyusutan yang masih menunggu keputusan. */
+/** Akumulasi yang sudah disetujui dan jadwal penyusutan aset. */
 async function posisiAset(tx: Tx, kode: string) {
   const a = await tx.aset.findUnique({ where: { kode }, include: { jadwal: { select: { periodeKe: true, periodeId: true, beban: true, jurnalNo: true, jurnal: { select: { status: true } } } } } });
   if (!a) throw new GalatAksi("Peralatan tidak ditemukan.");
   const jadwal = a.jadwal.map((r) => ({ periodeKe: r.periodeKe, periode: r.periodeId, beban: r.beban, jurnalNo: r.jurnalNo, statusJurnal: r.jurnal?.status ?? null }));
-  return { a, akumulasi: akumulasiDisetujui(jadwal), menunggu: [...new Set(jadwalMenunggu(jadwal).map((r) => r.jurnalNo!))] };
+  return { a, jadwal, akumulasi: akumulasiDisetujui(jadwal) };
 }
 
 export async function ajukanPelepasan(input: unknown): Promise<HasilAksi<{ no: string }>> {
@@ -37,12 +37,13 @@ export async function ajukanPelepasan(input: unknown): Promise<HasilAksi<{ no: s
     const harga = d.alasan === "DIJUAL" ? Number(d.hargaJual) : 0;
 
     const no = await db.$transaction(async (tx) => {
-      const { a, akumulasi, menunggu } = await posisiAset(tx, d.asetKode);
+      const { a, jadwal, akumulasi } = await posisiAset(tx, d.asetKode);
       if (a.status !== "AKTIF") throw new GalatAksi("Aset ini tidak aktif.", { asetKode: "Aset ini tidak aktif." });
       if (d.tanggal < dariDate(a.tglPerolehan)) throw new GalatAksi("Tanggal pelepasan tidak boleh sebelum tanggal perolehan.", { tanggal: "Tidak boleh sebelum tanggal perolehan." });
       if (await periodeTerkunci(tx, periodeDari(d.tanggal))) throw new GalatAksi(`Periode ${labelPeriode(periodeDari(d.tanggal))} sudah dikunci.`, { tanggal: "Periode terkunci." });
       if (await tx.pelepasan.count({ where: { asetKode: a.kode, status: "DIAJUKAN" } })) throw new GalatAksi("Aset ini sudah punya pengajuan yang menunggu keputusan.");
-      if (menunggu.length) throw new GalatAksi(`Masih ada penyusutan aset ini yang belum disetujui (${menunggu.join(", ")}). Tunggu disetujui atau ditolak dulu.`);
+      const tahanAjukan = cekJadwalPelepasan(jadwal, d.tanggal);
+      if (tahanAjukan) throw new GalatAksi(tahanAjukan, { tanggal: tahanAjukan });
 
       const h = hitungPelepasan(a.nilaiPerolehan, akumulasi, harga);
       const nomor = await nomorDokumen(tx, AWALAN.PELEPASAN, d.tanggal);
@@ -80,11 +81,12 @@ export async function setujuiPelepasan(input: unknown): Promise<HasilAksi> {
       const klaim = await tx.pelepasan.updateMany({ where: { no, status: "DIAJUKAN" }, data: { status: "DISETUJUI", disetujuiOlehId: pengguna.id, disetujuiPada: new Date() } });
       if (klaim.count !== 1) throw new GalatAksi("Pengajuan ini baru saja diputuskan pengguna lain.");
 
-      const { a, akumulasi, menunggu } = await posisiAset(tx, p.asetKode);
+      const { a, jadwal, akumulasi } = await posisiAset(tx, p.asetKode);
       if (a.status !== "AKTIF") throw new GalatAksi("Aset ini sudah tidak aktif.");
-      if (menunggu.length) throw new GalatAksi(`Masih ada penyusutan aset ini yang belum disetujui (${menunggu.join(", ")}).`);
-      const h = hitungPelepasan(a.nilaiPerolehan, akumulasi, p.hargaJual);
       const tanggal = dariDate(p.tanggal);
+      const tahanSetuju = cekJadwalPelepasan(jadwal, tanggal);
+      if (tahanSetuju) throw new GalatAksi(tahanSetuju);
+      const h = hitungPelepasan(a.nilaiPerolehan, akumulasi, p.hargaJual);
 
       const jurnalNo = await buatJurnal(tx, {
         tanggal,

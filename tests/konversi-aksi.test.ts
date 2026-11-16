@@ -172,6 +172,44 @@ describe.runIf(aktif)("siklus konversi lewat server action", async () => {
 
   describe("pelepasan", () => {
     let no = "";
+    it("jadwal belum lengkap: AST-0001 dilepas 16 November saat Oktober belum diproses ditolak (ajukan dan setujui)", async () => {
+      await masukSebagai("admin");
+      const okt = await db.jadwalPenyusutan.findFirstOrThrow({ where: { asetKode: "AST-0001", periodeId: "2026-10" } });
+      const dasar = { asetKode: "AST-0001", tanggal: "2026-11-16", alasan: "DIJUAL" as const, hargaJual: 10_000_000 };
+      try {
+        await db.jadwalPenyusutan.update({ where: { asetKode_periodeKe: { asetKode: "AST-0001", periodeKe: okt.periodeKe } }, data: { jurnalNo: null } });
+        const h = await lepas.ajukanPelepasan(dasar);
+        expect(h.ok).toBe(false);
+        if (!h.ok) expect(h.galat).toContain("2026-10");
+        expect(await db.pelepasan.count({ where: { asetKode: "AST-0001" } })).toBe(0);
+        // Pengajuan yang sudah ada tetap dicek ulang saat disetujui.
+        await db.jadwalPenyusutan.update({ where: { asetKode_periodeKe: { asetKode: "AST-0001", periodeKe: okt.periodeKe } }, data: { jurnalNo: okt.jurnalNo } });
+        const ok = await lepas.ajukanPelepasan(dasar);
+        expect(ok.ok).toBe(true);
+        const no2 = ok.ok ? ok.data!.no : "";
+        await db.jadwalPenyusutan.update({ where: { asetKode_periodeKe: { asetKode: "AST-0001", periodeKe: okt.periodeKe } }, data: { jurnalNo: null } });
+        await masukSebagai("owner");
+        const s = await lepas.setujuiPelepasan({ no: no2 });
+        expect(s.ok).toBe(false);
+        expect((await db.pelepasan.findUniqueOrThrow({ where: { no: no2 } })).status).toBe("DIAJUKAN");
+        expect((await db.aset.findUniqueOrThrow({ where: { kode: "AST-0001" } })).status).toBe("AKTIF");
+        await db.jadwalPenyusutan.update({ where: { asetKode_periodeKe: { asetKode: "AST-0001", periodeKe: okt.periodeKe } }, data: { jurnalNo: okt.jurnalNo } });
+        await db.pelepasan.delete({ where: { no: no2 } });
+      } finally {
+        await db.jadwalPenyusutan.update({ where: { asetKode_periodeKe: { asetKode: "AST-0001", periodeKe: okt.periodeKe } }, data: { jurnalNo: okt.jurnalNo } });
+      }
+    });
+
+    it("bulan sebelum pelepasan belum diproses (Desember) dan pelepasan mundur tanggal ditolak", async () => {
+      await masukSebagai("admin");
+      const jan = await lepas.ajukanPelepasan({ asetKode: "AST-0001", tanggal: "2027-01-10", alasan: "DIBUANG" });
+      expect(jan.ok).toBe(false);
+      if (!jan.ok) expect(jan.galat).toContain("2026-12");
+      const mundur = await lepas.ajukanPelepasan({ asetKode: "AST-0001", tanggal: "2026-10-20", alasan: "DIBUANG" });
+      expect(mundur.ok).toBe(false);
+      if (!mundur.ok) expect(mundur.galat).toContain("2026-11");
+    });
+
     it("hanya Admin yang mengajukan; harga jual wajib bila dijual; tanggal sebelum perolehan ditolak", async () => {
       const dasar = { asetKode: "AST-0001", tanggal: "2026-11-20", alasan: "DIJUAL" as const, hargaJual: 10_000_000 };
       await masukSebagai("hrd");
@@ -182,7 +220,7 @@ describe.runIf(aktif)("siklus konversi lewat server action", async () => {
       const h = await lepas.ajukanPelepasan(dasar);
       expect(h.ok).toBe(true);
       no = h.ok ? h.data!.no : "";
-      expect(no).toBe("PLP-2026-0002");
+      expect(no).toBe("PLP-2026-0003"); // 0002 terpakai tes jadwal belum lengkap di atas
       expect((await lepas.ajukanPelepasan(dasar)).ok).toBe(false); // sudah ada pengajuan
     });
 

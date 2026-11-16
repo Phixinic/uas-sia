@@ -18,6 +18,7 @@ import Rupiah from "@/komponen/ui/Rupiah";
 import { barisPelepasan, hitungPelepasan } from "@/lib/inti/jurnal";
 import { LABEL_ALASAN_PELEPASAN } from "@/lib/format";
 import type { AlasanPelepasan } from "@/generated/prisma/enums";
+import { cekJadwalPelepasan, KEBIJAKAN_BULAN_PELEPASAN } from "@/lib/data/konversi/hitung";
 import type { DataPelepasan } from "@/lib/data/konversi/aset";
 
 export default function FormPelepasan({ aset, namaAkun, asetAwal, tanggalAwal, alamatKembali }: {
@@ -46,7 +47,8 @@ export default function FormPelepasan({ aset, namaAkun, asetAwal, tanggalAwal, a
     } catch {}
     return { ...h, jurnal };
   }, [a, harga]);
-  const tertahan = !!a && (a.sudahDiajukan || a.menunggu.length > 0);
+  const tahanJadwal = a && tanggal ? cekJadwalPelepasan(a.jadwal, tanggal) : null;
+  const tertahan = !!a && (a.sudahDiajukan || !!tahanJadwal);
 
   const kirim = () =>
     jalankan(() => ajukanPelepasan({ asetKode, tanggal, alasan, hargaJual: alasan === "DIJUAL" ? hargaJual : "" }), { setelahBerhasil: (h) => router.push(`${alamatKembali}?lihat=${h.data?.no}`) }).then((h) => setGalat(h.ok ? {} : h.galatIsian ?? {}));
@@ -86,9 +88,8 @@ export default function FormPelepasan({ aset, namaAkun, asetAwal, tanggalAwal, a
         ) : (
           <div className="space-y-4 rounded-xl border border-slate-200 p-4">
             {a.sudahDiajukan && <Peringatan jenis="awas">Aset ini sudah punya pengajuan yang menunggu keputusan Owner.</Peringatan>}
-            {a.menunggu.length > 0 && (
-              <Peringatan jenis="awas">Penyusutan aset ini belum disetujui ({a.menunggu.join(", ")}). Tunggu disetujui atau ditolak dulu.</Peringatan>
-            )}
+            {tahanJadwal && <Peringatan jenis="awas">{tahanJadwal}</Peringatan>}
+            <p className="teks-redup">{KEBIJAKAN_BULAN_PELEPASAN}</p>
             {hitung && (
               <>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">

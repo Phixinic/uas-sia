@@ -10,6 +10,7 @@ import { db } from "@/lib/server/db";
 import { buatSesi, hapusSesi, penggunaSaatIni } from "@/lib/server/auth";
 import { cocokKataSandi, HASH_TIRUAN } from "@/lib/server/kata-sandi";
 import { catatLog } from "@/lib/server/log";
+import { tujuanAman } from "@/lib/inti/tujuan";
 
 export type StatusMasuk = { galat: string | null };
 
@@ -44,8 +45,7 @@ export async function masuk(_sebelumnya: StatusMasuk, fd: FormData): Promise<Sta
   await buatSesi(p.id);
   await catatLog(db, p.id, "auth.masuk", "pengguna", String(p.id));
   // Hanya jalur internal yang boleh jadi tujuan, supaya tidak bisa dipakai mengalihkan ke situs lain.
-  const tujuan = kembali && kembali.startsWith("/") && !kembali.startsWith("//") ? kembali : "/";
-  redirect(tujuan);
+  redirect(tujuanAman(kembali));
 }
 
 export async function keluar() {
