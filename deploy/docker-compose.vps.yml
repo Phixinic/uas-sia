@@ -1,0 +1,18 @@
+# Tambahan untuk VPS (dipakai bersama docker-compose.yml):
+#   docker compose --env-file .env.docker -f docker-compose.yml -f deploy/docker-compose.vps.yml up -d --no-build
+# Isi: nama image tetap (untuk image yang dibangun di Mac lalu di-load), slice cgroup sendiri,
+# port aplikasi 8080 ke publik. Postgres tidak punya port yang diterbitkan.
+name: sia-dpro
+
+services:
+  db:
+    image: postgres:16-alpine
+    cgroup_parent: sia-dpro.slice
+  migrasi:
+    image: sia-dpro-migrasi:latest
+    cgroup_parent: sia-dpro.slice
+  app:
+    image: sia-dpro-app:latest
+    cgroup_parent: sia-dpro.slice
+    ports: !override
+      - "8080:3000"
