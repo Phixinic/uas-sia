@@ -11,13 +11,15 @@ import type { HasilAksi } from "@/lib/server/aksi";
  *   <TombolAksi aksi={() => postingPembelian({ no })} konfirmasi={{ judul: "Posting BP-2026-0007?" }}>Posting</TombolAksi>
  *   <TombolAksi aksi={(alasan) => tolakJurnal({ no, alasan })} varian="bahaya" konfirmasi={{ judul: "Tolak jurnal", perluAlasan: true }}>Tolak</TombolAksi>
  */
-export default function TombolAksi({ aksi, konfirmasi, varian = "garis", kecil = true, ikon, children, disabled }: {
+export default function TombolAksi({ aksi, konfirmasi, varian = "garis", kecil = true, ikon, children, disabled, judul }: {
   aksi: (alasan: string) => Promise<HasilAksi<unknown>>;
   konfirmasi?: { judul: string; pesan?: ReactNode; labelKonfirmasi?: string; perluAlasan?: boolean; labelAlasan?: string; bahaya?: boolean };
   varian?: VarianTombol;
   kecil?: boolean;
   ikon?: ReactNode;
   disabled?: boolean;
+  /** Teks bantu dan nama aksesibel bila label tampil dipersingkat. */
+  judul?: string;
   children: ReactNode;
 }) {
   const { jalankan, memuat } = useAksi();
@@ -28,7 +30,7 @@ export default function TombolAksi({ aksi, konfirmasi, varian = "garis", kecil =
   };
   return (
     <>
-      <Tombol varian={varian} kecil={kecil} ikon={ikon} memuat={memuat && !buka} disabled={disabled} onClick={() => (konfirmasi ? setBuka(true) : kerjakan(""))}>
+      <Tombol varian={varian} kecil={kecil} ikon={ikon} memuat={memuat && !buka} disabled={disabled} title={judul} aria-label={judul} onClick={() => (konfirmasi ? setBuka(true) : kerjakan(""))}>
         {children}
       </Tombol>
       {konfirmasi && (
