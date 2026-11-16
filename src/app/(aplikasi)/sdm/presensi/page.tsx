@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { wajibMasuk } from "@/lib/server/auth";
-import HalamanBelumJadi from "@/komponen/ui/HalamanBelumJadi";
+import HalamanPresensi, { type CariPresensi } from "@/komponen/sdm/HalamanPresensi";
 
 export const metadata: Metadata = { title: "Presensi" };
 
-export default async function Halaman() {
-  await wajibMasuk();
-  return <HalamanBelumJadi judul="Presensi" keterangan="Catatan kehadiran harian dan rekapnya per periode." pemilik="SDM" />;
+export default async function Halaman({ searchParams }: { searchParams: Promise<CariPresensi> }) {
+  return <HalamanPresensi cari={await searchParams} />;
 }
