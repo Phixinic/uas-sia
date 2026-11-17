@@ -552,6 +552,18 @@ const TAB_MASTER: DefTab[] = [
   },
 ];
 
+test("7a. Form master dikirim kosong: pesan Indonesia, isian salah pertama difokuskan dan menunjuk pesannya", async () => {
+  const p = sesi.owner.page;
+  await bukaHalaman(p, "/master/konversi?tab=supplier&form=baru");
+  const form = p.getByRole("form", { name: "Form Supplier" });
+  await form.getByRole("button", { name: "Simpan" }).click();
+  const nama = form.getByLabel("Nama supplier");
+  await expect(nama).toBeFocused();
+  await expect(nama).toHaveAttribute("aria-invalid", "true");
+  await expect(nama).toHaveAccessibleDescription("Nama supplier wajib diisi.");
+  await expect(p.getByRole("status")).toContainText("Nama supplier wajib diisi.");
+});
+
 /** Tambah satu data lewat form; bila `nanti` kosong, langsung dinonaktifkan lagi. */
 for (const t of TAB_MASTER) {
   test(`7. Master ${t.kel}/${t.label}: Owner tambah${t.nanti ? "" : " lalu nonaktifkan"} satu data`, async () => {
@@ -623,6 +635,30 @@ test("8m. Tampilan layar sempit (390px): halaman utama tanpa overflow", async ({
   await bukaHalaman(m.page, "/sdm/hitung-gaji?periode=2026-11");
   await expect(m.page.locator("table[aria-label='Hitung gaji per karyawan']")).toBeHidden();
   await expect(m.page.getByLabel("Hitung gaji per karyawan (ringkas)")).toBeVisible();
+
+  // Kode akun tidak terbelah ("1-" dan "140"); tabelnya digeser di dalam pembungkus, halaman tidak melebar.
+  await bukaHalaman(m.page, "/pelaporan/neraca-saldo?periode=2026-11");
+  const kode = m.page.locator("td .kode, td.kode", { hasText: /^1-140$/ }).first();
+  await expect(kode).toHaveCSS("white-space", "nowrap");
+  // Satu kotak baris untuk teksnya = tidak patah ke baris kedua.
+  expect(await kode.evaluate((el) => { const r = document.createRange(); r.selectNodeContents(el); return r.getClientRects().length; })).toBe(1);
+  await cekLuapan(m.page, "mobile/neraca-saldo");
+
+  // Laci menu: tertutup = inert (tidak bisa dicapai Tab), Esc menutup, fokus pindah ke tombol tutup lalu kembali.
+  const laci = m.page.locator("#laci-menu");
+  const buka = m.page.getByRole("button", { name: "Buka menu" });
+  await expect(laci).toHaveAttribute("inert", "");
+  await buka.focus();
+  await m.page.keyboard.press("Shift+Tab");
+  expect(await m.page.evaluate(() => !!document.activeElement?.closest("#laci-menu"))).toBe(false);
+  // Shift+Tab mendarat di tautan "Lompat ke isi" (menutupi tombol), jadi laci dibuka lewat papan ketik dari tombolnya.
+  await buka.focus();
+  await m.page.keyboard.press("Enter");
+  await expect(m.page.getByRole("button", { name: "Tutup menu" })).toBeFocused();
+  await expect(laci).not.toHaveAttribute("inert");
+  await m.page.keyboard.press("Escape");
+  await expect(laci).toHaveAttribute("inert", "");
+  await expect(buka).toBeFocused();
   await m.ctx.close();
 });
 

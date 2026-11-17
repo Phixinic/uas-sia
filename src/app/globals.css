@@ -65,8 +65,9 @@ body {
   .angka {
     @apply tabular-nums;
   }
+  /* Kode dan nomor dokumen (1-140, JU-2026-0011) tidak boleh patah; tabel tetap bisa digeser di .bungkus-tabel. */
   .kode {
-    @apply font-mono text-[12px] text-slate-600;
+    @apply font-mono text-[12px] whitespace-nowrap text-slate-600;
   }
 
   /* ---------- Kartu ---------- */

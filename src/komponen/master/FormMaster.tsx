@@ -1,10 +1,11 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save } from "lucide-react";
 import { simpanMaster } from "@/lib/aksi/master/master";
 import { useAksi } from "@/komponen/ui/useAksi";
+import { useFokusGalat } from "@/komponen/ui/useFokusGalat";
 import Kartu from "@/komponen/ui/Kartu";
 import Tombol from "@/komponen/ui/Tombol";
 import { Bidang, Isian, Pilihan } from "@/komponen/ui/Isian";
@@ -26,6 +27,8 @@ export default function FormMaster({ def, opsi, kode, awal, alamatKembali }: {
   const { jalankan, memuat } = useAksi();
   const [nilai, setNilai] = useState<Nilai>(awal);
   const [galat, setGalat] = useState<Record<string, string>>({});
+  const akar = useRef<HTMLFormElement>(null);
+  useFokusGalat(akar, galat);
   const ubah = (k: string, v: string | string[]) => setNilai((n) => ({ ...n, [k]: v }));
 
   const kirim = async (e: React.FormEvent) => {
@@ -37,7 +40,7 @@ export default function FormMaster({ def, opsi, kode, awal, alamatKembali }: {
 
   return (
     <Kartu>
-      <form onSubmit={kirim} className="space-y-4" aria-label={`Form ${def.label}`} noValidate>
+      <form ref={akar} onSubmit={kirim} className="space-y-4" aria-label={`Form ${def.label}`} noValidate>
         <h2 className="judul-kartu">{kode ? `Ubah ${kode}` : `${def.label} baru`}</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           {def.isian.map((d) => {

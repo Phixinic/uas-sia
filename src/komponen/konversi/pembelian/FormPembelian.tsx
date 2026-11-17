@@ -4,11 +4,12 @@
  * Form draf pembelian (baru atau ubah). Pratinjau total, jadwal penyusutan per baris, dan jurnal yang akan dibuat
  * dihitung langsung di browser memakai src/lib/inti (fungsi yang sama dengan server), jadi angkanya pasti sama.
  */
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Save, Send, Trash2 } from "lucide-react";
 import { simpanPembelian } from "@/lib/aksi/konversi/pembelian";
 import { useAksi } from "@/komponen/ui/useAksi";
+import { useFokusGalat } from "@/komponen/ui/useFokusGalat";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
 import Tombol, { TautanTombol } from "@/komponen/ui/Tombol";
 import { Bidang, Isian, IsianRupiah, Pilihan } from "@/komponen/ui/Isian";
@@ -51,6 +52,8 @@ export default function FormPembelian({ jenis, awal, supplier: supplierAwal, bar
   const [supplier, setSupplier] = useState(supplierAwal);
   const [barang, setBarang] = useState(barangAwal);
   const [galat, setGalat] = useState<Record<string, string>>({});
+  const akar = useRef<HTMLFormElement>(null);
+  useFokusGalat(akar, galat);
   const [konfirmasiPosting, setKonfirmasiPosting] = useState(false);
   const peralatan = jenis === "PERALATAN";
   const label = peralatan ? "peralatan" : "perlengkapan";
@@ -131,9 +134,10 @@ export default function FormPembelian({ jenis, awal, supplier: supplierAwal, bar
     <Kartu rapat>
       <KepalaKartu
         judul={f.no ? `Ubah draf ${f.no}` : `Pembelian ${label} baru`}
-        keterangan={`Use case: Kelola (CRUD) Pembelian ${peralatan ? "Peralatan" : "Perlengkapan"}`}
+        keterangan={peralatan ? "Kelola draf pembelian peralatan, lalu posting untuk membuat jurnal dan kartu aset." : "Kelola draf pembelian perlengkapan, lalu posting untuk membuat jurnal."}
       />
       <form
+        ref={akar}
         className="space-y-5 p-5"
         onSubmit={(e) => {
           e.preventDefault();
@@ -231,7 +235,7 @@ export default function FormPembelian({ jenis, awal, supplier: supplierAwal, bar
                       </Bidang>
                       <Bidang label="Dasar jumlah periode (n)" htmlFor={id("dasar")}>
                         <Pilihan id={id("dasar")} value={b.dasarN} onChange={(e) => ubahBaris(i, { dasarN: e.target.value as DasarN })}>
-                          <option value="GARANSI">Garansi (sesuai papan dosen)</option>
+                          <option value="GARANSI">Garansi</option>
                           <option value="MASA_MANFAAT">Masa manfaat</option>
                         </Pilihan>
                       </Bidang>

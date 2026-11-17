@@ -24,20 +24,27 @@ export function Bidang({ label, htmlFor, petunjuk, galat, wajib, className = "",
 
 type GalatProp = { galat?: boolean };
 
+/**
+ * Saat isian salah, kontrol menunjuk pesan galat Bidang (id `<htmlFor>-galat`) lewat aria-describedby supaya pembaca layar
+ * ikut membacakan pesannya. aria-describedby yang diberikan pemanggil tetap dipakai.
+ */
+const keteranganGalat = (galat: boolean | undefined, id: string | undefined, dariPemanggil: string | undefined) =>
+  dariPemanggil ?? (galat && id ? `${id}-galat` : undefined);
+
 export function Isian({ galat, className = "", ...p }: InputHTMLAttributes<HTMLInputElement> & GalatProp) {
-  return <input className={`isian ${p.type === "number" ? "isian-angka" : ""} ${className}`} aria-invalid={galat || undefined} {...p} />;
+  return <input className={`isian ${p.type === "number" ? "isian-angka" : ""} ${className}`} aria-invalid={galat || undefined} {...p} aria-describedby={keteranganGalat(galat, p.id, p["aria-describedby"])} />;
 }
 
 export function Pilihan({ galat, className = "", children, ...p }: SelectHTMLAttributes<HTMLSelectElement> & GalatProp) {
   return (
-    <select className={`isian ${className}`} aria-invalid={galat || undefined} {...p}>
+    <select className={`isian ${className}`} aria-invalid={galat || undefined} {...p} aria-describedby={keteranganGalat(galat, p.id, p["aria-describedby"])}>
       {children}
     </select>
   );
 }
 
 export function AreaTeks({ galat, className = "", ...p }: TextareaHTMLAttributes<HTMLTextAreaElement> & GalatProp) {
-  return <textarea className={`isian ${className}`} aria-invalid={galat || undefined} {...p} />;
+  return <textarea className={`isian ${className}`} aria-invalid={galat || undefined} {...p} aria-describedby={keteranganGalat(galat, p.id, p["aria-describedby"])} />;
 }
 
 /** Isian rupiah: menerima angka bulat, menampilkan pemisah ribuan di bawahnya. */
@@ -57,6 +64,7 @@ export function IsianRupiah({ nilai, saatUbah, id, galat, ...p }: Omit<InputHTML
       value={nilai === "" ? "" : Number(nilai).toLocaleString("id-ID")}
       onChange={(e) => saatUbah(e.target.value.replace(/[^\d]/g, "").replace(/^0+(?=\d)/, ""))}
       {...p}
+      aria-describedby={keteranganGalat(galat, id, p["aria-describedby"])}
     />
   );
 }

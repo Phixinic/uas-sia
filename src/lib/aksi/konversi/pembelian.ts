@@ -2,7 +2,7 @@
 
 /*
  * Server action pembelian peralatan dan perlengkapan (pola rujukan, lihat docs/KONTRAK.md).
- * Use case: Kelola (CRUD) Pembelian; include Insert transaksi dan Hitung Penyusutan (jadwal dibuat saat posting).
+ * Use case: Kelola draf pembelian peralatan, perlengkapan; Posting pembelian (include Buat kartu aset dan jadwal penyusutan).
  * Aturan peran (sama dengan app lama):
  *   simpan/ubah/hapus draf : Admin
  *   posting                : Admin atau Owner  (posting = status DISETUJUI, jurnal umum langsung berlaku)

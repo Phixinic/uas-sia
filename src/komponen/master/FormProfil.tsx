@@ -1,12 +1,13 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Save } from "lucide-react";
 import { simpanProfil } from "@/lib/aksi/master/master";
 import { useAksi } from "@/komponen/ui/useAksi";
 import Kartu from "@/komponen/ui/Kartu";
 import Tombol from "@/komponen/ui/Tombol";
 import { Bidang, Isian } from "@/komponen/ui/Isian";
+import { useFokusGalat } from "@/komponen/ui/useFokusGalat";
 
 /** Profil usaha (Owner): nama dan keterangan di sidebar. */
 export default function FormProfil({ awal }: { awal: { nama: string; keterangan: string } }) {
@@ -14,9 +15,12 @@ export default function FormProfil({ awal }: { awal: { nama: string; keterangan:
   const { jalankan, memuat } = useAksi();
   const [nilai, setNilai] = useState(awal);
   const [galat, setGalat] = useState<Record<string, string>>({});
+  const akar = useRef<HTMLFormElement>(null);
+  useFokusGalat(akar, galat);
   return (
     <Kartu>
       <form
+        ref={akar}
         className="space-y-4"
         aria-label="Profil usaha"
         onSubmit={async (e) => {

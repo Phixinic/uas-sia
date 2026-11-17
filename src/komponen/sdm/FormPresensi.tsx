@@ -1,7 +1,7 @@
 "use client";
 
 /* Form input atau ubah presensi harian. Terlambat dihitung server dari jadwal kerja jabatan karyawan. */
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save } from "lucide-react";
 import { simpanPresensi } from "@/lib/aksi/sdm/presensi";
@@ -12,6 +12,7 @@ import { Bidang, Isian, Pilihan } from "@/komponen/ui/Isian";
 import { LABEL_ABSENSI } from "@/lib/format";
 import { hitungTerlambat } from "@/lib/inti/penggajian";
 import type { Absensi } from "@/generated/prisma/enums";
+import { useFokusGalat } from "@/komponen/ui/useFokusGalat";
 
 export type NilaiFormPresensi = { id: number | null; karyawanKode: string; tanggal: string; absensi: Absensi; jamMasuk: string; jamKeluar: string };
 export type OpsiKaryawan = { kode: string; nama: string; siapInput: boolean; jamMasuk: string; jamKeluar: string };
@@ -21,6 +22,8 @@ export default function FormPresensi({ awal, karyawan, alamatKembali }: { awal: 
   const { jalankan, memuat } = useAksi();
   const [f, setF] = useState(awal);
   const [galat, setGalat] = useState<Record<string, string>>({});
+  const akar = useRef<HTMLFormElement>(null);
+  useFokusGalat(akar, galat);
   const ubah = (p: Partial<NilaiFormPresensi>) => setF((x) => ({ ...x, ...p }));
   const hadir = f.absensi === "HADIR";
   const pilih = karyawan.find((k) => k.kode === f.karyawanKode);
@@ -33,6 +36,7 @@ export default function FormPresensi({ awal, karyawan, alamatKembali }: { awal: 
     <Kartu rapat>
       <KepalaKartu judul={f.id ? "Ubah presensi" : "Input presensi"} keterangan="Keterlambatan dihitung otomatis dari jadwal kerja jabatan." />
       <form
+        ref={akar}
         className="space-y-4 p-5"
         noValidate
         onSubmit={(e) => {

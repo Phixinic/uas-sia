@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save } from "lucide-react";
 import { buatPengguna, resetKataSandi, ubahPengguna } from "@/lib/aksi/pengguna/pengguna";
@@ -9,6 +9,7 @@ import Kartu from "@/komponen/ui/Kartu";
 import Tombol from "@/komponen/ui/Tombol";
 import { Bidang, Isian, Pilihan } from "@/komponen/ui/Isian";
 import { LABEL_PERAN, type Peran } from "@/lib/peran";
+import { useFokusGalat } from "@/komponen/ui/useFokusGalat";
 
 const PERAN: Peran[] = ["ADMIN", "HRD", "OWNER"];
 
@@ -21,6 +22,8 @@ export default function FormPengguna(p: Props) {
   const { jalankan, memuat } = useAksi();
   const [nilai, setNilai] = useState({ namaPengguna: "", nama: p.mode === "ubah" ? p.nama : "", peran: (p.mode === "ubah" ? p.peran : "ADMIN") as Peran, kataSandi: "" });
   const [galat, setGalat] = useState<Record<string, string>>({});
+  const akar = useRef<HTMLFormElement>(null);
+  useFokusGalat(akar, galat);
   const kembali = "/pengguna";
   const ubah = (k: keyof typeof nilai, v: string) => setNilai((n) => ({ ...n, [k]: v }));
   const id = (k: string) => `${awalan}-${k}`;
@@ -39,7 +42,7 @@ export default function FormPengguna(p: Props) {
   const judul = p.mode === "baru" ? "Pengguna baru" : p.mode === "ubah" ? `Ubah ${p.namaPengguna}` : `Ganti kata sandi ${p.namaPengguna}`;
   return (
     <Kartu>
-      <form onSubmit={kirim} className="space-y-4" aria-label={judul} noValidate autoComplete="off">
+      <form ref={akar} onSubmit={kirim} className="space-y-4" aria-label={judul} noValidate autoComplete="off">
         <h2 className="judul-kartu">{judul}</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           {p.mode === "baru" && (

@@ -1,7 +1,8 @@
 "use server";
 
 /*
- * Server action Pelepasan Peralatan (use case: Hapus Peralatan, dijual / dibuang / hilang).
+ * Server action Pelepasan Peralatan (use case: Ajukan pelepasan peralatan; Setujui atau tolak pelepasan peralatan),
+ * untuk peralatan yang dijual, dibuang, atau hilang.
  *   ajukan : Admin; setujui atau tolak : Owner.
  * Nilai buku memakai penyusutan yang sudah DISETUJUI. Pengajuan dan persetujuan ditolak bila jadwal aset belum lengkap
  * (lihat cekJadwalPelepasan: bulan sebelum pelepasan wajib sudah disetujui, bulan sesudahnya tidak boleh sudah dijurnal). Saat disetujui: jurnal umum langsung DISETUJUI, aset DILEPAS,

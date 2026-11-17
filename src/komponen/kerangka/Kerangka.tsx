@@ -7,7 +7,7 @@
  */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import Logo from "@/komponen/kerangka/Logo";
 import IkonMenu from "@/komponen/kerangka/IkonMenu";
@@ -46,6 +46,9 @@ export default function Kerangka({ pengguna, namaUsaha, keteranganUsaha, adaLogo
   const pathname = usePathname();
   const [laci, setLaci] = useState(false);
   const [mini, setMini] = useState(false);
+  const tombolBuka = useRef<HTMLButtonElement>(null);
+  const tombolTutup = useRef<HTMLButtonElement>(null);
+  const pernahBuka = useRef(false);
   const [grupTerbuka, setGrupTerbuka] = useState<Record<string, boolean>>({});
 
   // Pilihan tersimpan baru dibaca sesudah hidrasi supaya HTML server dan klien sama.
@@ -55,6 +58,20 @@ export default function Kerangka({ pengguna, namaUsaha, keteranganUsaha, adaLogo
     setGrupTerbuka(bacaLokal(KUNCI_GRUP, {}));
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
+
+  // Laci layar kecil: Esc menutup; fokus pindah ke "Tutup menu" saat dibuka dan kembali ke "Buka menu" saat ditutup.
+  useEffect(() => {
+    if (laci) {
+      pernahBuka.current = true;
+      tombolTutup.current?.focus();
+      const tekan = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setLaci(false);
+      };
+      document.addEventListener("keydown", tekan);
+      return () => document.removeEventListener("keydown", tekan);
+    }
+    if (pernahBuka.current) tombolBuka.current?.focus();
+  }, [laci]);
 
   const menu = MENU.map((g) => ({ ...g, tautan: g.tautan.filter((t) => !t.peran || t.peran.includes(pengguna.peran)) })).filter((g) => g.tautan.length);
 
@@ -146,10 +163,11 @@ export default function Kerangka({ pengguna, namaUsaha, keteranganUsaha, adaLogo
 
       {/* Laci mobile */}
       {laci && <div className="fixed inset-0 z-40 bg-slate-900/40 lg:hidden" onClick={() => setLaci(false)} aria-hidden />}
-      <aside className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-merek transition-transform lg:hidden ${laci ? "translate-x-0" : "-translate-x-full"}`} aria-hidden={!laci}>
+      {/* Laci tertutup dibuat inert: tautan di dalamnya tidak bisa dicapai dengan Tab dan tidak dibaca pembaca layar. */}
+      <aside id="laci-menu" className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-merek transition-transform lg:hidden ${laci ? "translate-x-0" : "-translate-x-full"}`} inert={!laci} aria-hidden={!laci}>
         <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
           <Logo adaLogo={adaLogo} nama={namaUsaha} keterangan={keteranganUsaha} gelap />
-          <button type="button" onClick={() => setLaci(false)} className="rounded p-1 text-merek-lembut hover:text-white" aria-label="Tutup menu">
+          <button type="button" ref={tombolTutup} onClick={() => setLaci(false)} className="rounded p-1 text-merek-lembut hover:text-white" aria-label="Tutup menu">
             <X className="size-5" />
           </button>
         </div>
@@ -158,7 +176,7 @@ export default function Kerangka({ pengguna, namaUsaha, keteranganUsaha, adaLogo
 
       <div className={`flex min-h-screen flex-col transition-[padding] ${mini ? "lg:pl-[68px]" : "lg:pl-64"}`}>
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur md:px-6">
-          <button type="button" onClick={() => setLaci(true)} className="tombol tombol-hantu tombol-kecil lg:hidden" aria-label="Buka menu">
+          <button type="button" ref={tombolBuka} onClick={() => setLaci(true)} className="tombol tombol-hantu tombol-kecil lg:hidden" aria-label="Buka menu" aria-expanded={laci} aria-controls="laci-menu">
             <Menu className="size-5" />
           </button>
           <div className="flex-1" />

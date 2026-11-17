@@ -4,7 +4,7 @@
  * Form ajukan pelepasan. Nilai buku, laba/rugi, dan jurnal dihitung di browser dengan fungsi yang sama dengan server
  * (hitungPelepasan, barisPelepasan di src/lib/inti/jurnal.ts).
  */
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
 import { ajukanPelepasan } from "@/lib/aksi/konversi/pelepasan";
@@ -20,6 +20,7 @@ import { LABEL_ALASAN_PELEPASAN } from "@/lib/format";
 import type { AlasanPelepasan } from "@/generated/prisma/enums";
 import { cekJadwalPelepasan, KEBIJAKAN_BULAN_PELEPASAN } from "@/lib/data/konversi/hitung";
 import type { DataPelepasan } from "@/lib/data/konversi/aset";
+import { useFokusGalat } from "@/komponen/ui/useFokusGalat";
 
 export default function FormPelepasan({ aset, namaAkun, asetAwal, tanggalAwal, alamatKembali }: {
   aset: DataPelepasan["aset"];
@@ -35,6 +36,8 @@ export default function FormPelepasan({ aset, namaAkun, asetAwal, tanggalAwal, a
   const [alasan, setAlasan] = useState<AlasanPelepasan>("DIJUAL");
   const [hargaJual, setHargaJual] = useState("");
   const [galat, setGalat] = useState<Record<string, string>>({});
+  const akar = useRef<HTMLFormElement>(null);
+  useFokusGalat(akar, galat);
 
   const a = aset.find((x) => x.kode === asetKode);
   const harga = alasan === "DIJUAL" && hargaJual !== "" ? Number(hargaJual) : 0;
@@ -55,8 +58,8 @@ export default function FormPelepasan({ aset, namaAkun, asetAwal, tanggalAwal, a
 
   return (
     <Kartu rapat>
-      <KepalaKartu judul="Ajukan pelepasan" keterangan="Use case: Hapus Peralatan" />
-      <form className="space-y-5 p-5" noValidate onSubmit={(e) => { e.preventDefault(); kirim(); }}>
+      <KepalaKartu judul="Ajukan pelepasan" keterangan="Ajukan pelepasan peralatan untuk disetujui Owner." />
+      <form ref={akar} className="space-y-5 p-5" noValidate onSubmit={(e) => { e.preventDefault(); kirim(); }}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Bidang label="Peralatan" htmlFor="asetKode" wajib galat={galat.asetKode} className="sm:col-span-2">
             <Pilihan id="asetKode" value={asetKode} onChange={(e) => setAsetKode(e.target.value)} galat={!!galat.asetKode}>
