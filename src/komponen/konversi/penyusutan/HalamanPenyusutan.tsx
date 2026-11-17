@@ -53,7 +53,11 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
           . Proses periode paling lama dulu supaya urutan jadwal tetap benar.
         </Peringatan>
       )}
-      {d.terkunci && <Peringatan jenis="galat">Periode {labelPeriode(periode)} terkunci. Minta Owner membuka kunci sebelum memproses.</Peringatan>}
+      {d.penutup && (
+        <Peringatan jenis="galat">
+          {d.penutup === periode ? `Periode ${labelPeriode(periode)} terkunci` : `Periode ${labelPeriode(periode)} tertutup karena ${labelPeriode(d.penutup)} sudah dikunci`}. Minta Owner membuka kunci sebelum memproses.
+        </Peringatan>
+      )}
 
       <Kartu rapat>
         <KepalaKartu judul={`Pratinjau ${labelPeriode(periode)}`} keterangan={`${d.baris.length} aset, ${d.belumDiproses} belum diproses`} />

@@ -21,7 +21,7 @@ export default async function Halaman() {
     <>
       <KepalaHalaman
         judul="Tutup Periode"
-        keterangan="Periode yang dikunci menolak jurnal baru bertanggal di dalamnya. Owner mengunci setelah semua pemeriksaan lulus, dan bisa membuka lagi dengan alasan."
+        keterangan="Periode yang dikunci menolak jurnal baru bertanggal di dalamnya. Periode dikunci berurutan dari yang paling lama dan dibuka berurutan dari yang paling akhir. Owner mengunci setelah semua pemeriksaan lulus, dan bisa membuka lagi dengan alasan."
       />
       <div className="space-y-4">
         {daftar.map((p) => {
@@ -35,7 +35,9 @@ export default async function Halaman() {
                 </div>
                 {bolehKunci && (
                   <div className="flex items-center gap-2">
-                    {p.status === "TERBUKA" ? (
+                    {!p.urutanBoleh ? (
+                      <span className="text-xs text-slate-500">{p.tahanUrutan}</span>
+                    ) : p.status === "TERBUKA" ? (
                       lulus ? <TombolKunci periode={p.id} /> : <span className="text-xs text-slate-500">Lengkapi pemeriksaan dulu</span>
                     ) : (
                       <TombolBukaKunci periode={p.id} />
@@ -43,6 +45,9 @@ export default async function Halaman() {
                   </div>
                 )}
               </div>
+              {p.tertutupOleh && (
+                <p className="text-sm text-amber-700">Tertutup untuk transaksi karena {labelPeriode(p.tertutupOleh)} sudah dikunci.</p>
+              )}
               {p.periksa ? (
                 <ul className="grid gap-1.5 sm:grid-cols-2" aria-label={`Pemeriksaan ${labelPeriode(p.id)}`}>
                   {p.periksa.map((x) => (

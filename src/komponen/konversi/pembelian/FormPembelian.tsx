@@ -20,7 +20,7 @@ import { TambahBarangCepat, TambahSupplierCepat, type KategoriForm } from "./Tam
 import { AKUN } from "@/lib/inti/akun";
 import { barisPembelian } from "@/lib/inti/jurnal";
 import { hitungJadwal, nDariDasar, type DasarN } from "@/lib/inti/penyusutan";
-import { periodeDari, labelPeriode } from "@/lib/inti/tanggal";
+import { kunciPenutup, periodeDari, labelPeriode } from "@/lib/inti/tanggal";
 import { rupiah, LABEL_CARA_BAYAR } from "@/lib/format";
 import type { BarangForm } from "@/lib/data/konversi/pembelian";
 import type { CaraBayar, JenisPembelian } from "@/generated/prisma/enums";
@@ -101,7 +101,14 @@ export default function FormPembelian({ jenis, awal, supplier: supplierAwal, bar
     return { total, jadwal, jurnal: total > 0 ? barisPembelian(debit, f.caraBayar) : [] };
   }, [f, barang, peralatan]);
 
-  const terkunci = periodeTerkunci.includes(periodeDari(f.tanggal));
+  // Periode tertutup bila periode itu sendiri atau periode sesudahnya sudah dikunci (kunci berurutan).
+  const penutup = f.tanggal ? kunciPenutup(periodeDari(f.tanggal), periodeTerkunci) : null;
+  const terkunci = penutup !== null;
+  const pesanKunci = penutup === null
+    ? undefined
+    : penutup === periodeDari(f.tanggal)
+      ? `Periode ${labelPeriode(penutup)} terkunci; draf boleh disimpan, posting ditolak.`
+      : `Periode ${labelPeriode(periodeDari(f.tanggal))} tertutup karena ${labelPeriode(penutup)} sudah dikunci; draf boleh disimpan, posting ditolak.`;
 
   const kirim = (posting: boolean) =>
     jalankan(
@@ -138,7 +145,7 @@ export default function FormPembelian({ jenis, awal, supplier: supplierAwal, bar
           <Bidang label="No. pembelian" htmlFor="no">
             <Isian id="no" value={f.no ?? "Dibuat otomatis"} readOnly />
           </Bidang>
-          <Bidang label="Tanggal" htmlFor="tanggal" wajib galat={g("tanggal") ?? (terkunci ? `Periode ${labelPeriode(periodeDari(f.tanggal))} terkunci; draf boleh disimpan, posting ditolak.` : undefined)}>
+          <Bidang label="Tanggal" htmlFor="tanggal" wajib galat={g("tanggal") ?? pesanKunci}>
             <Isian id="tanggal" type="date" value={f.tanggal} onChange={(e) => ubah({ tanggal: e.target.value })} galat={!!g("tanggal") || terkunci} />
           </Bidang>
           <Bidang label="Cara bayar" htmlFor="caraBayar" wajib>

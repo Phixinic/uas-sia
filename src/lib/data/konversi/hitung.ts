@@ -1,6 +1,7 @@
 /*
  * Hitungan murni siklus konversi (tanpa database), supaya mudah diuji.
  */
+import { labelPeriode, tambahBulan } from "@/lib/inti/tanggal";
 
 export type PembelianLkp = { perlengkapanKode: string; periode: string; nilai: number };
 export type BebanOpname = { perlengkapanKode: string; periode: string; beban: number };
@@ -14,6 +15,36 @@ export function saldoBukuPerlengkapan(pembelian: PembelianLkp[], opname: BebanOp
   for (const b of pembelian) if (b.periode <= periode) saldo[b.perlengkapanKode] = (saldo[b.perlengkapanKode] ?? 0) + b.nilai;
   for (const o of opname) if (o.periode < periode) saldo[o.perlengkapanKode] = (saldo[o.perlengkapanKode] ?? 0) - o.beban;
   return saldo;
+}
+
+/**
+ * Bulan paling awal sebelum `periode` yang masih punya saldo perlengkapan tetapi belum punya nilai sisa yang tidak ditolak.
+ * Bulan tanpa saldo tidak perlu dihitung fisik. `sudahAda` = periode yang punya opname tidak ditolak.
+ * Dipakai supaya nilai sisa diinput berurutan: bulan yang terlewat tidak bisa diisi lagi sesudah bulan berikutnya,
+ * karena biaya bulan berikutnya sudah dihitung dari saldo tanpa biaya bulan itu.
+ */
+export function bulanNilaiSisaTerlewat(pembelian: PembelianLkp[], opname: BebanOpname[], sudahAda: ReadonlySet<string>, periode: string): string | null {
+  let m = pembelian.reduce<string | null>((a, b) => (a === null || b.periode < a ? b.periode : a), null);
+  for (; m !== null && m < periode; m = tambahBulan(m, 1)) {
+    if (sudahAda.has(m)) continue;
+    if (Object.values(saldoBukuPerlengkapan(pembelian, opname, m)).some((v) => v > 0)) return m;
+  }
+  return null;
+}
+
+/**
+ * Alasan nilai sisa periode P belum boleh diinput karena urutan bulan, atau null bila boleh.
+ * `lain` = opname periode lain yang tidak ditolak. Dipakai server action dan halaman supaya pesannya sama.
+ */
+export function tahanUrutanNilaiSisa(P: string, lain: { periodeId: string; status: string }[], terlewat: string | null): string | null {
+  const sesudah = lain.filter((o) => o.periodeId > P && o.status !== "DITOLAK").map((o) => o.periodeId).sort()[0];
+  if (sesudah) {
+    return `Nilai sisa ${labelPeriode(sesudah)} sudah diinput, jadi nilai sisa ${labelPeriode(P)} tidak bisa diinput atau diubah lagi. Biaya perlengkapan ${labelPeriode(sesudah)} sudah dihitung dari saldo tanpa biaya ${labelPeriode(P)}, sehingga biayanya akan terhitung dua kali.`;
+  }
+  const tunda = lain.filter((o) => o.periodeId < P && (o.status === "DRAFT" || o.status === "DIAJUKAN")).map((o) => o.periodeId).sort()[0];
+  if (tunda) return `Nilai sisa ${labelPeriode(tunda)} belum disetujui Owner. Selesaikan dulu supaya saldo buku ${labelPeriode(P)} sudah pasti.`;
+  if (terlewat) return `Nilai sisa ${labelPeriode(terlewat)} belum diinput. Nilai sisa diisi berurutan per bulan, jadi isi ${labelPeriode(terlewat)} dulu.`;
+  return null;
 }
 
 export type BarisAset = { periodeKe: number; periode: string; beban: number; jurnalNo: string | null; statusJurnal: string | null };

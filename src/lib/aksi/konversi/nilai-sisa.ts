@@ -4,6 +4,8 @@
  * Server action Nilai Sisa Perlengkapan (use case: Input Nilai Sisa (Saldo Akhir) Perlengkapan).
  * Biaya = saldo buku - nilai sisa hasil hitung fisik. Jurnal penyesuaian dibuat DRAFT, lalu Admin mengajukan ke Owner.
  * Satu opname per periode: input ulang sesudah ditolak memperbarui baris OPN-YYYY-MM yang sama.
+ * Diinput berurutan per bulan: bulan sebelumnya harus sudah disetujui (atau tidak bersaldo), dan bulan yang sudah
+ * dilewati bulan berikutnya tidak bisa diinput atau diubah lagi, supaya biaya tidak terhitung dua kali.
  */
 import { db } from "@/lib/server/db";
 import { aksiAman, GalatAksi, segarkan, validasi, type HasilAksi } from "@/lib/server/aksi";
@@ -11,13 +13,15 @@ import { wajibPeran } from "@/lib/server/auth";
 import { IZIN } from "@/lib/peran";
 import { nomorOpname } from "@/lib/server/nomor";
 import { pastikanTerbuka } from "@/lib/server/periode";
-import { buatJurnal } from "@/lib/server/jurnal";
+import { buatJurnal, saldoAkun } from "@/lib/server/jurnal";
 import { catatLog } from "@/lib/server/log";
 import { barisOpname } from "@/lib/inti/jurnal";
+import { AKUN } from "@/lib/inti/akun";
 import { hariTerakhir, labelPeriode, periodeIni } from "@/lib/inti/tanggal";
 import { rupiah } from "@/lib/format";
 import { skemaNilaiSisa } from "@/lib/skema/konversi";
-import { saldoBukuLkp } from "@/lib/data/konversi/nilai-sisa";
+import { bahanNilaiSisa } from "@/lib/data/konversi/nilai-sisa";
+import { tahanUrutanNilaiSisa } from "@/lib/data/konversi/hitung";
 
 export async function simpanNilaiSisa(input: unknown): Promise<HasilAksi<{ no: string }>> {
   return aksiAman(async () => {
@@ -29,10 +33,19 @@ export async function simpanNilaiSisa(input: unknown): Promise<HasilAksi<{ no: s
 
     const hasil = await db.$transaction(async (tx) => {
       await pastikanTerbuka(tx, P);
+      // Satu input nilai sisa sekaligus, supaya cek urutan di bawah tidak disalip input bulan lain yang berjalan bersamaan.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(7410002)`;
       const lama = await tx.opname.findUnique({ where: { periodeId: P }, select: { status: true } });
       if (lama && lama.status !== "DITOLAK") throw new GalatAksi(`Nilai sisa ${labelPeriode(P)} sudah diinput.`);
 
-      const saldo = await saldoBukuLkp(tx, P);
+      // Urutan: saldo buku P dihitung dari biaya opname bulan-bulan sebelumnya, jadi bulan sesudah P belum boleh
+      // punya nilai sisa (biaya akan terhitung dua kali) dan bulan sebelum P harus sudah final.
+      const [lain, { saldo, terlewat }] = await Promise.all([
+        tx.opname.findMany({ where: { periodeId: { not: P }, status: { not: "DITOLAK" } }, select: { periodeId: true, status: true } }),
+        bahanNilaiSisa(tx, P),
+      ]);
+      const tahan = tahanUrutanNilaiSisa(P, lain, terlewat);
+      if (tahan) throw new GalatAksi(tahan);
       if (!saldo.length) throw new GalatAksi("Tidak ada perlengkapan untuk dihitung.");
       const nilai = new Map(d.nilai.map((x) => [x.perlengkapanKode, x.nilaiSisa]));
       const galatIsian: Record<string, string> = {};
@@ -48,6 +61,11 @@ export async function simpanNilaiSisa(input: unknown): Promise<HasilAksi<{ no: s
         throw new GalatAksi(`${pertama.nama}: ${galatIsian[salah[0]].toLowerCase()}`, Object.fromEntries(salah.map((k) => [`nilai.${k}`, galatIsian[k]])));
       }
       const total = baris.reduce((s, b) => s + (b.saldoBuku - b.nilaiSisa), 0);
+      // Penjaga: biaya tidak boleh melebihi saldo akun Perlengkapan di buku besar sampai akhir P (saldo tidak boleh minus).
+      const saldoAkunLkp = await saldoAkun(tx, AKUN.PERLENGKAPAN, P);
+      if (total > saldoAkunLkp) {
+        throw new GalatAksi(`Biaya perlengkapan ${rupiah(total)} melebihi saldo akun Perlengkapan sampai ${labelPeriode(P)} (${rupiah(saldoAkunLkp)}), jadi saldonya akan minus. Periksa lagi nilai sisa dan jurnal yang mengurangi akun Perlengkapan.`);
+      }
 
       let jurnalNo: string | null = null;
       if (total > 0) {

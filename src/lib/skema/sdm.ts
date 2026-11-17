@@ -1,7 +1,7 @@
 /*
  * Skema validasi siklus SDM (zod). Aturan sama dengan prsSave() di versi-statis/assets/js/views/presensi.js.
  */
-import { z } from "zod";
+import { z } from "./zod";
 import { POLA_PERIODE, POLA_TANGGAL, keMenit } from "@/lib/inti/tanggal";
 
 const POLA_JAM = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -9,12 +9,12 @@ const POLA_JAM = /^([01]\d|2[0-3]):[0-5]\d$/;
 export const skemaPresensi = z
   .object({
     /** Diisi saat mengubah presensi yang sudah ada. */
-    id: z.coerce.number().int().positive().optional().nullable(),
-    karyawanKode: z.string().trim().min(1, "Pilih karyawan."),
-    tanggal: z.string().regex(POLA_TANGGAL, "Isi tanggal."),
+    id: z.coerce.number({ error: "Presensi tidak valid." }).int("Presensi tidak valid.").positive("Presensi tidak valid.").optional().nullable(),
+    karyawanKode: z.string({ error: "Pilih karyawan." }).trim().min(1, "Pilih karyawan."),
+    tanggal: z.string({ error: "Isi tanggal." }).regex(POLA_TANGGAL, "Isi tanggal."),
     absensi: z.enum(["HADIR", "IZIN", "SAKIT", "CUTI", "ALPA"], { error: "Pilih jenis absensi." }),
-    jamMasuk: z.string().trim().optional().default(""),
-    jamKeluar: z.string().trim().optional().default(""),
+    jamMasuk: z.string({ error: "Jam masuk tidak valid." }).trim().optional().default(""),
+    jamKeluar: z.string({ error: "Jam keluar tidak valid." }).trim().optional().default(""),
   })
   .superRefine((d, ctx) => {
     if (d.absensi !== "HADIR") return;
@@ -25,18 +25,18 @@ export const skemaPresensi = z
     }
   });
 
-export const skemaIdPresensi = z.object({ id: z.coerce.number().int().positive("Presensi tidak valid.") });
+export const skemaIdPresensi = z.object({ id: z.coerce.number({ error: "Presensi tidak valid." }).int("Presensi tidak valid.").positive("Presensi tidak valid.") });
 
-export const skemaPeriode = z.object({ periode: z.string().regex(POLA_PERIODE, "Periode tidak valid.") });
+export const skemaPeriode = z.object({ periode: z.string({ error: "Periode tidak valid." }).regex(POLA_PERIODE, "Periode tidak valid.") });
 
 export const skemaHitungSatu = z.object({
-  periode: z.string().regex(POLA_PERIODE, "Periode tidak valid."),
-  karyawanKode: z.string().trim().min(1, "Karyawan tidak valid."),
+  periode: z.string({ error: "Periode tidak valid." }).regex(POLA_PERIODE, "Periode tidak valid."),
+  karyawanKode: z.string({ error: "Karyawan tidak valid." }).trim().min(1, "Karyawan tidak valid."),
 });
 
-export const skemaNoDokumen = z.object({ no: z.string().trim().min(1, "Nomor dokumen kosong.") });
+export const skemaNoDokumen = z.object({ no: z.string({ error: "Nomor dokumen kosong." }).trim().min(1, "Nomor dokumen kosong.") });
 
 export const skemaNoDanAlasan = z.object({
-  no: z.string().trim().min(1, "Nomor dokumen kosong."),
-  alasan: z.string().trim().min(1, "Tulis alasan penolakan.").max(500, "Alasan terlalu panjang (maksimal 500 huruf)."),
+  no: z.string({ error: "Nomor dokumen kosong." }).trim().min(1, "Nomor dokumen kosong."),
+  alasan: z.string({ error: "Tulis alasan penolakan." }).trim().min(1, "Tulis alasan penolakan.").max(500, "Alasan terlalu panjang (maksimal 500 huruf)."),
 });

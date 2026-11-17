@@ -13,7 +13,9 @@ import { nomorDokumen, AWALAN } from "@/lib/server/nomor";
 import { pastikanTerbuka } from "@/lib/server/periode";
 import { catatLog } from "@/lib/server/log";
 import { validasiBaris, type BarisJurnal } from "@/lib/inti/jurnal";
-import { periodeDari, keDate, dariDate } from "@/lib/inti/tanggal";
+import { periodeDari, keDate, dariDate, labelPeriode } from "@/lib/inti/tanggal";
+import { AKUN } from "@/lib/inti/akun";
+import { rupiah } from "@/lib/format";
 import type { JurnalBuku } from "@/lib/inti/buku-besar";
 import type { JenisJurnal, StatusPersetujuan, SumberJurnal } from "@/generated/prisma/enums";
 
@@ -83,12 +85,23 @@ export async function ajukanJurnal(tx: Tx, no: string, penggunaId: number) {
   await catatLog(tx, penggunaId, "jurnal.ajukan", "jurnal", no);
 }
 
-/** DIAJUKAN -> DISETUJUI. Pembuat tidak boleh menyetujui jurnalnya sendiri. Opname sumbernya ikut DISETUJUI. */
+/**
+ * DIAJUKAN -> DISETUJUI. Pembuat tidak boleh menyetujui jurnalnya sendiri. Opname sumbernya ikut DISETUJUI.
+ * Jurnal biaya perlengkapan (opname) ditolak bila membuat saldo akun Perlengkapan sampai periodenya minus.
+ */
 export async function setujuiJurnal(tx: Tx, no: string, penggunaId: number) {
   const j = await ambilJurnal(tx, no);
   if (j.status !== "DIAJUKAN") throw new GalatAksi(`${no} belum diajukan atau sudah diputuskan.`);
   if (j.dibuatOlehId === penggunaId) throw new GalatAksi("Pembuat tidak boleh menyetujui jurnalnya sendiri.");
   await pastikanTerbuka(tx, j.periodeId);
+  if (j.sumberTipe === "OPNAME") {
+    const kredit = await tx.detailJurnal.aggregate({ where: { jurnalNo: no, akunKode: AKUN.PERLENGKAPAN }, _sum: { kredit: true, debit: true } });
+    const keluar = (kredit._sum.kredit ?? 0) - (kredit._sum.debit ?? 0);
+    const saldo = await saldoAkun(tx, AKUN.PERLENGKAPAN, j.periodeId);
+    if (keluar > saldo) {
+      throw new GalatAksi(`Saldo Perlengkapan sampai ${labelPeriode(j.periodeId)} tinggal ${rupiah(saldo)}, kurang dari biaya ${rupiah(keluar)} di ${no}. Jurnal ini akan membuat saldo Perlengkapan minus, jadi tolak lalu minta Admin menginput ulang nilai sisanya.`);
+    }
+  }
   const sekarang = new Date();
   await tx.jurnal.update({ where: { no }, data: { status: "DISETUJUI", disetujuiOlehId: penggunaId, disetujuiPada: sekarang } });
   if (j.sumberTipe === "OPNAME") {
@@ -107,6 +120,8 @@ export async function tolakJurnal(tx: Tx, no: string, penggunaId: number, alasan
   if (!al) throw new GalatAksi("Tulis alasan penolakan.");
   const j = await ambilJurnal(tx, no);
   if (j.status !== "DIAJUKAN") throw new GalatAksi(`${no} belum diajukan atau sudah diputuskan.`);
+  // Penolakan membuka lagi dokumen sumbernya, jadi periode tertutup juga menolak keputusan ini.
+  await pastikanTerbuka(tx, j.periodeId);
   const sekarang = new Date();
   await tx.jurnal.update({ where: { no }, data: { status: "DITOLAK", alasanTolak: al, disetujuiOlehId: penggunaId, disetujuiPada: sekarang } });
   if (j.sumberTipe === "PENYUSUTAN") await tx.jadwalPenyusutan.updateMany({ where: { jurnalNo: no }, data: { jurnalNo: null } });

@@ -8,6 +8,13 @@ import FormMasuk from "./FormMasuk";
 
 export const metadata: Metadata = { title: "Masuk" };
 
+/**
+ * Petunjuk akun demo (sandi bawaan seed) hanya tampil bila TAMPILKAN_AKUN_DEMO=1, yaitu di lingkungan pengembangan
+ * dan uji E2E. Di server sungguhan sandinya sudah diganti, jadi petunjuk itu menyesatkan dan bisa membuat akun
+ * terkunci 10 menit sesudah 5 kali gagal.
+ */
+const tampilkanAkunDemo = () => process.env.TAMPILKAN_AKUN_DEMO === "1";
+
 export default async function HalamanMasuk({ searchParams }: { searchParams: Promise<{ kembali?: string }> }) {
   if (await penggunaSaatIni()) redirect("/");
   const { kembali } = await searchParams;
@@ -25,7 +32,7 @@ export default async function HalamanMasuk({ searchParams }: { searchParams: Pro
           </div>
           <FormMasuk kembali={kembali ?? "/"} />
         </div>
-        <p className="text-center text-[12px] text-merek-lembut/80">Akun demo: admin / admin123, hrd / hrd12345, owner / owner123</p>
+        {tampilkanAkunDemo() && <p className="text-center text-[12px] text-merek-lembut/80">Akun demo: admin / admin123, hrd / hrd12345, owner / owner123</p>}
       </div>
     </div>
   );

@@ -166,6 +166,25 @@ test("1c. Owner: menu Pengguna ada, posting ada, ubah dan hapus draf tidak ada",
   await expect(p.getByRole("heading", { name: "Pengguna", level: 1 })).toBeVisible();
 });
 
+test("1d. Halaman masuk: petunjuk akun demo tampil karena server uji memasang TAMPILKAN_AKUN_DEMO=1", async ({ browser }) => {
+  const ctx = await browser.newContext({ baseURL: BASE, locale: "id-ID", timezoneId: "Asia/Jakarta" });
+  const p = await ctx.newPage();
+  await p.goto("/masuk");
+  await expect(p.getByText(/Akun demo: admin \/ admin123/)).toBeVisible();
+  await ctx.close();
+});
+
+test("1e. Dashboard HRD: tautan cepat SDM membawa periode yang sedang dipilih", async () => {
+  const p = sesi.hrd.page;
+  await bukaHalaman(p, "/?periode=2026-10");
+  const cepat = kartu(p, "Tautan cepat");
+  await expect(cepat.getByRole("link", { name: "Presensi", exact: true })).toHaveAttribute("href", "/sdm/presensi?periode=2026-10");
+  await expect(cepat.getByRole("link", { name: "Hitung gaji", exact: true })).toHaveAttribute("href", "/sdm/hitung-gaji?periode=2026-10");
+  await cepat.getByRole("link", { name: "Distribusi gaji", exact: true }).click();
+  await p.waitForURL(/\/sdm\/distribusi\?periode=2026-10/);
+  await expect(p.locator("#pilih-periode")).toHaveValue("2026-10");
+});
+
 /* ------------------------------------------------------------------ 2. Admin: pembelian */
 
 let noBeliA = "";
@@ -415,6 +434,10 @@ test("6a. Jurnal umum, buku besar kas, dan neraca saldo November", async () => {
 test("6b. Tutup Oktober lulus, transaksi di Oktober ditolak, buka kembali dengan alasan", async () => {
   const po = sesi.owner.page;
   await bukaHalaman(po, "/pelaporan/tutup-periode");
+  // Kunci berurutan: November baru bisa dikunci sesudah Oktober.
+  const nov = po.locator(".kartu", { has: po.getByRole("heading", { name: "November 2026" }) });
+  await expect(nov.getByText("Kunci Oktober 2026 dulu")).toBeVisible();
+  await expect(nov.getByRole("button", { name: "Kunci periode" })).toHaveCount(0);
   const okt = po.locator(".kartu", { has: po.getByRole("heading", { name: "Oktober 2026" }) });
   await expect(okt.getByText("Belum:", { exact: false })).toHaveCount(0);
   await okt.getByRole("button", { name: "Kunci periode" }).click();

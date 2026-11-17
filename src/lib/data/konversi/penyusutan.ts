@@ -31,7 +31,8 @@ export async function dataPenyusutan(periode: string) {
       orderBy: [{ periodeId: "desc" }, { no: "desc" }],
       select: { no: true, periodeId: true, status: true, alasanTolak: true, detail: { select: { debit: true } }, _count: { select: { jadwalPenyusutan: true } } },
     }),
-    db.periode.findUnique({ where: { id: periode }, select: { status: true } }),
+    // Tertutup bila periode ini atau periode sesudahnya terkunci (kunci berurutan).
+    db.periode.findFirst({ where: { id: { gte: periode }, status: "TERKUNCI" }, orderBy: { id: "asc" }, select: { id: true } }),
   ]);
   const baris = jadwal.map((r) => ({
     asetKode: r.asetKode,
@@ -51,7 +52,8 @@ export async function dataPenyusutan(periode: string) {
     totalBelum: belum.reduce((s, r) => s + r.beban, 0),
     jurnalBaris: barisPenyusutan(belum.map((r) => ({ akunBeban: r.aset.akunBebanKode, akunAkumulasi: r.aset.akunAkumulasiKode, beban: r.beban }))),
     periodeSebelumnyaBelum: sebelumnya.map((x) => x.periodeId),
-    terkunci: terkunci?.status === "TERKUNCI",
+    terkunci: !!terkunci,
+    penutup: terkunci?.id ?? null,
     riwayat: riwayat.map((j) => ({ no: j.no, periode: j.periodeId, status: j.status, alasanTolak: j.alasanTolak, total: j.detail.reduce((s, d) => s + d.debit, 0), jumlahAset: j._count.jadwalPenyusutan })),
   };
 }

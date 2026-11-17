@@ -7,7 +7,7 @@ import { wajibMasuk } from "@/lib/server/auth";
 import { dataDashboard } from "@/lib/data/pelaporan/dashboard";
 import { semuaPeriode } from "@/lib/data/pelaporan/periode";
 import { labelPeriode, labelTanggal, periodeIni } from "@/lib/inti/tanggal";
-import { LABEL_JENIS_JURNAL } from "@/lib/format";
+import { LABEL_JENIS_JURNAL, rupiah } from "@/lib/format";
 import { LABEL_PERAN, type Peran } from "@/lib/peran";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import KartuRingkasan from "@/komponen/ui/KartuRingkasan";
@@ -19,32 +19,46 @@ import FilterUrl from "@/komponen/pelaporan/FilterUrl";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
-const TAUTAN: Record<Peran, { href: string; label: string; ikon: React.ReactNode }[]> = {
+/** `berperiode`: halaman tujuan membaca ?periode, jadi tautannya membawa periode yang sedang dipilih di dashboard. */
+type Tautan = { href: string; label: string; ikon: React.ReactNode; berperiode?: boolean };
+
+const TAUTAN: Record<Peran, Tautan[]> = {
   ADMIN: [
     { href: "/konversi/pembelian-peralatan", label: "Pembelian peralatan", ikon: <Wrench className="size-4" /> },
     { href: "/konversi/pembelian-perlengkapan", label: "Pembelian perlengkapan", ikon: <Package className="size-4" /> },
-    { href: "/konversi/penyusutan", label: "Proses penyusutan", ikon: <TrendingDown className="size-4" /> },
+    { href: "/konversi/penyusutan", label: "Proses penyusutan", ikon: <TrendingDown className="size-4" />, berperiode: true },
     { href: "/pelaporan/jurnal-penyesuaian", label: "Jurnal penyesuaian", ikon: <FileText className="size-4" /> },
   ],
   HRD: [
-    { href: "/sdm/presensi", label: "Presensi", ikon: <CalendarClock className="size-4" /> },
-    { href: "/sdm/hitung-gaji", label: "Hitung gaji", ikon: <Coins className="size-4" /> },
-    { href: "/sdm/distribusi", label: "Distribusi gaji", ikon: <ReceiptText className="size-4" /> },
+    { href: "/sdm/presensi", label: "Presensi", ikon: <CalendarClock className="size-4" />, berperiode: true },
+    { href: "/sdm/hitung-gaji", label: "Hitung gaji", ikon: <Coins className="size-4" />, berperiode: true },
+    { href: "/sdm/distribusi", label: "Distribusi gaji", ikon: <ReceiptText className="size-4" />, berperiode: true },
     { href: "/master/sdm", label: "Master SDM", ikon: <Users className="size-4" /> },
   ],
   OWNER: [
     { href: "/pelaporan/jurnal-penyesuaian?status=DIAJUKAN", label: "Setujui jurnal", ikon: <BadgeCheck className="size-4" /> },
-    { href: "/sdm/distribusi", label: "Setujui penggajian", ikon: <ReceiptText className="size-4" /> },
+    { href: "/sdm/distribusi", label: "Setujui penggajian", ikon: <ReceiptText className="size-4" />, berperiode: true },
     { href: "/pelaporan/tutup-periode", label: "Tutup periode", ikon: <Lock className="size-4" /> },
     { href: "/pengguna", label: "Kelola pengguna", ikon: <UserCog className="size-4" /> },
   ],
 };
 
-const TAUTAN_LAPORAN = [
-  { href: "/pelaporan/jurnal-umum", label: "Jurnal umum", ikon: <BookOpen className="size-4" /> },
-  { href: "/pelaporan/buku-besar", label: "Buku besar", ikon: <ClipboardCheck className="size-4" /> },
-  { href: "/pelaporan/neraca-saldo", label: "Neraca saldo", ikon: <Scale className="size-4" /> },
+const TAUTAN_LAPORAN: Tautan[] = [
+  { href: "/pelaporan/jurnal-umum", label: "Jurnal umum", ikon: <BookOpen className="size-4" />, berperiode: true },
+  { href: "/pelaporan/buku-besar", label: "Buku besar", ikon: <ClipboardCheck className="size-4" />, berperiode: true },
+  { href: "/pelaporan/neraca-saldo", label: "Neraca saldo", ikon: <Scale className="size-4" />, berperiode: true },
 ];
+
+const denganPeriode = (href: string, periode: string) => `${href}${href.includes("?") ? "&" : "?"}periode=${periode}`;
+
+/** Keterangan kartu penyusutan: angka disetujui berasal dari jurnal penyusutan yang disetujui. */
+function ketPenyusutan(s: { jadwal: number; disetujui: number; unit: number }) {
+  const sisa = Math.max(s.jadwal - s.disetujui, 0);
+  if (!s.unit && !s.disetujui) return "Tidak ada jadwal di periode ini";
+  if (s.disetujui && !sisa) return "Dari jurnal penyusutan yang disetujui";
+  if (s.disetujui) return `Dari jurnal yang disetujui; ${rupiah(sisa)} lagi belum disetujui`;
+  return `Jadwal ${s.unit} unit, belum dijurnal atau belum disetujui`;
+}
 
 export default async function Dashboard({ searchParams }: { searchParams: Promise<{ periode?: string }> }) {
   const pengguna = await wajibMasuk();
@@ -69,9 +83,9 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         <KartuRingkasan judul="Total aset bersih" nilai={d.totalAset} ikon={<IdCard className="size-4" />} keterangan="Aset dikurangi akumulasi penyusutan" />
         <KartuRingkasan
           judul={`Beban penyusutan ${labelPeriode(periode)}`}
-          nilai={d.susut.jadwal}
+          nilai={d.susut.disetujui || d.susut.jadwal}
           ikon={<TrendingDown className="size-4" />}
-          keterangan={d.susut.unit ? (d.susut.dijurnal >= d.susut.jadwal && d.susut.jadwal > 0 ? "Sudah dijurnal dan disetujui" : `Jadwal ${d.susut.unit} unit, ${d.susut.dijurnal ? "sebagian" : "belum"} dijurnal`) : "Tidak ada jadwal di periode ini"}
+          keterangan={ketPenyusutan(d.susut)}
         />
         <KartuRingkasan judul={`Beban gaji ${labelPeriode(periode)}`} nilai={d.bebanGaji} ikon={<Coins className="size-4" />} keterangan={d.bebanGaji ? "Dari jurnal penggajian yang disetujui" : "Belum ada penggajian disetujui"} />
         <KartuRingkasan
@@ -115,7 +129,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           <p className="mt-0.5 text-xs text-slate-500">Menu yang sering dipakai {LABEL_PERAN[pengguna.peran]}.</p>
           <div className="mt-3 grid gap-2">
             {[...TAUTAN[pengguna.peran], ...TAUTAN_LAPORAN].map((t) => (
-              <Link key={t.href} href={t.href} className="flex items-center gap-2.5 rounded-lg border border-slate-200 px-3 py-2 text-[13px] font-medium text-slate-700 transition-colors hover:border-aksen hover:bg-aksen-lembut hover:text-aksen-gelap">
+              <Link key={t.href} href={t.berperiode ? denganPeriode(t.href, periode) : t.href} className="flex items-center gap-2.5 rounded-lg border border-slate-200 px-3 py-2 text-[13px] font-medium text-slate-700 transition-colors hover:border-aksen hover:bg-aksen-lembut hover:text-aksen-gelap">
                 <span className="text-slate-500">{t.ikon}</span>
                 {t.label}
               </Link>

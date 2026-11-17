@@ -6,7 +6,7 @@ import { wajibMasuk } from "@/lib/server/auth";
 import { boleh } from "@/lib/peran";
 import { petaAkun, periodeTerkunciSemua } from "@/lib/data/umum";
 import { dataNilaiSisa, periodeNilaiSisa } from "@/lib/data/konversi/nilai-sisa";
-import { labelPeriode } from "@/lib/inti/tanggal";
+import { kunciPenutup, labelPeriode } from "@/lib/inti/tanggal";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
 import KartuRingkasan from "@/komponen/ui/KartuRingkasan";
@@ -30,7 +30,9 @@ export default async function HalamanNilaiSisa({ cari }: { cari: { periode?: str
   const bolehAjukan = boleh(pengguna.peran, "jurnal-penyesuaian.ajukan");
   const o = d.opname && d.opname.status !== "DITOLAK" ? d.opname : null;
   const ditolak = d.opname?.status === "DITOLAK" ? d.opname : null;
-  const periodeTerkunci = terkunci.includes(periode);
+  // Tertutup bila periode ini atau periode sesudahnya sudah dikunci (kunci berurutan).
+  const penutup = kunciPenutup(periode, terkunci);
+  const periodeTerkunci = penutup !== null;
   const totalSaldo = d.baris.reduce((s, b) => s + b.saldoBuku, 0);
 
   return (
@@ -53,7 +55,11 @@ export default async function HalamanNilaiSisa({ cari }: { cari: { periode?: str
         />
       </div>
 
-      {periodeTerkunci && <Peringatan jenis="awas">Periode {labelPeriode(periode)} sudah dikunci, jadi nilai sisanya tidak bisa diinput. Minta Owner membuka kunci dulu.</Peringatan>}
+      {penutup && (
+        <Peringatan jenis="awas">
+          {penutup === periode ? `Periode ${labelPeriode(periode)} sudah dikunci` : `Periode ${labelPeriode(periode)} tertutup karena ${labelPeriode(penutup)} sudah dikunci`}, jadi nilai sisanya tidak bisa diinput. Minta Owner membuka kunci dulu.
+        </Peringatan>
+      )}
       {ditolak && <Peringatan jenis="galat">Input sebelumnya ditolak{ditolak.alasanTolak ? `: ${ditolak.alasanTolak}` : ""}. Silakan input ulang.</Peringatan>}
 
       {o ? (
@@ -100,7 +106,9 @@ export default async function HalamanNilaiSisa({ cari }: { cari: { periode?: str
         </Kartu>
       ) : d.baris.length === 0 ? (
         <Kartu><KeadaanKosong judul={`Tidak ada saldo perlengkapan sampai ${labelPeriode(periode)}`} keterangan="Posting pembelian perlengkapan dulu, lalu saldonya muncul di sini." /></Kartu>
-      ) : periodeTerkunci ? null : (
+      ) : periodeTerkunci ? null : d.tahanUrutan ? (
+        <Peringatan jenis="awas">{d.tahanUrutan}</Peringatan>
+      ) : (
         <FormNilaiSisa key={periode} periode={periode} baris={d.baris} bolehInput={bolehInput} namaAkun={namaAkun} />
       )}
 

@@ -2,7 +2,7 @@
  * Skema validasi pembelian (zod). Dipakai server action dan boleh dipakai form klien untuk validasi awal.
  * Aturan sama dengan validasiBeli() di versi-statis/assets/js/views/pembelian.js.
  */
-import { z } from "zod";
+import { z } from "./zod";
 import { POLA_TANGGAL, periodeDari } from "@/lib/inti/tanggal";
 import { hitungJadwal, nDariDasar } from "@/lib/inti/penyusutan";
 
@@ -12,29 +12,29 @@ export const RUPIAH_MAKS = 2_000_000_000;
 const bulat = (pesan: string) => z.coerce.number({ error: pesan }).int(pesan);
 
 export const skemaBarisPembelian = z.object({
-  barangKode: z.string().trim().min(1, "Pilih barang."),
+  barangKode: z.string({ error: "Pilih barang." }).trim().min(1, "Pilih barang."),
   qty: bulat("Jumlah harus bilangan bulat.").min(1, "Jumlah minimal 1."),
   harga: bulat("Harga harus bilangan bulat.").min(1, "Harga harus lebih dari 0.").max(RUPIAH_MAKS, "Harga terlalu besar."),
   // Kolom berikut hanya untuk peralatan
   residu: bulat("Residu harus bilangan bulat.").min(0, "Residu tidak boleh negatif.").default(0),
-  garansiBulan: bulat("Garansi harus bilangan bulat.").min(0).max(600).default(0),
-  masaManfaatBulan: bulat("Masa manfaat harus bilangan bulat.").min(0).max(600).default(0),
-  dasarN: z.enum(["GARANSI", "MASA_MANFAAT"]).default("GARANSI"),
+  garansiBulan: bulat("Garansi harus bilangan bulat.").min(0, "Garansi tidak boleh negatif.").max(600, "Garansi maksimal 600 bulan.").default(0),
+  masaManfaatBulan: bulat("Masa manfaat harus bilangan bulat.").min(0, "Masa manfaat tidak boleh negatif.").max(600, "Masa manfaat maksimal 600 bulan.").default(0),
+  dasarN: z.enum(["GARANSI", "MASA_MANFAAT"], { error: "Pilih dasar n (garansi atau masa manfaat)." }).default("GARANSI"),
 });
 
 export const skemaPembelian = z
   .object({
     /** Diisi saat mengubah draf. */
-    no: z.string().trim().optional().nullable(),
-    jenis: z.enum(["PERALATAN", "PERLENGKAPAN"]),
-    tanggal: z.string().regex(POLA_TANGGAL, "Isi tanggal pembelian."),
-    caraBayar: z.enum(["TUNAI", "KREDIT", "INVESTASI"]),
-    jatuhTempo: z.string().optional().default(""),
-    supplierKode: z.string().trim().optional().default(""),
-    keterangan: z.string().trim().max(200, "Keterangan maksimal 200 karakter.").default(""),
-    baris: z.array(skemaBarisPembelian).min(1, "Isi minimal satu baris barang.").max(50, "Maksimal 50 baris."),
+    no: z.string({ error: "Nomor pembelian tidak valid." }).trim().optional().nullable(),
+    jenis: z.enum(["PERALATAN", "PERLENGKAPAN"], { error: "Jenis pembelian tidak valid." }),
+    tanggal: z.string({ error: "Isi tanggal pembelian." }).regex(POLA_TANGGAL, "Isi tanggal pembelian."),
+    caraBayar: z.enum(["TUNAI", "KREDIT", "INVESTASI"], { error: "Pilih cara bayar." }),
+    jatuhTempo: z.string({ error: "Isi jatuh tempo utang." }).optional().default(""),
+    supplierKode: z.string({ error: "Pilih supplier." }).trim().optional().default(""),
+    keterangan: z.string({ error: "Keterangan tidak valid." }).trim().max(200, "Keterangan maksimal 200 karakter.").default(""),
+    baris: z.array(skemaBarisPembelian, { error: "Isi minimal satu baris barang." }).min(1, "Isi minimal satu baris barang.").max(50, "Maksimal 50 baris."),
     /** true = simpan lalu langsung posting. */
-    posting: z.boolean().default(false),
+    posting: z.boolean({ error: "Pilihan posting tidak valid." }).default(false),
   })
   .superRefine((d, ctx) => {
     if (d.caraBayar !== "INVESTASI" && !d.supplierKode) {
@@ -66,5 +66,5 @@ export const skemaPembelian = z
 
 export type InputPembelian = z.input<typeof skemaPembelian>;
 
-export const skemaNoDokumen = z.object({ no: z.string().trim().min(1, "Nomor dokumen kosong.") });
-export const skemaNoDanAlasan = skemaNoDokumen.extend({ alasan: z.string().trim().min(1, "Tulis alasannya.").max(300, "Alasan maksimal 300 karakter.") });
+export const skemaNoDokumen = z.object({ no: z.string({ error: "Nomor dokumen kosong." }).trim().min(1, "Nomor dokumen kosong.") });
+export const skemaNoDanAlasan = skemaNoDokumen.extend({ alasan: z.string({ error: "Tulis alasannya." }).trim().min(1, "Tulis alasannya.").max(300, "Alasan maksimal 300 karakter.") });

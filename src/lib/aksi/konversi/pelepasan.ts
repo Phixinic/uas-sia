@@ -12,11 +12,11 @@ import { aksiAman, GalatAksi, segarkan, validasi, type HasilAksi } from "@/lib/s
 import { wajibPeran } from "@/lib/server/auth";
 import { IZIN } from "@/lib/peran";
 import { AWALAN, nomorDokumen } from "@/lib/server/nomor";
-import { periodeTerkunci } from "@/lib/server/periode";
+import { pastikanTerbuka } from "@/lib/server/periode";
 import { buatJurnal } from "@/lib/server/jurnal";
 import { catatLog } from "@/lib/server/log";
 import { barisPelepasan, hitungPelepasan } from "@/lib/inti/jurnal";
-import { dariDate, keDate, labelPeriode, periodeDari } from "@/lib/inti/tanggal";
+import { dariDate, keDate, periodeDari } from "@/lib/inti/tanggal";
 import { LABEL_ALASAN_PELEPASAN } from "@/lib/format";
 import { skemaAjukanPelepasan, skemaNoPelepasan } from "@/lib/skema/konversi";
 import { skemaNoDanAlasan } from "@/lib/skema/pembelian";
@@ -40,7 +40,7 @@ export async function ajukanPelepasan(input: unknown): Promise<HasilAksi<{ no: s
       const { a, jadwal, akumulasi } = await posisiAset(tx, d.asetKode);
       if (a.status !== "AKTIF") throw new GalatAksi("Aset ini tidak aktif.", { asetKode: "Aset ini tidak aktif." });
       if (d.tanggal < dariDate(a.tglPerolehan)) throw new GalatAksi("Tanggal pelepasan tidak boleh sebelum tanggal perolehan.", { tanggal: "Tidak boleh sebelum tanggal perolehan." });
-      if (await periodeTerkunci(tx, periodeDari(d.tanggal))) throw new GalatAksi(`Periode ${labelPeriode(periodeDari(d.tanggal))} sudah dikunci.`, { tanggal: "Periode terkunci." });
+      await pastikanTerbuka(tx, periodeDari(d.tanggal), { tanggal: "Periode tanggal ini sudah dikunci." });
       if (await tx.pelepasan.count({ where: { asetKode: a.kode, status: "DIAJUKAN" } })) throw new GalatAksi("Aset ini sudah punya pengajuan yang menunggu keputusan.");
       const tahanAjukan = cekJadwalPelepasan(jadwal, d.tanggal);
       if (tahanAjukan) throw new GalatAksi(tahanAjukan, { tanggal: tahanAjukan });

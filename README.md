@@ -41,6 +41,8 @@ Akun demo (dibuat oleh seed, khusus pengembangan):
 
 `npm run db:seed` menolak berjalan kalau database sudah berisi data. Untuk mengisi ulang dari awal: `SEED_PAKSA=1 npm run db:seed` (semua data dihapus).
 
+Halaman masuk hanya menampilkan petunjuk akun demo bila `TAMPILKAN_AKUN_DEMO=1` (sudah ada di `.env.example` dan di server uji E2E). Jangan pasang flag ini di server sungguhan, karena sandinya sudah diganti dan lima kali gagal masuk mengunci akun selama 10 menit.
+
 ## Perintah lain
 
 | Perintah | Fungsi |
@@ -74,6 +76,12 @@ Gaya cetak (laporan dan slip gaji) ada di `src/app/globals.css`. Rincian konvens
 | Owner | Menyetujui atau menolak jurnal, pelepasan, dan penggajian; membalik pembelian; bagan akun; kunci periode; kelola pengguna |
 
 Rincian per aksi ada di `src/lib/peran.ts` dan `docs/KONTRAK.md`.
+
+## Aturan urutan
+
+- **Tutup periode berurutan.** Periode hanya bisa dikunci bila semua periode sebelumnya sudah terkunci, dan hanya bisa dibuka bila tidak ada periode sesudahnya yang terkunci. Periode juga dianggap tertutup bila ada periode sesudahnya yang terkunci, jadi pembelian, penyusutan, nilai sisa, pelepasan, gaji, dan keputusan jurnal bertanggal di bulan itu ditolak (`pastikanTerbuka` di `src/lib/server/periode.ts`).
+- **Nilai sisa perlengkapan berurutan per bulan.** Nilai sisa bulan M hanya bisa diinput bila nilai sisa bulan sebelumnya sudah disetujui (bulan tanpa saldo perlengkapan dilewati), dan tidak bisa diinput atau diubah lagi bila bulan sesudah M sudah punya nilai sisa. Biaya juga ditolak bila membuat saldo akun Perlengkapan minus, baik saat input maupun saat jurnalnya disetujui.
+- **Periode bawaan.** Halaman SDM dan dashboard sama-sama memakai periode berjalan bila `?periode` kosong. Tautan dari dashboard membawa `?periode` yang sedang dipilih.
 
 ## Rumus penting
 

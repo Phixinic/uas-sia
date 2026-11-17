@@ -72,7 +72,7 @@ Sumber kebenaran: `IZIN` di `src/lib/peran.ts`. Semua peran boleh **membuka** se
 | `penggajian.putuskan` | Owner | setujui (jurnal + bayar) atau tolak |
 | `jurnal-penyesuaian.ajukan` | Admin | ajukan jurnal penyesuaian draf |
 | `jurnal-penyesuaian.putuskan` | Owner | setujui atau tolak; pembuat tidak boleh menyetujui jurnalnya sendiri |
-| `periode.kunci` | Owner | tutup periode (mengunci periode, tanpa jurnal penutup) dan buka kunci periode (alasan wajib saat buka) |
+| `periode.kunci` | Owner | tutup periode (mengunci periode, tanpa jurnal penutup) dan buka kunci periode (alasan wajib saat buka); berurutan: kunci dari periode paling lama, buka dari periode terkunci paling akhir |
 | `master-konversi.ubah` | Admin, Owner | tambah/ubah supplier, peralatan, perlengkapan |
 | `master-konversi.tambah-cepat` | Admin | tambah supplier/barang langsung dari form pembelian (extend) |
 | `master-sdm.ubah` | HRD, Owner | tambah/ubah master SDM |
@@ -97,7 +97,7 @@ Enum `StatusPersetujuan` (DRAFT, DIAJUKAN, DISETUJUI, DITOLAK) dipakai jurnal, p
 
 Efek penolakan jurnal penyesuaian ke sumbernya sudah ditulis di `src/lib/server/jurnal.ts` (`ajukanJurnal`, `setujuiJurnal`, `tolakJurnal`). Agen pelaporan cukup memanggilnya dari server action.
 
-Hanya jurnal DISETUJUI yang masuk buku besar dan neraca saldo. Periode TERKUNCI menolak jurnal baru bertanggal di dalamnya (`buatJurnal` sudah memeriksa).
+Hanya jurnal DISETUJUI yang masuk buku besar dan neraca saldo. Periode dikunci berurutan: periode P hanya boleh dikunci bila semua periode sebelum P sudah terkunci, dan hanya boleh dibuka bila tidak ada periode sesudah P yang terkunci. Periode P tertutup bila P sendiri atau periode sesudahnya terkunci; periode tertutup menolak jurnal dan dokumen baru bertanggal di dalamnya, juga persetujuan dan penolakan jurnal penyesuaiannya (`buatJurnal`, `ajukanJurnal`, `setujuiJurnal`, `tolakJurnal` sudah memeriksa).
 
 ## 5. Konvensi server action
 
@@ -125,7 +125,7 @@ Aturan:
 - Input berupa objek biasa (bukan FormData), divalidasi zod. Skema ditaruh di `src/lib/skema/` supaya bisa dipakai form klien.
 - Galat untuk pengguna dilempar sebagai `GalatAksi` (boleh dengan peta `galatIsian`, kunci = path zod seperti `baris.0.harga`). Galat lain disembunyikan dan dicatat di log server.
 - Perubahan status selalu lewat `updateMany` bersyarat status lama, lalu periksa `count`, supaya dua klik bersamaan tidak sama-sama lolos.
-- Cek periode terkunci memakai `pastikanTerbuka(tx, periode)` (otomatis di `buatJurnal`). Baris periode baru dibuat dengan `pastikanPeriode`.
+- Cek periode tertutup memakai `pastikanTerbuka(tx, periode)` (otomatis di `buatJurnal`), selalu di dalam transaksi: fungsi ini memegang kunci advisory bersama sampai commit, sedangkan aksi kunci/buka periode memegang kunci eksklusif, jadi periode tidak bisa dikunci di tengah posting. Jangan memeriksa status baris periode sendiri. Baris periode baru dibuat dengan `pastikanPeriode`.
 - Setiap aksi yang mengubah data mencatat `catatLog`.
 - Nilai rupiah selalu bilangan bulat. Hitungan memakai fungsi di `src/lib/inti`, jangan menulis ulang rumus di komponen.
 - Tanggal di database kolom `@db.Date`: tulis dengan `keDate("2026-10-05")`, baca dengan `dariDate(d)`. Periode selalu string `"YYYY-MM"`. Hari ini: `hariIni()` (zona Asia/Jakarta).
@@ -164,6 +164,7 @@ Setiap agen hanya menulis di folder miliknya. Berkas bersama (`prisma/`, `src/li
 - Folder: `src/app/(aplikasi)/konversi/**`, `src/lib/aksi/konversi/**`, `src/lib/data/konversi/**`, `src/lib/skema/` (berkas baru untuk konversi), `src/komponen/konversi/**`, `tests/konversi-*.test.ts`.
 - Kerjakan: nilai sisa (opname, jurnal penyesuaian draf, rumus saldo buku perlengkapan dari pembelian DISETUJUI dikurangi opname tidak ditolak di periode sebelumnya), proses penyusutan (urutan periode, satu jurnal per periode berkelompok akun, isi `jurnalNo` di jadwal), kartu aset (rumus dengan angka asli, akumulasi dari jadwal yang jurnalnya DISETUJUI), pelepasan (ajukan, setujui, tolak), tambah cepat master dari form pembelian.
 - Opname unik per periode (`periode 1:0..1 opname`): input ulang sesudah ditolak memperbarui baris `OPN-YYYY-MM` yang sama (ganti detail, jurnal draf baru, status DRAFT), jurnal lama yang ditolak tetap ada.
+- Opname berurutan per bulan (`tahanUrutanNilaiSisa` di `src/lib/data/konversi/hitung.ts`): bulan sebelumnya harus DISETUJUI atau tidak bersaldo, dan bulan M tidak bisa diinput atau diubah bila bulan sesudah M sudah punya opname yang tidak ditolak (biaya akan terhitung dua kali). Biaya yang membuat saldo akun Perlengkapan minus ditolak saat input dan saat jurnalnya disetujui.
 - Acuan lama: `nilai-sisa.js`, `penyusutan.js`, `aset.js`, `pelepasan.js`, `ledger.js` (`saldoBukuLkp`).
 
 **Agen SDM**
@@ -189,3 +190,8 @@ Selesai mengerjakan: `npm run cek-tipe`, `npm run lint`, `npm run uji`, dan `npm
 - Penggajian yang ditolak tidak lagi punya slip (slip dikembalikan ke DRAFT supaya bisa diajukan ulang). Jumlah dan total slip tetap tersimpan di header penggajian sebagai jejak.
 - Nilai rupiah kolom `Int` (maksimal Rp2.147.483.647 per nilai). Skema zod membatasi harga dan total pembelian Rp2 miliar.
 - `dibuat_oleh`, `disetujui_oleh`, `dikunci_oleh` sekarang kunci asing ke `pengguna`, bukan teks peran.
+- Kunci periode berurutan (audit putaran kedua): tanpa aturan ini November bisa dikunci saat Oktober masih terbuka, lalu pembelian bertanggal 30 Oktober ikut mengubah saldo November. Halaman Tutup Periode hanya menampilkan tombol kunci atau buka yang sesuai urutan.
+- Skema zod mengimpor `z` dari `src/lib/skema/zod.ts`, bukan dari `"zod"`, supaya pesan bawaan (isian tidak terkirim, tipe salah) berbahasa Indonesia di server maupun form klien. Pesan per isian tetap ditulis di skemanya.
+- Petunjuk akun demo di halaman masuk hanya tampil bila `TAMPILKAN_AKUN_DEMO=1` (`.env.example` dan server uji E2E), tidak di docker-compose maupun VPS.
+- Periode bawaan halaman SDM = periode berjalan, sama dengan dashboard. Tautan cepat dashboard ke halaman berperiode membawa `?periode` yang sedang dipilih; tautan "Perlu tindakan" SDM membawa periode pekerjaan yang tertunda.
+- Kartu penyusutan di dashboard mengambil angka disetujui dari jurnal penyusutan yang disetujui, jadi aset yang dilepas sesudah penyusutannya disetujui tetap terhitung.

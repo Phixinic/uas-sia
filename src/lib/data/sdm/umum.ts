@@ -5,10 +5,13 @@
 import { db } from "@/lib/server/db";
 import { POLA_PERIODE, periodeIni, tambahBulan } from "@/lib/inti/tanggal";
 
-/** Periode dari query string; bawaannya bulan sebelum bulan ini (gaji dibayar sesudah bulannya berakhir). */
+/**
+ * Periode dari query string; bawaannya periode berjalan, sama dengan dashboard dan halaman lain.
+ * Bulan lalu tetap ada di pilihan (lihat opsiPeriodeSdm), dan tautan dashboard membawa ?periode yang sedang dipilih.
+ */
 export function periodeDipilih(param?: string): string {
   if (param && POLA_PERIODE.test(param)) return param;
-  return tambahBulan(periodeIni(), -1);
+  return periodeIni();
 }
 
 /** Periode yang layak dipilih: bulan ini, bulan lalu, serta semua periode yang punya presensi, slip, atau penggajian. */

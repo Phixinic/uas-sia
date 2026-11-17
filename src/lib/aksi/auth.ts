@@ -5,7 +5,7 @@
  * (5 kali dalam 10 menit, disimpan di memori proses, cukup untuk satu server kecil).
  */
 import { redirect } from "next/navigation";
-import { z } from "zod";
+import { z } from "@/lib/skema/zod";
 import { db } from "@/lib/server/db";
 import { buatSesi, hapusSesi, penggunaSaatIni } from "@/lib/server/auth";
 import { cocokKataSandi, HASH_TIRUAN } from "@/lib/server/kata-sandi";
@@ -15,9 +15,9 @@ import { tujuanAman } from "@/lib/inti/tujuan";
 export type StatusMasuk = { galat: string | null };
 
 const skemaMasuk = z.object({
-  namaPengguna: z.string().trim().toLowerCase().min(1, "Isi nama pengguna.").max(50),
-  kataSandi: z.string().min(1, "Isi kata sandi.").max(200),
-  kembali: z.string().optional(),
+  namaPengguna: z.string({ error: "Isi nama pengguna." }).trim().toLowerCase().min(1, "Isi nama pengguna.").max(50, "Nama pengguna terlalu panjang."),
+  kataSandi: z.string({ error: "Isi kata sandi." }).min(1, "Isi kata sandi.").max(200, "Kata sandi terlalu panjang."),
+  kembali: z.string({ error: "Alamat tujuan tidak valid." }).optional(),
 });
 
 const BATAS_GAGAL = 5;

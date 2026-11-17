@@ -4,13 +4,13 @@
  */
 import { db, type DbAtauTx } from "@/lib/server/db";
 import { dariDate, daftarPeriode, periodeDari, periodeIni } from "@/lib/inti/tanggal";
-import { saldoBukuPerlengkapan } from "./hitung";
+import { bulanNilaiSisaTerlewat, saldoBukuPerlengkapan, tahanUrutanNilaiSisa, type BebanOpname, type PembelianLkp } from "./hitung";
 
 export type BarisSaldoLkp = { kode: string; nama: string; satuan: string; saldoBuku: number };
 
-/** Perlengkapan yang masih punya saldo buku di periode P, urut kode. */
-export async function saldoBukuLkp(klien: DbAtauTx, periode: string): Promise<BarisSaldoLkp[]> {
-  const [barang, detail, opname] = await Promise.all([
+/** Bahan hitung saldo buku perlengkapan: pembelian DISETUJUI dan opname yang tidak ditolak. */
+async function muatBahanLkp(klien: DbAtauTx) {
+  const [barang, detail, opname, periodeOpname] = await Promise.all([
     klien.perlengkapan.findMany({ orderBy: { kode: "asc" }, select: { kode: true, nama: true, satuan: true } }),
     klien.detailPembelian.findMany({
       where: { perlengkapanKode: { not: null }, pembelian: { status: "DISETUJUI" } },
@@ -20,13 +20,29 @@ export async function saldoBukuLkp(klien: DbAtauTx, periode: string): Promise<Ba
       where: { opname: { status: { not: "DITOLAK" } } },
       select: { perlengkapanKode: true, saldoBuku: true, nilaiSisa: true, opname: { select: { periodeId: true } } },
     }),
+    klien.opname.findMany({ where: { status: { not: "DITOLAK" } }, select: { periodeId: true } }),
   ]);
-  const saldo = saldoBukuPerlengkapan(
-    detail.map((d) => ({ perlengkapanKode: d.perlengkapanKode!, periode: periodeDari(dariDate(d.pembelian.tanggal)), nilai: d.qty * d.harga })),
-    opname.map((o) => ({ perlengkapanKode: o.perlengkapanKode, periode: o.opname.periodeId, beban: o.saldoBuku - o.nilaiSisa })),
-    periode,
-  );
-  return barang.filter((b) => (saldo[b.kode] ?? 0) > 0).map((b) => ({ ...b, saldoBuku: saldo[b.kode] }));
+  const pembelian: PembelianLkp[] = detail.map((d) => ({ perlengkapanKode: d.perlengkapanKode!, periode: periodeDari(dariDate(d.pembelian.tanggal)), nilai: d.qty * d.harga }));
+  const beban: BebanOpname[] = opname.map((o) => ({ perlengkapanKode: o.perlengkapanKode, periode: o.opname.periodeId, beban: o.saldoBuku - o.nilaiSisa }));
+  return { barang, pembelian, beban, sudahAda: new Set(periodeOpname.map((o) => o.periodeId)) };
+}
+
+/** Perlengkapan yang masih punya saldo buku di periode P, urut kode. */
+export async function saldoBukuLkp(klien: DbAtauTx, periode: string): Promise<BarisSaldoLkp[]> {
+  return (await bahanNilaiSisa(klien, periode)).saldo;
+}
+
+/**
+ * Saldo buku periode P beserta bulan sebelum P yang nilai sisanya terlewat (masih bersaldo tetapi belum diinput).
+ * Dipakai server action supaya saldo yang divalidasi sama dengan yang ditampilkan.
+ */
+export async function bahanNilaiSisa(klien: DbAtauTx, periode: string): Promise<{ saldo: BarisSaldoLkp[]; terlewat: string | null }> {
+  const { barang, pembelian, beban, sudahAda } = await muatBahanLkp(klien);
+  const saldo = saldoBukuPerlengkapan(pembelian, beban, periode);
+  return {
+    saldo: barang.filter((b) => (saldo[b.kode] ?? 0) > 0).map((b) => ({ ...b, saldoBuku: saldo[b.kode] })),
+    terlewat: bulanNilaiSisaTerlewat(pembelian, beban, sudahAda, periode),
+  };
 }
 
 /** Periode pertama yang belum punya opname (tidak ditolak) sejak pembelian pertama; bila semua sudah, periode berjalan. */
@@ -42,8 +58,8 @@ export async function periodeNilaiSisa(dipilih?: string) {
 }
 
 export async function dataNilaiSisa(periode: string) {
-  const [baris, opname, riwayat] = await Promise.all([
-    saldoBukuLkp(db, periode),
+  const [bahan, opname, riwayat] = await Promise.all([
+    bahanNilaiSisa(db, periode),
     db.opname.findUnique({
       where: { periodeId: periode },
       include: {
@@ -55,7 +71,9 @@ export async function dataNilaiSisa(periode: string) {
     db.opname.findMany({ orderBy: { periodeId: "desc" }, include: { jurnal: { select: { no: true, status: true } } } }),
   ]);
   return {
-    baris,
+    baris: bahan.saldo,
+    /** Alasan form nilai sisa periode ini ditahan karena urutan bulan (sama dengan pemeriksaan server action). */
+    tahanUrutan: tahanUrutanNilaiSisa(periode, riwayat.filter((o) => o.periodeId !== periode && o.status !== "DITOLAK"), bahan.terlewat),
     opname: opname && {
       no: opname.no,
       status: opname.status,

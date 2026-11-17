@@ -2,10 +2,10 @@
  * Kueri periode akuntansi: daftar periode yang dikenal dan daftar periksa sebelum periode dikunci
  * (padanan cekPeriode() di versi-statis/assets/js/views/periode.js).
  */
-import { db } from "@/lib/server/db";
+import { db, type DbAtauTx } from "@/lib/server/db";
 import { muatJurnalBuku } from "@/lib/server/jurnal";
 import { neracaSaldo, type JurnalBuku } from "@/lib/inti/buku-besar";
-import { dariDate, hariTerakhir, keDate, periodeDari, periodeIni } from "@/lib/inti/tanggal";
+import { dariDate, hariTerakhir, keDate, labelPeriode, periodeDari, periodeIni } from "@/lib/inti/tanggal";
 
 /** Semua periode yang pernah dipakai (baris periode, jurnal, pembelian) ditambah periode berjalan, urut naik. */
 export async function semuaPeriode(): Promise<string[]> {
@@ -30,20 +30,23 @@ export async function periodeLaporanBawaan(): Promise<string> {
 
 export type ButirPeriksa = { label: string; lulus: boolean; catatan: string };
 
-/** Daftar periksa satu periode. `buku` = jurnal disetujui (dimuat sekali oleh pemanggil bila memeriksa banyak periode). */
-export async function cekPeriode(P: string, buku?: JurnalBuku[]): Promise<ButirPeriksa[]> {
+/**
+ * Daftar periksa satu periode. `buku` = jurnal disetujui (dimuat sekali oleh pemanggil bila memeriksa banyak periode).
+ * `klien` = transaksi aksi kunci periode, supaya pemeriksaan berjalan di dalam kunci eksklusifnya.
+ */
+export async function cekPeriode(P: string, buku?: JurnalBuku[], klien: DbAtauTx = db): Promise<ButirPeriksa[]> {
   const awal = keDate(`${P}-01`);
   const akhir = keDate(hariTerakhir(P));
   const [drafBeli, susutBelum, jurnalTunda, pelepasanTunda, perlengkapanPosting, opname, penggajianTunda, daftarAkun, bukuSemua] = await Promise.all([
-    db.pembelian.count({ where: { status: "DRAFT", tanggal: { gte: awal, lte: akhir } } }),
-    db.jadwalPenyusutan.count({ where: { aset: { status: "AKTIF" }, periodeId: { lte: P }, jurnalNo: null } }),
-    db.jurnal.count({ where: { periodeId: P, status: { in: ["DRAFT", "DIAJUKAN"] } } }),
-    db.pelepasan.count({ where: { status: "DIAJUKAN", tanggal: { gte: awal, lte: akhir } } }),
-    db.pembelian.count({ where: { jenis: "PERLENGKAPAN", status: "DISETUJUI", tanggal: { lte: akhir } } }),
-    db.opname.findUnique({ where: { periodeId: P }, select: { status: true } }),
-    db.penggajian.count({ where: { periodeId: P, status: "DIAJUKAN" } }),
-    db.akun.findMany({ select: { kode: true } }),
-    buku ? Promise.resolve(buku) : muatJurnalBuku(db, P),
+    klien.pembelian.count({ where: { status: "DRAFT", tanggal: { gte: awal, lte: akhir } } }),
+    klien.jadwalPenyusutan.count({ where: { aset: { status: "AKTIF" }, periodeId: { lte: P }, jurnalNo: null } }),
+    klien.jurnal.count({ where: { periodeId: P, status: { in: ["DRAFT", "DIAJUKAN"] } } }),
+    klien.pelepasan.count({ where: { status: "DIAJUKAN", tanggal: { gte: awal, lte: akhir } } }),
+    klien.pembelian.count({ where: { jenis: "PERLENGKAPAN", status: "DISETUJUI", tanggal: { lte: akhir } } }),
+    klien.opname.findUnique({ where: { periodeId: P }, select: { status: true } }),
+    klien.penggajian.count({ where: { periodeId: P, status: "DIAJUKAN" } }),
+    klien.akun.findMany({ select: { kode: true } }),
+    buku ? Promise.resolve(buku) : muatJurnalBuku(klien, P),
   ]);
   const ns = neracaSaldo(bukuSemua.filter((j) => j.periode <= P), daftarAkun.map((a) => a.kode), P);
   const perluOpname = perlengkapanPosting > 0;
@@ -66,11 +69,28 @@ export type DataPeriode = {
   dikunciPada: string | null;
   riwayat: { aksi: "KUNCI" | "BUKA"; oleh: string; waktu: string; alasan: string | null }[];
   periksa: ButirPeriksa[] | null;
+  /** Tombol kunci (periode terbuka) atau buka kunci (periode terkunci) boleh ditampilkan menurut urutan periode. */
+  urutanBoleh: boolean;
+  /** Alasan tombol ditahan karena urutan periode, misalnya "Kunci Oktober 2026 dulu." */
+  tahanUrutan: string | null;
+  /** Periode terbuka yang tertutup karena periode sesudahnya sudah dikunci (data lama sebelum aturan berurutan). */
+  tertutupOleh: string | null;
 };
 
-/** Periode terbaru lebih dulu. Daftar periksa hanya dihitung untuk periode yang masih terbuka. */
+/**
+ * Periode terbaru lebih dulu. Daftar periksa hanya dihitung untuk periode yang masih terbuka.
+ * Periode terbuka paling lama selalu ikut ditampilkan walau lebih lama dari `maks` periode terakhir,
+ * karena periode itulah yang harus dikunci berikutnya.
+ */
 export async function dataTutupPeriode(maks = 12): Promise<DataPeriode[]> {
-  const ids = (await semuaPeriode()).reverse().slice(0, maks);
+  const [semua, statusSemua] = await Promise.all([
+    semuaPeriode(),
+    db.periode.findMany({ select: { id: true, status: true }, orderBy: { id: "asc" } }),
+  ]);
+  const terkunci = statusSemua.filter((p) => p.status === "TERKUNCI").map((p) => p.id);
+  const terbukaPertama = statusSemua.find((p) => p.status === "TERBUKA" && p.id <= periodeIni())?.id;
+  const ids = semua.reverse().slice(0, maks);
+  if (terbukaPertama && !ids.includes(terbukaPertama)) ids.push(terbukaPertama);
   const [baris, buku] = await Promise.all([
     db.periode.findMany({
       where: { id: { in: ids } },
@@ -83,6 +103,16 @@ export async function dataTutupPeriode(maks = 12): Promise<DataPeriode[]> {
     ids.map(async (id) => {
       const p = peta.get(id);
       const status = p?.status ?? "TERBUKA";
+      let tahanUrutan: string | null = null;
+      let tertutupOleh: string | null = null;
+      if (status === "TERBUKA") {
+        const sebelum = statusSemua.find((x) => x.id < id && x.status === "TERBUKA");
+        if (sebelum) tahanUrutan = `Kunci ${labelPeriode(sebelum.id)} dulu`;
+        tertutupOleh = terkunci.find((x) => x > id) ?? null;
+      } else {
+        const sesudah = terkunci.filter((x) => x > id).at(-1);
+        if (sesudah) tahanUrutan = `Buka kunci ${labelPeriode(sesudah)} dulu`;
+      }
       return {
         id,
         status,
@@ -90,6 +120,9 @@ export async function dataTutupPeriode(maks = 12): Promise<DataPeriode[]> {
         dikunciPada: p?.dikunciPada?.toISOString() ?? null,
         riwayat: (p?.riwayat ?? []).map((r) => ({ aksi: r.aksi, oleh: r.oleh.nama, waktu: r.waktu.toISOString(), alasan: r.alasan })),
         periksa: status === "TERBUKA" ? await cekPeriode(id, buku) : null,
+        urutanBoleh: tahanUrutan === null,
+        tahanUrutan,
+        tertutupOleh,
       };
     }),
   );

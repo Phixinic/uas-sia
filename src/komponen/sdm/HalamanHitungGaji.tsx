@@ -6,7 +6,7 @@
 import { wajibMasuk } from "@/lib/server/auth";
 import { boleh } from "@/lib/peran";
 import { periodeTerkunciSemua, profilUsaha } from "@/lib/data/umum";
-import { labelPeriode } from "@/lib/inti/tanggal";
+import { kunciPenutup, labelPeriode } from "@/lib/inti/tanggal";
 import { opsiPeriodeSdm, periodeDipilih } from "@/lib/data/sdm/umum";
 import { ambilSlip, barisHitungGaji, daftarSlipPeriode } from "@/lib/data/sdm/gaji";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
@@ -43,7 +43,9 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
 
   const alamatPeriode = `${ALAMAT}?periode=${periode}`;
   const slipDibuka = cari.slip === "semua" ? tersimpan : cari.slip ? [await ambilSlip(cari.slip)].filter((s) => s !== null) : [];
-  const periodeKunci = terkunci.includes(periode);
+  // Tertutup bila periode ini atau periode sesudahnya sudah dikunci (kunci berurutan).
+  const penutup = kunciPenutup(periode, terkunci);
+  const periodeKunci = penutup !== null;
   const bisaDihitung = baris.filter((b) => b.jumlahPresensi > 0 && (!b.slipStatus || b.slipStatus === "DRAFT")).length;
   const jumlahSimpan = baris.filter((b) => b.slipNo).length;
   const jumlah = (f: (b: (typeof baris)[number]) => number) => baris.reduce((s, b) => s + f(b), 0);
@@ -71,7 +73,11 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
           }
         />
 
-        {periodeKunci && <Peringatan jenis="awas">Periode {labelPeriode(periode)} terkunci. Slip tidak bisa dihitung atau diajukan sampai Owner membuka kuncinya.</Peringatan>}
+        {penutup && (
+          <Peringatan jenis="awas">
+            {penutup === periode ? `Periode ${labelPeriode(periode)} terkunci` : `Periode ${labelPeriode(periode)} tertutup karena ${labelPeriode(penutup)} sudah dikunci`}. Slip tidak bisa dihitung atau diajukan sampai Owner membuka kuncinya.
+          </Peringatan>
+        )}
         {!bolehHitung && <Peringatan>Hitung gaji dijalankan oleh HRD. Kamu bisa melihat hasil dan slipnya.</Peringatan>}
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

@@ -46,6 +46,16 @@ export function daftarPeriode(a: string, b: string): string[] {
   return hasil;
 }
 
+/**
+ * Kunci periode berurutan: periode P tertutup bila P sendiri atau periode sesudahnya sudah dikunci.
+ * Mengembalikan periode terkunci paling awal yang >= P (penutupnya), atau null bila P masih terbuka.
+ */
+export function kunciPenutup(periode: string, terkunci: readonly string[]): string | null {
+  let hasil: string | null = null;
+  for (const p of terkunci) if (p >= periode && (hasil === null || p < hasil)) hasil = p;
+  return hasil;
+}
+
 /** "2026-10" -> "Oktober 2026". */
 export const labelPeriode = (periode: string | null | undefined) =>
   periode ? `${NAMA_BULAN[+periode.slice(5, 7) - 1]} ${periode.slice(0, 4)}` : "-";

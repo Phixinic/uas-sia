@@ -27,7 +27,7 @@ export default defineConfig({
     url: `http://127.0.0.1:${PORT}/api/sehat`,
     reuseExistingServer: false,
     timeout: 60_000,
-    // Cookie sesi tidak "secure" supaya bisa dipakai di http://127.0.0.1.
-    env: { COOKIE_TIDAK_AMAN: "1", DATABASE_URL: process.env.DATABASE_URL ?? "" },
+    // Cookie sesi tidak "secure" supaya bisa dipakai di http://127.0.0.1. Petunjuk akun demo ditampilkan di server uji.
+    env: { COOKIE_TIDAK_AMAN: "1", TAMPILKAN_AKUN_DEMO: "1", DATABASE_URL: process.env.DATABASE_URL ?? "" },
   },
 });

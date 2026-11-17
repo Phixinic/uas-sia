@@ -3,7 +3,7 @@
  * Satu definisi dipakai tiga tempat: form (isian apa saja), server action (validasi), dan daftar (label).
  * Aturan sama dengan MDEF di versi-statis/assets/js/views/master.js.
  */
-import { z } from "zod";
+import { z } from "./zod";
 import type { KunciIzin } from "@/lib/peran";
 
 export const JENIS_MASTER = ["supplier", "peralatan", "perlengkapan", "kategori", "akun", "karyawan", "jabatan", "golongan", "tunjangan", "jadwal", "setgaji"] as const;
@@ -170,16 +170,19 @@ function skemaIsian(d: DefIsian): z.ZodType {
       // Isian angka opsional yang tidak disentuh form tidak terkirim sama sekali; dianggap 0, bukan NaN.
       return d.wajib ? angka : z.preprocess((v) => (v === undefined || v === null ? 0 : v), angka);
     }
+    // Form yang dikirim kosong tidak mengirim isian sama sekali (undefined), jadi pesan tipe juga ditulis per isian.
     case "waktu":
-      return z.string().trim().regex(POLA_JAM, `${d.label} berbentuk HH:MM.`);
+      return z.string({ error: `${d.label} wajib diisi.` }).trim().min(1, `${d.label} wajib diisi.`).regex(POLA_JAM, `${d.label} berbentuk HH:MM.`);
     case "banyak":
-      return z.array(z.string()).default([]);
+      return z.array(z.string({ error: `${d.label} tidak valid.` }), { error: `${d.label} tidak valid.` }).default([]);
     case "email":
-      return z.string().trim().max(120, `${d.label} maksimal 120 karakter.`).refine((v) => v === "" || z.email().safeParse(v).success, `${d.label} tidak valid.`).default("");
-    case "pilih":
-      return d.wajib ? z.string().trim().min(1, `Pilih ${d.label.toLowerCase()}.`) : z.string().trim().default("");
+      return z.string({ error: `${d.label} tidak valid.` }).trim().max(120, `${d.label} maksimal 120 karakter.`).refine((v) => v === "" || z.email().safeParse(v).success, `${d.label} tidak valid.`).default("");
+    case "pilih": {
+      const pesan = `Pilih ${d.label.toLowerCase()}.`;
+      return d.wajib ? z.string({ error: pesan }).trim().min(1, pesan) : z.string({ error: pesan }).trim().default("");
+    }
     default: {
-      const s = z.string().trim().max(200, `${d.label} maksimal 200 karakter.`);
+      const s = z.string({ error: d.wajib ? `${d.label} wajib diisi.` : `${d.label} tidak valid.` }).trim().max(200, `${d.label} maksimal 200 karakter.`);
       return d.wajib ? s.min(1, `${d.label} wajib diisi.`) : s.default("");
     }
   }
@@ -206,17 +209,17 @@ export function skemaIsiMaster(jenis: JenisMaster) {
 export const skemaSimpanMaster = z.object({
   jenis: z.enum(JENIS_MASTER, { error: "Jenis master tidak dikenal." }),
   /** Kode data yang diubah; kosong untuk data baru. */
-  kode: z.string().trim().optional().nullable(),
-  nilai: z.record(z.string(), z.unknown()),
+  kode: z.string({ error: "Kode data tidak valid." }).trim().optional().nullable(),
+  nilai: z.record(z.string(), z.unknown(), { error: "Isian form tidak terkirim. Muat ulang halaman lalu coba lagi." }),
 });
 
 export const skemaStatusMaster = z.object({
   jenis: z.enum(JENIS_MASTER, { error: "Jenis master tidak dikenal." }),
-  kode: z.string().trim().min(1, "Kode kosong."),
-  aktif: z.boolean(),
+  kode: z.string({ error: "Kode kosong." }).trim().min(1, "Kode kosong."),
+  aktif: z.boolean({ error: "Status aktif tidak valid." }),
 });
 
 export const skemaProfil = z.object({
-  nama: z.string().trim().min(1, "Nama usaha wajib diisi.").max(80, "Nama usaha maksimal 80 karakter."),
-  keterangan: z.string().trim().max(120, "Keterangan maksimal 120 karakter.").default(""),
+  nama: z.string({ error: "Nama usaha wajib diisi." }).trim().min(1, "Nama usaha wajib diisi.").max(80, "Nama usaha maksimal 80 karakter."),
+  keterangan: z.string({ error: "Keterangan tidak valid." }).trim().max(120, "Keterangan maksimal 120 karakter.").default(""),
 });
