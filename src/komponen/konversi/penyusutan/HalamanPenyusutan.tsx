@@ -62,7 +62,7 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
       <Kartu rapat>
         <KepalaKartu judul={`Pratinjau ${labelPeriode(periode)}`} keterangan={`${d.baris.length} aset, ${d.belumDiproses} belum diproses`} />
         {d.baris.length === 0 ? (
-          <KeadaanKosong judul={`Tidak ada aset aktif yang disusutkan pada ${labelPeriode(periode)}`} keterangan="Jadwal dibuat saat pembelian peralatan diposting." />
+          <KeadaanKosong judul={`Tidak ada aset yang disusutkan pada ${labelPeriode(periode)}`} keterangan="Jadwal dibuat saat pembelian peralatan diposting." />
         ) : (
           <Tabel label="Pratinjau penyusutan">
             <thead>
@@ -78,7 +78,10 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
             <tbody>
               {d.baris.map((r) => (
                 <tr key={r.asetKode}>
-                  <td><Link className="kode hover:underline" href={`/konversi/kartu-aset?aset=${r.asetKode}`}>{r.asetKode}</Link> {r.nama}</td>
+                  <td>
+                    <Link className="kode hover:underline" href={`/konversi/kartu-aset?aset=${r.asetKode}`}>{r.asetKode}</Link> {r.nama}
+                    {r.dilepas && <span className="ml-1.5"><Lencana warna="abu">dilepas</Lencana></span>}
+                  </td>
                   <td className="whitespace-nowrap">
                     {r.periodeKe} dari {r.n}
                     {r.periodeKe === r.n && r.n > 1 && <Lencana warna="biru">sisa (rumus 2)</Lencana>}
@@ -97,6 +100,11 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
               ))}
             </tbody>
             <tfoot>
+              <tr>
+                <td colSpan={2}>Total beban {labelPeriode(periode)}</td>
+                <td className="kolom-angka"><Rupiah nilai={d.totalBeban} polos /></td>
+                <td colSpan={3} />
+              </tr>
               <tr>
                 <td colSpan={2}>Total belum diproses</td>
                 <td className="kolom-angka"><Rupiah nilai={d.totalBelum} polos /></td>

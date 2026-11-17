@@ -6,6 +6,7 @@ import { db, type DbAtauTx } from "@/lib/server/db";
 import { muatJurnalBuku } from "@/lib/server/jurnal";
 import { neracaSaldo, type JurnalBuku } from "@/lib/inti/buku-besar";
 import { dariDate, hariTerakhir, keDate, labelPeriode, periodeDari, periodeIni } from "@/lib/inti/tanggal";
+import { saldoBukuLkp } from "@/lib/data/konversi/nilai-sisa";
 
 /** Semua periode yang pernah dipakai (baris periode, jurnal, pembelian) ditambah periode berjalan, urut naik. */
 export async function semuaPeriode(): Promise<string[]> {
@@ -37,24 +38,27 @@ export type ButirPeriksa = { label: string; lulus: boolean; catatan: string };
 export async function cekPeriode(P: string, buku?: JurnalBuku[], klien: DbAtauTx = db): Promise<ButirPeriksa[]> {
   const awal = keDate(`${P}-01`);
   const akhir = keDate(hariTerakhir(P));
-  const [drafBeli, susutBelum, jurnalTunda, pelepasanTunda, perlengkapanPosting, opname, penggajianTunda, daftarAkun, bukuSemua] = await Promise.all([
+  const [drafBeli, susutBelum, jurnalTunda, pelepasanTunda, saldoLkp, opname, penggajianTunda, daftarAkun, bukuSemua] = await Promise.all([
     klien.pembelian.count({ where: { status: "DRAFT", tanggal: { gte: awal, lte: akhir } } }),
     klien.jadwalPenyusutan.count({ where: { aset: { status: "AKTIF" }, periodeId: { lte: P }, jurnalNo: null } }),
     klien.jurnal.count({ where: { periodeId: P, status: { in: ["DRAFT", "DIAJUKAN"] } } }),
     klien.pelepasan.count({ where: { status: "DIAJUKAN", tanggal: { gte: awal, lte: akhir } } }),
-    klien.pembelian.count({ where: { jenis: "PERLENGKAPAN", status: "DISETUJUI", tanggal: { lte: akhir } } }),
+    // Rumus yang sama dengan form nilai sisa: perlengkapan yang masih bersaldo buku di periode P.
+    saldoBukuLkp(klien, P),
     klien.opname.findUnique({ where: { periodeId: P }, select: { status: true } }),
     klien.penggajian.count({ where: { periodeId: P, status: "DIAJUKAN" } }),
     klien.akun.findMany({ select: { kode: true } }),
     buku ? Promise.resolve(buku) : muatJurnalBuku(klien, P),
   ]);
   const ns = neracaSaldo(bukuSemua.filter((j) => j.periode <= P), daftarAkun.map((a) => a.kode), P);
-  const perluOpname = perlengkapanPosting > 0;
+  // Nilai sisa hanya wajib bila ada perlengkapan yang perlu dihitung. Bulan bersaldo nol tidak bisa diinput
+  // ("Tidak ada perlengkapan untuk dihitung"), jadi tidak boleh menahan kunci periode itu dan periode sesudahnya.
+  const perluOpname = saldoLkp.length > 0;
   const opnameAda = !!opname && opname.status !== "DITOLAK";
   return [
     { label: "Semua pembelian periode ini sudah diposting", lulus: drafBeli === 0, catatan: drafBeli ? `${drafBeli} draf` : "" },
     { label: "Penyusutan sudah diproses sampai periode ini", lulus: susutBelum === 0, catatan: susutBelum ? `${susutBelum} baris jadwal belum dijurnal` : "" },
-    { label: "Nilai sisa perlengkapan sudah diinput", lulus: !perluOpname || opnameAda, catatan: perluOpname && !opnameAda ? "belum ada opname" : "" },
+    { label: "Nilai sisa perlengkapan sudah diinput", lulus: !perluOpname || opnameAda, catatan: opnameAda ? "" : perluOpname ? "belum ada opname" : "tidak ada saldo perlengkapan" },
     { label: "Jurnal penyesuaian sudah diputuskan", lulus: jurnalTunda === 0, catatan: jurnalTunda ? `${jurnalTunda} menunggu` : "" },
     { label: "Pengajuan pelepasan sudah diputuskan", lulus: pelepasanTunda === 0, catatan: pelepasanTunda ? `${pelepasanTunda} menunggu` : "" },
     { label: "Pengajuan penggajian sudah diputuskan", lulus: penggajianTunda === 0, catatan: penggajianTunda ? `${penggajianTunda} menunggu` : "" },

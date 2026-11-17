@@ -18,13 +18,26 @@ export function saldoBukuPerlengkapan(pembelian: PembelianLkp[], opname: BebanOp
 }
 
 /**
- * Bulan paling awal sebelum `periode` yang masih punya saldo perlengkapan tetapi belum punya nilai sisa yang tidak ditolak.
- * Bulan tanpa saldo tidak perlu dihitung fisik. `sudahAda` = periode yang punya opname tidak ditolak.
- * Dipakai supaya nilai sisa diinput berurutan: bulan yang terlewat tidak bisa diisi lagi sesudah bulan berikutnya,
- * karena biaya bulan berikutnya sudah dihitung dari saldo tanpa biaya bulan itu.
+ * Bulan pertama urutan nilai sisa sebelum `periode`: bulan sesudah opname terakhir (tidak ditolak) yang lebih awal dari
+ * `periode`, atau bulan pembelian pertama bila belum ada opname. Bulan sebelum opname terakhir sudah tertutup oleh opname
+ * itu: pembelian bertanggal mundur ke sana (misalnya September sesudah opname Oktober) ikut masuk saldo bulan berikutnya,
+ * bukan jadi bulan terlewat yang menahan input dan tidak mungkin diisi lagi.
+ */
+export function awalUrutanNilaiSisa(pembelian: PembelianLkp[], sudahAda: Iterable<string>, periode: string): string | null {
+  let terakhir: string | null = null;
+  for (const p of sudahAda) if (p < periode && (terakhir === null || p > terakhir)) terakhir = p;
+  if (terakhir !== null) return tambahBulan(terakhir, 1);
+  return pembelian.reduce<string | null>((a, b) => (a === null || b.periode < a ? b.periode : a), null);
+}
+
+/**
+ * Bulan paling awal sesudah opname terakhir dan sebelum `periode` yang masih punya saldo perlengkapan tetapi belum punya
+ * nilai sisa yang tidak ditolak. Bulan tanpa saldo tidak perlu dihitung fisik. `sudahAda` = periode yang punya opname
+ * tidak ditolak. Dipakai supaya nilai sisa diinput berurutan: bulan yang terlewat tidak bisa diisi lagi sesudah bulan
+ * berikutnya, karena biaya bulan berikutnya sudah dihitung dari saldo tanpa biaya bulan itu.
  */
 export function bulanNilaiSisaTerlewat(pembelian: PembelianLkp[], opname: BebanOpname[], sudahAda: ReadonlySet<string>, periode: string): string | null {
-  let m = pembelian.reduce<string | null>((a, b) => (a === null || b.periode < a ? b.periode : a), null);
+  let m = awalUrutanNilaiSisa(pembelian, sudahAda, periode);
   for (; m !== null && m < periode; m = tambahBulan(m, 1)) {
     if (sudahAda.has(m)) continue;
     if (Object.values(saldoBukuPerlengkapan(pembelian, opname, m)).some((v) => v > 0)) return m;

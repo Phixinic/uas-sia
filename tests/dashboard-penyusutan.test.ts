@@ -2,7 +2,8 @@
  * Tes integrasi angka penyusutan di dashboard (UJI_DB=1). Regresi audit: angka "disetujui" dihitung dari jadwal
  * aset AKTIF saja, jadi aset yang dilepas sesudah penyusutannya disetujui hilang dari angka dashboard
  * (November tertulis 1.532.498, jurnalnya 1.572.081). Sumber kebenaran sekarang jurnal penyusutan yang disetujui.
- * Ikut diuji: periode bawaan halaman SDM sama dengan dashboard, dan tautan dashboard membawa ?periode.
+ * Ikut diuji: tabel halaman Proses Penyusutan memuat aset yang sudah dilepas (total sama dengan jurnal), periode bawaan
+ * halaman SDM sama dengan dashboard, dan tautan dashboard membawa ?periode.
  * PERHATIAN: database DATABASE_URL diisi ulang dengan data contoh sebelum dan sesudah tes.
  */
 import "dotenv/config";
@@ -32,6 +33,7 @@ describe.runIf(aktif)("dashboard: penyusutan dan periode", async () => {
   const lepas = await import("@/lib/aksi/konversi/pelepasan");
   const { setujuiJurnal } = await import("@/lib/server/jurnal");
   const { dataDashboard } = await import("@/lib/data/pelaporan/dashboard");
+  const { dataPenyusutan } = await import("@/lib/data/konversi/penyusutan");
   const { periodeDipilih } = await import("@/lib/data/sdm/umum");
   const { periodeIni } = await import("@/lib/inti/tanggal");
 
@@ -68,6 +70,19 @@ describe.runIf(aktif)("dashboard: penyusutan dan periode", async () => {
     const lama = await db.jadwalPenyusutan.aggregate({ where: { periodeId: "2026-11", aset: { status: "AKTIF" }, jurnal: { status: "DISETUJUI" } }, _sum: { beban: true } });
     expect((lama._sum.beban ?? 0) + bebanAst3).toBe(d.susut.disetujui);
     expect(bebanAst3).toBeGreaterThan(0);
+  });
+
+  it("halaman Proses Penyusutan memuat aset yang sudah dilepas, jadi total tabel = jurnal penyusutan Oktober dan November", async () => {
+    for (const P of ["2026-10", "2026-11"]) {
+      const d = await dataPenyusutan(P);
+      const jurnal = await db.detailJurnal.aggregate({ where: { jurnal: { sumberTipe: "PENYUSUTAN", status: "DISETUJUI", periodeId: P } }, _sum: { debit: true } });
+      const ast3 = d.baris.find((r) => r.asetKode === "AST-0003");
+      expect(ast3?.dilepas, P).toBe(true);
+      expect(d.totalBeban, P).toBe(jurnal._sum.debit);
+      expect(d.baris.reduce((s, r) => s + r.beban, 0), P).toBe(jurnal._sum.debit);
+      expect(d.baris.length, P).toBe(await db.jadwalPenyusutan.count({ where: { periodeId: P, jurnal: { status: "DISETUJUI" } } }));
+      expect(d.belumDiproses, P).toBe(0);
+    }
   });
 
   it("periode bawaan halaman SDM = periode berjalan (sama dengan dashboard); tautan tindakan membawa ?periode", async () => {

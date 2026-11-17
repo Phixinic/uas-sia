@@ -20,10 +20,12 @@ export async function periodePenyusutan(dipilih?: string) {
 
 export async function dataPenyusutan(periode: string) {
   const [jadwal, sebelumnya, riwayat, terkunci] = await Promise.all([
+    // Semua aset yang punya jadwal di periode ini: aset aktif, ditambah baris yang sudah dijurnal walau asetnya dilepas
+    // sesudahnya, supaya total tabel sama dengan jurnal penyusutan periode itu.
     db.jadwalPenyusutan.findMany({
-      where: { periodeId: periode, aset: { status: "AKTIF" } },
+      where: { periodeId: periode, OR: [{ aset: { status: "AKTIF" } }, { jurnalNo: { not: null } }] },
       orderBy: { asetKode: "asc" },
-      include: { aset: { select: { nama: true, n: true, akunBebanKode: true, akunAkumulasiKode: true } }, jurnal: { select: { status: true } } },
+      include: { aset: { select: { nama: true, n: true, status: true, akunBebanKode: true, akunAkumulasiKode: true } }, jurnal: { select: { status: true } } },
     }),
     db.jadwalPenyusutan.findMany({ where: { periodeId: { lt: periode }, jurnalNo: null, aset: { status: "AKTIF" } }, distinct: ["periodeId"], orderBy: { periodeId: "asc" }, select: { periodeId: true } }),
     db.jurnal.findMany({
@@ -37,6 +39,7 @@ export async function dataPenyusutan(periode: string) {
   const baris = jadwal.map((r) => ({
     asetKode: r.asetKode,
     nama: r.aset.nama,
+    dilepas: r.aset.status === "DILEPAS",
     periodeKe: r.periodeKe,
     n: r.aset.n,
     beban: r.beban,
@@ -48,6 +51,7 @@ export async function dataPenyusutan(periode: string) {
   const belum = jadwal.filter((r) => !r.jurnalNo);
   return {
     baris,
+    totalBeban: jadwal.reduce((s, r) => s + r.beban, 0),
     belumDiproses: belum.length,
     totalBelum: belum.reduce((s, r) => s + r.beban, 0),
     jurnalBaris: barisPenyusutan(belum.map((r) => ({ akunBeban: r.aset.akunBebanKode, akunAkumulasi: r.aset.akunAkumulasiKode, beban: r.beban }))),

@@ -3,7 +3,7 @@
  * saldo yang divalidasi sama dengan yang ditampilkan.
  */
 import { db, type DbAtauTx } from "@/lib/server/db";
-import { dariDate, daftarPeriode, periodeDari, periodeIni } from "@/lib/inti/tanggal";
+import { dariDate, daftarPeriode, periodeDari, periodeIni, tambahBulan } from "@/lib/inti/tanggal";
 import { bulanNilaiSisaTerlewat, saldoBukuPerlengkapan, tahanUrutanNilaiSisa, type BebanOpname, type PembelianLkp } from "./hitung";
 
 export type BarisSaldoLkp = { kode: string; nama: string; satuan: string; saldoBuku: number };
@@ -45,14 +45,19 @@ export async function bahanNilaiSisa(klien: DbAtauTx, periode: string): Promise<
   };
 }
 
-/** Periode pertama yang belum punya opname (tidak ditolak) sejak pembelian pertama; bila semua sudah, periode berjalan. */
+/**
+ * Periode pertama yang belum punya opname (tidak ditolak), dihitung sejak opname terakhir (atau sejak pembelian pertama
+ * bila belum ada opname), sama dengan urutan yang diperiksa server action; bila semua sudah, periode berjalan.
+ */
 export async function periodeNilaiSisa(dipilih?: string) {
   const sekarang = periodeIni();
   const pertama = await db.pembelian.findFirst({ where: { jenis: "PERLENGKAPAN", status: "DISETUJUI" }, orderBy: { tanggal: "asc" }, select: { tanggal: true } });
   const awal = pertama ? periodeDari(dariDate(pertama.tanggal)) : sekarang;
   const pilihan = daftarPeriode(awal < sekarang ? awal : sekarang, sekarang);
   const sudah = new Set((await db.opname.findMany({ where: { status: { not: "DITOLAK" } }, select: { periodeId: true } })).map((o) => o.periodeId));
-  const bawaan = pilihan.find((p) => !sudah.has(p)) ?? sekarang;
+  const terakhir = [...sudah].filter((p) => p <= sekarang).sort().at(-1);
+  const mulai = terakhir ? tambahBulan(terakhir, 1) : awal;
+  const bawaan = pilihan.find((p) => p >= mulai && !sudah.has(p)) ?? sekarang;
   const periode = dipilih && pilihan.includes(dipilih) ? dipilih : bawaan;
   return { periode, pilihan, sekarang };
 }

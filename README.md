@@ -80,7 +80,7 @@ Rincian per aksi ada di `src/lib/peran.ts` dan `docs/KONTRAK.md`.
 ## Aturan urutan
 
 - **Tutup periode berurutan.** Periode hanya bisa dikunci bila semua periode sebelumnya sudah terkunci, dan hanya bisa dibuka bila tidak ada periode sesudahnya yang terkunci. Periode juga dianggap tertutup bila ada periode sesudahnya yang terkunci, jadi pembelian, penyusutan, nilai sisa, pelepasan, gaji, dan keputusan jurnal bertanggal di bulan itu ditolak (`pastikanTerbuka` di `src/lib/server/periode.ts`).
-- **Nilai sisa perlengkapan berurutan per bulan.** Nilai sisa bulan M hanya bisa diinput bila nilai sisa bulan sebelumnya sudah disetujui (bulan tanpa saldo perlengkapan dilewati), dan tidak bisa diinput atau diubah lagi bila bulan sesudah M sudah punya nilai sisa. Biaya juga ditolak bila membuat saldo akun Perlengkapan minus, baik saat input maupun saat jurnalnya disetujui.
+- **Nilai sisa perlengkapan berurutan per bulan.** Nilai sisa bulan M hanya bisa diinput bila nilai sisa bulan sebelumnya sudah disetujui, dan tidak bisa diinput atau diubah lagi bila bulan sesudah M sudah punya nilai sisa. Bulan terlewat hanya dihitung sesudah nilai sisa terakhir: pembelian bertanggal mundur ke bulan yang sudah dilewati ikut masuk saldo bulan berikutnya. Bulan tanpa saldo perlengkapan tidak perlu nilai sisa, termasuk di daftar periksa Tutup Periode. Biaya juga ditolak bila membuat saldo akun Perlengkapan minus, baik saat input maupun saat jurnalnya disetujui.
 - **Periode bawaan.** Halaman SDM dan dashboard sama-sama memakai periode berjalan bila `?periode` kosong. Tautan dari dashboard membawa `?periode` yang sedang dipilih.
 
 ## Rumus penting
