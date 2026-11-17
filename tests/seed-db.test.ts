@@ -45,10 +45,11 @@ describe.runIf(aktif)("isi database hasil seed", async () => {
     }
   });
 
-  it("slip Oktober: total bruto, PPh 21, THP; penggajian punya 1..N slip", async () => {
+  it("slip Oktober: total bruto, PPh 21, THP; penggajian yang tidak ditolak punya minimal satu slip", async () => {
     const s = await db.slipGaji.aggregate({ where: { periodeId: "2026-10" }, _sum: { bruto: true, pph21: true, thp: true } });
     expect([s._sum.bruto, s._sum.pph21, s._sum.thp]).toEqual([31_500_001, 299_658, 31_200_343]);
-    for (const g of await db.penggajian.findMany({ include: { _count: { select: { slip: true } } } })) expect(g._count.slip).toBeGreaterThan(0);
+    // Penggajian DITOLAK melepas slipnya (relasi penggajian -> slip_gaji digambar 0..N di logical database).
+    for (const g of await db.penggajian.findMany({ where: { status: { not: "DITOLAK" } }, include: { _count: { select: { slip: true } } } })) expect(g._count.slip).toBeGreaterThan(0);
   });
 });
 

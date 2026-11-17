@@ -398,7 +398,7 @@ erDiagram
   golongan ||--o{ slip_gaji : "id_golongan"
   jadwal_kerja |o--o{ slip_gaji : "id_jadwal"
   akun ||--o{ slip_gaji : "akun_beban"
-  penggajian |o--|{ slip_gaji : "no_penggajian"
+  penggajian |o--o{ slip_gaji : "no_penggajian"
   pengguna ||--o{ slip_gaji : "dibuat_oleh"
   pengguna |o--o{ slip_gaji : "disetujui_oleh"
   slip_gaji ||--o{ slip_tunjangan : "id_slip"

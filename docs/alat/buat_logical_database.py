@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Membangkitkan docs/logical-database.{svg,png,mmd} dari prisma/schema.prisma (tata letak manual, garis dirutekan otomatis).
+"""Membangkitkan docs/logical-database.{svg,png,mmd} dari prisma/schema.prisma (tata letak manual, garis dirutekan
+otomatis kecuali relasi di TEPI_KIRI).
 
 Pemakaian (dari akar repo, butuh Python 3 + Pillow dan rsvg-convert):
     python3 docs/alat/buat_logical_database.py             # tulis svg, png, dan mmd
@@ -14,7 +15,7 @@ Aturan penurunan:
 - Kolom stempel waktu audit (KOLOM_WAKTU) tidak digambar di PNG; .mmd memuat semuanya.
 - Ukuran kanvas = ukuran cetak (poin) di halaman laporan, jadi ukuran huruf di sini = ukuran huruf tercetak.
 """
-import os, re, subprocess, sys
+import math, os, re, subprocess, sys
 
 AKAR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SKEMA = os.path.join(AKAR, "prisma", "schema.prisma")
@@ -42,9 +43,10 @@ SATU_BANYAK = {
     ("detail_jurnal", "jurnal"): "validasiBaris: minimal dua baris detail (src/lib/inti/jurnal.ts)",
     # nilai-sisa: ditolak bila tidak ada perlengkapan, dan setiap perlengkapan wajib dihitung lalu disimpan sebagai detail
     ("detail_opname", "opname"): "nilai-sisa: semua perlengkapan wajib dihitung, kosong ditolak (src/lib/aksi/konversi/nilai-sisa.ts)",
-    # ajukanPenggajian: ditolak bila tidak ada slip draf, jumlah_slip = slip yang dikaitkan (src/lib/aksi/sdm/distribusi.ts)
-    ("slip_gaji", "penggajian"): "ajukanPenggajian: tanpa slip draf pengajuan ditolak (src/lib/aksi/sdm/distribusi.ts)",
 }
+# Sengaja TIDAK 1..N: penggajian -> slip_gaji. Pengajuan memang butuh minimal satu slip draf, tetapi penggajian yang
+# ditolak melepas slipnya (slip kembali DRAFT dan no_penggajian dikosongkan, tolakPenggajian di
+# src/lib/aksi/sdm/distribusi.ts), jadi penggajian DITOLAK tidak punya slip lagi: sisi slip_gaji tetap 0..N.
 
 # Stempel waktu audit yang tidak digambar (disebut di keterangan gambar).
 KOLOM_WAKTU = {"dibuat_pada", "diubah_pada", "diajukan_pada", "dihitung_pada", "dibalik_pada"}
@@ -230,11 +232,20 @@ TATA = {
         ["karyawan", "jabatan", "jadwal_kerja", "golongan", "tunjangan"],
         ["presensi", "setting_gaji", "setting_tunjangan"],
     ],
-    "gutter": [22, 24, 38, 26, 24, 22],
+    "gutter": [22, 24, 38, 26, 19, 22],   # gutter[4] dikurangi 5 pt untuk LAJUR_KIRI; mengurangi gutter lain mengubah lebih banyak rute
     "gap": 9,
     "gap_hubung": 17,
     "bawah": ["pengguna", "sesi", "log_aktivitas", "profil_usaha", "penghitung"],
 }
+# aset->kategori_aset dan aset->peralatan hanya bisa naik lewat tepi kiri kanvas: sisi kiri induknya tidak muat
+# simbol, dan gutter pertama terpotong simbol konektor lurus dari detail_pembelian. Kolom pertama digeser LAJUR_KIRI
+# (kelipatan grid 2,5 pt) supaya tepi kiri punya dua lajur tegak, x=5 dan x=10. Keduanya dirutekan manual oleh
+# tepi_kiri() di gambar(), karena perute A* memberi lajur luar ke garis yang dirutekan lebih dulu sehingga bersilangan.
+# Nilai: (lajur, celah). Celah = sisi induk tempat garis berbelok ke gutter pertama. Celah antara kategori_aset dan
+# peralatan terisi konektor peralatan->kategori_aset, jadi kategori_aset lewat atas dan peralatan lewat bawah.
+# Garis yang berbelok lebih tinggi memakai lajur luar dan keluar dari aset lebih bawah, supaya keduanya bersarang.
+LAJUR_KIRI = 5.0
+TEPI_KIRI = {("aset", "kategori_aset"): ("luar", "atas"), ("aset", "peralatan"): ("dalam", "bawah")}
 
 
 def terhubung(model, a, b):
@@ -254,7 +265,7 @@ def hitung_posisi(model, t2i):
         isi[t] = isi_kotak(t2i[t], model, 85)
     uk = {t: ukuran_kotak(t, isi[t]) for t in t2i}
     pos = {}
-    x = 7.0
+    x = 7.0 + LAJUR_KIRI
     bawah_maks = 0
     for k, tabs in enumerate(TATA["kolom"]):
         lebar = max(uk[t][0] for t in tabs)
@@ -314,7 +325,9 @@ def gambar(model, t2i, path_svg, path_png):
     # kelompok
     grp = {}
     for kode, judul, warna, tabs in KELOMPOK:
-        x0 = min(pos[t][0] for t in tabs) - 5; y0 = min(pos[t][1] for t in tabs) - 13
+        # grup yang memuat kolom pertama melebar LAJUR_KIRI ke kiri supaya lajur garis di tepi kiri tetap di dalamnya
+        x0 = min(pos[t][0] for t in tabs) - 5 - (LAJUR_KIRI if set(tabs) & set(TATA["kolom"][0]) else 0)
+        y0 = min(pos[t][1] for t in tabs) - 13
         x1 = max(pos[t][0] + pos[t][2] for t in tabs) + 5; y1 = max(pos[t][1] + pos[t][3] for t in tabs) + 5
         grp[kode] = (x0, y0, x1 - x0, y1 - y0)
         svg.rect(x0, y0, x1 - x0, y1 - y0, warna, "#9a9a9a", 0.6, 4)
@@ -366,6 +379,36 @@ def gambar(model, t2i, path_svg, path_png):
                     pts = [p0, p1] if a_dulu else [p1, p0]
                 return pts, sa, sb
         return None
+    def tepi_kiri(a, b):
+        """Rute manual relasi TEPI_KIRI (anak a di kolom kedua, induk b di kolom pertama): keluar dari sisi kiri a di
+        bawah dasar kolom pertama, naik di lajur tepi kiri, berbelok ke kanan lewat celah di atas atau di bawah b,
+        lalu dari tengah gutter pertama masuk ke sisi kanan b. Semua titik dihitung dari posisi kotak, dibulatkan ke grid."""
+        lajur, celah = TEPI_KIRI[(a, b)]
+        g = rt.g
+        grid = lambda v: round(v / g) * g
+        kol0 = TATA["kolom"][0]
+        xa, ya, wa, ha = pos[a]; xb, yb, wb, hb = pos[b]
+        # lajur dalam 2 pt dari kotak kolom pertama, lajur luar LAJUR_KIRI di sebelah kirinya
+        x_lajur = grid(pos[kol0[0]][0] - 2.0) - (LAJUR_KIRI if lajur == "luar" else 0.0)
+        # keluar dari a minimal 5 pt di bawah dasar kolom pertama; lajur luar 10 pt lebih bawah supaya kaki gagak
+        # kedua garis di sisi kiri a tidak bertumpuk
+        y_dasar = max(pos[t][1] + pos[t][3] for t in kol0)
+        y_keluar = math.ceil((y_dasar + 5.0) / g) * g + (10.0 if lajur == "luar" else 0.0)
+        if not ya + 4 <= y_keluar <= ya + ha - 4:
+            raise RuntimeError(f"port {y_keluar:.1f} di luar sisi kiri {a} untuk rute tepi kiri")
+        # berbelok di tengah celah antara b dan tetangganya, masuk ke sisi kanan b dekat sudut di sisi celah itu
+        n = kol0.index(b) + (-1 if celah == "atas" else 1)
+        if not 0 <= n < len(kol0):
+            raise RuntimeError(f"{b} tidak punya tetangga di sisi {celah} untuk rute tepi kiri")
+        xt, yt, wt, ht = pos[kol0[n]]
+        if celah == "atas":
+            y_celah, y_masuk = grid((yt + ht + yb) / 2), grid(yb + 4)
+        else:
+            y_celah, y_masuk = grid((yb + hb + yt) / 2), grid(yb + hb - 4)
+        x_gutter = grid((xb + wb + pos[TATA["kolom"][1][0]][0]) / 2)
+        pts = [(xa, y_keluar), (x_lajur, y_keluar), (x_lajur, y_celah), (x_gutter, y_celah), (x_gutter, y_masuk), (xb + wb, y_masuk)]
+        rt.tandai_polyline(pts); rt.ujung.extend([pts[0], pts[-1]])
+        return pts, "L", "R"
     garis = []
     for info in model.values():
         for r in info["relasi"]:
@@ -390,7 +433,7 @@ def gambar(model, t2i, path_svg, path_png):
             hasil.append((a, b, r, pts, "R", "R"))
             continue
         try:
-            d = langsung(a, b)
+            d = tepi_kiri(a, b) if (a, b) in TEPI_KIRI else langsung(a, b)
             pts, sisi_a, sisi_b = d if d else rt.rute(tuple(pos[a]), tuple(pos[b]), tangkai=10.0)
         except RuntimeError as e:
             print("GAGAL rute", a, b, e); continue
