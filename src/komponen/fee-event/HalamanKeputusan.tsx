@@ -30,6 +30,7 @@ import FormKeputusan, { type BarisKeputusan } from "./FormKeputusan";
 import { FormPenilaian } from "./FormPenilaian";
 import { KeteranganPenilaian, LencanaPenilaian } from "./Penilaian";
 import SlipFee from "./SlipFee";
+import { DaftarHP, KartuHP, RincianHP, TabelLebar } from "./Ringkas";
 
 const ALAMAT = "/fee-event/keputusan";
 export type CariKeputusan = { lihat?: string; slip?: string };
@@ -63,7 +64,23 @@ export default async function HalamanKeputusan({ cari }: { cari: CariKeputusan }
         {daftar.length === 0 ? (
           <KeadaanKosong judul="Belum ada laporan" keterangan="Laporan muncul di sini setelah kapten mengirimnya." />
         ) : (
-          <Tabel label="Daftar laporan kapten">
+          <>
+<DaftarHP label="Daftar laporan kapten">
+            {daftar.map((l) => (
+              <KartuHP key={l.no} judul={l.event} sub={<><span className="kode">{l.no}</span> · {l.eventKode}</>} kanan={<LencanaStatus jenis="persetujuan" status={l.status} />}>
+                <RincianHP
+                  isi={[
+                    ["Dikirim", `${labelWaktu(l.diajukanPada)}, ${l.diajukanOleh}`],
+                    ["Usulan / dibayar", <>{rupiah(l.totalUsulan)}{l.totalDibayar !== null ? ` / ${rupiah(l.totalDibayar)}` : ""}</>],
+                  ]}
+                />
+                {l.jurnalNo && <div className="kode text-[11px]!">{l.jurnalNo}</div>}
+                <TautanTombol href={`${ALAMAT}?lihat=${l.no}`} kecil varian={l.status === "DIAJUKAN" && bolehPutuskan ? "utama" : "garis"}>{l.status === "DIAJUKAN" && bolehPutuskan ? "Putuskan" : "Buka"}</TautanTombol>
+              </KartuHP>
+            ))}
+          </DaftarHP>
+<TabelLebar>
+<Tabel label="Daftar laporan kapten">
             <thead>
               <tr><th>No.</th><th>Event</th><th>Dikirim</th><th className="kolom-angka">Usulan (Rp)</th><th className="kolom-angka">Dibayar (Rp)</th><th>Status</th><th className="text-right">Aksi</th></tr>
             </thead>
@@ -86,6 +103,8 @@ export default async function HalamanKeputusan({ cari }: { cari: CariKeputusan }
               ))}
             </tbody>
           </Tabel>
+</TabelLebar>
+</>
         )}
       </Kartu>
     </>
@@ -141,6 +160,7 @@ async function Menunggu({ l, bolehPutuskan }: { l: RingkasLaporan; bolehPutuskan
   if (!b) return <Peringatan jenis="galat">Event laporan ini tidak ditemukan.</Peringatan>;
   const kurang = b.orang.flatMap((o) => o.kehadiran.filter((k) => k.penilaian === "KURANG").map((k) => ({ o, k, s: b.sesi.find((x) => x.id === k.sesiId)! })));
   const pajak = b.orang.map((o) => pph21BukanPegawai(o.usulan.fee));
+  const barisJurnal = barisFeeEvent(b.orang.map((o, i) => ({ akunBeban: o.akunBebanKode, bruto: pajak[i].bruto, pph21: pajak[i].pph21, dibayar: pajak[i].dibayar })));
   const baris: BarisKeputusan[] = b.orang.map((o) => ({
     karyawanKode: o.karyawanKode,
     nama: o.nama,
@@ -192,7 +212,10 @@ async function Menunggu({ l, bolehPutuskan }: { l: RingkasLaporan; bolehPutuskan
         <details className="mt-4 rounded-lg border border-slate-200 px-4 py-2.5">
           <summary className="cursor-pointer text-sm font-medium text-slate-700">Jurnal bila disetujui dengan fee usulan</summary>
           <div className="mt-3">
-            <TabelJurnal baris={barisFeeEvent(b.orang.map((o, i) => ({ akunBeban: o.akunBebanKode, bruto: pajak[i].bruto, pph21: pajak[i].pph21, dibayar: pajak[i].dibayar })))} namaAkun={namaAkun} />
+            <JurnalRingkas baris={barisJurnal} namaAkun={namaAkun} />
+            <TabelLebar>
+              <TabelJurnal baris={barisJurnal} namaAkun={namaAkun} />
+            </TabelLebar>
           </div>
         </details>
       </Kartu>
@@ -202,7 +225,14 @@ async function Menunggu({ l, bolehPutuskan }: { l: RingkasLaporan; bolehPutuskan
 
 function TabelUsulan({ b }: { b: BahanEvent }) {
   return (
-    <Tabel label="Usulan fee">
+    <>
+<DaftarHP label="Usulan fee">
+      {b.orang.map((o) => (
+        <KartuHP key={o.karyawanKode} judul={o.nama} sub={`${LABEL_PERAN_EVENT[o.peranEvent]} · ${dasarFee(o)}`} kanan={<Rupiah nilai={o.usulan.fee} className="font-semibold" />} />
+      ))}
+    </DaftarHP>
+<TabelLebar>
+<Tabel label="Usulan fee">
       <thead><tr><th>Nama</th><th>Peran</th><th>Dasar</th><th className="kolom-angka">Usulan (Rp)</th></tr></thead>
       <tbody>
         {b.orang.map((o) => (
@@ -215,6 +245,8 @@ function TabelUsulan({ b }: { b: BahanEvent }) {
         ))}
       </tbody>
     </Tabel>
+</TabelLebar>
+</>
   );
 }
 
@@ -265,7 +297,28 @@ async function Disetujui({ l }: { l: RingkasLaporan }) {
       </div>
       <Kartu rapat>
         <KepalaKartu judul="Slip fee" keterangan="Satu slip per orang, status Dibayar" aksi={l.jurnalNo ? <Link href={`/pelaporan/jurnal-umum?periode=${l.tanggalSelesai.slice(0, 7)}`} className="text-[13px] font-semibold text-aksen hover:underline">Lihat jurnal umum</Link> : undefined} />
-        <Tabel label="Slip fee">
+        <DaftarHP label="Slip fee">
+          {daftar.map((s) => (
+            <KartuHP key={s.no} judul={s.karyawan} sub={<><span className="kode">{s.no}</span> · {LABEL_PERAN_EVENT[s.peranEvent]}</>} kanan={<Rupiah nilai={s.dibayar} className="font-semibold" />}>
+              <RincianHP
+                kolom={3}
+                isi={[
+                  ["Dasar", `${s.satuanTarif === "HARI" ? `${s.jumlahHari} hari` : labelDurasi(s.menitDiakui)} x ${rupiah(s.tarif)}`],
+                  ["Usulan / akhir", <span key="f" className={s.alasanUbah ? "text-amber-700" : ""}>{rupiah(s.feeUsulan)} / {rupiah(s.feeAkhir)}</span>],
+                  ["PPh 21", rupiah(s.pph21)],
+                ]}
+              />
+              {s.alasanUbah && <div className="text-[12px] text-amber-700">Diubah: {s.alasanUbah}</div>}
+              <TautanTombol href={`${dasar}&slip=${s.karyawanKode}`} kecil>Slip</TautanTombol>
+            </KartuHP>
+          ))}
+          <li className="flex items-center justify-between bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900">
+            <span>Total dibayar ({daftar.length} slip)</span>
+            <Rupiah nilai={l.totalDibayar ?? 0} />
+          </li>
+        </DaftarHP>
+<TabelLebar>
+<Tabel label="Slip fee">
           <thead>
             <tr><th>Slip</th><th>Nama</th><th>Tarif</th><th>Dasar</th><th className="kolom-angka">Usulan (Rp)</th><th className="kolom-angka">Fee akhir (Rp)</th><th className="kolom-angka">PPh 21 (Rp)</th><th className="kolom-angka">Dibayar (Rp)</th><th /></tr>
           </thead>
@@ -298,8 +351,28 @@ async function Disetujui({ l }: { l: RingkasLaporan }) {
             </tr>
           </tfoot>
         </Tabel>
+</TabelLebar>
+
       </Kartu>
       {daftar.some((s) => s.alasanUbah) && <p className="text-xs text-slate-500"><Lencana warna="kuning">Diubah</Lencana> Fee akhir berbeda dari usulan sistem, alasannya dicatat Owner.</p>}
     </>
+  );
+}
+
+/** Pratinjau jurnal untuk layar sempit: satu baris per akun, debit atau kredit di kanan. */
+function JurnalRingkas({ baris, namaAkun }: { baris: ReturnType<typeof barisFeeEvent>; namaAkun: Record<string, string> }) {
+  const isi = baris.filter((x) => x.debit || x.kredit);
+  return (
+    <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200 text-[13px] md:hidden" aria-label="Baris jurnal (ringkas)">
+      {isi.map((x, i) => (
+        <li key={i} className={`flex items-start justify-between gap-3 px-3 py-2 ${x.kredit ? "pl-6" : ""}`}>
+          <span className="min-w-0 break-words"><span className="kode mr-1.5">{x.akun}</span>{namaAkun[x.akun] ?? x.akun}</span>
+          <span className="shrink-0 text-right">
+            <span className="block text-[11px] text-slate-500">{x.debit ? "Debit" : "Kredit"}</span>
+            <Rupiah nilai={x.debit || x.kredit} polos />
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }

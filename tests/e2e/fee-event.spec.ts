@@ -49,7 +49,11 @@ async function tungguToast(p: Page, pola: RegExp) {
   await expect(toast(p)).toContainText(pola);
 }
 
-async function potret(p: Page, nama: string) {
+/**
+ * Potret 1440 dan 390. Halaman tidak boleh melebar melewati layar. Untuk halaman fee event (`tanpaGeser`), di 390 juga
+ * tidak boleh ada tabel yang tampil dan menggulir ke samping di dalam pembungkusnya: daftar harus tampil sebagai kartu.
+ */
+async function potret(p: Page, nama: string, tanpaGeser = true) {
   fs.mkdirSync(POTRET, { recursive: true });
   for (const lebar of [1440, 390]) {
     await p.setViewportSize({ width: lebar, height: lebar === 390 ? 844 : 900 });
@@ -59,6 +63,16 @@ async function potret(p: Page, nama: string) {
     // Halaman tidak boleh melebar melewati layar (tabel lebar menggulir di dalam pembungkusnya).
     const lebih = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(lebih, `${nama} melebar ${lebih}px di ${lebar}`).toBeLessThanOrEqual(1);
+    if (lebar === 390) expect(await p.evaluate(() => document.documentElement.scrollWidth), `${nama} scrollWidth di 390`).toBeLessThanOrEqual(390);
+    if (lebar === 390 && tanpaGeser) {
+      const meluap = await p.evaluate(() =>
+        [...document.querySelectorAll<HTMLElement>("main .bungkus-tabel, main table")]
+          .filter((el) => el.checkVisibility() && el.getBoundingClientRect().width > 0)
+          .filter((el) => el.scrollWidth > el.clientWidth + 1 || el.getBoundingClientRect().right > document.documentElement.clientWidth + 1)
+          .map((el) => el.getAttribute("aria-label") ?? el.className),
+      );
+      expect(meluap, `${nama}: tabel meluap atau bergeser di 390`).toEqual([]);
+    }
     await p.screenshot({ path: `${POTRET}/${nama}-${lebar}.png`, fullPage: true });
   }
   await p.setViewportSize({ width: 1440, height: 900 });
@@ -177,6 +191,22 @@ test("HRD mencatat event, sesi, penugasan, dan kehadiran", async () => {
   await tungguToast(p, /Kehadiran tersimpan/);
   await expect(p.getByText("4 crew belum dinilai")).toBeVisible();
   await potret(p, "hrd-detail-event");
+  // Layar HP: kehadiran tampil sebagai kartu, tombol Ubah dan Hapus bisa dipakai dari kartu.
+  await p.setViewportSize({ width: 390, height: 844 });
+  const kartuHadir = p.getByRole("list", { name: "Kehadiran Hari H (ringkas)" });
+  await expect(p.getByRole("table", { name: "Kehadiran Hari H" })).toBeHidden();
+  const arifHp = kartuHadir.getByRole("listitem").filter({ hasText: "Arif Hidayat" });
+  await expect(arifHp).toContainText("tercatat 9 jam");
+  await arifHp.getByRole("link", { name: "Ubah" }).click();
+  await expect(p.getByRole("form", { name: "Ubah kehadiran: Hari H" })).toBeVisible();
+  await potret(p, "hrd-form-ubah-kehadiran");
+  await p.getByRole("form", { name: "Ubah kehadiran: Hari H" }).getByRole("link", { name: "Batal" }).click();
+  await p.setViewportSize({ width: 390, height: 844 });
+  await expect(kartuHadir).toBeVisible();
+  await kartuHadir.getByRole("listitem").filter({ hasText: "Rizky Pratama" }).getByRole("button", { name: "Hapus" }).click();
+  await expect(p.getByRole("dialog")).toContainText("Hapus kehadiran Rizky Pratama?");
+  await p.getByRole("dialog").getByRole("button", { name: "Batal" }).click();
+  await p.setViewportSize({ width: 1440, height: 900 });
 });
 
 test("akses terlarang lewat URL: kapten tidak membuka halaman staf dan event kapten lain", async () => {
@@ -318,7 +348,7 @@ test("Owner menilai kapten, mengubah satu fee (alasan wajib), menyetujui; HRD ti
   await p.getByRole("dialog").getByRole("button", { name: "Setujui dan bayar" }).click();
   await tungguToast(p, new RegExp(`${no} disetujui. Jurnal JU-2026-\\d+ dibuat`));
   await expect(p.getByRole("heading", { name: `Laporan ${no}` })).toBeVisible();
-  await expect(p.getByText("Diubah: Bonus lembur")).toBeVisible();
+  await expect(p.getByRole("table", { name: "Slip fee" }).getByText("Diubah: Bonus lembur")).toBeVisible();
   await potret(p, "owner-disetujui");
   const jurnal = (await p.locator(".kartu", { hasText: "Jurnal" }).locator(".angka").first().textContent())!.trim();
   expect(jurnal).toMatch(/^JU-2026-\d{4}$/);
@@ -338,14 +368,14 @@ test("halaman master dan pengguna untuk fee event", async () => {
   const p = sesi.owner.page;
   await p.goto("/master/sdm?tab=jabatanEvent");
   await expect(p.getByRole("row", { name: /Kapten Event/ })).toContainText("200.000");
-  await potret(p, "owner-master-jabatan-event");
+  await potret(p, "owner-master-jabatan-event", false); // tabel master bersama (modul lama), di luar lingkup kartu
   await p.goto("/master/sdm?tab=karyawan");
   await expect(p.getByRole("row", { name: /Bima Satria/ })).toContainText("Event (fee)");
-  await potret(p, "owner-master-karyawan");
+  await potret(p, "owner-master-karyawan", false);
   await p.goto("/pengguna?form=baru");
   await p.getByLabel("Peran").selectOption("KAPTEN");
   await expect(p.getByLabel("Crew yang dipegang")).toBeVisible();
-  await potret(p, "owner-pengguna-kapten");
+  await potret(p, "owner-pengguna-kapten", false);
   const h = sesi.hrd.page;
   await h.goto("/master/sdm?tab=jabatanEvent");
   await expect(h.getByText("hanya bisa melihat jabatan event")).toBeVisible();

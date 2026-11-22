@@ -24,6 +24,7 @@ import { TautanTombol } from "@/komponen/ui/Tombol";
 import { FormEvent, FormKehadiran, FormPenugasan, FormSesi } from "./FormEvent";
 import { AksiBaris, TombolHapusEvent } from "./AksiEvent";
 import { KeteranganPenilaian, LencanaPenilaian } from "./Penilaian";
+import { DaftarHP, KartuHP, RincianHP, TabelLebar } from "./Ringkas";
 
 const ALAMAT = "/fee-event/event";
 export type CariEvent = { lihat?: string; form?: string; sesi?: string; tugas?: string; hadir?: string; sesiId?: string };
@@ -58,7 +59,29 @@ export default async function HalamanEvent({ cari }: { cari: CariEvent }) {
         {daftar.length === 0 ? (
           <KeadaanKosong judul="Belum ada event" keterangan={bolehKelola ? 'Tekan "Event baru" untuk mencatat event pertama.' : undefined} />
         ) : (
-          <Tabel label="Daftar event">
+          <>
+<DaftarHP label="Daftar event">
+            {daftar.map((e) => (
+              <KartuHP
+                key={e.kode}
+                judul={e.nama}
+                sub={<><span className="kode">{e.kode}</span>{e.klien ? ` · ${e.klien}` : ""}</>}
+                kanan={<><LencanaStatus jenis="event" status={e.status} />{e.status === "PENILAIAN" && e.alasanTolak && <div className="mt-0.5 text-[11px] text-rose-700">Ditolak Owner</div>}</>}
+              >
+                <RincianHP
+                  isi={[
+                    ["Tanggal", `${labelTanggal(e.tanggalMulai)}${e.tanggalSelesai !== e.tanggalMulai ? ` sampai ${labelTanggal(e.tanggalSelesai)}` : ""}`],
+                    ["Kapten", e.kapten.length ? e.kapten.join(", ") : <Lencana key="k" warna="kuning">Belum ada</Lencana>],
+                    ["Sesi, orang", `${e.jumlahSesi} sesi, ${e.jumlahOrang} orang`],
+                    ["Kehadiran", <>{e.jumlahKehadiran}{e.status === "PENILAIAN" && e.belumDinilai > 0 && <span className="text-amber-700">, {e.belumDinilai} belum dinilai</span>}</>],
+                  ]}
+                />
+                <TautanTombol href={`${ALAMAT}?lihat=${e.kode}`} kecil>Buka</TautanTombol>
+              </KartuHP>
+            ))}
+          </DaftarHP>
+<TabelLebar>
+<Tabel label="Daftar event">
             <thead>
               <tr>
                 <th>Kode</th>
@@ -97,6 +120,8 @@ export default async function HalamanEvent({ cari }: { cari: CariEvent }) {
               ))}
             </tbody>
           </Tabel>
+</TabelLebar>
+</>
         )}
       </Kartu>
     </>
@@ -162,7 +187,16 @@ async function DetailEvent({ kode, cari, bolehKelola }: { kode: string; cari: Ca
         {b.sesi.length === 0 ? (
           <KeadaanKosong judul="Belum ada sesi" keterangan="Contoh sesi: Meeting, Loading in, Hari H, Loading out." />
         ) : (
-          <Tabel label="Sesi event">
+          <>
+<DaftarHP label="Sesi event">
+            {b.sesi.map((s) => (
+              <KartuHP key={s.id} judul={s.nama} sub={`${labelTanggal(s.tanggal)}, ${s.jamMulai} sampai ${s.jamSelesai}`} kanan={<span className="text-xs text-slate-500">{semuaKehadiran.filter((k) => k.sesiId === s.id).length} hadir</span>}>
+                {kelola && <AksiBaris kiri jenis="sesi" id={s.id} ubahHref={`${dasar}&sesi=${s.id}`} judulHapus={`Hapus sesi ${s.nama}?`} pesanHapus="Sesi yang sudah punya kehadiran tidak bisa dihapus." />}
+              </KartuHP>
+            ))}
+          </DaftarHP>
+<TabelLebar>
+<Tabel label="Sesi event">
             <thead>
               <tr><th>Sesi</th><th>Tanggal</th><th>Jadwal</th><th className="kolom-angka">Kehadiran</th>{kelola && <th className="text-right">Aksi</th>}</tr>
             </thead>
@@ -181,6 +215,8 @@ async function DetailEvent({ kode, cari, bolehKelola }: { kode: string; cari: Ca
               })}
             </tbody>
           </Tabel>
+</TabelLebar>
+</>
         )}
       </Kartu>
 
@@ -193,7 +229,24 @@ async function DetailEvent({ kode, cari, bolehKelola }: { kode: string; cari: Ca
         {b.orang.length === 0 ? (
           <KeadaanKosong judul="Belum ada penugasan" />
         ) : (
-          <Tabel label="Penugasan event">
+          <>
+<DaftarHP label="Penugasan event">
+            {b.orang.map((o) => (
+              <KartuHP key={o.karyawanKode} judul={o.nama} sub={<><span className="kode">{o.karyawanKode}</span> · {o.jabatan}</>} kanan={<Lencana warna={o.peranEvent === "KAPTEN" ? "teal" : "abu"}>{LABEL_PERAN_EVENT[o.peranEvent]}</Lencana>}>
+                <RincianHP
+                  kolom={3}
+                  isi={[
+                    ["Tarif", `${rupiah(o.tarif)} ${LABEL_SATUAN_TARIF[o.satuanTarif]}`],
+                    ["Diakui", `${o.satuanTarif === "HARI" ? `${o.usulan.jumlahHari} hari` : labelDurasi(o.usulan.menitDiakui)} (${o.usulan.jumlahSesi} sesi)`],
+                    ["Usulan", <Rupiah key="u" nilai={o.usulan.fee} />],
+                  ]}
+                />
+                {kelola && <AksiBaris kiri jenis="penugasan" id={o.penugasanId} ubahHref={`${dasar}&tugas=${o.penugasanId}`} labelUbah="Ganti jabatan" judulHapus={`Hapus penugasan ${o.nama}?`} pesanHapus="Orang yang sudah punya kehadiran tidak bisa dihapus dari event." />}
+              </KartuHP>
+            ))}
+          </DaftarHP>
+<TabelLebar>
+<Tabel label="Penugasan event">
             <thead>
               <tr><th>Nama</th><th>Jabatan</th><th>Tarif</th><th className="kolom-angka">Sesi hadir</th><th className="kolom-angka">Diakui</th><th className="kolom-angka">Usulan (Rp)</th>{kelola && <th className="text-right">Aksi</th>}</tr>
             </thead>
@@ -211,6 +264,8 @@ async function DetailEvent({ kode, cari, bolehKelola }: { kode: string; cari: Ca
               ))}
             </tbody>
           </Tabel>
+</TabelLebar>
+</>
         )}
       </Kartu>
 
@@ -226,7 +281,18 @@ async function DetailEvent({ kode, cari, bolehKelola }: { kode: string; cari: Ca
             {baris.length === 0 ? (
               <p className="px-5 py-4 text-sm text-slate-500">Belum ada kehadiran di sesi ini.</p>
             ) : (
-              <Tabel label={`Kehadiran ${s.nama}`}>
+              <>
+<DaftarHP label={`Kehadiran ${s.nama}`}>
+                {baris.map(({ o, k }) => (
+                  <KartuHP key={k.id} judul={o.nama} sub={`${LABEL_PERAN_EVENT[o.peranEvent]} · ${k.jamMasuk} sampai ${k.jamPulang} · tercatat ${labelDurasi(k.menitTercatat)}`} kanan={<LencanaPenilaian k={k} peran={o.peranEvent} />} nada={k.penilaian === "KURANG" ? "kurang" : undefined}>
+                    <div className="text-[13px] break-words text-slate-700">{k.catatanProgres || <span className="text-slate-400">Tanpa catatan progres</span>}</div>
+                    <KeteranganPenilaian k={k} />
+                    {kelola && <AksiBaris kiri jenis="kehadiran" id={k.id} ubahHref={`${dasar}&hadir=${k.id}&sesiId=${s.id}`} judulHapus={`Hapus kehadiran ${o.nama}?`} pesanHapus={`Kehadiran di sesi ${s.nama} dihapus${k.penilaian ? " beserta penilaiannya" : ""}.`} />}
+                  </KartuHP>
+                ))}
+              </DaftarHP>
+<TabelLebar>
+<Tabel label={`Kehadiran ${s.nama}`}>
                 <thead>
                   <tr><th>Nama</th><th>Masuk</th><th>Pulang</th><th className="kolom-angka">Tercatat</th><th>Catatan progres</th><th>Penilaian</th>{kelola && <th className="text-right">Aksi</th>}</tr>
                 </thead>
@@ -244,6 +310,8 @@ async function DetailEvent({ kode, cari, bolehKelola }: { kode: string; cari: Ca
                   ))}
                 </tbody>
               </Tabel>
+</TabelLebar>
+</>
             )}
           </Kartu>
         );
@@ -252,7 +320,17 @@ async function DetailEvent({ kode, cari, bolehKelola }: { kode: string; cari: Ca
       {riwayat.length > 0 && (
         <Kartu rapat>
           <KepalaKartu judul="Riwayat laporan kapten" keterangan={`${riwayat.length} laporan`} />
-          <Tabel label="Riwayat laporan">
+          <>
+<DaftarHP label="Riwayat laporan">
+            {riwayat.map((l) => (
+              <KartuHP key={l.no} judul={<span className="kode">{l.no}</span>} sub={`${labelWaktu(l.diajukanPada)} · ${l.diajukanOleh}`} kanan={<LencanaStatus jenis="persetujuan" status={l.status} />}>
+                <div className="text-[13px] break-words">{l.alasanTolak ? <span className="text-rose-700">Ditolak: {l.alasanTolak}</span> : l.jurnalNo ? `Jurnal ${l.jurnalNo}` : l.catatanKapten || "-"}</div>
+                <TautanTombol href={`/fee-event/keputusan?lihat=${l.no}`} kecil>Buka</TautanTombol>
+              </KartuHP>
+            ))}
+          </DaftarHP>
+<TabelLebar>
+<Tabel label="Riwayat laporan">
             <thead><tr><th>No.</th><th>Dikirim</th><th>Oleh</th><th>Status</th><th>Keterangan</th><th className="text-right" /></tr></thead>
             <tbody>
               {riwayat.map((l) => (
@@ -267,6 +345,8 @@ async function DetailEvent({ kode, cari, bolehKelola }: { kode: string; cari: Ca
               ))}
             </tbody>
           </Tabel>
+</TabelLebar>
+</>
         </Kartu>
       )}
     </>

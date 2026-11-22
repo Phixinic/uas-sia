@@ -14,16 +14,18 @@ import { useState } from "react";
 type Jenis = "sesi" | "penugasan" | "kehadiran";
 const AKSI_HAPUS: Record<Jenis, (input: { id: number }) => ReturnType<typeof hapusSesi>> = { sesi: hapusSesi, penugasan: hapusPenugasan, kehadiran: hapusKehadiran };
 
-export function AksiBaris({ jenis, id, ubahHref, judulHapus, pesanHapus, labelUbah = "Ubah" }: {
+export function AksiBaris({ jenis, id, ubahHref, judulHapus, pesanHapus, labelUbah = "Ubah", kiri }: {
   jenis: Jenis;
   id: number;
   ubahHref: string;
   judulHapus: string;
   pesanHapus?: string;
   labelUbah?: string;
+  /** Rata kiri (di kartu layar sempit); bawaannya rata kanan seperti kolom aksi tabel. */
+  kiri?: boolean;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-end gap-1.5">
+    <div className={`flex flex-wrap items-center gap-1.5 ${kiri ? "" : "justify-end"}`}>
       <TautanTombol href={ubahHref} kecil ikon={<Pencil className="size-4" />}>{labelUbah}</TautanTombol>
       <TombolAksi aksi={() => AKSI_HAPUS[jenis]({ id })} varian="bahaya" ikon={<Trash2 className="size-4" />} judul={judulHapus} konfirmasi={{ judul: judulHapus, pesan: pesanHapus }}>
         Hapus
