@@ -9,13 +9,13 @@ Next.js 16 (App Router, TypeScript), Prisma 7 + PostgreSQL 16 (adapter `pg`), Ta
 ```
 prisma/schema.prisma            skema relasional (nama Indonesia, tabel snake_case)
 prisma/migrations/              migrasi (CHECK constraint tambahan ditulis manual di migrasi awal)
-prisma/seed.ts                  data contoh Oktober 2026 + 3 pengguna demo
+prisma/seed.ts                  data contoh Oktober 2026 + 3 pengguna demo, data contoh fee event November 2026 + 2 akun kapten
 prisma/data/                    salinan JSON data contoh app lama
-src/lib/inti/                   logika murni tanpa DB/UI: tanggal, penyusutan, penggajian, jurnal, buku-besar, akun
+src/lib/inti/                   logika murni tanpa DB/UI: tanggal, penyusutan, penggajian, fee-event, jurnal, buku-besar, akun
 src/lib/server/                 khusus server: db, auth, aksi (konvensi), nomor, periode, jurnal, log, menu, logo
 src/lib/aksi/<siklus>/          server action ("use server")
 src/lib/data/<siklus>/          kueri baca untuk komponen server
-src/lib/skema/                  skema zod (boleh diimpor klien): konversi, pembelian, sdm, pelaporan, master, pengguna
+src/lib/skema/                  skema zod (boleh diimpor klien): konversi, pembelian, sdm, fee-event, pelaporan, master, pengguna
 src/lib/peran.ts                peran + tabel IZIN per aksi (boleh diimpor klien)
 src/lib/format.ts               rupiah, tanggal, label enum (boleh diimpor klien)
 src/lib/menu.ts                 peta menu sidebar
@@ -42,6 +42,9 @@ tests/                          vitest: tes inti (tanpa DB) dan tes integrasi (U
 | `/sdm/presensi` | Presensi (rekap dan harian) | SDM |
 | `/sdm/hitung-gaji` | Hitung Gaji (slip, PPh 21) | SDM |
 | `/sdm/distribusi` | Distribusi Gaji (pengajuan penggajian) | SDM |
+| `/fee-event/event` | Event & Kehadiran crew freelance (`?lihat=EVT-2026-0001`, `&sesi=`, `&tugas=`, `&hadir=`) | SDM (fee event) |
+| `/fee-event/keputusan` | Laporan & Fee: keputusan Owner, slip fee (`?lihat=FEE-2026-0001&slip=semua`) | SDM (fee event) |
+| `/kapten` | Penilaian Crew (hanya peran Kapten, `?lihat=EVT-2026-0001`) | SDM (fee event) |
 | `/pelaporan/jurnal-penyesuaian` | Jurnal Penyesuaian (ajukan, setujui, tolak) | Pelaporan |
 | `/pelaporan/jurnal-umum` | Jurnal Umum (umum + pembalik yang disetujui) | Pelaporan |
 | `/pelaporan/buku-besar` | Buku Besar | Pelaporan |
@@ -55,7 +58,9 @@ Halaman yang belum jadi memakai `HalamanBelumJadi`; ganti seluruh isi `page.tsx`
 
 ## 3. Peran dan izin per aksi
 
-Sumber kebenaran: `IZIN` di `src/lib/peran.ts`. Semua peran boleh **membuka** semua halaman kecuali `/pengguna`; tombol aksi disembunyikan dengan `boleh(peran, "kunci")`, dan server action **wajib** memanggil `wajibPeran(IZIN["kunci"])`.
+Sumber kebenaran: `IZIN` di `src/lib/peran.ts`. Semua peran staf (Admin, HRD, Owner) boleh **membuka** semua halaman kecuali `/pengguna` dan `/kapten`; tombol aksi disembunyikan dengan `boleh(peran, "kunci")`, dan server action **wajib** memanggil `wajibPeran(IZIN["kunci"])`.
+
+Peran **Kapten** (crew freelance yang memimpin event) ditolak secara bawaan: `wajibMasuk()` mengalihkan Kapten ke `/tanpa-akses`, jadi semua halaman lama tertutup untuknya tanpa diubah satu per satu. Kapten hanya membuka dashboard khusus kapten (`wajibMasuk({ kapten: true })`) dan `/kapten` (`wajibPeranHalaman(["KAPTEN"])`). Menu sidebar untuk Kapten hanya berisi tautan yang menyebut `KAPTEN` secara eksplisit (`tampilUntuk` di `src/lib/menu.ts`). Akun Kapten ditautkan ke satu karyawan berjenis Event (`pengguna.id_karyawan`), dan setiap aksi kapten memeriksa kepemilikan event lewat `pastikanKaptenEvent` (kapten hanya menyentuh event tempat karyawannya ditugaskan sebagai Kapten).
 
 | Kunci izin | Peran | Aksi |
 |---|---|---|
@@ -70,6 +75,11 @@ Sumber kebenaran: `IZIN` di `src/lib/peran.ts`. Semua peran boleh **membuka** se
 | `gaji.hitung` | HRD | hitung dan simpan slip, hapus slip draf |
 | `penggajian.ajukan` | HRD | ajukan semua slip draf satu periode |
 | `penggajian.putuskan` | Owner | setujui (jurnal + bayar) atau tolak |
+| `event.kelola` | HRD, Owner | event, sesi, penugasan crew, kehadiran per sesi (hanya selama event berstatus Penilaian) |
+| `event.nilai` | Kapten, Owner | Kapten menilai kehadiran crew di event miliknya (bukan dirinya, bukan kapten lain); Owner menilai kehadiran kapten |
+| `event.lapor` | Kapten | kirim laporan progres ke Owner (semua kehadiran crew sudah dinilai) |
+| `fee-event.putuskan` | Owner | tentukan fee akhir per orang, setujui (jurnal + slip fee) atau tolak (kembali ke kapten) |
+| `tarif-event.ubah` | Owner | master Jabatan event: peran (Kapten/Crew), satuan tarif (hari/jam), tarif, akun biaya |
 | `jurnal-penyesuaian.ajukan` | Admin | ajukan jurnal penyesuaian draf |
 | `jurnal-penyesuaian.putuskan` | Owner | setujui atau tolak; pembuat tidak boleh menyetujui jurnalnya sendiri |
 | `periode.kunci` | Owner | tutup periode (mengunci periode, tanpa jurnal penutup) dan buka kunci periode (alasan wajib saat buka); berurutan: kunci dari periode paling lama, buka dari periode terkunci paling akhir |
@@ -94,6 +104,9 @@ Enum `StatusPersetujuan` (DRAFT, DIAJUKAN, DISETUJUI, DITOLAK) dipakai jurnal, p
 | Pelepasan | dibuat DIAJUKAN → Owner DISETUJUI (jurnal umum dibuat, aset DILEPAS, jadwal yang belum dijurnal dihapus) / DITOLAK |
 | Slip | DRAFT (boleh dihitung ulang/hapus) → DIAJUKAN (bersama penggajian) → DISETUJUI (dibayar); bila penggajian ditolak slip kembali DRAFT, `penggajianNo` dikosongkan, `alasanTolak` diisi |
 | Penggajian | dibuat DIAJUKAN → Owner DISETUJUI (cek saldo kas ≥ total THP, jurnal umum dibuat, slip DISETUJUI) / DITOLAK |
+| Event (fee event) | `StatusEvent`: PENILAIAN (HRD mencatat, kapten menilai) → kapten kirim laporan → DIAJUKAN (data terkunci) → Owner setujui → SELESAI; Owner tolak → kembali PENILAIAN dengan `alasan_tolak` |
+| Laporan fee | dibuat DIAJUKAN saat kapten mengirim → Owner DISETUJUI (cek saldo kas ≥ total dibayar, periode tanggal selesai event terbuka, jurnal umum DISETUJUI, slip fee per orang) / DITOLAK (tetap tersimpan sebagai jejak; kiriman ulang = nomor baru) |
+| Slip fee | dibuat saat laporan disetujui, selalu tampil "Dibayar" |
 
 Efek penolakan jurnal penyesuaian ke sumbernya sudah ditulis di `src/lib/server/jurnal.ts` (`ajukanJurnal`, `setujuiJurnal`, `tolakJurnal`). Agen pelaporan cukup memanggilnya dari server action.
 
@@ -150,6 +163,9 @@ Dibuat oleh `src/lib/server/nomor.ts`, penghitung atomik di tabel `penghitung` (
 | Pembelian peralatan / perlengkapan | `BP-2026-0008`, `BL-2026-0003` | `nomorDokumen(tx, AWALAN.PEMBELIAN_PERALATAN, tanggal)` |
 | Pelepasan | `PLP-2026-0002` | `nomorDokumen(tx, AWALAN.PELEPASAN, tanggal)` |
 | Penggajian | `PAY-2026-0002` (tahun dari hari terakhir periode) | `nomorDokumen(tx, AWALAN.PENGGAJIAN, hariTerakhir(periode))` |
+| Event | `EVT-2026-0001` (tahun dari tanggal mulai) | `nomorDokumen(tx, AWALAN.EVENT, tanggalMulai)` |
+| Laporan fee | `FEE-2026-0001` (tahun dari tanggal selesai event) | `nomorDokumen(tx, AWALAN.LAPORAN_FEE, tanggalSelesai)` |
+| Slip fee | `SFE-EVT-2026-0001-KRY-06` (satu per orang per event) | `nomorSlipFee(eventKode, karyawanKode)` |
 | Aset | `AST-0010` | `kodeBerikutnya(tx, AWALAN.ASET, 4)` |
 | Master | `SUP-04`, `ALT-07`, `LKP-06`, `KAT-05`, `KRY-06`, `JBT-05`, `GP-05`, `TNJ-05`, `TM-05`, `SET-06` | `kodeBerikutnya(tx, AWALAN.X)` |
 | Akun | kode diketik Owner (`1-110`), tidak bisa diubah sesudah dibuat | |
@@ -197,3 +213,18 @@ Selesai mengerjakan: `npm run cek-tipe`, `npm run lint`, `npm run uji`, dan `npm
 - Periode bawaan halaman SDM = periode berjalan, sama dengan dashboard. Tautan cepat dashboard ke halaman berperiode membawa `?periode` yang sedang dipilih; tautan "Perlu tindakan" SDM membawa periode pekerjaan yang tertunda.
 - Kartu penyusutan di dashboard mengambil angka disetujui dari jurnal penyusutan yang disetujui, jadi aset yang dilepas sesudah penyusutannya disetujui tetap terhitung. Tabel halaman Proses Penyusutan juga memuat baris aset yang sudah dilepas (diberi lencana "dilepas"), sehingga total tabel sama dengan jurnal periodenya.
 - Kontrol form (`Isian`, `Pilihan`, `AreaTeks`, `IsianRupiah`) otomatis menunjuk pesan galat `<id>-galat` lewat `aria-describedby`. Form yang memakai galat per isian memanggil `useFokusGalat` supaya isian salah pertama difokuskan sesudah kirim gagal. Laci menu layar kecil `inert` saat tertutup, Esc menutupnya, dan fokus pindah ke "Tutup menu" lalu kembali ke "Buka menu".
+
+### Fee event (crew freelance per event)
+
+Revisi modul penggajian: sekarang ada dua jenis penggajian. Konsepnya mengikuti app absen D'Production (dproabsent, `src/lib/upah.js`), disederhanakan untuk SIA.
+
+- **Jenis karyawan** (`karyawan.jenis`): `INHOUSE` (gaji tetap bulanan: presensi, setting gaji, Hitung Gaji, Distribusi) atau `EVENT` (crew freelance, fee per event). Data lama otomatis `INHOUSE` lewat nilai bawaan kolom di migrasi `20261122140000_fee_event`. Presensi, Hitung Gaji, Setting gaji, dan Jadwal kerja hanya untuk karyawan dan jabatan inhouse (dicek di data dan server action). Jenis tidak bisa diubah bila karyawan sudah punya data di jalur lain.
+- **Kelompok jabatan** (`jabatan.kelompok`): jabatan `EVENT` punya `peran_event` (KAPTEN/CREW), `satuan_tarif` (HARI/JAM), dan `tarif`. Dikelola di tab Master SDM "Jabatan event" (izin `tarif-event.ubah`, Owner saja); tab "Jabatan" hanya menampilkan dan mengubah jabatan inhouse. Bawaan: Kapten Event Rp200.000 per hari, Crew Event Rp20.000 per jam, akun biaya baru `6-230 Biaya Fee Crew Event (Freelance)`. Migrasi menambah akun dan dua jabatan ini di database yang sudah berisi bagan akun; database kosong diisi seed. Peran jabatan yang sudah dipakai penugasan tidak bisa diubah (tarif tetap boleh).
+- **Struktur**: `event` 1:N `sesi_event` (Meeting, Loading in, Hari H, Loading out; jam selesai harus sesudah jam mulai di hari yang sama, sesi lewat tengah malam dipecah dua), `event` 1:N `penugasan_event` (satu orang satu penugasan per event; kapten boleh lebih dari satu dan diganti dengan mengubah jabatan penugasannya), `sesi_event` 1:N `kehadiran_event` (satu per orang per sesi, hanya orang yang ditugaskan), `event` 1:N `laporan_fee`, `laporan_fee` 1:N `slip_fee`.
+- **Rumus** (`src/lib/inti/fee-event.ts`, dites di `tests/fee-event.test.ts`): menit tercatat = jam masuk sampai pulang yang dipotong ke jadwal sesi (menit penuh). SESUAI atau belum dinilai = menit tercatat diakui penuh; KURANG = jam diakui isian penilai, tidak pernah lebih dari menit tercatat. Tarif per jam: menit diakui x tarif / 60, dibulatkan ke rupiah. Tarif per hari: jumlah tanggal berbeda yang punya menit diakui > 0 x tarif. Menit di atas 8 jam per sesi ditampilkan sebagai lembur dengan tarif yang sama.
+- **Penilaian**: kapten menilai kehadiran crew di event miliknya selama PENILAIAN; tidak boleh menilai dirinya sendiri atau kapten lain. Kehadiran kapten dinilai Owner (di halaman keputusan, selama PENILAIAN atau DIAJUKAN); yang belum dinilai Owner dihitung sesuai catatan HRD. Mengubah jam sesi, data kehadiran, atau peran penugasan menghapus penilaian yang terkait supaya kapten menilai ulang.
+- **Laporan dan keputusan**: kapten mengirim laporan (catatan umum opsional) setelah semua kehadiran crew dinilai. Owner melihat daftar KURANG beserta catatan kapten secara menonjol, boleh mengubah fee akhir per orang (alasan wajib bila berbeda dari usulan, disimpan di slip), lalu Setujui atau Tolak (alasan wajib, tampil ke kapten dan HRD). Semua aksi yang mengubah event mengunci baris event (`kunciEvent`, `SELECT ... FOR UPDATE`) supaya perubahan HRD, penilaian, kiriman laporan, dan keputusan Owner tidak saling menyalip.
+- **Jurnal fee**: satu jurnal umum DISETUJUI bertanggal **tanggal selesai event** (periode itu harus terbuka): Dr akun biaya jabatan (bruto = fee akhir), Kr `2-120 Utang PPh 21`, Kr `1-110 Kas` (yang dibayar). Sumber jurnal `FEE_EVENT`, `sumber_id` = nomor laporan. Saldo kas harus cukup, sama dengan alur penggajian. Pembuat dan penyetuju jurnal = Owner yang menyetujui.
+- **Asumsi PPh 21 event**: crew freelance diperlakukan sebagai penerima penghasilan bukan pegawai yang tidak berkesinambungan: DPP = 50% x bruto, PPh 21 = 5% x DPP (tarif lapis pertama Pasal 17), tanpa PTKP dan tanpa akumulasi setahun. Rumus pegawai tetap yang sudah ada (`hitungPph21`, disetahunkan dengan biaya jabatan dan PTKP) tidak cocok untuk fee per event, jadi tidak dipakai. Ini simulasi untuk tugas, sama seperti PPh 21 inhouse.
+- **Privasi kapten**: halaman dan dashboard kapten tidak menampilkan tarif, fee, atau angka keuangan; kapten hanya melihat jam dan catatan progres. Pesan galat untuk event milik kapten lain sama dengan event yang tidak ada.
+- **Data contoh** (seed): `EVT-2026-0001` Gathering Tahunan PT Sinar Abadi (4 sesi, kapten Bima Satria + 4 crew, satu penilaian KURANG, laporan `FEE-2026-0001` menunggu Owner, usulan Rp2.255.000) dan `EVT-2026-0002` Wedding Expo Malang (menunggu penilaian kapten Sari Wulandari). Seed fee event tidak membuat jurnal, jadi angka data lama (neraca Oktober, nomor jurnal berikutnya) tidak berubah. Akun contoh: `kapten` (KRY-06) dan `kapten2` (KRY-07).

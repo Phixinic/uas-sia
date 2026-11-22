@@ -67,7 +67,7 @@ export default async function HalamanPresensi({ cari }: { cari: CariPresensi }) 
     <>
       <KepalaHalaman
         judul="Presensi"
-        keterangan="Catatan kehadiran harian dan rekapnya per periode. Jam kerja dikurangi istirahat 1 jam. Presensi terkunci setelah gaji periodenya diajukan."
+        keterangan="Catatan kehadiran harian karyawan inhouse dan rekapnya per periode. Kehadiran crew event dicatat di menu Event & Kehadiran. Jam kerja dikurangi istirahat 1 jam. Presensi terkunci setelah gaji periodenya diajukan."
         aksi={
           <>
             <PilihPeriode terpilih={periode} opsi={opsiPeriode} />

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  ArrowRight, BadgeCheck, Banknote, BookOpen, CalendarClock, ClipboardCheck, Coins, FileText, Hourglass, IdCard, Lock, Package, ReceiptText, Scale, TrendingDown, UserCog, Users, Wrench,
+  ArrowRight, BadgeCheck, Banknote, BookOpen, CalendarClock, CalendarRange, ClipboardCheck, Coins, FileText, HandCoins, Hourglass, IdCard, Lock, Package, ReceiptText, Scale, TrendingDown, UserCog, Users, Wrench,
 } from "lucide-react";
 import { wajibMasuk } from "@/lib/server/auth";
 import { dataDashboard } from "@/lib/data/pelaporan/dashboard";
@@ -16,13 +16,14 @@ import Tabel, { BarisKosong } from "@/komponen/ui/Tabel";
 import Rupiah from "@/komponen/ui/Rupiah";
 import Lencana, { LencanaStatus } from "@/komponen/ui/Lencana";
 import FilterUrl from "@/komponen/pelaporan/FilterUrl";
+import DashboardKapten from "@/komponen/fee-event/DashboardKapten";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
 /** `berperiode`: halaman tujuan membaca ?periode, jadi tautannya membawa periode yang sedang dipilih di dashboard. */
 type Tautan = { href: string; label: string; ikon: React.ReactNode; berperiode?: boolean };
 
-const TAUTAN: Record<Peran, Tautan[]> = {
+const TAUTAN: Record<Exclude<Peran, "KAPTEN">, Tautan[]> = {
   ADMIN: [
     { href: "/konversi/pembelian-peralatan", label: "Pembelian peralatan", ikon: <Wrench className="size-4" /> },
     { href: "/konversi/pembelian-perlengkapan", label: "Pembelian perlengkapan", ikon: <Package className="size-4" /> },
@@ -33,11 +34,13 @@ const TAUTAN: Record<Peran, Tautan[]> = {
     { href: "/sdm/presensi", label: "Presensi", ikon: <CalendarClock className="size-4" />, berperiode: true },
     { href: "/sdm/hitung-gaji", label: "Hitung gaji", ikon: <Coins className="size-4" />, berperiode: true },
     { href: "/sdm/distribusi", label: "Distribusi gaji", ikon: <ReceiptText className="size-4" />, berperiode: true },
+    { href: "/fee-event/event", label: "Event & kehadiran crew", ikon: <CalendarRange className="size-4" /> },
     { href: "/master/sdm", label: "Master SDM", ikon: <Users className="size-4" /> },
   ],
   OWNER: [
     { href: "/pelaporan/jurnal-penyesuaian?status=DIAJUKAN", label: "Setujui jurnal", ikon: <BadgeCheck className="size-4" /> },
     { href: "/sdm/distribusi", label: "Setujui penggajian", ikon: <ReceiptText className="size-4" />, berperiode: true },
+    { href: "/fee-event/keputusan", label: "Putuskan fee event", ikon: <HandCoins className="size-4" /> },
     { href: "/pelaporan/tutup-periode", label: "Tutup periode", ikon: <Lock className="size-4" /> },
     { href: "/pengguna", label: "Kelola pengguna", ikon: <UserCog className="size-4" /> },
   ],
@@ -61,7 +64,10 @@ function ketPenyusutan(s: { jadwal: number; disetujui: number; unit: number }) {
 }
 
 export default async function Dashboard({ searchParams }: { searchParams: Promise<{ periode?: string }> }) {
-  const pengguna = await wajibMasuk();
+  const pengguna = await wajibMasuk({ kapten: true });
+  // Kapten (crew freelance) tidak melihat angka keuangan; dashboard-nya hanya berisi pekerjaan penilaian.
+  if (pengguna.peran === "KAPTEN") return <DashboardKapten pengguna={pengguna} />;
+  const peran = pengguna.peran;
   const cari = await searchParams;
   const semua = await semuaPeriode();
   const periode = cari.periode && semua.includes(cari.periode) ? cari.periode : periodeIni();
@@ -87,13 +93,18 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           ikon={<TrendingDown className="size-4" />}
           keterangan={ketPenyusutan(d.susut)}
         />
-        <KartuRingkasan judul={`Beban gaji ${labelPeriode(periode)}`} nilai={d.bebanGaji} ikon={<Coins className="size-4" />} keterangan={d.bebanGaji ? "Dari jurnal penggajian yang disetujui" : "Belum ada penggajian disetujui"} />
+        <KartuRingkasan
+          judul={`Beban gaji dan fee ${labelPeriode(periode)}`}
+          nilai={d.bebanGaji + d.bebanFee}
+          ikon={<Coins className="size-4" />}
+          keterangan={d.bebanGaji || d.bebanFee ? `Gaji inhouse ${rupiah(d.bebanGaji)}, fee event ${rupiah(d.bebanFee)}` : "Belum ada penggajian atau fee disetujui"}
+        />
         <KartuRingkasan
           judul="Menunggu persetujuan"
           nilai={String(d.menunggu.total)}
           bukanUang
           ikon={<Hourglass className="size-4" />}
-          keterangan={`Jurnal ${d.menunggu.jurnal}, pelepasan ${d.menunggu.pelepasan}, penggajian ${d.menunggu.penggajian}`}
+          keterangan={`Jurnal ${d.menunggu.jurnal}, pelepasan ${d.menunggu.pelepasan}, penggajian ${d.menunggu.penggajian}, fee ${d.menunggu.fee}`}
           nada={d.menunggu.total ? "kuning" : "netral"}
         />
         <KartuRingkasan judul="Periode aktif" nilai={labelPeriode(periode)} bukanUang ikon={<CalendarClock className="size-4" />} keterangan={d.statusPeriode === "TERKUNCI" ? "Terkunci, menolak jurnal baru" : "Terbuka untuk transaksi"} nada={d.statusPeriode === "TERKUNCI" ? "merah" : "netral"} />
@@ -128,7 +139,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           <h2 className="judul-kartu">Tautan cepat</h2>
           <p className="mt-0.5 text-xs text-slate-500">Menu yang sering dipakai {LABEL_PERAN[pengguna.peran]}.</p>
           <div className="mt-3 grid gap-2">
-            {[...TAUTAN[pengguna.peran], ...TAUTAN_LAPORAN].map((t) => (
+            {[...TAUTAN[peran], ...TAUTAN_LAPORAN].map((t) => (
               <Link key={t.href} href={t.berperiode ? denganPeriode(t.href, periode) : t.href} className="flex items-center gap-2.5 rounded-lg border border-slate-200 px-3 py-2 text-[13px] font-medium text-slate-700 transition-colors hover:border-aksen hover:bg-aksen-lembut hover:text-aksen-gelap">
                 <span className="text-slate-500">{t.ikon}</span>
                 {t.label}

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Plus } from "lucide-react";
 import { wajibPeranHalaman } from "@/lib/server/auth";
 import { IZIN, LABEL_PERAN } from "@/lib/peran";
-import { daftarPengguna } from "@/lib/data/master/pengguna";
+import { daftarPengguna, opsiKaryawanKapten } from "@/lib/data/master/pengguna";
 import { labelWaktu } from "@/lib/format";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
@@ -18,14 +18,14 @@ export const metadata: Metadata = { title: "Pengguna" };
 export default async function Halaman({ searchParams }: { searchParams: Promise<{ form?: string; ubah?: string; sandi?: string }> }) {
   const saya = await wajibPeranHalaman(IZIN["pengguna.kelola"]);
   const cari = await searchParams;
-  const daftar = await daftarPengguna();
+  const [daftar, karyawan] = await Promise.all([daftarPengguna(), opsiKaryawanKapten()]);
   const cariId = (s?: string) => daftar.find((p) => String(p.id) === s);
 
   let form: React.ReactNode = null;
-  if (cari.form === "baru") form = <FormPengguna key="baru" mode="baru" />;
+  if (cari.form === "baru") form = <FormPengguna key="baru" mode="baru" karyawan={karyawan} />;
   else if (cari.ubah) {
     const p = cariId(cari.ubah);
-    form = p ? <FormPengguna key={`ubah-${p.id}`} mode="ubah" id={p.id} namaPengguna={p.namaPengguna} nama={p.nama} peran={p.peran} dirinyaSendiri={p.id === saya.id} /> : <Peringatan jenis="galat">Pengguna tidak ditemukan.</Peringatan>;
+    form = p ? <FormPengguna key={`ubah-${p.id}`} mode="ubah" id={p.id} namaPengguna={p.namaPengguna} nama={p.nama} peran={p.peran} karyawanKode={p.karyawanKode} dirinyaSendiri={p.id === saya.id} karyawan={karyawan} /> : <Peringatan jenis="galat">Pengguna tidak ditemukan.</Peringatan>;
   } else if (cari.sandi) {
     const p = cariId(cari.sandi);
     form = p ? <FormPengguna key={`sandi-${p.id}`} mode="sandi" id={p.id} namaPengguna={p.namaPengguna} /> : <Peringatan jenis="galat">Pengguna tidak ditemukan.</Peringatan>;
@@ -35,7 +35,7 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
     <>
       <KepalaHalaman
         judul="Pengguna"
-        keterangan="Kelola akun Admin, HRD, dan Owner. Menonaktifkan akun atau mengganti kata sandinya langsung memutus sesi login akun itu."
+        keterangan="Kelola akun Admin, HRD, Owner, dan Kapten event. Akun Kapten ditautkan ke satu crew berjenis Event. Menonaktifkan akun atau mengganti kata sandinya langsung memutus sesi login akun itu."
         aksi={!form ? <TautanTombol href="/pengguna?form=baru" varian="utama" ikon={<Plus className="size-4" />}>Pengguna baru</TautanTombol> : null}
       />
       {form}
@@ -58,7 +58,10 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
               <tr key={p.id} className={p.aktif ? "" : "text-slate-400"}>
                 <td className="kode">@{p.namaPengguna}{p.id === saya.id && <span className="ml-1.5 text-[11px] text-aksen">(kamu)</span>}</td>
                 <td className="font-medium">{p.nama}</td>
-                <td><Lencana warna={p.peran === "OWNER" ? "teal" : p.peran === "ADMIN" ? "biru" : "kuning"}>{LABEL_PERAN[p.peran]}</Lencana></td>
+                <td>
+                  <Lencana warna={p.peran === "OWNER" ? "teal" : p.peran === "ADMIN" ? "biru" : p.peran === "KAPTEN" ? "hijau" : "kuning"}>{LABEL_PERAN[p.peran]}</Lencana>
+                  {p.peran === "KAPTEN" && <div className="mt-0.5 text-[11px] text-slate-500">{p.karyawan ? `${p.karyawanKode} · ${p.karyawan}` : "Belum ditautkan"}</div>}
+                </td>
                 <td className="whitespace-nowrap">{labelWaktu(p.dibuatPada)}</td>
                 <td className="angka">{p.sesiAktif}</td>
                 <td><Lencana warna={p.aktif ? "hijau" : "abu"}>{p.aktif ? "Aktif" : "Nonaktif"}</Lencana></td>

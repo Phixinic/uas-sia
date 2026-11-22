@@ -13,7 +13,7 @@ import { IZIN } from "@/lib/peran";
 import { AWALAN, kodeBerikutnya } from "@/lib/server/nomor";
 import { catatLog } from "@/lib/server/log";
 import { DEF_MASTER, skemaIsiMaster, skemaProfil, skemaSimpanMaster, skemaStatusMaster, type JenisMaster } from "@/lib/skema/master";
-import type { SaldoNormal, StatusPtkp, TipeAkun } from "@/generated/prisma/enums";
+import type { JenisKaryawan, PeranEvent, SaldoNormal, SatuanTarif, StatusPtkp, TipeAkun } from "@/generated/prisma/enums";
 
 type Nilai = Record<string, string | number | string[]>;
 
@@ -24,6 +24,18 @@ async function pastikanRujukan(daftar: { ada: boolean; aktif: boolean; label: st
   for (const r of daftar) {
     if (!r.ada) throw new GalatAksi(`${r.label} tidak ditemukan.`, { [r.isian]: `${r.label} tidak ditemukan.` });
     if (!r.aktif && !r.lama) throw new GalatAksi(`${r.label} sudah dinonaktifkan.`, { [r.isian]: `${r.label} nonaktif.` });
+  }
+}
+
+/** Setting gaji dan jadwal kerja hanya untuk karyawan dan jabatan inhouse (crew event dibayar lewat fee event). */
+async function pastikanInhouse(tx: Tx, r: { karyawanKode?: string; jabatanKode?: string }) {
+  if (r.karyawanKode) {
+    const k = await tx.karyawan.findUnique({ where: { kode: r.karyawanKode }, select: { jenis: true } });
+    if (k?.jenis === "EVENT") throw new GalatAksi("Karyawan event tidak memakai setting gaji. Fee-nya dihitung di menu Fee event.", { karyawanKode: "Karyawan event." });
+  }
+  if (r.jabatanKode) {
+    const j = await tx.jabatan.findUnique({ where: { kode: r.jabatanKode }, select: { kelompok: true } });
+    if (j?.kelompok === "EVENT") throw new GalatAksi("Jabatan event tidak dipakai untuk gaji inhouse.", { jabatanKode: "Jabatan event." });
   }
 }
 
@@ -92,16 +104,42 @@ async function simpan(tx: Tx, jenis: JenisMaster, kodeLama: string | null, v: Ni
       return kodeLama;
     }
     case "karyawan": {
-      const data = { nama: s("nama"), statusPtkp: s("statusPtkp") as StatusPtkp, bank: s("bank"), noRek: s("noRek") };
+      // Isian jenis kosong (form lama atau kiriman tanpa jenis) dianggap Inhouse, sama dengan nilai bawaan kolomnya.
+      const jenisBaru = (s("jenis") || "INHOUSE") as JenisKaryawan;
+      const data = { nama: s("nama"), statusPtkp: s("statusPtkp") as StatusPtkp, bank: s("bank"), noRek: s("noRek"), jenis: jenisBaru };
       if (baru) return (await tx.karyawan.create({ data: { kode: await kodeBerikutnya(tx, AWALAN.KARYAWAN), ...data } })).kode;
+      const lama = await tx.karyawan.findUniqueOrThrow({ where: { kode: kodeLama }, select: { jenis: true, settingGaji: { select: { kode: true } }, _count: { select: { presensi: true, slipGaji: true, penugasan: true, kehadiran: true } }, pengguna: { select: { id: true } } } });
+      if (lama.jenis !== jenisBaru) {
+        const c = lama._count;
+        if (jenisBaru === "EVENT" && (lama.settingGaji || c.presensi || c.slipGaji)) {
+          throw new GalatAksi("Karyawan ini sudah punya setting gaji, presensi, atau slip gaji inhouse, jadi jenisnya tidak bisa diubah menjadi Event. Buat data karyawan baru untuk crew event.", { jenis: "Sudah dipakai di gaji inhouse." });
+        }
+        if (jenisBaru === "INHOUSE" && (c.penugasan || c.kehadiran || lama.pengguna)) {
+          throw new GalatAksi("Karyawan ini sudah ditugaskan di event atau ditautkan ke akun kapten, jadi jenisnya tidak bisa diubah menjadi Inhouse.", { jenis: "Sudah dipakai di fee event." });
+        }
+      }
       await tx.karyawan.update({ where: { kode: kodeLama }, data });
       return kodeLama;
     }
     case "jabatan": {
-      const lama = kodeLama ? await tx.jabatan.findUnique({ where: { kode: kodeLama }, select: { akunBebanKode: true } }) : null;
+      const lama = kodeLama ? await tx.jabatan.findUnique({ where: { kode: kodeLama }, select: { akunBebanKode: true, kelompok: true } }) : null;
+      if (lama && lama.kelompok !== "INHOUSE") throw new GalatAksi("Jabatan ini jabatan event. Ubah lewat tab Jabatan event (khusus Owner).");
       await pastikanRujukan([await ada("akun", s("akunBebanKode"), "Akun biaya gaji", "akunBebanKode", lama?.akunBebanKode === s("akunBebanKode"))]);
       const data = { nama: s("nama"), tunjJabatan: n("tunjJabatan"), tunjKeluarga: n("tunjKeluarga"), akunBebanKode: s("akunBebanKode") };
-      if (baru) return (await tx.jabatan.create({ data: { kode: await kodeBerikutnya(tx, AWALAN.JABATAN), ...data } })).kode;
+      if (baru) return (await tx.jabatan.create({ data: { kode: await kodeBerikutnya(tx, AWALAN.JABATAN), ...data, kelompok: "INHOUSE" } })).kode;
+      await tx.jabatan.update({ where: { kode: kodeLama }, data });
+      return kodeLama;
+    }
+    case "jabatanEvent": {
+      const lama = kodeLama ? await tx.jabatan.findUnique({ where: { kode: kodeLama }, select: { akunBebanKode: true, kelompok: true, peranEvent: true, _count: { select: { penugasan: true } } } }) : null;
+      if (lama && lama.kelompok !== "EVENT") throw new GalatAksi("Jabatan ini jabatan inhouse. Ubah lewat tab Jabatan.");
+      await pastikanRujukan([await ada("akun", s("akunBebanKode"), "Akun biaya fee", "akunBebanKode", lama?.akunBebanKode === s("akunBebanKode"))]);
+      const peranEvent = s("peranEvent") as PeranEvent;
+      if (lama && lama.peranEvent !== peranEvent && lama._count.penugasan) {
+        throw new GalatAksi("Jabatan ini sudah dipakai di penugasan event, jadi perannya (Kapten atau Crew) tidak bisa diubah. Buat jabatan baru.", { peranEvent: "Sudah dipakai di penugasan." });
+      }
+      const data = { nama: s("nama"), peranEvent, satuanTarif: s("satuanTarif") as SatuanTarif, tarif: n("tarif"), akunBebanKode: s("akunBebanKode"), tunjJabatan: 0, tunjKeluarga: 0 };
+      if (baru) return (await tx.jabatan.create({ data: { kode: await kodeBerikutnya(tx, AWALAN.JABATAN), ...data, kelompok: "EVENT" } })).kode;
       await tx.jabatan.update({ where: { kode: kodeLama }, data });
       return kodeLama;
     }
@@ -120,6 +158,7 @@ async function simpan(tx: Tx, jenis: JenisMaster, kodeLama: string | null, v: Ni
     case "jadwal": {
       const lama = kodeLama ? await tx.jadwalKerja.findUnique({ where: { kode: kodeLama }, select: { jabatanKode: true } }) : null;
       await pastikanRujukan([await ada("jabatan", s("jabatanKode"), "Jabatan", "jabatanKode", lama?.jabatanKode === s("jabatanKode"))]);
+      await pastikanInhouse(tx, { jabatanKode: s("jabatanKode") });
       const bentrok = await tx.jadwalKerja.findFirst({ where: { jabatanKode: s("jabatanKode"), ...(kodeLama ? { kode: { not: kodeLama } } : {}) }, select: { kode: true } });
       if (bentrok) throw new GalatAksi("Jabatan ini sudah punya jadwal kerja.", { jabatanKode: "Jabatan ini sudah punya jadwal kerja." });
       const data = { jabatanKode: s("jabatanKode"), jamMasuk: s("jamMasuk"), jamKeluar: s("jamKeluar"), hariKerja: n("hariKerja") };
@@ -139,6 +178,7 @@ async function simpan(tx: Tx, jenis: JenisMaster, kodeLama: string | null, v: Ni
         await ada("jabatan", s("jabatanKode"), "Jabatan", "jabatanKode", lama?.jabatanKode === s("jabatanKode")),
         await ada("golongan", s("golonganKode"), "Gaji pokok", "golonganKode", lama?.golonganKode === s("golonganKode")),
       ]);
+      await pastikanInhouse(tx, { karyawanKode: s("karyawanKode"), jabatanKode: s("jabatanKode") });
       const bentrok = await tx.settingGaji.findFirst({ where: { karyawanKode: s("karyawanKode"), ...(kodeLama ? { kode: { not: kodeLama } } : {}) }, select: { kode: true } });
       if (bentrok) throw new GalatAksi("Karyawan ini sudah punya setting gaji. Ubah data yang ada.", { karyawanKode: "Sudah punya setting gaji." });
       const data = { karyawanKode: s("karyawanKode"), jabatanKode: s("jabatanKode"), golonganKode: s("golonganKode") };
@@ -156,7 +196,7 @@ async function simpan(tx: Tx, jenis: JenisMaster, kodeLama: string | null, v: Ni
 
 const MODEL: Record<JenisMaster, string> = {
   supplier: "supplier", peralatan: "peralatan", perlengkapan: "perlengkapan", kategori: "kategoriAset", akun: "akun",
-  karyawan: "karyawan", jabatan: "jabatan", golongan: "golongan", tunjangan: "tunjangan", jadwal: "jadwalKerja", setgaji: "settingGaji",
+  karyawan: "karyawan", jabatan: "jabatan", jabatanEvent: "jabatan", golongan: "golongan", tunjangan: "tunjangan", jadwal: "jadwalKerja", setgaji: "settingGaji",
 };
 
 /** Tambah (kode kosong) atau ubah data master. Izin menurut jenisnya. */

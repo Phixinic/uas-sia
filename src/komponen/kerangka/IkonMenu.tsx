@@ -1,6 +1,6 @@
 import {
-  BookOpen, Boxes, Calculator, CalendarCheck, ClipboardList, Database, FileMinus, FileSpreadsheet, IdCard, LayoutDashboard,
-  Library, Lock, PackageMinus, Scale, Send, ShoppingCart, TrendingDown, UserCog, Users,
+  BookOpen, Boxes, Calculator, CalendarCheck, CalendarRange, ClipboardCheck, ClipboardList, Database, FileMinus, FileSpreadsheet, HandCoins, IdCard,
+  LayoutDashboard, Library, Lock, PackageMinus, Scale, Send, ShoppingCart, TrendingDown, UserCog, Users,
 } from "lucide-react";
 import type { IkonMenu as Kunci } from "@/lib/menu";
 
@@ -24,6 +24,9 @@ const PETA = {
   "master-sdm": Users,
   pengguna: UserCog,
   laporan: FileSpreadsheet,
+  event: CalendarRange,
+  "fee-event": HandCoins,
+  penilaian: ClipboardCheck,
 } as const;
 
 export default function IkonMenu({ nama, className = "size-4" }: { nama: Kunci; className?: string }) {

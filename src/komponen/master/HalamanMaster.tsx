@@ -37,7 +37,10 @@ export default async function HalamanMaster({ kelompok, cari }: { kelompok: Kelo
   if (cari.form && bolehUbah && opsi) {
     const baris = cari.form === "baru" ? null : data.baris.find((b) => b.kode === cari.form);
     if (cari.form !== "baru" && !baris) form = <Peringatan jenis="galat">Data {cari.form} tidak ditemukan.</Peringatan>;
-    else form = <FormMaster key={`${jenis}-${cari.form}`} def={def} opsi={opsi} kode={baris?.kode ?? null} awal={baris?.nilai ?? {}} alamatKembali={alamatDaftar} />;
+    else {
+      const bawaan = Object.fromEntries(def.isian.filter((d) => d.bawaan).map((d) => [d.kunci, d.bawaan as string]));
+      form = <FormMaster key={`${jenis}-${cari.form}`} def={def} opsi={opsi} kode={baris?.kode ?? null} awal={baris?.nilai ?? bawaan} alamatKembali={alamatDaftar} />;
+    }
   }
 
   const kunciMaster = kelompok === "sdm" ? "HRD dan Owner" : "Admin dan Owner";
@@ -59,7 +62,7 @@ export default async function HalamanMaster({ kelompok, cari }: { kelompok: Kelo
         ))}
       </nav>
 
-      {!bolehUbah && <Peringatan>Peran {LABEL_PERAN[pengguna.peran]} hanya bisa melihat {def.label.toLowerCase()}. Yang boleh mengubah: {def.izin === "master.akun-kategori" ? "Owner" : kunciMaster}.</Peringatan>}
+      {!bolehUbah && <Peringatan>Peran {LABEL_PERAN[pengguna.peran]} hanya bisa melihat {def.label.toLowerCase()}. Yang boleh mengubah: {def.izin === "master.akun-kategori" || def.izin === "tarif-event.ubah" ? "Owner" : kunciMaster}.</Peringatan>}
       {form}
 
       <Kartu rapat>

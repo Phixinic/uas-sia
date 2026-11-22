@@ -13,7 +13,7 @@ import { profilUsaha } from "@/lib/data/umum";
 export default async function TataLetakAplikasi({ children }: { children: React.ReactNode }) {
   const pengguna = await penggunaSaatIni();
   if (!pengguna) redirect("/masuk");
-  const [profil, hitungan] = await Promise.all([profilUsaha(), hitunganMenu(pengguna.peran)]);
+  const [profil, hitungan] = await Promise.all([profilUsaha(), hitunganMenu(pengguna.peran, pengguna.id)]);
   return (
     <PenyediaToast>
       <Kerangka pengguna={pengguna} namaUsaha={profil.nama} keteranganUsaha={profil.keterangan} adaLogo={adaLogo()} hitungan={hitungan}>

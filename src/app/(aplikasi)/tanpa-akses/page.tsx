@@ -5,12 +5,12 @@ import Kartu from "@/komponen/ui/Kartu";
 import { TautanTombol } from "@/komponen/ui/Tombol";
 
 export default async function TanpaAkses() {
-  const p = await wajibMasuk();
+  const p = await wajibMasuk({ kapten: true });
   return (
     <Kartu className="mx-auto max-w-lg space-y-3 text-center">
       <ShieldAlert className="mx-auto size-10 text-amber-500" aria-hidden />
       <h1 className="text-lg font-semibold">Halaman ini bukan untuk peran {LABEL_PERAN[p.peran]}</h1>
-      <p className="teks-redup">Kalau kamu perlu membukanya, minta Owner mengubah peran akunmu.</p>
+      <p className="teks-redup">{p.peran === "KAPTEN" ? "Akun kapten hanya bisa membuka dashboard dan halaman Penilaian Crew." : "Kalau kamu perlu membukanya, minta Owner mengubah peran akunmu."}</p>
       <TautanTombol href="/" varian="utama">Kembali ke dashboard</TautanTombol>
     </Kartu>
   );

@@ -13,7 +13,7 @@ export type Tindakan = { judul: string; uraian: string; href: string; peran: Per
 export async function dataDashboard(periode: string) {
   const hari = hariIni();
   const sekarang = periodeIni();
-  const [kas, mutasiAkun, tipeAkun, jadwalP, susutDisetujui, gaji, jurnalTunggu, pelepasanTunggu, penggajianTunggu, statusP, terbaru] = await Promise.all([
+  const [kas, mutasiAkun, tipeAkun, jadwalP, susutDisetujui, gaji, jurnalTunggu, pelepasanTunggu, penggajianTunggu, statusP, terbaru, feeTunggu, fee] = await Promise.all([
     saldoAkun(db, AKUN.KAS, periode),
     db.detailJurnal.groupBy({ by: ["akunKode"], where: { jurnal: { status: "DISETUJUI", periodeId: { lte: periode } } }, _sum: { debit: true, kredit: true } }),
     db.akun.findMany({ select: { kode: true, tipe: true } }),
@@ -28,6 +28,8 @@ export async function dataDashboard(periode: string) {
     // Tertutup bila periode ini atau periode sesudahnya terkunci (kunci berurutan).
     db.periode.findFirst({ where: { id: { gte: periode }, status: "TERKUNCI" }, select: { id: true } }),
     db.jurnal.findMany({ orderBy: [{ dibuatPada: "desc" }, { no: "desc" }], take: 6, include: { detail: { select: { debit: true } } } }),
+    db.laporanFee.findMany({ where: { status: "DIAJUKAN" }, orderBy: { diajukanPada: "asc" }, select: { no: true, totalUsulan: true, event: { select: { nama: true } } } }),
+    db.detailJurnal.aggregate({ where: { jurnal: { status: "DISETUJUI", sumberTipe: "FEE_EVENT", periodeId: periode } }, _sum: { debit: true } }),
   ]);
 
   // Total aset bersih = aset (bersaldo debit) dikurangi kontra aset (akumulasi penyusutan), dari buku besar sampai periode.
@@ -39,7 +41,7 @@ export async function dataDashboard(periode: string) {
     if (t === "ASET" || t === "KONTRA_ASET") totalAset += net;
   }
 
-  const [drafBeli, drafJurnal, susutBelum, slipDraf, garansi, slipDrafPertama, penggajianPertama] = await Promise.all([
+  const [drafBeli, drafJurnal, susutBelum, slipDraf, garansi, slipDrafPertama, penggajianPertama, eventTanpaKapten, eventDitolak] = await Promise.all([
     db.pembelian.findMany({ where: { status: "DRAFT" }, select: { jenis: true } }),
     db.jurnal.count({ where: { status: "DRAFT", jenis: "PENYESUAIAN" } }),
     db.jadwalPenyusutan.findMany({ where: { aset: { status: "AKTIF" }, periodeId: { lt: sekarang }, jurnalNo: null }, distinct: ["periodeId"], select: { periodeId: true }, orderBy: { periodeId: "asc" } }),
@@ -48,6 +50,8 @@ export async function dataDashboard(periode: string) {
     // Periode pekerjaan SDM yang tertunda, supaya tautan "Buka" mendarat di bulan yang benar.
     db.slipGaji.findFirst({ where: { status: "DRAFT" }, orderBy: { periodeId: "asc" }, select: { periodeId: true } }),
     db.penggajian.findFirst({ where: { status: "DIAJUKAN" }, orderBy: { periodeId: "asc" }, select: { periodeId: true } }),
+    db.event.findMany({ where: { status: "PENILAIAN", penugasan: { none: { jabatan: { peranEvent: "KAPTEN" } } } }, select: { kode: true, nama: true }, orderBy: { tanggalMulai: "asc" } }),
+    db.event.findMany({ where: { status: "PENILAIAN", alasanTolak: { not: null } }, select: { kode: true, nama: true }, orderBy: { tanggalMulai: "asc" } }),
   ]);
 
   const tindakan: Tindakan[] = [];
@@ -58,6 +62,16 @@ export async function dataDashboard(periode: string) {
   if (pelepasanTunggu) tindakan.push({ judul: `${pelepasanTunggu} pengajuan pelepasan peralatan`, uraian: "Menunggu keputusan Owner.", href: "/konversi/pelepasan", peran: ["OWNER"] });
   if (slipDraf) tindakan.push({ judul: `${slipDraf} slip gaji masih draf`, uraian: "HRD mengajukan distribusinya ke Owner.", href: `/sdm/distribusi?periode=${slipDrafPertama?.periodeId ?? periode}`, peran: ["HRD"] });
   if (penggajianTunggu) tindakan.push({ judul: `${penggajianTunggu} pengajuan penggajian menunggu persetujuan`, uraian: "Owner menyetujui supaya gaji dijurnal dan dibayar.", href: `/sdm/distribusi?periode=${penggajianPertama?.periodeId ?? periode}`, peran: ["OWNER"] });
+  if (feeTunggu.length) {
+    tindakan.push({
+      judul: `${feeTunggu.length} laporan kapten menunggu keputusan fee`,
+      uraian: `${feeTunggu.map((l) => l.event.nama).join(", ")}. Owner menentukan fee akhir lalu menyetujui atau menolak.`,
+      href: feeTunggu.length === 1 ? `/fee-event/keputusan?lihat=${feeTunggu[0].no}` : "/fee-event/keputusan",
+      peran: ["OWNER"],
+    });
+  }
+  for (const e of eventTanpaKapten) tindakan.push({ judul: `Event ${e.nama} belum punya kapten`, uraian: `${e.kode}: tugaskan minimal satu kapten supaya progres crew bisa dinilai.`, href: `/fee-event/event?lihat=${e.kode}`, peran: ["HRD"] });
+  for (const e of eventDitolak) tindakan.push({ judul: `Laporan event ${e.nama} ditolak Owner`, uraian: `${e.kode}: periksa data kehadiran bila perlu; kapten menilai ulang lalu mengirim lagi.`, href: `/fee-event/event?lihat=${e.kode}`, peran: ["HRD"] });
   for (const a of garansi) tindakan.push({ judul: `Garansi ${a.nama} habis ${dariDate(a.garansiSampai)}`, uraian: `${a.kode}: cek kondisi sebelum garansi berakhir.`, href: `/konversi/kartu-aset?aset=${a.kode}`, peran: ["ADMIN"] });
 
   return {
@@ -65,7 +79,9 @@ export async function dataDashboard(periode: string) {
     totalAset,
     susut: { jadwal: jadwalP._sum.beban ?? 0, disetujui: susutDisetujui._sum.debit ?? 0, unit: jadwalP._count },
     bebanGaji: gaji._sum.debit ?? 0,
-    menunggu: { jurnal: jurnalTunggu, pelepasan: pelepasanTunggu, penggajian: penggajianTunggu, total: jurnalTunggu + pelepasanTunggu + penggajianTunggu },
+    /** Beban fee event (crew freelance) dari jurnal fee yang disetujui di periode ini. */
+    bebanFee: fee._sum.debit ?? 0,
+    menunggu: { jurnal: jurnalTunggu, pelepasan: pelepasanTunggu, penggajian: penggajianTunggu, fee: feeTunggu.length, total: jurnalTunggu + pelepasanTunggu + penggajianTunggu + feeTunggu.length },
     statusPeriode: statusP ? ("TERKUNCI" as const) : ("TERBUKA" as const),
     tindakan,
     terbaru: terbaru.map((j) => ({ no: j.no, tanggal: dariDate(j.tanggal), keterangan: j.keterangan, jenis: j.jenis, status: j.status, jumlah: j.detail.reduce((s, d) => s + d.debit, 0) })),

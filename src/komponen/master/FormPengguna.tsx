@@ -11,16 +11,26 @@ import { Bidang, Isian, Pilihan } from "@/komponen/ui/Isian";
 import { LABEL_PERAN, type Peran } from "@/lib/peran";
 import { useFokusGalat } from "@/komponen/ui/useFokusGalat";
 
-const PERAN: Peran[] = ["ADMIN", "HRD", "OWNER"];
+const PERAN: Peran[] = ["ADMIN", "HRD", "OWNER", "KAPTEN"];
 
-type Props = { mode: "baru" } | { mode: "ubah"; id: number; namaPengguna: string; nama: string; peran: Peran; dirinyaSendiri: boolean } | { mode: "sandi"; id: number; namaPengguna: string };
+export type OpsiKaryawanKapten = { kode: string; nama: string; aktif: boolean; akun: string | null };
+type Props =
+  | { mode: "baru"; karyawan: OpsiKaryawanKapten[] }
+  | { mode: "ubah"; id: number; namaPengguna: string; nama: string; peran: Peran; karyawanKode: string | null; dirinyaSendiri: boolean; karyawan: OpsiKaryawanKapten[] }
+  | { mode: "sandi"; id: number; namaPengguna: string };
 
 /** Form kelola pengguna: akun baru, ubah nama/peran, atau ganti kata sandi. */
 export default function FormPengguna(p: Props) {
   const router = useRouter();
   const awalan = useId();
   const { jalankan, memuat } = useAksi();
-  const [nilai, setNilai] = useState({ namaPengguna: "", nama: p.mode === "ubah" ? p.nama : "", peran: (p.mode === "ubah" ? p.peran : "ADMIN") as Peran, kataSandi: "" });
+  const [nilai, setNilai] = useState({
+    namaPengguna: "",
+    nama: p.mode === "ubah" ? p.nama : "",
+    peran: (p.mode === "ubah" ? p.peran : "ADMIN") as Peran,
+    karyawanKode: p.mode === "ubah" ? (p.karyawanKode ?? "") : "",
+    kataSandi: "",
+  });
   const [galat, setGalat] = useState<Record<string, string>>({});
   const akar = useRef<HTMLFormElement>(null);
   useFokusGalat(akar, galat);
@@ -33,7 +43,7 @@ export default function FormPengguna(p: Props) {
     setGalat({});
     const aksi =
       p.mode === "baru" ? () => buatPengguna(nilai)
-      : p.mode === "ubah" ? () => ubahPengguna({ id: p.id, nama: nilai.nama, peran: nilai.peran })
+      : p.mode === "ubah" ? () => ubahPengguna({ id: p.id, nama: nilai.nama, peran: nilai.peran, karyawanKode: nilai.karyawanKode })
       : () => resetKataSandi({ id: p.id, kataSandi: nilai.kataSandi });
     const h = await jalankan(aksi, { setelahBerhasil: () => router.push(kembali) });
     if (!h.ok && h.galatIsian) setGalat(h.galatIsian);
@@ -59,6 +69,19 @@ export default function FormPengguna(p: Props) {
             <Bidang label="Peran" htmlFor={id("peran")} wajib galat={galat.peran} petunjuk={p.mode === "ubah" && p.dirinyaSendiri ? "Peran akunmu sendiri tidak bisa diubah." : undefined}>
               <Pilihan id={id("peran")} value={nilai.peran} galat={!!galat.peran} disabled={p.mode === "ubah" && p.dirinyaSendiri} onChange={(e) => ubah("peran", e.target.value)}>
                 {PERAN.map((x) => <option key={x} value={x}>{LABEL_PERAN[x]}</option>)}
+              </Pilihan>
+            </Bidang>
+          )}
+          {p.mode !== "sandi" && nilai.peran === "KAPTEN" && (
+            <Bidang label="Crew yang dipegang" htmlFor={id("crew")} wajib galat={galat.karyawanKode} petunjuk="Kapten hanya melihat event tempat crew ini ditugaskan sebagai Kapten.">
+              <Pilihan id={id("crew")} value={nilai.karyawanKode} galat={!!galat.karyawanKode} onChange={(e) => ubah("karyawanKode", e.target.value)}>
+                <option value="">Pilih karyawan event</option>
+                {p.karyawan
+                  .filter((k) => k.aktif || k.kode === nilai.karyawanKode)
+                  .map((k) => {
+                    const dipakai = !!k.akun && !(p.mode === "ubah" && k.kode === p.karyawanKode);
+                    return <option key={k.kode} value={k.kode} disabled={dipakai}>{k.kode} · {k.nama}{dipakai ? ` (sudah dipegang @${k.akun})` : ""}</option>;
+                  })}
               </Pilihan>
             </Bidang>
           )}

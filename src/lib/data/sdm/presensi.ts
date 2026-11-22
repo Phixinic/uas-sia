@@ -19,10 +19,10 @@ export type BarisRekap = {
 const awalBulan = (periode: string) => keDate(`${periode}-01`);
 const akhirBulan = (periode: string) => keDate(hariTerakhir(periode));
 
-/** Karyawan aktif beserta jabatan dan jadwal kerjanya (dari setting gaji). */
+/** Karyawan inhouse aktif beserta jabatan dan jadwal kerjanya (dari setting gaji). Crew event tidak memakai presensi bulanan. */
 async function karyawanAktif() {
   return db.karyawan.findMany({
-    where: { aktif: true },
+    where: { aktif: true, jenis: "INHOUSE" },
     orderBy: { kode: "asc" },
     select: { kode: true, nama: true, settingGaji: { select: { aktif: true, jabatan: { select: { nama: true, jadwalKerja: { select: { kode: true, hariKerja: true, jamMasuk: true, jamKeluar: true } } } } } } },
   });

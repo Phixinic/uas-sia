@@ -57,10 +57,10 @@ export type BahanGaji = {
   input: InputGaji;
 };
 
-/** Karyawan dengan setting gaji aktif beserta masukan rumusnya untuk satu periode. */
+/** Karyawan inhouse dengan setting gaji aktif beserta masukan rumusnya untuk satu periode. Crew event dibayar lewat fee event. */
 export async function muatBahanGaji(klien: DbAtauTx, periode: string, karyawanKode?: string): Promise<BahanGaji[]> {
   const setting = await klien.settingGaji.findMany({
-    where: { aktif: true, karyawan: { aktif: true }, ...(karyawanKode ? { karyawanKode } : {}) },
+    where: { aktif: true, karyawan: { aktif: true, jenis: "INHOUSE" }, jabatan: { kelompok: "INHOUSE" }, ...(karyawanKode ? { karyawanKode } : {}) },
     orderBy: { karyawanKode: "asc" },
     include: {
       karyawan: true,

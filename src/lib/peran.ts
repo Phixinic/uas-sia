@@ -6,7 +6,13 @@ import type { Peran } from "@/generated/prisma/enums";
 
 export type { Peran };
 
-export const LABEL_PERAN: Record<Peran, string> = { ADMIN: "Admin", HRD: "HRD", OWNER: "Owner" };
+export const LABEL_PERAN: Record<Peran, string> = { ADMIN: "Admin", HRD: "HRD", OWNER: "Owner", KAPTEN: "Kapten" };
+
+/**
+ * Peran staf kantor. Kapten (crew freelance) bukan staf: ia hanya boleh membuka dashboard dan halaman Penilaian Crew,
+ * jadi halaman lain menolaknya lewat wajibMasuk() (lihat src/lib/server/auth.ts).
+ */
+export const PERAN_STAF = ["ADMIN", "HRD", "OWNER"] as const satisfies readonly Peran[];
 
 /** Nama cookie sesi; dipakai juga oleh proxy.ts. */
 export const NAMA_COOKIE_SESI = "sia_sesi";
@@ -30,6 +36,12 @@ export const IZIN = {
   "gaji.hitung": ["HRD"],
   "penggajian.ajukan": ["HRD"],
   "penggajian.putuskan": ["OWNER"],
+  // Fee event (crew freelance per event)
+  "event.kelola": ["HRD", "OWNER"],
+  "event.nilai": ["KAPTEN", "OWNER"],
+  "event.lapor": ["KAPTEN"],
+  "fee-event.putuskan": ["OWNER"],
+  "tarif-event.ubah": ["OWNER"],
   // Pelaporan
   "jurnal-penyesuaian.ajukan": ["ADMIN"],
   "jurnal-penyesuaian.putuskan": ["OWNER"],

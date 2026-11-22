@@ -52,16 +52,23 @@ export const penggunaSaatIni = cache(async (): Promise<PenggunaSesi | null> => {
   return { id, namaPengguna, nama, peran };
 });
 
-/** Halaman: belum masuk -> /masuk. */
-export async function wajibMasuk(): Promise<PenggunaSesi> {
+/**
+ * Halaman: belum masuk -> /masuk.
+ * Kapten (crew freelance) ditolak secara bawaan -> /tanpa-akses, supaya halaman keuangan dan gaji tidak terbuka
+ * untuknya. Hanya halaman yang memang untuk kapten memanggil wajibMasuk({ kapten: true }) atau
+ * wajibPeranHalaman([... "KAPTEN" ...]).
+ */
+export async function wajibMasuk(opsi?: { kapten?: boolean }): Promise<PenggunaSesi> {
   const p = await penggunaSaatIni();
   if (!p) redirect("/masuk");
+  if (p.peran === "KAPTEN" && !opsi?.kapten) redirect("/tanpa-akses");
   return p;
 }
 
 /** Halaman: peran tidak termasuk daftar -> /tanpa-akses. */
 export async function wajibPeranHalaman(peran: readonly Peran[]): Promise<PenggunaSesi> {
-  const p = await wajibMasuk();
+  const p = await penggunaSaatIni();
+  if (!p) redirect("/masuk");
   if (!peran.includes(p.peran)) redirect("/tanpa-akses");
   return p;
 }

@@ -22,8 +22,9 @@ export async function opsiMaster(): Promise<OpsiMaster> {
   const [kategori, akun, jabatan, karyawan, golongan, tunjangan] = await Promise.all([
     db.kategoriAset.findMany({ orderBy: { kode: "asc" } }),
     db.akun.findMany({ orderBy: { kode: "asc" } }),
-    db.jabatan.findMany({ orderBy: { kode: "asc" } }),
-    db.karyawan.findMany({ orderBy: { kode: "asc" } }),
+    // Pilihan jabatan dan karyawan dipakai Jadwal kerja dan Setting gaji, jadi hanya yang inhouse.
+    db.jabatan.findMany({ where: { kelompok: "INHOUSE" }, orderBy: { kode: "asc" } }),
+    db.karyawan.findMany({ where: { jenis: "INHOUSE" }, orderBy: { kode: "asc" } }),
     db.golongan.findMany({ orderBy: { kode: "asc" } }),
     db.tunjangan.findMany({ orderBy: { kode: "asc" } }),
   ]);
@@ -91,18 +92,33 @@ export async function daftarMaster(jenis: JenisMaster): Promise<DaftarMaster> {
     case "karyawan": {
       const d = urut(await db.karyawan.findMany());
       return {
-        kolom: [{ judul: "PTKP" }, { judul: "Rekening" }],
-        baris: d.map((x) => ({ kode: x.kode, nama: x.nama, aktif: x.aktif, sel: [labelPtkp(x.statusPtkp), `${x.bank} ${x.noRek}`], nilai: { nama: x.nama, statusPtkp: x.statusPtkp, bank: x.bank, noRek: x.noRek } })),
+        kolom: [{ judul: "Jenis" }, { judul: "PTKP" }, { judul: "Rekening" }],
+        baris: d.map((x) => ({
+          kode: x.kode, nama: x.nama, aktif: x.aktif,
+          sel: [x.jenis === "EVENT" ? "Event (fee)" : "Inhouse", labelPtkp(x.statusPtkp), `${x.bank} ${x.noRek}`],
+          nilai: { nama: x.nama, statusPtkp: x.statusPtkp, bank: x.bank, noRek: x.noRek, jenis: x.jenis },
+        })),
       };
     }
     case "jabatan": {
-      const d = urut(await db.jabatan.findMany({ include: { akunBeban: { select: { nama: true } } } }));
+      const d = urut(await db.jabatan.findMany({ where: { kelompok: "INHOUSE" }, include: { akunBeban: { select: { nama: true } } } }));
       return {
         kolom: [{ judul: "Tunj. jabatan (Rp)", angka: true }, { judul: "Tunj. istri/anak (Rp)", angka: true }, { judul: "Akun biaya" }],
         baris: d.map((x) => ({
           kode: x.kode, nama: x.nama, aktif: x.aktif,
           sel: [angka(x.tunjJabatan), angka(x.tunjKeluarga), `${x.akunBebanKode} ${x.akunBeban.nama}`],
           nilai: { nama: x.nama, tunjJabatan: str(x.tunjJabatan), tunjKeluarga: str(x.tunjKeluarga), akunBebanKode: x.akunBebanKode },
+        })),
+      };
+    }
+    case "jabatanEvent": {
+      const d = urut(await db.jabatan.findMany({ where: { kelompok: "EVENT" }, include: { akunBeban: { select: { nama: true } }, _count: { select: { penugasan: true } } } }));
+      return {
+        kolom: [{ judul: "Peran" }, { judul: "Tarif (Rp)", angka: true }, { judul: "Satuan" }, { judul: "Akun biaya" }, { judul: "Dipakai", angka: true }],
+        baris: d.map((x) => ({
+          kode: x.kode, nama: x.nama, aktif: x.aktif,
+          sel: [x.peranEvent === "KAPTEN" ? "Kapten" : "Crew", angka(x.tarif), x.satuanTarif === "HARI" ? "per hari" : "per jam", `${x.akunBebanKode} ${x.akunBeban.nama}`, `${x._count.penugasan} penugasan`],
+          nilai: { nama: x.nama, peranEvent: x.peranEvent ?? "", satuanTarif: x.satuanTarif ?? "", tarif: str(x.tarif), akunBebanKode: x.akunBebanKode },
         })),
       };
     }

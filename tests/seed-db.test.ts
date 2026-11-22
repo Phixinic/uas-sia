@@ -22,7 +22,9 @@ describe.runIf(aktif)("isi database hasil seed", async () => {
     expect(await db.aset.count()).toBe(Object.keys(seed.aset).length);
     expect(await db.presensi.count()).toBe(Object.keys(seed.presensi).length);
     expect(await db.slipGaji.count()).toBe(Object.keys(seed.slip).length);
-    expect(await db.pengguna.count()).toBe(3);
+    // Tiga akun staf dari data lama, ditambah dua akun kapten contoh fee event.
+    expect(await db.pengguna.count({ where: { peran: { not: "KAPTEN" } } })).toBe(3);
+    expect(await db.pengguna.count({ where: { peran: "KAPTEN" } })).toBe(2);
   });
 
   it("neraca saldo s.d. Oktober 2026 dari database seimbang Rp145.622.573", async () => {

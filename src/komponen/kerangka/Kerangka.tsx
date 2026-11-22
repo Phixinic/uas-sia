@@ -11,7 +11,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import Logo from "@/komponen/kerangka/Logo";
 import IkonMenu from "@/komponen/kerangka/IkonMenu";
-import { MENU, aktifDi } from "@/lib/menu";
+import { MENU, aktifDi, tampilUntuk } from "@/lib/menu";
 import { LABEL_PERAN, type Peran } from "@/lib/peran";
 import { keluar } from "@/lib/aksi/auth";
 
@@ -73,7 +73,7 @@ export default function Kerangka({ pengguna, namaUsaha, keteranganUsaha, adaLogo
     if (pernahBuka.current) tombolBuka.current?.focus();
   }, [laci]);
 
-  const menu = MENU.map((g) => ({ ...g, tautan: g.tautan.filter((t) => !t.peran || t.peran.includes(pengguna.peran)) })).filter((g) => g.tautan.length);
+  const menu = MENU.map((g) => ({ ...g, tautan: g.tautan.filter((t) => tampilUntuk(t, pengguna.peran)) })).filter((g) => g.tautan.length);
 
   const grupAktif = (kunci: string) => menu.find((g) => g.kunci === kunci)?.tautan.some((t) => aktifDi(t.href, pathname)) ?? false;
   const terbuka = (kunci: string) => grupTerbuka[kunci] ?? (grupAktif(kunci) || kunci === "ringkasan");

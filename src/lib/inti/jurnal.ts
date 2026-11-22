@@ -90,5 +90,24 @@ export function barisGaji(slip: { akunBeban: string; bruto: number; pph21: numbe
     ]);
 }
 
+/**
+ * Fee event: debit beban fee per akun beban jabatan (fee akhir = bruto), kredit Utang PPh 21 dan Kas (yang dibayar).
+ * Baris bernilai nol dibuang oleh validasiBaris.
+ */
+export function barisFeeEvent(slip: { akunBeban: string; bruto: number; pph21: number; dibayar: number }[]): BarisJurnal[] {
+  const grup: Record<string, number> = {};
+  for (const s of slip) {
+    const akun = s.akunBeban || AKUN.BIAYA_FEE_EVENT;
+    grup[akun] = (grup[akun] ?? 0) + s.bruto;
+  }
+  return Object.keys(grup)
+    .sort()
+    .map((akun) => ({ akun, debit: grup[akun], kredit: 0 }))
+    .concat([
+      { akun: AKUN.UTANG_PPH21, debit: 0, kredit: slip.reduce((s, x) => s + x.pph21, 0) },
+      { akun: AKUN.KAS, debit: 0, kredit: slip.reduce((s, x) => s + x.dibayar, 0) },
+    ]);
+}
+
 /** Jurnal pembalik: debit dan kredit ditukar. */
 export const barisPembalik = (baris: BarisJurnal[]): BarisJurnal[] => baris.map((b) => ({ akun: b.akun, debit: b.kredit, kredit: b.debit }));

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import type { StatusAset, StatusPembelian, StatusPeriode, StatusPersetujuan } from "@/generated/prisma/enums";
-import { LABEL_STATUS_ASET, LABEL_STATUS_PEMBELIAN, LABEL_STATUS_PERIODE, LABEL_STATUS_PERSETUJUAN, LABEL_STATUS_SLIP } from "@/lib/format";
+import type { StatusAset, StatusEvent, StatusPembelian, StatusPeriode, StatusPersetujuan } from "@/generated/prisma/enums";
+import { LABEL_STATUS_ASET, LABEL_STATUS_EVENT, LABEL_STATUS_PEMBELIAN, LABEL_STATUS_PERIODE, LABEL_STATUS_PERSETUJUAN, LABEL_STATUS_SLIP } from "@/lib/format";
 
 export type WarnaLencana = "hijau" | "kuning" | "merah" | "biru" | "abu" | "teal";
 
@@ -19,6 +19,8 @@ const WARNA_STATUS: Record<string, WarnaLencana> = {
   BATAL: "merah",
   TERBUKA: "teal",
   TERKUNCI: "abu",
+  PENILAIAN: "kuning",
+  SELESAI: "hijau",
 };
 
 type JenisStatus =
@@ -26,7 +28,8 @@ type JenisStatus =
   | { jenis: "pembelian"; status: StatusPembelian }
   | { jenis: "slip"; status: StatusPersetujuan }
   | { jenis: "aset"; status: StatusAset }
-  | { jenis: "periode"; status: StatusPeriode };
+  | { jenis: "periode"; status: StatusPeriode }
+  | { jenis: "event"; status: StatusEvent };
 
 /**
  * Lencana status dokumen dengan warna dan label yang konsisten di semua halaman.
@@ -39,6 +42,7 @@ export function LencanaStatus(p: JenisStatus) {
     : p.jenis === "slip" ? LABEL_STATUS_SLIP[p.status]
     : p.jenis === "aset" ? LABEL_STATUS_ASET[p.status]
     : p.jenis === "periode" ? LABEL_STATUS_PERIODE[p.status]
+    : p.jenis === "event" ? LABEL_STATUS_EVENT[p.status]
     : LABEL_STATUS_PERSETUJUAN[p.status];
   return <Lencana warna={WARNA_STATUS[p.status] ?? "abu"}>{label}</Lencana>;
 }

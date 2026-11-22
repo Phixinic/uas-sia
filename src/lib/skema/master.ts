@@ -6,7 +6,7 @@
 import { z } from "./zod";
 import type { KunciIzin } from "@/lib/peran";
 
-export const JENIS_MASTER = ["supplier", "peralatan", "perlengkapan", "kategori", "akun", "karyawan", "jabatan", "golongan", "tunjangan", "jadwal", "setgaji"] as const;
+export const JENIS_MASTER = ["supplier", "peralatan", "perlengkapan", "kategori", "akun", "karyawan", "jabatan", "jabatanEvent", "golongan", "tunjangan", "jadwal", "setgaji"] as const;
 export type JenisMaster = (typeof JENIS_MASTER)[number];
 export type KelompokMaster = "konversi" | "sdm";
 
@@ -24,6 +24,8 @@ export type DefIsian = {
   petunjuk?: string;
   /** Tidak bisa diubah sesudah data dibuat. */
   tetap?: boolean;
+  /** Nilai awal di form data baru. */
+  bawaan?: string;
 };
 
 export type DefMaster = {
@@ -47,6 +49,9 @@ export const OPSI_STATIS: OpsiMaster = {
   saldoNormal: [{ nilai: "D", label: "Debit" }, { nilai: "K", label: "Kredit" }],
   ptkp: ["TK0", "TK1", "TK2", "TK3", "K0", "K1", "K2", "K3"].map((k) => ({ nilai: k, label: k.replace(/^(TK|K)(\d)$/, "$1/$2") })),
   bank: ["BCA", "Mandiri", "BRI", "BNI", "BSI"].map((b) => ({ nilai: b, label: b })),
+  jenisKaryawan: [{ nilai: "INHOUSE", label: "Inhouse (gaji bulanan)" }, { nilai: "EVENT", label: "Event (fee per event)" }],
+  peranEvent: [{ nilai: "KAPTEN", label: "Kapten (menilai crew, dinilai Owner)" }, { nilai: "CREW", label: "Crew (dinilai kapten)" }],
+  satuanTarif: [{ nilai: "HARI", label: "Per hari (jumlah tanggal hadir)" }, { nilai: "JAM", label: "Per jam (jam yang diakui)" }],
 };
 
 export const DEF_MASTER: Record<JenisMaster, DefMaster> = {
@@ -104,6 +109,10 @@ export const DEF_MASTER: Record<JenisMaster, DefMaster> = {
       { kunci: "statusPtkp", label: "Status PTKP", tipe: "pilih", sumber: "ptkp", wajib: true },
       { kunci: "bank", label: "Bank", tipe: "pilih", sumber: "bank", wajib: true },
       { kunci: "noRek", label: "No. rekening", tipe: "teks", wajib: true },
+      {
+        kunci: "jenis", label: "Jenis karyawan", tipe: "pilih", sumber: "jenisKaryawan", bawaan: "INHOUSE",
+        petunjuk: "Inhouse digaji bulanan lewat Hitung Gaji. Event (crew freelance) dibayar fee per event, tanpa setting gaji.",
+      },
     ],
   },
   jabatan: {
@@ -113,6 +122,17 @@ export const DEF_MASTER: Record<JenisMaster, DefMaster> = {
       { kunci: "tunjJabatan", label: "Tunjangan jabatan (Rp)", tipe: "angka" },
       { kunci: "tunjKeluarga", label: "Tunj. istri/anak (Rp)", tipe: "angka", petunjuk: "Hanya untuk karyawan berstatus PTKP K/*." },
       { kunci: "akunBebanKode", label: "Akun biaya gaji", tipe: "pilih", sumber: "akun", wajib: true },
+    ],
+  },
+  jabatanEvent: {
+    jenis: "jabatanEvent", label: "Jabatan event", kelompok: "sdm", izin: "tarif-event.ubah",
+    petunjuk: "Jabatan event (Kapten, Crew) dan tarifnya hanya bisa diubah Owner. Tarif baru langsung dipakai untuk usulan fee yang belum disetujui.",
+    isian: [
+      { kunci: "nama", label: "Nama jabatan", tipe: "teks", wajib: true },
+      { kunci: "peranEvent", label: "Peran di event", tipe: "pilih", sumber: "peranEvent", wajib: true },
+      { kunci: "satuanTarif", label: "Satuan tarif", tipe: "pilih", sumber: "satuanTarif", wajib: true },
+      { kunci: "tarif", label: "Tarif (Rp)", tipe: "angka", wajib: true, maks: 100_000_000, petunjuk: "Bawaan: Kapten Rp200.000 per hari, Crew Rp20.000 per jam (Rp160.000 untuk 8 jam)." },
+      { kunci: "akunBebanKode", label: "Akun biaya fee", tipe: "pilih", sumber: "akun", wajib: true, bawaan: "6-230" },
     ],
   },
   golongan: {

@@ -4,6 +4,7 @@
  * Server action kelola pengguna (hanya Owner): buat, ubah nama/peran, reset kata sandi, aktif/nonaktif.
  * Menonaktifkan pengguna atau mereset kata sandinya menghapus semua sesinya, jadi aksesnya langsung putus.
  * Owner tidak boleh menonaktifkan atau menurunkan peran dirinya sendiri, dan harus selalu ada satu Owner aktif.
+ * Akun Kapten wajib ditautkan ke satu karyawan berjenis Event (satu karyawan satu akun); peran lain tidak ditautkan.
  */
 import { db, type Tx } from "@/lib/server/db";
 import { aksiAman, GalatAksi, segarkan, validasi, type HasilAksi } from "@/lib/server/aksi";
@@ -19,6 +20,17 @@ const ambil = async (tx: Tx, id: number) => {
   return p;
 };
 
+/** Karyawan yang ditautkan ke akun Kapten: wajib ada, berjenis Event, aktif, dan belum dipegang akun lain. */
+async function karyawanKapten(tx: Tx, peran: string, kode: string | null | undefined, penggunaId: number | null): Promise<string | null> {
+  if (peran !== "KAPTEN") return null;
+  if (!kode) throw new GalatAksi("Pilih crew yang dipegang akun kapten ini.", { karyawanKode: "Wajib untuk peran Kapten." });
+  const k = await tx.karyawan.findUnique({ where: { kode }, select: { jenis: true, aktif: true, pengguna: { select: { id: true, namaPengguna: true } } } });
+  if (!k || k.jenis !== "EVENT") throw new GalatAksi("Akun kapten harus ditautkan ke karyawan berjenis Event.", { karyawanKode: "Bukan karyawan event." });
+  if (!k.aktif) throw new GalatAksi("Karyawan ini sudah nonaktif.", { karyawanKode: "Karyawan nonaktif." });
+  if (k.pengguna && k.pengguna.id !== penggunaId) throw new GalatAksi(`Karyawan ini sudah dipegang akun @${k.pengguna.namaPengguna}.`, { karyawanKode: "Sudah punya akun." });
+  return kode;
+}
+
 /** Setelah perubahan, harus tersisa minimal satu Owner aktif. */
 const pastikanAdaOwner = async (tx: Tx) => {
   if ((await tx.pengguna.count({ where: { peran: "OWNER", aktif: true } })) < 1) throw new GalatAksi("Harus ada minimal satu Owner aktif.");
@@ -33,7 +45,8 @@ export async function buatPengguna(input: unknown): Promise<HasilAksi> {
       if (await tx.pengguna.findUnique({ where: { namaPengguna: d.namaPengguna }, select: { id: true } })) {
         throw new GalatAksi("Nama pengguna sudah dipakai.", { namaPengguna: "Nama pengguna sudah dipakai." });
       }
-      const p = await tx.pengguna.create({ data: { namaPengguna: d.namaPengguna, nama: d.nama, peran: d.peran, kataSandiHash: hash } });
+      const karyawanKode = await karyawanKapten(tx, d.peran, d.karyawanKode, null);
+      const p = await tx.pengguna.create({ data: { namaPengguna: d.namaPengguna, nama: d.nama, peran: d.peran, karyawanKode, kataSandiHash: hash } });
       await catatLog(tx, aktor.id, "pengguna.buat", "pengguna", String(p.id), `${d.namaPengguna} (${d.peran})`);
     });
     segarkan();
@@ -48,7 +61,8 @@ export async function ubahPengguna(input: unknown): Promise<HasilAksi> {
     await db.$transaction(async (tx) => {
       const p = await ambil(tx, d.id);
       if (p.id === aktor.id && d.peran !== "OWNER") throw new GalatAksi("Kamu tidak bisa menurunkan peran akunmu sendiri.", { peran: "Tidak bisa mengubah peran sendiri." });
-      await tx.pengguna.update({ where: { id: d.id }, data: { nama: d.nama, peran: d.peran } });
+      const karyawanKode = await karyawanKapten(tx, d.peran, d.karyawanKode, d.id);
+      await tx.pengguna.update({ where: { id: d.id }, data: { nama: d.nama, peran: d.peran, karyawanKode } });
       await pastikanAdaOwner(tx);
       await catatLog(tx, aktor.id, "pengguna.ubah", "pengguna", String(d.id), `${p.namaPengguna}: ${p.peran} -> ${d.peran}`);
     });

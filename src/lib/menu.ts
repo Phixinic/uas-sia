@@ -1,19 +1,28 @@
 /*
  * Peta menu sidebar (aman untuk klien). Urutan grup mengikuti siklus.
- * `peran` kosong = semua peran boleh membuka halaman itu (aksi di dalamnya tetap dibatasi IZIN).
+ * `peran` kosong = semua peran staf (Admin, HRD, Owner) boleh membuka halaman itu (aksi di dalamnya tetap dibatasi IZIN).
+ * Kapten hanya melihat tautan yang menyebut KAPTEN secara eksplisit.
  */
 import type { Peran } from "@/lib/peran";
 
 export type IkonMenu =
   | "dashboard" | "beli-alat" | "beli-lengkap" | "nilai-sisa" | "penyusutan" | "kartu-aset" | "pelepasan"
   | "presensi" | "hitung-gaji" | "distribusi" | "jurnal-penyesuaian" | "jurnal-umum" | "buku-besar" | "neraca-saldo"
-  | "tutup-periode" | "master-konversi" | "master-sdm" | "pengguna";
+  | "tutup-periode" | "master-konversi" | "master-sdm" | "pengguna" | "event" | "fee-event" | "penilaian";
 
 export type TautanMenu = { href: string; label: string; ikon: IkonMenu; peran?: readonly Peran[] };
 export type GrupMenu = { kunci: string; judul: string; tautan: TautanMenu[] };
 
 export const MENU: GrupMenu[] = [
-  { kunci: "ringkasan", judul: "Ringkasan", tautan: [{ href: "/", label: "Dashboard", ikon: "dashboard" }] },
+  {
+    kunci: "ringkasan",
+    judul: "Ringkasan",
+    tautan: [
+      { href: "/", label: "Dashboard", ikon: "dashboard", peran: ["ADMIN", "HRD", "OWNER", "KAPTEN"] },
+      // Satu-satunya menu kerja kapten, ditaruh di grup ringkasan supaya selalu terbuka.
+      { href: "/kapten", label: "Penilaian Crew", ikon: "penilaian", peran: ["KAPTEN"] },
+    ],
+  },
   {
     kunci: "konversi",
     judul: "Siklus konversi",
@@ -28,11 +37,19 @@ export const MENU: GrupMenu[] = [
   },
   {
     kunci: "sdm",
-    judul: "Siklus SDM",
+    judul: "Siklus SDM: gaji inhouse",
     tautan: [
       { href: "/sdm/presensi", label: "Presensi", ikon: "presensi" },
       { href: "/sdm/hitung-gaji", label: "Hitung Gaji", ikon: "hitung-gaji" },
       { href: "/sdm/distribusi", label: "Distribusi Gaji", ikon: "distribusi" },
+    ],
+  },
+  {
+    kunci: "fee-event",
+    judul: "Siklus SDM: fee event",
+    tautan: [
+      { href: "/fee-event/event", label: "Event & Kehadiran", ikon: "event" },
+      { href: "/fee-event/keputusan", label: "Laporan & Fee", ikon: "fee-event" },
     ],
   },
   {
@@ -56,6 +73,9 @@ export const MENU: GrupMenu[] = [
     ],
   },
 ];
+
+/** true bila tautan menu tampil untuk peran ini. */
+export const tampilUntuk = (t: TautanMenu, peran: Peran) => (t.peran ? t.peran.includes(peran) : peran !== "KAPTEN");
 
 /** Tautan aktif bila jalurnya sama, atau jalur saat ini berada di bawahnya (kecuali "/"). */
 export const aktifDi = (href: string, pathname: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`));

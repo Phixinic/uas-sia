@@ -59,7 +59,7 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
       <div className={`space-y-5 ${cari.slip && slipDibuka.length ? "tanpa-cetak" : ""}`}>
         <KepalaHalaman
           judul="Hitung Gaji"
-          keterangan="Gaji dihitung dari Setting Gaji dan rekap presensi. Potongan absen = gaji pokok dibagi hari kerja, dikali jumlah alpa. Hasilnya disimpan sebagai slip draf, lalu diajukan lewat Distribusi Gaji."
+          keterangan="Gaji bulanan karyawan inhouse, dihitung dari Setting Gaji dan rekap presensi. Crew event dibayar lewat menu Fee event. Potongan absen = gaji pokok dibagi hari kerja, dikali jumlah alpa. Hasilnya disimpan sebagai slip draf, lalu diajukan lewat Distribusi Gaji."
           aksi={
             <>
               <PilihPeriode terpilih={periode} opsi={opsiPeriode} />

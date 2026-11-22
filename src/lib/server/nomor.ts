@@ -3,10 +3,10 @@
  * (INSERT ... ON CONFLICT DO UPDATE), jadi aman dipakai beberapa pengguna sekaligus.
  *
  * Format (sama dengan app lama):
- *   dokumen bertahun : AWALAN-YYYY-NNNN   (JU, JP, JB, BP, BL, PLP, PAY), penghitung per tahun
+ *   dokumen bertahun : AWALAN-YYYY-NNNN   (JU, JP, JB, BP, BL, PLP, PAY, EVT, FEE), penghitung per tahun
  *   aset             : AST-NNNN
  *   master           : AWALAN-NN          (SUP, ALT, LKP, KAT, KRY, JBT, GP, TNJ, TM, SET)
- *   turunan          : OPN-YYYY-MM, SLP-YYYY-MM-<kode karyawan> (tidak memakai penghitung)
+ *   turunan          : OPN-YYYY-MM, SLP-YYYY-MM-<kode karyawan>, SFE-<kode event>-<kode karyawan> (tidak memakai penghitung)
  */
 import type { DbAtauTx } from "@/lib/server/db";
 
@@ -18,6 +18,8 @@ export const AWALAN = {
   PEMBELIAN_PERLENGKAPAN: "BL",
   PELEPASAN: "PLP",
   PENGGAJIAN: "PAY",
+  EVENT: "EVT",
+  LAPORAN_FEE: "FEE",
   ASET: "AST",
   SUPPLIER: "SUP",
   PERALATAN: "ALT",
@@ -51,3 +53,5 @@ export async function kodeBerikutnya(tx: DbAtauTx, awalan: string, lebar = 2): P
 
 export const nomorOpname = (periode: string) => `OPN-${periode}`;
 export const nomorSlip = (periode: string, karyawanKode: string) => `SLP-${periode}-${karyawanKode}`;
+/** Slip fee event: satu per orang per event, contoh SFE-EVT-2026-0001-KRY-06. */
+export const nomorSlipFee = (eventKode: string, karyawanKode: string) => `SFE-${eventKode}-${karyawanKode}`;

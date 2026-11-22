@@ -3,6 +3,7 @@
  */
 import type {
   AlasanPelepasan, CaraBayar, DasarN, JenisJurnal, JenisPembelian, StatusAset, StatusPembelian, StatusPeriode, StatusPersetujuan, TipeAkun, Absensi,
+  HasilPenilaian, JenisKaryawan, PeranEvent, SatuanTarif, StatusEvent,
 } from "@/generated/prisma/enums";
 
 export { labelPeriode, labelTanggal } from "@/lib/inti/tanggal";
@@ -38,3 +39,8 @@ export const LABEL_ALASAN_PELEPASAN: Record<AlasanPelepasan, string> = { DIJUAL:
 export const LABEL_JENIS_JURNAL: Record<JenisJurnal, string> = { UMUM: "Umum", PENYESUAIAN: "Penyesuaian", PEMBALIK: "Pembalik" };
 export const LABEL_TIPE_AKUN: Record<TipeAkun, string> = { ASET: "Aset", KONTRA_ASET: "Kontra aset", LIABILITAS: "Liabilitas", EKUITAS: "Ekuitas", PENDAPATAN: "Pendapatan", BEBAN: "Beban" };
 export const LABEL_ABSENSI: Record<Absensi, string> = { HADIR: "Hadir", IZIN: "Izin", SAKIT: "Sakit", CUTI: "Cuti", ALPA: "Alpa" };
+export const LABEL_JENIS_KARYAWAN: Record<JenisKaryawan, string> = { INHOUSE: "Inhouse (gaji bulanan)", EVENT: "Event (fee per event)" };
+export const LABEL_PERAN_EVENT: Record<PeranEvent, string> = { KAPTEN: "Kapten", CREW: "Crew" };
+export const LABEL_SATUAN_TARIF: Record<SatuanTarif, string> = { HARI: "per hari", JAM: "per jam" };
+export const LABEL_STATUS_EVENT: Record<StatusEvent, string> = { PENILAIAN: "Penilaian kapten", DIAJUKAN: "Menunggu Owner", SELESAI: "Selesai, dibayar" };
+export const LABEL_PENILAIAN: Record<HasilPenilaian, string> = { SESUAI: "Sesuai", KURANG: "Kurang" };

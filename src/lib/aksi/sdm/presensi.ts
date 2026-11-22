@@ -31,9 +31,10 @@ export async function simpanPresensi(input: unknown): Promise<HasilAksi> {
     await db.$transaction(async (tx) => {
       const karyawan = await tx.karyawan.findUnique({
         where: { kode: d.karyawanKode },
-        select: { aktif: true, settingGaji: { select: { aktif: true, jabatan: { select: { jadwalKerja: { select: { kode: true, jamMasuk: true } } } } } } },
+        select: { aktif: true, jenis: true, settingGaji: { select: { aktif: true, jabatan: { select: { jadwalKerja: { select: { kode: true, jamMasuk: true } } } } } } },
       });
       if (!karyawan || !karyawan.aktif) throw new GalatAksi("Karyawan tidak ditemukan atau sudah nonaktif.", { karyawanKode: "Karyawan tidak ditemukan." });
+      if (karyawan.jenis !== "INHOUSE") throw new GalatAksi("Crew event tidak memakai presensi bulanan. Catat kehadirannya di menu Event & Kehadiran.", { karyawanKode: "Karyawan event." });
       const jadwal = karyawan.settingGaji?.aktif ? karyawan.settingGaji.jabatan.jadwalKerja : null;
       if (!jadwal) throw new GalatAksi("Karyawan ini belum punya Setting Gaji, atau jabatannya belum punya jadwal kerja.", { karyawanKode: "Setting gaji atau jadwal kerja belum ada." });
 

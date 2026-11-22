@@ -21,6 +21,8 @@ enum Peran {
   ADMIN
   HRD
   OWNER
+  /// Kapten event (crew freelance yang ditunjuk memimpin event). Ditautkan ke satu karyawan EVENT.
+  KAPTEN
 }
 
 /// Status persetujuan bersama: jurnal, pelepasan, opname, slip gaji, penggajian.
@@ -68,6 +70,7 @@ enum SumberJurnal {
   OPNAME
   PELEPASAN
   PENGGAJIAN
+  FEE_EVENT
 }
 
 enum StatusPeriode {
@@ -119,6 +122,42 @@ enum StatusPtkp {
   K3  @map("K/3")
 }
 
+/// INHOUSE = gaji tetap bulanan (presensi, setting gaji, slip gaji). EVENT = crew freelance dibayar fee per event.
+enum JenisKaryawan {
+  INHOUSE
+  EVENT
+}
+
+/// Kelompok jabatan: INHOUSE untuk setting gaji bulanan, EVENT untuk penugasan event (Kapten, Crew).
+enum KelompokJabatan {
+  INHOUSE
+  EVENT
+}
+
+/// Peran dalam event. KAPTEN menilai progres crew; CREW dinilai kapten.
+enum PeranEvent {
+  KAPTEN
+  CREW
+}
+
+/// Satuan tarif jabatan event: per hari (jumlah tanggal berbeda yang dihadiri) atau per jam (jam yang diakui).
+enum SatuanTarif {
+  HARI
+  JAM
+}
+
+/// PENILAIAN = HRD mencatat kehadiran dan kapten menilai; DIAJUKAN = laporan kapten menunggu Owner; SELESAI = fee dibayar.
+enum StatusEvent {
+  PENILAIAN
+  DIAJUKAN
+  SELESAI
+}
+
+enum HasilPenilaian {
+  SESUAI
+  KURANG
+}
+
 enum Absensi {
   HADIR
   IZIN
@@ -139,26 +178,34 @@ model Pengguna {
   peran         Peran
   aktif         Boolean  @default(true)
   dibuatPada    DateTime @default(now()) @map("dibuat_pada")
+  /// Hanya untuk peran KAPTEN: karyawan EVENT yang dipegang akun ini (1:0..1).
+  karyawanKode  String?  @unique @map("id_karyawan")
 
-  sesi Sesi[]
-  log  LogAktivitas[]
+  karyawan Karyawan?      @relation(fields: [karyawanKode], references: [kode])
+  sesi     Sesi[]
+  log      LogAktivitas[]
 
-  jurnalDibuat         Jurnal[]         @relation("JurnalDibuat")
-  jurnalDisetujui      Jurnal[]         @relation("JurnalDisetujui")
-  pembelianDibuat      Pembelian[]      @relation("PembelianDibuat")
-  pembelianDisetujui   Pembelian[]      @relation("PembelianDisetujui")
-  pembelianDibalik     Pembelian[]      @relation("PembelianDibalik")
-  pelepasanDibuat      Pelepasan[]      @relation("PelepasanDibuat")
-  pelepasanDisetujui   Pelepasan[]      @relation("PelepasanDisetujui")
-  opnameDibuat         Opname[]         @relation("OpnameDibuat")
-  opnameDisetujui      Opname[]         @relation("OpnameDisetujui")
-  slipDibuat           SlipGaji[]       @relation("SlipDibuat")
-  slipDisetujui        SlipGaji[]       @relation("SlipDisetujui")
-  penggajianDibuat     Penggajian[]     @relation("PenggajianDibuat")
-  penggajianDisetujui  Penggajian[]     @relation("PenggajianDisetujui")
-  presensiDibuat       Presensi[]
-  periodeDikunci       Periode[]
-  riwayatPeriode       RiwayatPeriode[]
+  jurnalDibuat        Jurnal[]         @relation("JurnalDibuat")
+  jurnalDisetujui     Jurnal[]         @relation("JurnalDisetujui")
+  pembelianDibuat     Pembelian[]      @relation("PembelianDibuat")
+  pembelianDisetujui  Pembelian[]      @relation("PembelianDisetujui")
+  pembelianDibalik    Pembelian[]      @relation("PembelianDibalik")
+  pelepasanDibuat     Pelepasan[]      @relation("PelepasanDibuat")
+  pelepasanDisetujui  Pelepasan[]      @relation("PelepasanDisetujui")
+  opnameDibuat        Opname[]         @relation("OpnameDibuat")
+  opnameDisetujui     Opname[]         @relation("OpnameDisetujui")
+  slipDibuat          SlipGaji[]       @relation("SlipDibuat")
+  slipDisetujui       SlipGaji[]       @relation("SlipDisetujui")
+  penggajianDibuat    Penggajian[]     @relation("PenggajianDibuat")
+  penggajianDisetujui Penggajian[]     @relation("PenggajianDisetujui")
+  presensiDibuat      Presensi[]
+  periodeDikunci      Periode[]
+  riwayatPeriode      RiwayatPeriode[]
+  eventDibuat         Event[]          @relation("EventDibuat")
+  kehadiranDibuat     KehadiranEvent[] @relation("KehadiranDibuat")
+  kehadiranDinilai    KehadiranEvent[] @relation("KehadiranDinilai")
+  laporanDiajukan     LaporanFee[]     @relation("LaporanDiajukan")
+  laporanDiputuskan   LaporanFee[]     @relation("LaporanDiputuskan")
 
   @@map("pengguna")
 }
@@ -231,6 +278,7 @@ model Akun {
   asetAkunBeban     Aset[]         @relation("AsetAkunBeban")
   jabatan           Jabatan[]
   slipGaji          SlipGaji[]
+  slipFee           SlipFee[]
 
   @@map("akun")
 }
@@ -300,6 +348,7 @@ model Jurnal {
   opname            Opname?
   pelepasan         Pelepasan?
   penggajian        Penggajian?
+  laporanFee        LaporanFee?
 
   @@index([periodeId, status])
   @@index([jenis, status])
@@ -580,33 +629,47 @@ model Pelepasan {
 // ======================================================================
 
 model Karyawan {
-  kode       String     @id @map("id_karyawan")
+  kode       String        @id @map("id_karyawan")
   nama       String
-  statusPtkp StatusPtkp @map("status_ptkp")
+  statusPtkp StatusPtkp    @map("status_ptkp")
   bank       String
-  noRek      String     @map("no_rek")
-  aktif      Boolean    @default(true)
+  noRek      String        @map("no_rek")
+  /// Data lama otomatis INHOUSE. Karyawan EVENT tidak punya setting gaji.
+  jenis      JenisKaryawan @default(INHOUSE)
+  aktif      Boolean       @default(true)
 
   settingGaji SettingGaji?
   presensi    Presensi[]
   slipGaji    SlipGaji[]
+  pengguna    Pengguna?
+  penugasan   PenugasanEvent[]
+  kehadiran   KehadiranEvent[]
+  slipFee     SlipFee[]
 
   @@map("karyawan")
 }
 
 model Jabatan {
-  kode          String  @id @map("id_jabatan")
+  kode          String          @id @map("id_jabatan")
   nama          String
-  tunjJabatan   Int     @default(0) @map("tunj_jabatan")
+  tunjJabatan   Int             @default(0) @map("tunj_jabatan")
   /// Tunjangan istri/anak, hanya untuk karyawan berstatus PTKP K/*.
-  tunjKeluarga  Int     @default(0) @map("tunj_keluarga")
-  akunBebanKode String  @map("akun_beban")
-  aktif         Boolean @default(true)
+  tunjKeluarga  Int             @default(0) @map("tunj_keluarga")
+  akunBebanKode String          @map("akun_beban")
+  /// Data lama otomatis INHOUSE. Jabatan EVENT dipakai di penugasan event dan hanya diubah Owner.
+  kelompok      KelompokJabatan @default(INHOUSE)
+  /// Hanya jabatan EVENT: peran dalam event, satuan tarif, dan tarif (rupiah per hari atau per jam).
+  peranEvent    PeranEvent?     @map("peran_event")
+  satuanTarif   SatuanTarif?    @map("satuan_tarif")
+  tarif         Int             @default(0)
+  aktif         Boolean         @default(true)
 
-  akunBeban   Akun          @relation(fields: [akunBebanKode], references: [kode])
+  akunBeban   Akun             @relation(fields: [akunBebanKode], references: [kode])
   jadwalKerja JadwalKerja?
   settingGaji SettingGaji[]
   slipGaji    SlipGaji[]
+  penugasan   PenugasanEvent[]
+  slipFee     SlipFee[]
 
   @@map("jabatan")
 }
@@ -797,4 +860,150 @@ model Penggajian {
 
   @@index([periodeId, status])
   @@map("penggajian")
+}
+
+// ======================================================================
+// Fee event (crew freelance per event)
+// ======================================================================
+
+/// Event (acara) yang dikerjakan crew freelance. Kode EVT-2026-0001.
+model Event {
+  kode           String      @id @map("id_event")
+  nama           String
+  klien          String      @default("")
+  tanggalMulai   DateTime    @map("tanggal_mulai") @db.Date
+  tanggalSelesai DateTime    @map("tanggal_selesai") @db.Date
+  status         StatusEvent @default(PENILAIAN)
+  /// Alasan penolakan laporan terakhir oleh Owner (ditampilkan ke kapten sampai laporan dikirim ulang).
+  alasanTolak    String?     @map("alasan_tolak")
+  dibuatOlehId   Int         @map("dibuat_oleh")
+  dibuatPada     DateTime    @default(now()) @map("dibuat_pada")
+
+  dibuatOleh Pengguna         @relation("EventDibuat", fields: [dibuatOlehId], references: [id])
+  sesi       SesiEvent[]
+  penugasan  PenugasanEvent[]
+  laporan    LaporanFee[]
+  slipFee    SlipFee[]
+
+  @@index([status])
+  @@map("event")
+}
+
+/// Sub-event / sesi kerja (Meeting, Loading in, Hari H, Loading out). Jam "HH:MM", selesai sesudah mulai di hari yang sama.
+model SesiEvent {
+  id         Int      @id @default(autoincrement()) @map("id_sesi")
+  eventKode  String   @map("id_event")
+  nama       String
+  tanggal    DateTime @db.Date
+  jamMulai   String   @map("jam_mulai")
+  jamSelesai String   @map("jam_selesai")
+
+  event     Event            @relation(fields: [eventKode], references: [kode], onDelete: Cascade)
+  kehadiran KehadiranEvent[]
+
+  @@index([eventKode, tanggal])
+  @@map("sesi_event")
+}
+
+/// Penugasan karyawan EVENT ke satu event dengan jabatan EVENT (Kapten atau Crew). Satu orang satu penugasan per event.
+model PenugasanEvent {
+  id           Int    @id @default(autoincrement()) @map("id_penugasan")
+  eventKode    String @map("id_event")
+  karyawanKode String @map("id_karyawan")
+  jabatanKode  String @map("id_jabatan")
+
+  event    Event    @relation(fields: [eventKode], references: [kode], onDelete: Cascade)
+  karyawan Karyawan @relation(fields: [karyawanKode], references: [kode])
+  jabatan  Jabatan  @relation(fields: [jabatanKode], references: [kode])
+
+  @@unique([eventKode, karyawanKode])
+  @@map("penugasan_event")
+}
+
+/// Kehadiran satu orang di satu sesi (dicatat HRD) beserta penilaian progresnya (kapten untuk crew, Owner untuk kapten).
+model KehadiranEvent {
+  id             Int             @id @default(autoincrement()) @map("id_kehadiran")
+  sesiId         Int             @map("id_sesi")
+  karyawanKode   String          @map("id_karyawan")
+  jamMasuk       String          @map("jam_masuk")
+  jamPulang      String          @map("jam_pulang")
+  catatanProgres String          @default("") @map("catatan_progres")
+  penilaian      HasilPenilaian?
+  /// Diisi bila KURANG: menit yang diakui (tidak boleh melebihi menit tercatat yang dipotong ke jadwal sesi).
+  menitDiakui    Int?            @map("menit_diakui")
+  catatanNilai   String?         @map("catatan_nilai")
+  dinilaiOlehId  Int?            @map("dinilai_oleh")
+  dinilaiPada    DateTime?       @map("dinilai_pada")
+  dibuatOlehId   Int             @map("dibuat_oleh")
+  dibuatPada     DateTime        @default(now()) @map("dibuat_pada")
+
+  sesi        SesiEvent @relation(fields: [sesiId], references: [id], onDelete: Cascade)
+  karyawan    Karyawan  @relation(fields: [karyawanKode], references: [kode])
+  dinilaiOleh Pengguna? @relation("KehadiranDinilai", fields: [dinilaiOlehId], references: [id])
+  dibuatOleh  Pengguna  @relation("KehadiranDibuat", fields: [dibuatOlehId], references: [id])
+
+  @@unique([sesiId, karyawanKode])
+  @@map("kehadiran_event")
+}
+
+/// Laporan progres yang dikirim kapten ke Owner. Satu event bisa punya beberapa laporan (yang ditolak tetap tersimpan sebagai jejak).
+model LaporanFee {
+  no               String            @id @map("no_laporan")
+  eventKode        String            @map("id_event")
+  status           StatusPersetujuan @default(DIAJUKAN)
+  catatanKapten    String            @default("") @map("catatan_kapten")
+  /// Salinan total usulan saat laporan dikirim.
+  totalUsulan      Int               @map("total_usulan")
+  totalFee         Int?              @map("total_fee")
+  totalPph         Int?              @map("total_pph")
+  totalDibayar     Int?              @map("total_dibayar")
+  alasanTolak      String?           @map("alasan_tolak")
+  jurnalNo         String?           @unique @map("jurnal_no")
+  diajukanOlehId   Int               @map("diajukan_oleh")
+  diajukanPada     DateTime          @default(now()) @map("diajukan_pada")
+  diputuskanOlehId Int?              @map("diputuskan_oleh")
+  diputuskanPada   DateTime?         @map("diputuskan_pada")
+
+  event          Event     @relation(fields: [eventKode], references: [kode])
+  jurnal         Jurnal?   @relation(fields: [jurnalNo], references: [no])
+  diajukanOleh   Pengguna  @relation("LaporanDiajukan", fields: [diajukanOlehId], references: [id])
+  diputuskanOleh Pengguna? @relation("LaporanDiputuskan", fields: [diputuskanOlehId], references: [id])
+  slip           SlipFee[]
+
+  @@index([eventKode, status])
+  @@map("laporan_fee")
+}
+
+/// Slip fee satu orang untuk satu event, dibuat saat Owner menyetujui laporan (status selalu "Dibayar").
+model SlipFee {
+  no            String      @id @map("id_slip_fee")
+  laporanNo     String      @map("no_laporan")
+  eventKode     String      @map("id_event")
+  karyawanKode  String      @map("id_karyawan")
+  jabatanKode   String      @map("id_jabatan")
+  akunBebanKode String      @map("akun_beban")
+  peranEvent    PeranEvent  @map("peran_event")
+  satuanTarif   SatuanTarif @map("satuan_tarif")
+  tarif         Int
+  jumlahSesi    Int         @map("jumlah_sesi")
+  menitTercatat Int         @map("menit_tercatat")
+  menitDiakui   Int         @map("menit_diakui")
+  jumlahHari    Int         @map("jumlah_hari")
+  feeUsulan     Int         @map("fee_usulan")
+  /// Fee akhir dari Owner = bruto.
+  feeAkhir      Int         @map("fee_akhir")
+  alasanUbah    String?     @map("alasan_ubah")
+  dpp           Int
+  pph21         Int
+  dibayar       Int
+
+  laporan   LaporanFee @relation(fields: [laporanNo], references: [no])
+  event     Event      @relation(fields: [eventKode], references: [kode])
+  karyawan  Karyawan   @relation(fields: [karyawanKode], references: [kode])
+  jabatan   Jabatan    @relation(fields: [jabatanKode], references: [kode])
+  akunBeban Akun       @relation(fields: [akunBebanKode], references: [kode])
+
+  @@unique([eventKode, karyawanKode])
+  @@index([laporanNo])
+  @@map("slip_fee")
 }
