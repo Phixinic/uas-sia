@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
   // Menghasilkan .next/standalone (server.js + dependensi minimum) untuk image Docker.
   output: "standalone",
+  // next dev tidak membuat AGENTS.md dan CLAUDE.md otomatis di folder proyek.
+  agentRules: false,
   async headers() {
     return [{ source: "/:path*", headers: headerKeamanan }];
   },
