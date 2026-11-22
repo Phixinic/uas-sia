@@ -6,6 +6,7 @@ import { daftarJurnalPenyesuaian } from "@/lib/data/pelaporan/jurnal";
 import { labelTanggal } from "@/lib/inti/tanggal";
 import { labelWaktu, rupiah } from "@/lib/format";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
+import { TautanTombol } from "@/komponen/ui/Tombol";
 import Kartu from "@/komponen/ui/Kartu";
 import { LencanaStatus } from "@/komponen/ui/Lencana";
 import TabelJurnal from "@/komponen/ui/TabelJurnal";
@@ -35,7 +36,8 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
     <>
       <KepalaHalaman
         judul="Jurnal Penyesuaian"
-        keterangan={`Admin mengajukan, Owner menyetujui atau menolak dengan alasan. Hanya jurnal yang disetujui masuk buku besar. Kamu masuk sebagai ${LABEL_PERAN[pengguna.peran]}.`}
+        keterangan={`Admin mengajukan, Owner menyetujui atau menolak dengan alasan. Hanya jurnal yang disetujui masuk buku besar dan neraca saldo setelah penyesuaian. Kamu masuk sebagai ${LABEL_PERAN[pengguna.peran]}.`}
+        aksi={<TautanTombol href="/pelaporan/neraca-saldo?tahap=setelah">Lihat setelah penyesuaian</TautanTombol>}
       />
 
       <nav className="flex flex-wrap gap-2" aria-label="Filter status">

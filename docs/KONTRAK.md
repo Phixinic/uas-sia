@@ -47,8 +47,8 @@ tests/                          vitest: tes inti (tanpa DB) dan tes integrasi (U
 | `/kapten` | Penilaian Crew (hanya peran Kapten, `?lihat=EVT-2026-0001`) | SDM (fee event) |
 | `/pelaporan/jurnal-penyesuaian` | Jurnal Penyesuaian (ajukan, setujui, tolak) | Pelaporan |
 | `/pelaporan/jurnal-umum` | Jurnal Umum (umum + pembalik yang disetujui) | Pelaporan |
-| `/pelaporan/buku-besar` | Buku Besar | Pelaporan |
-| `/pelaporan/neraca-saldo` | Neraca Saldo | Pelaporan |
+| `/pelaporan/buku-besar` | Buku Besar (`?akun=1-110&periode=2026-10&tahap=sebelum\|setelah`, bawaan `setelah`) | Pelaporan |
+| `/pelaporan/neraca-saldo` | Neraca Saldo (`?periode=2026-10&tahap=sebelum\|setelah`; `setelah` = neraca lajur ringkas) | Pelaporan |
 | `/pelaporan/tutup-periode` | Tutup Periode | Pelaporan |
 | `/master/konversi` | Supplier, peralatan, perlengkapan, kategori aset, bagan akun, profil usaha | Pelaporan |
 | `/master/sdm` | Karyawan, jabatan, gaji pokok, tunjangan, jadwal kerja, setting gaji | Pelaporan |
@@ -110,7 +110,12 @@ Enum `StatusPersetujuan` (DRAFT, DIAJUKAN, DISETUJUI, DITOLAK) dipakai jurnal, p
 
 Efek penolakan jurnal penyesuaian ke sumbernya sudah ditulis di `src/lib/server/jurnal.ts` (`ajukanJurnal`, `setujuiJurnal`, `tolakJurnal`). Agen pelaporan cukup memanggilnya dari server action.
 
-Hanya jurnal DISETUJUI yang masuk buku besar dan neraca saldo. Periode dikunci berurutan: periode P hanya boleh dikunci bila semua periode sebelum P sudah terkunci, dan hanya boleh dibuka bila tidak ada periode sesudah P yang terkunci. Periode P tertutup bila P sendiri atau periode sesudahnya terkunci; periode tertutup menolak jurnal dan dokumen baru bertanggal di dalamnya, juga persetujuan dan penolakan jurnal penyesuaiannya (`buatJurnal`, `ajukanJurnal`, `setujuiJurnal`, `tolakJurnal` sudah memeriksa).
+Hanya jurnal DISETUJUI yang masuk buku besar dan neraca saldo. Laporan mengikuti tahap siklus akuntansi untuk periode P (`saringTahap` di `src/lib/inti/buku-besar.ts`):
+
+- **Sebelum penyesuaian**: semua jurnal DISETUJUI di periode sebelum P (semua jenis, karena penyesuaian periode lalu sudah menjadi saldo awal) ditambah jurnal UMUM dan PEMBALIK di periode P.
+- **Setelah penyesuaian**: semua jurnal DISETUJUI sampai P. Sama dengan saldo lengkap yang dipakai dashboard, tutup periode, dan cek saldo kas (`saldoAkun`, `neracaSaldo` tanpa saringan).
+
+Periode dikunci berurutan: periode P hanya boleh dikunci bila semua periode sebelum P sudah terkunci, dan hanya boleh dibuka bila tidak ada periode sesudah P yang terkunci. Periode P tertutup bila P sendiri atau periode sesudahnya terkunci; periode tertutup menolak jurnal dan dokumen baru bertanggal di dalamnya, juga persetujuan dan penolakan jurnal penyesuaiannya (`buatJurnal`, `ajukanJurnal`, `setujuiJurnal`, `tolakJurnal` sudah memeriksa).
 
 ## 5. Konvensi server action
 
@@ -213,6 +218,11 @@ Selesai mengerjakan: `npm run cek-tipe`, `npm run lint`, `npm run uji`, dan `npm
 - Periode bawaan halaman SDM = periode berjalan, sama dengan dashboard. Tautan cepat dashboard ke halaman berperiode membawa `?periode` yang sedang dipilih; tautan "Perlu tindakan" SDM membawa periode pekerjaan yang tertunda.
 - Kartu penyusutan di dashboard mengambil angka disetujui dari jurnal penyusutan yang disetujui, jadi aset yang dilepas sesudah penyusutannya disetujui tetap terhitung. Tabel halaman Proses Penyusutan juga memuat baris aset yang sudah dilepas (diberi lencana "dilepas"), sehingga total tabel sama dengan jurnal periodenya.
 - Kontrol form (`Isian`, `Pilihan`, `AreaTeks`, `IsianRupiah`) otomatis menunjuk pesan galat `<id>-galat` lewat `aria-describedby`. Form yang memakai galat per isian memanggil `useFokusGalat` supaya isian salah pertama difokuskan sesudah kirim gagal. Laci menu layar kecil `inert` saat tertutup, Esc menutupnya, dan fokus pindah ke "Tutup menu" lalu kembali ke "Buka menu".
+
+- Siklus akuntansi tampil berurutan di menu Jurnal & laporan: Jurnal Umum, Buku Besar, Neraca Saldo, Jurnal Penyesuaian, Tutup Periode. Buku Besar dan Neraca Saldo punya pilihan tahap (`?tahap=sebelum|setelah`, bawaan `setelah` supaya tautan lama bermakna sama); judul layar dan cetak ikut tahapnya ("Neraca Saldo Setelah Penyesuaian"). Tidak ada item menu terpisah per tahap; halaman Jurnal Penyesuaian memberi tautan cepat "Lihat setelah penyesuaian".
+- Jurnal PEMBALIK masuk tahap sebelum penyesuaian, sama dengan jurnal UMUM. Alasannya: jurnal pembalik hanya dibuat oleh `balikPembelian` (`src/lib/aksi/konversi/pembelian.ts`) untuk membatalkan jurnal transaksi pembelian, langsung DISETUJUI, dan bertanggal hari pembalikan. Isinya koreksi transaksi, bukan penyesuaian akhir periode, jadi harus sudah tercermin di neraca saldo sebelum penyesuaian.
+- Buku besar tahap setelah: mutasi UMUM dan PEMBALIK periode P tampil lebih dulu, lalu baris "Saldo sebelum penyesuaian", lalu mutasi jurnal penyesuaian P yang diberi lencana "Penyesuaian" (`bukuBesarTahap`). Jurnal penyesuaian selalu bertanggal hari terakhir periode, jadi urutan ini hanya menegaskan batas tahap.
+- Neraca saldo tahap setelah berbentuk neraca lajur ringkas (`neracaLajur`): kolom Neraca Saldo (tahap sebelum), Penyesuaian (jumlah debit dan kredit jurnal penyesuaian P per akun, tidak dinetokan, jadi totalnya sama dengan total jurnal penyesuaian), dan Setelah Penyesuaian, masing-masing debit dan kredit dengan total dan tanda seimbang. Per akun berlaku neraca saldo + penyesuaian = setelah penyesuaian. Di bawah `md` neraca lajur tampil sebagai kartu ringkas per akun; saat dicetak selalu tabel penuh.
 
 ### Fee event (crew freelance per event)
 

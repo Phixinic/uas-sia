@@ -135,8 +135,8 @@ describe("penggajian Oktober 2026", () => {
 });
 
 describe("buku besar dan neraca saldo", () => {
-  const jurnal: JurnalBuku[] = koleksi<{ tanggal: string; periode: string; status: string; keterangan: string; baris: { akun: string; debit: number; kredit: number }[] }>(seed, "jurnal").map((j) => ({
-    no: j.id, tanggal: j.tanggal, periode: j.periode, status: j.status.toUpperCase(), keterangan: j.keterangan, baris: j.baris,
+  const jurnal: JurnalBuku[] = koleksi<{ tanggal: string; periode: string; status: string; jenis: string; keterangan: string; baris: { akun: string; debit: number; kredit: number }[] }>(seed, "jurnal").map((j) => ({
+    no: j.id, tanggal: j.tanggal, periode: j.periode, status: j.status.toUpperCase(), jenis: j.jenis.toUpperCase() as JurnalBuku["jenis"], keterangan: j.keterangan, baris: j.baris,
   }));
   const kodeAkun = Object.keys(seed.akun);
 

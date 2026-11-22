@@ -55,11 +55,13 @@ export const MENU: GrupMenu[] = [
   {
     kunci: "pelaporan",
     judul: "Jurnal & laporan",
+    // Urut siklus akuntansi: jurnal umum, buku besar, neraca saldo, penyesuaian, lalu tutup periode.
+    // Buku Besar dan Neraca Saldo punya pilihan tahap sebelum atau setelah penyesuaian di halamannya.
     tautan: [
-      { href: "/pelaporan/jurnal-penyesuaian", label: "Jurnal Penyesuaian", ikon: "jurnal-penyesuaian" },
       { href: "/pelaporan/jurnal-umum", label: "Jurnal Umum", ikon: "jurnal-umum" },
       { href: "/pelaporan/buku-besar", label: "Buku Besar", ikon: "buku-besar" },
       { href: "/pelaporan/neraca-saldo", label: "Neraca Saldo", ikon: "neraca-saldo" },
+      { href: "/pelaporan/jurnal-penyesuaian", label: "Jurnal Penyesuaian", ikon: "jurnal-penyesuaian" },
       { href: "/pelaporan/tutup-periode", label: "Tutup Periode", ikon: "tutup-periode" },
     ],
   },

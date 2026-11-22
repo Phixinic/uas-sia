@@ -33,6 +33,24 @@ describe.runIf(aktif)("isi database hasil seed", async () => {
     expect([ns.debit, ns.kredit]).toEqual([145_622_573, 145_622_573]);
   });
 
+  it("tahap Oktober 2026: neraca lajur seimbang, beban dan akumulasi penyusutan sebelum + penyesuaian = setelah", async () => {
+    const { dataNeracaLajur, dataNeracaSaldo, dataBukuBesar } = await import("@/lib/data/pelaporan/jurnal");
+    const nl = await dataNeracaLajur("2026-10");
+    expect(nl.seimbang).toBe(true);
+    expect(nl.total.setelah.debit).toBe(145_622_573);
+    expect(nl.total.penyesuaian.debit).toBe(1_492_915 + 1_108_000);
+    expect(nl.total.neracaSaldo.debit).toBe((await dataNeracaSaldo("2026-10", "sebelum")).debit);
+    // Bawaan tetap saldo lengkap seperti sebelum ada pilihan tahap.
+    expect((await dataNeracaSaldo("2026-10")).debit).toBe(145_622_573);
+    for (const [kode, nilai] of [["6-110", 1_492_915], ["1-151", 1_492_915]] as const) {
+      const sb = (await dataBukuBesar(kode, "2026-10", "sebelum"))!;
+      const st = (await dataBukuBesar(kode, "2026-10", "setelah"))!;
+      expect(st.saldoSebelumPenyesuaian).toBe(sb.saldoAkhir);
+      expect(st.saldoAkhir).toBe(sb.saldoAkhir + nilai);
+      expect(st.baris.filter((b) => b.jenis === "PENYESUAIAN").map((b) => b.no)).toEqual(["JP-2026-0001"]);
+    }
+  });
+
   it("saldo kas lewat agregasi SQL sama dengan app lama", async () => {
     expect(await saldoAkun(db, "1-110", "2026-10")).toBe(jalankan<number>("saldo('1-110','2026-10')"));
   });

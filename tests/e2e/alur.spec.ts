@@ -420,15 +420,56 @@ test("6a. Jurnal umum, buku besar kas, dan neraca saldo November", async () => {
   angkaKunci["Kas akhir November"] = akhir;
   await foto(p, "owner", "buku-besar-kas-november");
 
+  // Bawaan = setelah penyesuaian, tampil sebagai neraca lajur: neraca saldo, penyesuaian, setelah penyesuaian.
   await bukaHalaman(p, "/pelaporan/neraca-saldo?periode=2026-11");
-  const total = p.locator("table tfoot tr").first().locator("td");
-  const debit = angkaDari(await total.nth(1).innerText());
-  const kredit = angkaDari(await total.nth(2).innerText());
+  await expect(p.getByRole("heading", { name: "Neraca Saldo Setelah Penyesuaian", level: 1 })).toBeVisible();
+  const total = p.locator("table[aria-label='Neraca lajur'] tfoot tr").first().locator("td");
+  const [nsDebit, nsKredit, adjDebit, adjKredit, debit, kredit] = await Promise.all([1, 2, 3, 4, 5, 6].map(async (i) => angkaDari(await total.nth(i).innerText())));
+  expect(nsDebit).toBe(nsKredit);
+  expect(adjDebit).toBe(adjKredit);
   expect(debit).toBe(kredit);
   expect(debit).toBeGreaterThan(145_622_573);
   await expect(p.getByText("Total seimbang")).toBeVisible();
   angkaKunci["Neraca saldo November (debit = kredit)"] = debit;
+  angkaKunci["Penyesuaian November (debit = kredit)"] = adjDebit;
   await foto(p, "owner", "neraca-saldo-november");
+
+  // Tahap sebelum = kolom neraca saldo di neraca lajur, dalam tabel debit dan kredit biasa.
+  await bukaHalaman(p, "/pelaporan/neraca-saldo?periode=2026-11&tahap=sebelum");
+  await expect(p.getByRole("heading", { name: "Neraca Saldo Sebelum Penyesuaian", level: 1 })).toBeVisible();
+  const totalSebelum = p.locator("table[aria-label='Neraca saldo'] tfoot tr").first().locator("td");
+  expect(angkaDari(await totalSebelum.nth(1).innerText())).toBe(nsDebit);
+  expect(angkaDari(await totalSebelum.nth(2).innerText())).toBe(nsKredit);
+  await expect(p.getByText("Total seimbang")).toBeVisible();
+  await foto(p, "owner", "neraca-saldo-november-sebelum");
+});
+
+test("6a2. Tahap penyesuaian: menu urut siklus, buku besar beban penyusutan Oktober sebelum dan setelah", async () => {
+  const p = sesi.owner.page;
+  await bukaHalaman(p, "/pelaporan/jurnal-penyesuaian");
+  await tautanMenu(p, "Jurnal & laporan", "Jurnal Umum");
+  await expect(p.getByRole("navigation", { name: "Menu utama" }).first().locator("#grup-pelaporan a")).toHaveText([
+    /^Jurnal Umum/, /^Buku Besar/, /^Neraca Saldo/, /^Jurnal Penyesuaian/, /^Tutup Periode/,
+  ]);
+  await p.getByRole("link", { name: "Lihat setelah penyesuaian" }).click();
+  await expect(p.getByRole("heading", { name: "Neraca Saldo Setelah Penyesuaian", level: 1 })).toBeVisible();
+
+  // Sebelum: jurnal penyesuaian Oktober belum dihitung.
+  await bukaHalaman(p, "/pelaporan/buku-besar?akun=6-110&periode=2026-10&tahap=sebelum");
+  await expect(p.getByRole("heading", { name: "Buku Besar Sebelum Penyesuaian", level: 1 })).toBeVisible();
+  await expect(baris(p, "JP-2026-0001")).toHaveCount(0);
+  const sebelum = angkaDari(await baris(p, "Saldo akhir").locator("td").last().innerText());
+
+  // Pilihan tahap membawa akun dan periode yang sedang dipilih.
+  await p.getByRole("link", { name: "Setelah penyesuaian" }).click();
+  await expect(p.getByRole("heading", { name: "Buku Besar Setelah Penyesuaian", level: 1 })).toBeVisible();
+  for (const q of [/akun=6-110/, /periode=2026-10/, /tahap=setelah/]) await expect(p).toHaveURL(q);
+  const jp = baris(p, "JP-2026-0001");
+  await expect(jp.getByText("Penyesuaian", { exact: true })).toBeVisible();
+  expect(angkaDari(await jp.locator("td").nth(3).innerText())).toBe(1_492_915);
+  expect(angkaDari(await baris(p, "Saldo sebelum penyesuaian").locator("td").last().innerText())).toBe(sebelum);
+  expect(angkaDari(await baris(p, "Saldo akhir").locator("td").last().innerText())).toBe(sebelum + 1_492_915);
+  angkaKunci["Beban penyusutan Oktober sebelum + penyesuaian = setelah"] = `${sebelum} + 1492915`;
 });
 
 test("6b. Tutup Oktober lulus, transaksi di Oktober ditolak, buka kembali dengan alasan", async () => {
@@ -636,13 +677,26 @@ test("8m. Tampilan layar sempit (390px): halaman utama tanpa overflow", async ({
   await expect(m.page.locator("table[aria-label='Hitung gaji per karyawan']")).toBeHidden();
   await expect(m.page.getByLabel("Hitung gaji per karyawan (ringkas)")).toBeVisible();
 
-  // Kode akun tidak terbelah ("1-" dan "140"); tabelnya digeser di dalam pembungkus, halaman tidak melebar.
+  // Satu kotak baris untuk teks kode akun = tidak patah ke baris kedua ("1-" dan "140").
+  const tidakPatah = async (kode: Locator) => {
+    await expect(kode).toBeVisible();
+    await expect(kode).toHaveCSS("white-space", "nowrap");
+    expect(await kode.evaluate((el) => { const r = document.createRange(); r.selectNodeContents(el); return r.getClientRects().length; })).toBe(1);
+  };
+  // Neraca lajur (bawaan, setelah penyesuaian) tampil sebagai kartu ringkas per akun, bukan tabel delapan kolom.
   await bukaHalaman(m.page, "/pelaporan/neraca-saldo?periode=2026-11");
-  const kode = m.page.locator("td .kode, td.kode", { hasText: /^1-140$/ }).first();
-  await expect(kode).toHaveCSS("white-space", "nowrap");
-  // Satu kotak baris untuk teksnya = tidak patah ke baris kedua.
-  expect(await kode.evaluate((el) => { const r = document.createRange(); r.selectNodeContents(el); return r.getClientRects().length; })).toBe(1);
+  await expect(m.page.locator("table[aria-label='Neraca lajur']")).toBeHidden();
+  const lajurHP = m.page.getByLabel("Neraca lajur (ringkas)");
+  await expect(lajurHP).toBeVisible();
+  await expect(lajurHP.getByText("Jumlah per kolom")).toBeVisible();
+  await tidakPatah(lajurHP.locator(".kode", { hasText: /^1-140$/ }).first());
   await cekLuapan(m.page, "mobile/neraca-saldo");
+  // Sebelum penyesuaian: tabel debit dan kredit biasa, digeser di dalam pembungkus bila perlu, halaman tidak melebar.
+  await bukaHalaman(m.page, "/pelaporan/neraca-saldo?periode=2026-11&tahap=sebelum");
+  await tidakPatah(m.page.locator("td .kode, td.kode", { hasText: /^1-140$/ }).first());
+  await cekLuapan(m.page, "mobile/neraca-saldo-sebelum");
+  await bukaHalaman(m.page, "/pelaporan/buku-besar?akun=6-110&periode=2026-10&tahap=setelah");
+  await cekLuapan(m.page, "mobile/buku-besar-setelah");
 
   // Laci menu: tertutup = inert (tidak bisa dicapai Tab), Esc menutup, fokus pindah ke tombol tutup lalu kembali.
   const laci = m.page.locator("#laci-menu");

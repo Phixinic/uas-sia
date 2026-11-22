@@ -4,7 +4,7 @@
  */
 import { db } from "@/lib/server/db";
 import { muatJurnalBuku } from "@/lib/server/jurnal";
-import { bukuBesar, neracaSaldo } from "@/lib/inti/buku-besar";
+import { bukuBesarTahap, neracaLajur, neracaSaldo, saringTahap, type Tahap } from "@/lib/inti/buku-besar";
 import { dariDate } from "@/lib/inti/tanggal";
 import type { BarisJurnal } from "@/lib/inti/jurnal";
 import type { Prisma } from "@/generated/prisma/client";
@@ -111,15 +111,25 @@ export async function daftarJurnalUmum(periode: string | null, jenis: "UMUM" | "
   return daftar.map((j) => petakan(j));
 }
 
-export async function dataBukuBesar(kodeAkun: string, periode: string) {
+/** Buku besar satu akun per tahap (bawaan "setelah" = semua jurnal disetujui sampai periode itu). */
+export async function dataBukuBesar(kodeAkun: string, periode: string, tahap: Tahap = "setelah") {
   const [akun, buku] = await Promise.all([db.akun.findUnique({ where: { kode: kodeAkun } }), muatJurnalBuku(db, periode)]);
   if (!akun) return null;
-  return { akun: { kode: akun.kode, nama: akun.nama, saldoNormal: akun.saldoNormal }, ...bukuBesar(buku, akun.kode, akun.saldoNormal, periode) };
+  return { akun: { kode: akun.kode, nama: akun.nama, saldoNormal: akun.saldoNormal }, ...bukuBesarTahap(buku, akun.kode, akun.saldoNormal, periode, tahap) };
 }
 
-export async function dataNeracaSaldo(sampai: string) {
+/** Neraca saldo sampai akhir periode per tahap (bawaan "setelah" = saldo lengkap seperti sebelumnya). */
+export async function dataNeracaSaldo(sampai: string, tahap: Tahap = "setelah") {
   const [akun, buku] = await Promise.all([db.akun.findMany({ select: { kode: true, nama: true } }), muatJurnalBuku(db, sampai)]);
-  const n = neracaSaldo(buku, akun.map((a) => a.kode), sampai);
+  const n = neracaSaldo(saringTahap(buku, sampai, tahap), akun.map((a) => a.kode), sampai);
+  const nama = new Map(akun.map((a) => [a.kode, a.nama]));
+  return { ...n, baris: n.baris.map((b) => ({ ...b, nama: nama.get(b.kode) ?? b.kode })) };
+}
+
+/** Neraca lajur ringkas periode P: neraca saldo, penyesuaian, dan neraca saldo setelah penyesuaian per akun. */
+export async function dataNeracaLajur(periode: string) {
+  const [akun, buku] = await Promise.all([db.akun.findMany({ select: { kode: true, nama: true } }), muatJurnalBuku(db, periode)]);
+  const n = neracaLajur(buku, akun.map((a) => a.kode), periode);
   const nama = new Map(akun.map((a) => [a.kode, a.nama]));
   return { ...n, baris: n.baris.map((b) => ({ ...b, nama: nama.get(b.kode) ?? b.kode })) };
 }

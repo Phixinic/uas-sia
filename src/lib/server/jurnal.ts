@@ -131,18 +131,22 @@ export async function tolakJurnal(tx: Tx, no: string, penggunaId: number, alasan
   await catatLog(tx, penggunaId, "jurnal.tolak", "jurnal", no, al);
 }
 
-/** Jurnal DISETUJUI (opsional sampai periode tertentu) dalam bentuk yang dipakai src/lib/inti/buku-besar.ts. */
+/**
+ * Jurnal DISETUJUI semua jenis (opsional sampai periode tertentu) dalam bentuk yang dipakai src/lib/inti/buku-besar.ts.
+ * Tahap sebelum atau setelah penyesuaian disaring di pemanggil lewat `saringTahap`, bukan di kueri ini.
+ */
 export async function muatJurnalBuku(klien: DbAtauTx = db, sampai?: string | null): Promise<JurnalBuku[]> {
   const daftar = await klien.jurnal.findMany({
     where: { status: "DISETUJUI", ...(sampai ? { periodeId: { lte: sampai } } : {}) },
     orderBy: [{ tanggal: "asc" }, { no: "asc" }],
-    select: { no: true, tanggal: true, periodeId: true, status: true, keterangan: true, detail: { orderBy: { noUrut: "asc" }, select: { akunKode: true, debit: true, kredit: true } } },
+    select: { no: true, tanggal: true, periodeId: true, status: true, jenis: true, keterangan: true, detail: { orderBy: { noUrut: "asc" }, select: { akunKode: true, debit: true, kredit: true } } },
   });
   return daftar.map((j) => ({
     no: j.no,
     tanggal: dariDate(j.tanggal),
     periode: j.periodeId,
     status: j.status,
+    jenis: j.jenis,
     keterangan: j.keterangan,
     baris: j.detail.map((d) => ({ akun: d.akunKode, debit: d.debit, kredit: d.kredit })),
   }));

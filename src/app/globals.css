@@ -273,6 +273,18 @@ body {
   tr {
     break-inside: avoid;
   }
+  /* Neraca lajur punya delapan kolom: huruf dan jarak dirapatkan supaya muat di kertas A4 tegak. */
+  .tabel-lajur {
+    font-size: 10px;
+  }
+  .tabel-lajur th,
+  .tabel-lajur td {
+    padding: 5px 4px !important;
+  }
+  .tabel-lajur th {
+    font-size: 8.5px;
+    letter-spacing: 0;
+  }
   .slip-cetak {
     border: 0 !important;
     padding: 0 !important;
