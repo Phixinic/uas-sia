@@ -9,6 +9,7 @@ import { periodeIni } from "@/lib/inti/tanggal";
 import { saldoBukuLkp } from "@/lib/data/konversi/nilai-sisa";
 import { LABEL_TIPE_AKUN } from "@/lib/format";
 import { OPSI_STATIS, type JenisMaster, type OpsiMaster } from "@/lib/skema/master";
+import { muatPetaNominal } from "@/lib/server/nominal";
 
 export type KolomMaster = { judul: string; angka?: boolean };
 export type BarisMaster = { kode: string; nama: string; aktif: boolean; sel: string[]; nilai: Record<string, string | string[]> };
@@ -18,8 +19,8 @@ const str = (x: unknown) => (x == null ? "" : String(x));
 const urut = <T extends { kode: string }>(a: T[]) => a.slice().sort((x, y) => x.kode.localeCompare(y.kode));
 
 /** Pilihan dinamis untuk form (kategori, akun, jabatan, karyawan, golongan, tunjangan). Yang nonaktif ditandai. */
-export async function opsiMaster(): Promise<OpsiMaster> {
-  const [kategori, akun, jabatan, karyawan, golongan, tunjangan] = await Promise.all([
+export async function opsiMaster(periode = periodeIni()): Promise<OpsiMaster> {
+  const [kategori, akun, jabatan, karyawan, golongan, tunjangan, peta] = await Promise.all([
     db.kategoriAset.findMany({ orderBy: { kode: "asc" } }),
     db.akun.findMany({ orderBy: { kode: "asc" } }),
     // Pilihan jabatan dan karyawan dipakai Jadwal kerja dan Setting gaji, jadi hanya yang inhouse.
@@ -27,19 +28,26 @@ export async function opsiMaster(): Promise<OpsiMaster> {
     db.karyawan.findMany({ where: { jenis: "INHOUSE" }, orderBy: { kode: "asc" } }),
     db.golongan.findMany({ orderBy: { kode: "asc" } }),
     db.tunjangan.findMany({ orderBy: { kode: "asc" } }),
+    muatPetaNominal(db),
   ]);
+  // Nominal di label = versi yang berlaku bulan berjalan; "belum berlaku" bila nominal awalnya belum disetujui.
+  const rp = (n: number | undefined) => (n === undefined ? "belum berlaku" : `Rp${angka(n)}`);
   return {
     ...OPSI_STATIS,
     kategori: kategori.map((x) => ({ nilai: x.kode, label: `${x.kode} · ${x.nama}`, nonaktif: !x.aktif })),
     akun: akun.map((x) => ({ nilai: x.kode, label: `${x.kode} · ${x.nama}`, nonaktif: !x.aktif })),
     jabatan: jabatan.map((x) => ({ nilai: x.kode, label: `${x.kode} · ${x.nama}`, nonaktif: !x.aktif })),
     karyawan: karyawan.map((x) => ({ nilai: x.kode, label: `${x.kode} · ${x.nama}`, nonaktif: !x.aktif })),
-    golongan: golongan.map((x) => ({ nilai: x.kode, label: `${x.kode} · ${x.nama} (Rp${angka(x.jumlah)})`, nonaktif: !x.aktif })),
-    tunjangan: tunjangan.map((x) => ({ nilai: x.kode, label: `${x.nama} (Rp${angka(x.nominal)})`, nonaktif: !x.aktif })),
+    golongan: golongan.map((x) => ({ nilai: x.kode, label: `${x.kode} · ${x.nama} (${rp(peta.pada("GOLONGAN", x.kode, periode)?.nominal)})`, nonaktif: !x.aktif })),
+    tunjangan: tunjangan.map((x) => ({ nilai: x.kode, label: `${x.nama} (${rp(peta.pada("TUNJANGAN", x.kode, periode)?.nominal)})`, nonaktif: !x.aktif })),
   };
 }
 
-export async function daftarMaster(jenis: JenisMaster): Promise<DaftarMaster> {
+/** Kolom nominal master struktur gaji = versi yang berlaku di periode (bawaan bulan berjalan); "-" bila belum berlaku. */
+export async function daftarMaster(jenis: JenisMaster, periode = periodeIni()): Promise<DaftarMaster> {
+  const butuhPeta = jenis === "jabatan" || jenis === "jabatanEvent" || jenis === "golongan" || jenis === "tunjangan" || jenis === "setgaji";
+  const peta = butuhPeta ? await muatPetaNominal(db) : null;
+  const rpAtau = (n: number | undefined) => (n === undefined ? "-" : angka(n));
   switch (jenis) {
     case "supplier": {
       const d = urut(await db.supplier.findMany());
@@ -104,11 +112,14 @@ export async function daftarMaster(jenis: JenisMaster): Promise<DaftarMaster> {
       const d = urut(await db.jabatan.findMany({ where: { kelompok: "INHOUSE" }, include: { akunBeban: { select: { nama: true } } } }));
       return {
         kolom: [{ judul: "Tunj. jabatan (Rp)", angka: true }, { judul: "Tunj. istri/anak (Rp)", angka: true }, { judul: "Akun biaya" }],
-        baris: d.map((x) => ({
-          kode: x.kode, nama: x.nama, aktif: x.aktif,
-          sel: [angka(x.tunjJabatan), angka(x.tunjKeluarga), `${x.akunBebanKode} ${x.akunBeban.nama}`],
-          nilai: { nama: x.nama, tunjJabatan: str(x.tunjJabatan), tunjKeluarga: str(x.tunjKeluarga), akunBebanKode: x.akunBebanKode },
-        })),
+        baris: d.map((x) => {
+          const v = peta!.pada("JABATAN", x.kode, periode);
+          return {
+            kode: x.kode, nama: x.nama, aktif: x.aktif,
+            sel: [rpAtau(v?.tunjJabatan), rpAtau(v?.tunjKeluarga), `${x.akunBebanKode} ${x.akunBeban.nama}`],
+            nilai: { nama: x.nama, akunBebanKode: x.akunBebanKode },
+          };
+        }),
       };
     }
     case "jabatanEvent": {
@@ -117,18 +128,18 @@ export async function daftarMaster(jenis: JenisMaster): Promise<DaftarMaster> {
         kolom: [{ judul: "Peran" }, { judul: "Tarif (Rp)", angka: true }, { judul: "Satuan" }, { judul: "Akun biaya" }, { judul: "Dipakai", angka: true }],
         baris: d.map((x) => ({
           kode: x.kode, nama: x.nama, aktif: x.aktif,
-          sel: [x.peranEvent === "KAPTEN" ? "Kapten" : "Crew", angka(x.tarif), x.satuanTarif === "HARI" ? "per hari" : "per jam", `${x.akunBebanKode} ${x.akunBeban.nama}`, `${x._count.penugasan} penugasan`],
-          nilai: { nama: x.nama, peranEvent: x.peranEvent ?? "", satuanTarif: x.satuanTarif ?? "", tarif: str(x.tarif), akunBebanKode: x.akunBebanKode },
+          sel: [x.peranEvent === "KAPTEN" ? "Kapten" : "Crew", rpAtau(peta!.pada("JABATAN_EVENT", x.kode, periode)?.nominal), x.satuanTarif === "HARI" ? "per hari" : "per jam", `${x.akunBebanKode} ${x.akunBeban.nama}`, `${x._count.penugasan} penugasan`],
+          nilai: { nama: x.nama, peranEvent: x.peranEvent ?? "", satuanTarif: x.satuanTarif ?? "", akunBebanKode: x.akunBebanKode },
         })),
       };
     }
     case "golongan": {
       const d = urut(await db.golongan.findMany());
-      return { kolom: [{ judul: "Gaji pokok (Rp)", angka: true }], baris: d.map((x) => ({ kode: x.kode, nama: x.nama, aktif: x.aktif, sel: [angka(x.jumlah)], nilai: { nama: x.nama, jumlah: str(x.jumlah) } })) };
+      return { kolom: [{ judul: "Gaji pokok (Rp)", angka: true }], baris: d.map((x) => ({ kode: x.kode, nama: x.nama, aktif: x.aktif, sel: [rpAtau(peta!.pada("GOLONGAN", x.kode, periode)?.nominal)], nilai: { nama: x.nama } })) };
     }
     case "tunjangan": {
       const d = urut(await db.tunjangan.findMany());
-      return { kolom: [{ judul: "Nominal (Rp)", angka: true }], baris: d.map((x) => ({ kode: x.kode, nama: x.nama, aktif: x.aktif, sel: [angka(x.nominal)], nilai: { nama: x.nama, nominal: str(x.nominal) } })) };
+      return { kolom: [{ judul: "Nominal (Rp)", angka: true }], baris: d.map((x) => ({ kode: x.kode, nama: x.nama, aktif: x.aktif, sel: [rpAtau(peta!.pada("TUNJANGAN", x.kode, periode)?.nominal)], nilai: { nama: x.nama } })) };
     }
     case "jadwal": {
       const d = urut(await db.jadwalKerja.findMany({ include: { jabatan: { select: { nama: true } } } }));
@@ -146,8 +157,10 @@ export async function daftarMaster(jenis: JenisMaster): Promise<DaftarMaster> {
       return {
         kolom: [{ judul: "Jabatan" }, { judul: "Gaji pokok" }, { judul: "Tunjangan" }, { judul: "Estimasi bruto (Rp)", angka: true }],
         baris: d.map((x) => {
-          const lain = x.tunjangan.reduce((s, t) => s + t.tunjangan.nominal, 0);
-          const bruto = x.golongan.jumlah + x.jabatan.tunjJabatan + (x.karyawan.statusPtkp.startsWith("K") ? x.jabatan.tunjKeluarga : 0) + lain;
+          const p = x.berlakuMulai > periode ? x.berlakuMulai : periode;
+          const vj = peta!.pada("JABATAN", x.jabatanKode, p);
+          const lain = x.tunjangan.reduce((s, t) => s + (peta!.pada("TUNJANGAN", t.tunjanganKode, p)?.nominal ?? 0), 0);
+          const bruto = (peta!.pada("GOLONGAN", x.golonganKode, p)?.nominal ?? 0) + (vj?.tunjJabatan ?? 0) + (x.karyawan.statusPtkp.startsWith("K") ? vj?.tunjKeluarga ?? 0 : 0) + lain;
           return {
             kode: x.kode, nama: x.karyawan.nama, aktif: x.aktif,
             sel: [x.jabatan.nama, x.golongan.nama, x.tunjangan.map((t) => t.tunjangan.nama).join(", ") || "-", angka(bruto)],

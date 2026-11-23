@@ -38,6 +38,8 @@ import { hariTerakhir, keDate, keMenit, labelPeriode, labelTanggal } from "../sr
 import { muatBahanGaji, versiBerlakuPeriode, type BahanGaji } from "../src/lib/data/sdm/gaji";
 import { isiVersi } from "../src/lib/server/setting-gaji";
 import { keteranganLog } from "../src/lib/inti/setting-gaji";
+import { ajukanNominalDalam, setujuiNominalDalam } from "../src/lib/server/nominal";
+import type { JenisNominal } from "../src/lib/inti/nominal";
 import { kunciEvent, muatBahanEvent, pastikanKaptenEvent } from "../src/lib/data/fee-event/bahan";
 import { skemaPresensi } from "../src/lib/skema/sdm";
 import { skemaEvent, skemaKehadiran, skemaKirimLaporan, skemaPenilaian, skemaSesi, skemaSetujuiFee, skemaTolakFee } from "../src/lib/skema/fee-event";
@@ -705,6 +707,7 @@ async function setujuiLaporan(tx: Tx, k: Konteks, noLaporan: string, pada: strin
       peranEvent: x.o.peranEvent,
       satuanTarif: x.o.satuanTarif,
       tarif: x.o.usulan.tarif,
+      versiTarifKode: x.o.versiTarif?.kode ?? null,
       jumlahSesi: x.o.usulan.jumlahSesi,
       menitTercatat: x.o.usulan.menitTercatat,
       menitDiakui: x.o.usulan.menitDiakui,
@@ -767,9 +770,11 @@ async function gajiSebulan(tx: Tx, k: Konteks, periode: string) {
         jamKerja: h.rekap.jamKerja, terlambatMenit: h.rekap.terlambatMenit, gajiPokok: h.gajiPokok, tunjJabatan: h.tunjJabatan, tunjKeluarga: h.tunjKeluarga,
         tunjLain: h.totalTunjLain, potonganAbsen: h.potonganAbsen, bruto: h.bruto, brutoSetahun: h.brutoSetahun, biayaJabatan: h.biayaJabatan, netoSetahun: h.netoSetahun,
         ptkp: h.ptkp, pkp: h.pkp, pphSetahun: h.pphSetahun, pph21: h.pph21, thp: h.thp, alasanTolak: null, settingKode: b.settingKode, dibuatOlehId: k.hrd, dihitungPada: new Date(),
+        versiGajiPokokKode: b.versiGajiPokok?.kode ?? null, versiJabatanKode: b.versiJabatan?.kode ?? null,
       },
     });
-    if (h.tunjLain.length) await tx.slipTunjangan.createMany({ data: h.tunjLain.map((t) => ({ slipNo: no, tunjanganKode: t.kode, nama: t.nama, nominal: t.nominal })) });
+    const versiTunj = new Map(b.versiTunjangan.map((t) => [t.kode, t.versi?.kode ?? null]));
+    if (h.tunjLain.length) await tx.slipTunjangan.createMany({ data: h.tunjLain.map((t) => ({ slipNo: no, tunjanganKode: t.kode, nama: t.nama, nominal: t.nominal, versiKode: versiTunj.get(t.kode) ?? null })) });
     await catatLog(tx, k.hrd, "slip.hitung", "slip", no, `bruto ${h.bruto}, PPh 21 ${h.pph21}, THP ${h.thp}`);
   }
 
@@ -818,23 +823,32 @@ async function gajiSebulan(tx: Tx, k: Konteks, periode: string) {
 
 async function tambahMaster(tx: Tx, k: Konteks, hashKapten: Record<string, string>) {
   const log = (jenis: string, kode: string, aktor = k.owner) => catatLog(tx, aktor, "master.tambah", jenis, kode);
+  // Nominal master berversi (riwayat nominal): Owner mengajukan nominal awal berlaku Oktober 2026 lalu menyetujuinya,
+  // sama dengan simpanMaster (data baru) diikuti setujuiNominal.
+  const nominalAwal = async (jenis: JenisNominal, itemKode: string, isi: { nominal?: number; tunjJabatan?: number; tunjKeluarga?: number }) => {
+    const h = await ajukanNominalDalam(tx, k.owner, { jenis, itemKode, nominal: isi.nominal ?? 0, tunjJabatan: isi.tunjJabatan ?? 0, tunjKeluarga: isi.tunjKeluarga ?? 0, berlaku: BERLAKU_SETTING_AWAL, alasan: "Nominal awal data baru." });
+    await setujuiNominalDalam(tx, k.owner, h.kode);
+  };
 
   const jabatanBaru: Record<string, string> = {};
   for (const j of JABATAN_INHOUSE) {
     const kode = await kodeBerikutnya(tx, AWALAN.JABATAN);
-    await tx.jabatan.create({ data: { kode, nama: j.nama, tunjJabatan: j.tunjJabatan, tunjKeluarga: j.tunjKeluarga, akunBebanKode: j.akunBebanKode, kelompok: "INHOUSE" } });
+    await tx.jabatan.create({ data: { kode, nama: j.nama, akunBebanKode: j.akunBebanKode, kelompok: "INHOUSE" } });
     await log("jabatan", kode);
+    await nominalAwal("JABATAN", kode, { tunjJabatan: j.tunjJabatan, tunjKeluarga: j.tunjKeluarga });
     const tm = await kodeBerikutnya(tx, AWALAN.JADWAL_KERJA);
     await tx.jadwalKerja.create({ data: { kode: tm, jabatanKode: kode, jamMasuk: j.jamMasuk, jamKeluar: j.jamKeluar, hariKerja: 22 } });
     await log("jadwal", tm);
     jabatanBaru[j.kunci] = kode;
   }
   const gp = await kodeBerikutnya(tx, AWALAN.GOLONGAN);
-  await tx.golongan.create({ data: { kode: gp, ...GOLONGAN_BARU } });
+  await tx.golongan.create({ data: { kode: gp, nama: GOLONGAN_BARU.nama } });
   await log("golongan", gp);
+  await nominalAwal("GOLONGAN", gp, { nominal: GOLONGAN_BARU.jumlah });
   const tnj = await kodeBerikutnya(tx, AWALAN.TUNJANGAN);
-  await tx.tunjangan.create({ data: { kode: tnj, ...TUNJANGAN_BARU } });
+  await tx.tunjangan.create({ data: { kode: tnj, nama: TUNJANGAN_BARU.nama } });
   await log("tunjangan", tnj);
+  await nominalAwal("TUNJANGAN", tnj, { nominal: TUNJANGAN_BARU.nominal });
 
   const inhouseBaru: { kode: string; profil: Profil }[] = [];
   for (const p of INHOUSE) {
@@ -867,8 +881,9 @@ async function tambahMaster(tx: Tx, k: Konteks, hashKapten: Record<string, strin
 
   for (const j of JABATAN_EVENT) {
     const kode = await kodeBerikutnya(tx, AWALAN.JABATAN);
-    await tx.jabatan.create({ data: { kode, nama: j.nama, peranEvent: j.peranEvent, satuanTarif: j.satuanTarif, tarif: j.tarif, akunBebanKode: AKUN.BIAYA_FEE_EVENT, tunjJabatan: 0, tunjKeluarga: 0, kelompok: "EVENT" } });
+    await tx.jabatan.create({ data: { kode, nama: j.nama, peranEvent: j.peranEvent, satuanTarif: j.satuanTarif, akunBebanKode: AKUN.BIAYA_FEE_EVENT, kelompok: "EVENT" } });
     await log("jabatanEvent", kode);
+    await nominalAwal("JABATAN_EVENT", kode, { nominal: j.tarif });
     k.jabatan[j.kunci] = kode;
   }
 

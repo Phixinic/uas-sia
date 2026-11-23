@@ -12,7 +12,7 @@ import LencanaPeriode from "@/komponen/ui/LencanaPeriode";
 import { PanelPeriodeLaporan } from "@/komponen/master/HalamanSettingGaji";
 import { opsiPeriodeSdm, periodeDipilih, type CariPeriode } from "@/lib/data/sdm/umum";
 import { ambilSlip, barisHitungGaji, daftarSlipPeriode, kesiapanGaji } from "@/lib/data/sdm/gaji";
-import { KesiapanGaji, PanelBiayaTetap } from "./KesiapanGaji";
+import { KesiapanGaji, PanelBiayaTetap, PanelVersiNominal } from "./KesiapanGaji";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
 import KartuRingkasan from "@/komponen/ui/KartuRingkasan";
@@ -48,7 +48,7 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
 
   const kesiapan = await kesiapanGaji(periode, baris);
   const alamatPeriode = denganPeriode(ALAMAT, periode);
-  const usang = baris.filter((b) => b.settingBerubah);
+  const usang = baris.filter((b) => b.settingBerubah || b.nominalBerubah);
   const slipDibuka = cari.slip === "semua" ? tersimpan : cari.slip ? [await ambilSlip(cari.slip)].filter((s) => s !== null) : [];
   // Tertutup bila periode ini atau periode sesudahnya sudah dikunci (kunci berurutan).
   const penutup = kunciPenutup(periode, terkunci);
@@ -89,7 +89,7 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
         {!bolehHitung && <Peringatan>Hitung gaji dijalankan oleh HRD. Kamu bisa melihat hasil dan slipnya.</Peringatan>}
         {usang.length > 0 && (
           <Peringatan jenis="awas">
-            Setting gaji {usang.map((b) => b.nama).join(", ")} berubah sesudah slip draf {usang.map((b) => b.slipNo).join(", ")} dihitung. Hitung ulang slip itu dulu; Distribusi Gaji menolak slip yang dihitung dengan setting lama.
+            Setting gaji atau nominal komponen {usang.map((b) => b.nama).join(", ")} berubah sesudah slip draf {usang.map((b) => b.slipNo).join(", ")} dihitung. Hitung ulang slip itu dulu; Distribusi Gaji menolak slip yang dihitung dengan setting atau nominal lama.
           </Peringatan>
         )}
 
@@ -104,6 +104,7 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
         <PanelBiayaTetap />
         <PanelPeriodeLaporan />
         <KesiapanGaji daftar={kesiapan} periode={periode} />
+        <PanelVersiNominal baris={baris} periode={periode} />
 
         <Kartu rapat>
           <KepalaKartu judul={`Proses hitung gaji · ${labelBulanTahun(periode)}`} keterangan="Tekan Rincian untuk melihat komponen gaji dan PPh 21 tiap karyawan" />

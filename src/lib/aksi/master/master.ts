@@ -5,6 +5,9 @@
  * tunjangan, jadwal kerja, setting gaji) dan profil usaha.
  * Master tidak pernah dihapus, hanya dinonaktifkan, supaya transaksi lama tetap terbaca.
  * Izin per jenis ada di DEF_MASTER (lihat src/lib/skema/master.ts), nonaktifkan hanya Owner.
+ * Nominal jabatan, jabatan event, golongan, dan tunjangan berversi (tabel versi_nominal): data baru langsung membuat
+ * pengajuan nominal awal dengan bulan berlaku, ubah data hanya mengubah atribut lain (nama, akun biaya, peran, satuan).
+ * Perubahan nominal sesudahnya lewat ajukanNominal (src/lib/aksi/master/nominal.ts).
  */
 import { db, type Tx } from "@/lib/server/db";
 import { aksiAman, GalatAksi, segarkan, validasi, type HasilAksi } from "@/lib/server/aksi";
@@ -12,7 +15,9 @@ import { wajibPeran } from "@/lib/server/auth";
 import { IZIN } from "@/lib/peran";
 import { AWALAN, kodeBerikutnya } from "@/lib/server/nomor";
 import { catatLog } from "@/lib/server/log";
-import { DEF_MASTER, skemaIsiMaster, skemaProfil, skemaSimpanMaster, skemaStatusMaster, type JenisMaster } from "@/lib/skema/master";
+import { DEF_MASTER, NOMINAL_STRUKTUR, skemaIsiMaster, skemaProfil, skemaSimpanMaster, skemaStatusMaster, termasukStruktur, type JenisMaster } from "@/lib/skema/master";
+import { ajukanNominalDalam } from "@/lib/server/nominal";
+import { labelPeriode, periodeDariBulanTahun } from "@/lib/inti/tanggal";
 import type { JenisKaryawan, PeranEvent, SaldoNormal, SatuanTarif, StatusPtkp, TipeAkun } from "@/generated/prisma/enums";
 
 type Nilai = Record<string, string | number | string[]>;
@@ -37,6 +42,26 @@ async function pastikanInhouse(tx: Tx, r: { karyawanKode?: string; jabatanKode?:
     const j = await tx.jabatan.findUnique({ where: { kode: r.jabatanKode }, select: { kelompok: true } });
     if (j?.kelompok === "EVENT") throw new GalatAksi("Jabatan event tidak dipakai untuk gaji inhouse.", { jabatanKode: "Jabatan event." });
   }
+}
+
+/** Pengajuan nominal awal data master baru: versi DIAJUKAN dengan bulan berlaku dari form, diputuskan Owner. */
+async function ajukanNominalAwal(tx: Tx, penggunaId: number, jenis: JenisMaster, kode: string, v: Nilai) {
+  if (!termasukStruktur(jenis)) return null;
+  const berlaku = periodeDariBulanTahun(v.bulan, v.tahun);
+  if (!berlaku) throw new GalatAksi("Pilih bulan dan tahun berlaku nominal awal.", { bulan: "Pilih bulan berlaku.", tahun: "Pilih tahun berlaku." });
+  const n = (k: string) => Number(v[k] ?? 0);
+  const jenisNominal = NOMINAL_STRUKTUR[jenis];
+  const nominal = jenis === "golongan" ? n("jumlah") : jenis === "tunjangan" ? n("nominal") : jenis === "jabatanEvent" ? n("tarif") : 0;
+  const h = await ajukanNominalDalam(tx, penggunaId, {
+    jenis: jenisNominal,
+    itemKode: kode,
+    nominal,
+    tunjJabatan: jenis === "jabatan" ? n("tunjJabatan") : 0,
+    tunjKeluarga: jenis === "jabatan" ? n("tunjKeluarga") : 0,
+    berlaku,
+    alasan: "Nominal awal data baru.",
+  });
+  return { kode: h.kode, berlaku };
 }
 
 async function simpan(tx: Tx, jenis: JenisMaster, kodeLama: string | null, v: Nilai): Promise<string> {
@@ -125,32 +150,37 @@ async function simpan(tx: Tx, jenis: JenisMaster, kodeLama: string | null, v: Ni
       const lama = kodeLama ? await tx.jabatan.findUnique({ where: { kode: kodeLama }, select: { akunBebanKode: true, kelompok: true } }) : null;
       if (lama && lama.kelompok !== "INHOUSE") throw new GalatAksi("Jabatan ini jabatan event. Ubah lewat tab Jabatan event (khusus Owner).");
       await pastikanRujukan([await ada("akun", s("akunBebanKode"), "Akun biaya gaji", "akunBebanKode", lama?.akunBebanKode === s("akunBebanKode"))]);
-      const data = { nama: s("nama"), tunjJabatan: n("tunjJabatan"), tunjKeluarga: n("tunjKeluarga"), akunBebanKode: s("akunBebanKode") };
+      // Tunjangan jabatan dan istri/anak tidak disimpan di jabatan, tetapi di versi nominal (lihat ajukanNominalAwal).
+      const data = { nama: s("nama"), akunBebanKode: s("akunBebanKode") };
       if (baru) return (await tx.jabatan.create({ data: { kode: await kodeBerikutnya(tx, AWALAN.JABATAN), ...data, kelompok: "INHOUSE" } })).kode;
       await tx.jabatan.update({ where: { kode: kodeLama }, data });
       return kodeLama;
     }
     case "jabatanEvent": {
-      const lama = kodeLama ? await tx.jabatan.findUnique({ where: { kode: kodeLama }, select: { akunBebanKode: true, kelompok: true, peranEvent: true, _count: { select: { penugasan: true } } } }) : null;
+      const lama = kodeLama ? await tx.jabatan.findUnique({ where: { kode: kodeLama }, select: { akunBebanKode: true, kelompok: true, peranEvent: true, satuanTarif: true, _count: { select: { penugasan: true } } } }) : null;
       if (lama && lama.kelompok !== "EVENT") throw new GalatAksi("Jabatan ini jabatan inhouse. Ubah lewat tab Jabatan.");
       await pastikanRujukan([await ada("akun", s("akunBebanKode"), "Akun biaya fee", "akunBebanKode", lama?.akunBebanKode === s("akunBebanKode"))]);
       const peranEvent = s("peranEvent") as PeranEvent;
       if (lama && lama.peranEvent !== peranEvent && lama._count.penugasan) {
         throw new GalatAksi("Jabatan ini sudah dipakai di penugasan event, jadi perannya (Kapten atau Crew) tidak bisa diubah. Buat jabatan baru.", { peranEvent: "Sudah dipakai di penugasan." });
       }
-      const data = { nama: s("nama"), peranEvent, satuanTarif: s("satuanTarif") as SatuanTarif, tarif: n("tarif"), akunBebanKode: s("akunBebanKode"), tunjJabatan: 0, tunjKeluarga: 0 };
+      // Satuan tarif menentukan arti angka tarif di semua versi (per hari atau per jam), jadi dikunci begitu jabatan dipakai.
+      if (lama && lama.satuanTarif !== s("satuanTarif") && lama._count.penugasan) {
+        throw new GalatAksi("Jabatan ini sudah dipakai di penugasan event, jadi satuan tarifnya (per hari atau per jam) tidak bisa diubah. Buat jabatan baru.", { satuanTarif: "Sudah dipakai di penugasan." });
+      }
+      const data = { nama: s("nama"), peranEvent, satuanTarif: s("satuanTarif") as SatuanTarif, akunBebanKode: s("akunBebanKode") };
       if (baru) return (await tx.jabatan.create({ data: { kode: await kodeBerikutnya(tx, AWALAN.JABATAN), ...data, kelompok: "EVENT" } })).kode;
       await tx.jabatan.update({ where: { kode: kodeLama }, data });
       return kodeLama;
     }
     case "golongan": {
-      const data = { nama: s("nama"), jumlah: n("jumlah") };
+      const data = { nama: s("nama") };
       if (baru) return (await tx.golongan.create({ data: { kode: await kodeBerikutnya(tx, AWALAN.GOLONGAN), ...data } })).kode;
       await tx.golongan.update({ where: { kode: kodeLama }, data });
       return kodeLama;
     }
     case "tunjangan": {
-      const data = { nama: s("nama"), nominal: n("nominal") };
+      const data = { nama: s("nama") };
       if (baru) return (await tx.tunjangan.create({ data: { kode: await kodeBerikutnya(tx, AWALAN.TUNJANGAN), ...data } })).kode;
       await tx.tunjangan.update({ where: { kode: kodeLama }, data });
       return kodeLama;
@@ -186,19 +216,23 @@ export async function simpanMaster(input: unknown): Promise<HasilAksi<{ kode: st
     const kodeLama = dasar.kode || null;
     // Kode akun tidak bisa diubah: pada ubah data, abaikan kode kiriman klien.
     const mentah = dasar.jenis === "akun" && kodeLama ? { ...dasar.nilai, kode: kodeLama } : dasar.nilai;
-    const v = validasi(skemaIsiMaster(dasar.jenis), mentah) as Nilai;
+    // Ubah data tidak memuat isian nominal: nominal berversi diubah lewat pengajuan perubahan nominal.
+    const v = validasi(skemaIsiMaster(dasar.jenis, { baru: !kodeLama }), mentah) as Nilai;
 
-    const kode = await db.$transaction(async (tx) => {
+    const hasil = await db.$transaction(async (tx) => {
       if (kodeLama) {
         const ada = await (tx[MODEL[dasar.jenis] as "supplier"] as unknown as { findUnique: (a: unknown) => Promise<unknown> }).findUnique({ where: { kode: kodeLama } });
         if (!ada) throw new GalatAksi(`Data ${kodeLama} tidak ditemukan.`);
       }
       const k = await simpan(tx, dasar.jenis, kodeLama, v);
       await catatLog(tx, pengguna.id, `master.${kodeLama ? "ubah" : "tambah"}`, dasar.jenis, k);
-      return k;
+      const nominal = kodeLama ? null : await ajukanNominalAwal(tx, pengguna.id, dasar.jenis, k, v);
+      return { kode: k, nominal };
     });
     segarkan();
-    return { pesan: `${def.label} ${kode} tersimpan.`, data: { kode } };
+    const kode = hasil.kode;
+    const tambahan = hasil.nominal ? ` Nominal awal ${hasil.nominal.kode} (berlaku ${labelPeriode(hasil.nominal.berlaku)}) menunggu persetujuan Owner.` : "";
+    return { pesan: `${def.label} ${kode} tersimpan.${tambahan}`, data: { kode } };
   });
 }
 

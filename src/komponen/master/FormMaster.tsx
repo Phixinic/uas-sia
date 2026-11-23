@@ -9,23 +9,33 @@ import { useFokusGalat } from "@/komponen/ui/useFokusGalat";
 import Kartu from "@/komponen/ui/Kartu";
 import Tombol from "@/komponen/ui/Tombol";
 import { Bidang, Isian, Pilihan } from "@/komponen/ui/Isian";
-import type { DefMaster, OpsiMaster } from "@/lib/skema/master";
+import { isianForm, punyaNominal, type DefMaster, type OpsiMaster } from "@/lib/skema/master";
+import { bulanDari, tahunDari } from "@/lib/inti/tanggal";
+import Peringatan from "@/komponen/ui/Peringatan";
+import PilihBerlaku from "./PilihBerlaku";
 
 type Nilai = Record<string, string | string[]>;
 
-/** Form tambah atau ubah satu data master, dibentuk dari definisinya (src/lib/skema/master.ts). */
-export default function FormMaster({ def, opsi, kode, awal, alamatKembali }: {
+/**
+ * Form tambah atau ubah satu data master, dibentuk dari definisinya (src/lib/skema/master.ts).
+ * Master bernominal (jabatan, jabatan event, golongan, tunjangan): data baru meminta nominal awal beserta bulan dan
+ * tahun berlakunya (menjadi pengajuan ke Owner); ubah data tidak memuat nominal, karena nominal diubah lewat pengajuan.
+ */
+export default function FormMaster({ def, opsi, kode, awal, alamatKembali, berlaku }: {
   def: DefMaster;
   opsi: OpsiMaster;
   /** null = data baru. */
   kode: string | null;
   awal: Nilai;
   alamatKembali: string;
+  /** Pilihan bulan berlaku nominal awal (wajib untuk master bernominal). */
+  berlaku?: { periodeBerlaku: string[]; bawaan: string };
 }) {
   const router = useRouter();
   const awalan = useId();
   const { jalankan, memuat } = useAksi();
-  const [nilai, setNilai] = useState<Nilai>(awal);
+  const pakaiBerlaku = !kode && punyaNominal(def) && !!berlaku;
+  const [nilai, setNilai] = useState<Nilai>(() => (pakaiBerlaku ? { ...awal, bulan: String(bulanDari(berlaku!.bawaan)), tahun: String(tahunDari(berlaku!.bawaan)) } : awal));
   const [galat, setGalat] = useState<Record<string, string>>({});
   const akar = useRef<HTMLFormElement>(null);
   useFokusGalat(akar, galat);
@@ -43,7 +53,7 @@ export default function FormMaster({ def, opsi, kode, awal, alamatKembali }: {
       <form ref={akar} onSubmit={kirim} className="space-y-4" aria-label={`Form ${def.label}`} noValidate>
         <h2 className="judul-kartu">{kode ? `Ubah ${kode}` : `${def.label} baru`}</h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          {def.isian.map((d) => {
+          {isianForm(def, !kode).map((d) => {
             const id = `${awalan}-${d.kunci}`;
             const v = nilai[d.kunci] ?? (d.tipe === "banyak" ? [] : "");
             const g = galat[d.kunci];
@@ -87,6 +97,15 @@ export default function FormMaster({ def, opsi, kode, awal, alamatKembali }: {
             );
           })}
         </div>
+        {pakaiBerlaku && (
+          <>
+            <PilihBerlaku id={awalan} label="Nominal awal berlaku mulai" bulan={String(nilai.bulan ?? "")} tahun={String(nilai.tahun ?? "")} periodeBerlaku={berlaku!.periodeBerlaku} galat={galat} onChange={(x) => setNilai((n) => ({ ...n, ...x }))} />
+            <Peringatan>Nominal awal dikirim sebagai pengajuan ke Owner. Nominal data ini baru dipakai menghitung gaji atau fee setelah Owner menyetujuinya.</Peringatan>
+          </>
+        )}
+        {kode && punyaNominal(def) && (
+          <Peringatan>Nominal tidak diubah di sini. Pakai tombol &quot;Ajukan nominal&quot; di tabel supaya perubahannya punya bulan berlaku dan disetujui Owner.</Peringatan>
+        )}
         <div className="flex gap-2">
           <Tombol type="submit" varian="utama" memuat={memuat} ikon={<Save className="size-4" />}>Simpan</Tombol>
           <Tombol varian="garis" onClick={() => router.push(alamatKembali)} disabled={memuat}>Batal</Tombol>

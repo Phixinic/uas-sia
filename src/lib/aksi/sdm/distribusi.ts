@@ -21,7 +21,7 @@ import { AKUN } from "@/lib/inti/akun";
 import { barisGaji } from "@/lib/inti/jurnal";
 import { hariTerakhir, labelPeriode } from "@/lib/inti/tanggal";
 import { tahanKunciSetting } from "@/lib/server/setting-gaji";
-import { versiBerlakuPeriode } from "@/lib/data/sdm/gaji";
+import { muatBahanGaji, pilihSidik, sidikBahan, sidikSlip } from "@/lib/data/sdm/gaji";
 
 export async function ajukanPenggajian(input: unknown): Promise<HasilAksi<{ no: string }>> {
   return aksiAman(async () => {
@@ -30,14 +30,18 @@ export async function ajukanPenggajian(input: unknown): Promise<HasilAksi<{ no: 
     const hasil = await db.$transaction(async (tx) => {
       await pastikanTerbuka(tx, periode);
       await tahanKunciSetting(tx);
-      const draf = await tx.slipGaji.findMany({ where: { periodeId: periode, status: "DRAFT" }, select: { no: true, karyawanKode: true, settingKode: true, bruto: true, pph21: true, thp: true } });
+      const draf = await tx.slipGaji.findMany({ where: { periodeId: periode, status: "DRAFT" }, select: { no: true, karyawanKode: true, bruto: true, pph21: true, thp: true, ...pilihSidik } });
       if (!draf.length) throw new GalatAksi(`Tidak ada slip draf di ${labelPeriode(periode)}. Hitung gaji dulu di menu Hitung Gaji.`);
-      // Slip draf yang dihitung dengan versi setting lain dari versi yang sekarang berlaku (misalnya promosi baru disetujui)
-      // harus dihitung ulang dulu, supaya gaji yang diajukan dan dibayar sesuai setting yang berlaku.
-      const berlaku = new Map((await versiBerlakuPeriode(tx, periode)).map((v) => [v.karyawanKode, v.kode]));
-      const usang = draf.filter((s) => s.settingKode === null || s.settingKode !== berlaku.get(s.karyawanKode));
+      // Slip draf yang dihitung dengan versi setting atau versi nominal komponen yang sekarang sudah tidak berlaku (misalnya
+      // promosi atau kenaikan gaji pokok baru disetujui) harus dihitung ulang dulu, supaya gaji yang diajukan dan dibayar
+      // sesuai setting dan nominal yang berlaku di bulan itu.
+      const bahan = new Map((await muatBahanGaji(tx, periode)).map((b) => [b.karyawanKode, b]));
+      const usang = draf.filter((s) => {
+        const b = bahan.get(s.karyawanKode);
+        return s.settingKode === null || !b || s.settingKode !== b.settingKode || sidikSlip(s) !== sidikBahan(b);
+      });
       if (usang.length) {
-        throw new GalatAksi(`Setting gaji ${usang.map((s) => s.no).join(", ")} sudah berubah sejak slipnya dihitung. Hitung ulang slip itu di menu Hitung Gaji, lalu ajukan lagi.`);
+        throw new GalatAksi(`Setting gaji atau nominal komponen ${usang.map((s) => s.no).join(", ")} sudah berubah sejak slipnya dihitung. Hitung ulang slip itu di menu Hitung Gaji, lalu ajukan lagi.`);
       }
       const no = await nomorDokumen(tx, AWALAN.PENGGAJIAN, hariTerakhir(periode));
       // Klaim slip lebih dulu (bersyarat DRAFT) supaya dua pengajuan bersamaan tidak memakai slip yang sama.

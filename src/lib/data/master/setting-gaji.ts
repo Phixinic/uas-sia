@@ -4,9 +4,14 @@
  */
 import { db } from "@/lib/server/db";
 import { daftarPeriode, periodeIni, tambahBulan } from "@/lib/inti/tanggal";
+import { muatPetaNominal } from "@/lib/server/nominal";
+import type { PetaNominal } from "@/lib/inti/nominal";
 import { pengamanBerlaku, pilihVersiBerlaku, versiDigantikan, type HasilPengaman, type JenisPerubahan, type SlipRingkas, type StatusVersi, type VersiRingkas } from "@/lib/inti/setting-gaji";
 
-/** Isi satu versi untuk ditampilkan: nama dan nominal master saat ini. */
+/**
+ * Isi satu versi untuk ditampilkan: nama master dan nominal yang berlaku di satu bulan (riwayat nominal). Riwayat dan
+ * pengajuan memakai bulan berlaku versinya; versi yang berlaku sekarang memakai bulan berjalan.
+ */
 export type TampilVersi = {
   kode: string;
   karyawanKode: string;
@@ -67,9 +72,13 @@ const sertai = {
 
 type VersiDb = Awaited<ReturnType<typeof db.settingGaji.findMany<{ include: typeof sertai }>>>[number];
 
-function keTampil(v: VersiDb, digantikan: Set<string>): TampilVersi {
-  const tunjLain = v.tunjangan.reduce((s, t) => s + t.tunjangan.nominal, 0);
-  const tunjKeluarga = v.karyawan.statusPtkp.startsWith("K") ? v.jabatan.tunjKeluarga : 0;
+function keTampil(v: VersiDb, digantikan: Set<string>, peta: PetaNominal, periode: string): TampilVersi {
+  const vj = peta.pada("JABATAN", v.jabatanKode, periode);
+  const gajiPokok = peta.pada("GOLONGAN", v.golonganKode, periode)?.nominal ?? 0;
+  const tunjJabatan = vj?.tunjJabatan ?? 0;
+  const tunjangan = v.tunjangan.map((t) => ({ nama: t.tunjangan.nama, nominal: peta.pada("TUNJANGAN", t.tunjanganKode, periode)?.nominal ?? 0 }));
+  const tunjLain = tunjangan.reduce((s, t) => s + t.nominal, 0);
+  const tunjKeluarga = v.karyawan.statusPtkp.startsWith("K") ? vj?.tunjKeluarga ?? 0 : 0;
   return {
     kode: v.kode,
     karyawanKode: v.karyawanKode,
@@ -78,12 +87,12 @@ function keTampil(v: VersiDb, digantikan: Set<string>): TampilVersi {
     jabatan: v.jabatan.nama,
     golonganKode: v.golonganKode,
     golongan: v.golongan.nama,
-    gajiPokok: v.golongan.jumlah,
-    tunjJabatan: v.jabatan.tunjJabatan,
+    gajiPokok,
+    tunjJabatan,
     tunjKeluarga,
     tunjanganKodes: v.tunjangan.map((t) => t.tunjanganKode),
-    tunjangan: v.tunjangan.map((t) => ({ nama: t.tunjangan.nama, nominal: t.tunjangan.nominal })),
-    estimasiBruto: v.golongan.jumlah + v.jabatan.tunjJabatan + tunjKeluarga + tunjLain,
+    tunjangan,
+    estimasiBruto: gajiPokok + tunjJabatan + tunjKeluarga + tunjLain,
     berlakuMulai: v.berlakuMulai,
     jenisPerubahan: v.jenisPerubahan,
     alasan: v.alasan,
@@ -98,11 +107,12 @@ function keTampil(v: VersiDb, digantikan: Set<string>): TampilVersi {
 }
 
 export async function dataSettingGaji(sekarang = periodeIni()) {
-  const [karyawan, versi, slip, barisPeriode] = await Promise.all([
+  const [karyawan, versi, slip, barisPeriode, peta] = await Promise.all([
     db.karyawan.findMany({ where: { jenis: "INHOUSE" }, orderBy: { kode: "asc" }, select: { kode: true, nama: true, aktif: true, statusPtkp: true } }),
     db.settingGaji.findMany({ include: sertai, orderBy: [{ karyawanKode: "asc" }, { berlakuMulai: "desc" }, { diajukanPada: "desc" }] }),
     db.slipGaji.findMany({ select: { no: true, periodeId: true, status: true, karyawanKode: true } }),
     db.periode.findMany({ select: { id: true } }),
+    muatPetaNominal(db),
   ]);
   // Pilihan "berlaku mulai": semua periode di tabel periode ditambah 12 bulan ke depan, dikelompokkan per tahun di form.
   const periodeBerlaku = [...new Set([...barisPeriode.map((p) => p.id), ...daftarPeriode(sekarang, tambahBulan(sekarang, 12))])].sort();
@@ -113,7 +123,7 @@ export async function dataSettingGaji(sekarang = periodeIni()) {
   for (const s of slip) slipPer.set(s.karyawanKode, [...(slipPer.get(s.karyawanKode) ?? []), { no: s.no, periode: s.periodeId, status: s.status }]);
   // "Digantikan" dibandingkan per karyawan (bulan berlaku sama milik karyawan lain tidak saling menggantikan).
   const ganti = new Set([...versiPer.values()].flatMap((d) => [...versiDigantikan(d)]));
-  const tampil = new Map(versi.map((v) => [v.kode, keTampil(v, ganti)]));
+  const tampil = new Map(versi.map((v) => [v.kode, keTampil(v, ganti, peta, v.berlakuMulai)]));
 
   const baris: BarisKaryawanGaji[] = karyawan.map((k) => {
     const milik = versiPer.get(k.kode) ?? [];
@@ -126,7 +136,7 @@ export async function dataSettingGaji(sekarang = periodeIni()) {
       nama: k.nama,
       aktif: k.aktif,
       statusPtkp: k.statusPtkp,
-      aktifSekarang: sekarangV ? tampil.get(sekarangV.kode)! : null,
+      aktifSekarang: sekarangV ? keTampil(sekarangV, ganti, peta, sekarang) : null,
       berikutnya: berikut ? tampil.get(berikut.kode)! : null,
       menunggu: milik.filter((v) => v.status === "DIAJUKAN").length,
     };

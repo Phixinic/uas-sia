@@ -2,11 +2,14 @@
  * Bahan bersama fee event untuk halaman dan server action (supaya angka di layar sama dengan yang disimpan):
  * - muatBahanEvent: event, sesi, penugasan, kehadiran, dan usulan fee per orang (rumus di src/lib/inti/fee-event.ts).
  * - kaptenDariPengguna / pastikanKaptenEvent: kepemilikan kapten (kapten hanya boleh menyentuh event yang ia pegang).
+ * Tarif tiap jabatan event = versi tarif yang berlaku di bulan tanggal selesai event (riwayat nominal, versi_nominal),
+ * sama dengan bulan jurnal fee-nya. Satu event selalu memakai satu tarif per jabatan, walau sesinya melewati pergantian bulan.
  * Hanya untuk server.
  */
 import { db, type DbAtauTx, type Tx } from "@/lib/server/db";
 import { GalatAksi } from "@/lib/server/aksi";
-import { dariDate } from "@/lib/inti/tanggal";
+import { dariDate, periodeDari } from "@/lib/inti/tanggal";
+import { muatPetaNominal } from "@/lib/server/nominal";
 import { hitungFeeOrang, menitTercatat, type HasilFeeOrang, type KodePenilaian, type KodePeranEvent, type KodeSatuan } from "@/lib/inti/fee-event";
 import type { StatusEvent } from "@/generated/prisma/enums";
 
@@ -39,6 +42,8 @@ export type OrangBahan = {
   peranEvent: KodePeranEvent;
   satuanTarif: KodeSatuan;
   tarif: number;
+  /** Versi tarif yang dipakai (berlaku di bulan tanggal selesai event). null = jabatan belum punya tarif disetujui di bulan itu. */
+  versiTarif: { kode: string; berlakuMulai: string } | null;
   akunBebanKode: string;
   kehadiran: KehadiranBahan[];
   usulan: HasilFeeOrang;
@@ -57,6 +62,10 @@ export type BahanEvent = {
   orang: OrangBahan[];
   /** Kehadiran crew yang belum dinilai kapten. */
   crewBelumDinilai: number;
+  /** Bulan tarif ("YYYY-MM") = bulan tanggal selesai event. */
+  periodeTarif: string;
+  /** Jabatan yang belum punya tarif disetujui dan berlaku di bulan tarif (laporan tidak bisa dikirim atau disetujui). */
+  tarifKurang: string[];
   totalUsulan: number;
 };
 
@@ -69,6 +78,8 @@ export async function muatBahanEvent(klien: DbAtauTx, kode: string): Promise<Bah
     },
   });
   if (!e) return null;
+  const periodeTarif = periodeDari(dariDate(e.tanggalSelesai));
+  const peta = await muatPetaNominal(klien);
   const sesi: SesiBahan[] = e.sesi.map((s) => ({ id: s.id, nama: s.nama, tanggal: dariDate(s.tanggal), jamMulai: s.jamMulai, jamSelesai: s.jamSelesai }));
   const petaSesi = new Map(sesi.map((s) => [s.id, s]));
   const semuaKehadiran = e.sesi.flatMap((s) =>
@@ -93,6 +104,8 @@ export async function muatBahanEvent(klien: DbAtauTx, kode: string): Promise<Bah
     .map((p) => {
       const kehadiran = semuaKehadiran.filter((k) => k.karyawanKode === p.karyawanKode);
       const satuanTarif = p.jabatan.satuanTarif as KodeSatuan;
+      const v = peta.pada("JABATAN_EVENT", p.jabatanKode, periodeTarif);
+      const tarif = v?.nominal ?? 0;
       return {
         penugasanId: p.id,
         karyawanKode: p.karyawanKode,
@@ -103,12 +116,13 @@ export async function muatBahanEvent(klien: DbAtauTx, kode: string): Promise<Bah
         jabatan: p.jabatan.nama,
         peranEvent: p.jabatan.peranEvent as KodePeranEvent,
         satuanTarif,
-        tarif: p.jabatan.tarif,
+        tarif,
+        versiTarif: v ? { kode: v.kode, berlakuMulai: v.berlakuMulai } : null,
         akunBebanKode: p.jabatan.akunBebanKode,
         kehadiran,
         usulan: hitungFeeOrang({
           satuanTarif,
-          tarif: p.jabatan.tarif,
+          tarif,
           kehadiran: kehadiran.map((k) => ({ ...k, sesi: petaSesi.get(k.sesiId)! })),
         }),
       };
@@ -125,6 +139,8 @@ export async function muatBahanEvent(klien: DbAtauTx, kode: string): Promise<Bah
     alasanTolak: e.alasanTolak,
     sesi,
     orang,
+    periodeTarif,
+    tarifKurang: [...new Set(orang.filter((o) => !o.versiTarif).map((o) => o.jabatan))],
     crewBelumDinilai: orang.filter((o) => o.peranEvent === "CREW").reduce((s, o) => s + o.kehadiran.filter((k) => !k.penilaian).length, 0),
     totalUsulan: orang.reduce((s, o) => s + o.usulan.fee, 0),
   };

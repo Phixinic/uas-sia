@@ -12,7 +12,7 @@ import { saldoAkun } from "@/lib/server/jurnal";
 import { AKUN } from "@/lib/inti/akun";
 import { barisFeeEvent } from "@/lib/inti/jurnal";
 import { labelDurasi, pph21BukanPegawai } from "@/lib/inti/fee-event";
-import { denganPeriode, labelTanggal } from "@/lib/inti/tanggal";
+import { denganPeriode, labelPeriode, labelTanggal } from "@/lib/inti/tanggal";
 import { LABEL_PERAN_EVENT, LABEL_SATUAN_TARIF, labelWaktu, rupiah } from "@/lib/format";
 import { petaAkun, profilUsaha } from "@/lib/data/umum";
 import { muatBahanEvent, type BahanEvent, type OrangBahan } from "@/lib/data/fee-event/bahan";
@@ -38,6 +38,10 @@ export type CariKeputusan = { lihat?: string; slip?: string };
 
 /** Rumus biaya variabel per orang: "Rp20.000/jam x 6 jam 30 mnt = Rp130.000" atau "Rp200.000/hari x 2 hari = Rp400.000". */
 function dasarFee(o: OrangBahan): string {
+  return `${dasarFeeSaja(o)}. ${o.versiTarif ? `Tarif ${o.jabatan} berlaku mulai ${labelPeriode(o.versiTarif.berlakuMulai)} (${o.versiTarif.kode})` : `Tarif ${o.jabatan} belum disetujui Owner`}`;
+}
+
+function dasarFeeSaja(o: OrangBahan): string {
   const u = o.usulan;
   if (o.satuanTarif === "HARI") return `${rupiah(o.tarif)}/hari x ${u.jumlahHari} hari = ${rupiah(u.fee)} (${u.jumlahSesi} sesi)`;
   const selisih = u.menitTercatat - u.menitDiakui;

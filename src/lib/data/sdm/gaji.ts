@@ -2,12 +2,19 @@
  * Kueri baca siklus gaji: bahan hitung gaji (dipakai halaman dan server action supaya angkanya sama),
  * daftar slip, dan bentuk seragam DataSlip untuk tampilan rincian dan cetak.
  * Rumus ada di src/lib/inti/penggajian.ts; berkas ini hanya menyusun masukannya dari database.
+ * Nominal komponen (gaji pokok, tunjangan jabatan, tunjangan istri/anak, tunjangan lain) diambil dari versi nominal yang
+ * berlaku di bulan slip (src/lib/inti/nominal.ts), dan kode versinya ikut disimpan di slip.
  */
 import { db, type DbAtauTx } from "@/lib/server/db";
 import { keDate, hariTerakhir, labelPeriode } from "@/lib/inti/tanggal";
 import { hitungGaji, type HasilGaji, type InputGaji, type KodePtkp } from "@/lib/inti/penggajian";
 import { LABEL_JENIS_PERUBAHAN, pilihVersiBerlaku } from "@/lib/inti/setting-gaji";
+import { labelSumberVersi, sidikVersiSlip, type PetaNominal } from "@/lib/inti/nominal";
+import { muatPetaNominal } from "@/lib/server/nominal";
 import type { StatusPersetujuan } from "@/generated/prisma/enums";
+
+/** Versi nominal yang dipakai satu komponen slip. null = nominal sebelum riwayat (slip lama) atau belum berlaku. */
+export type RefVersi = { kode: string; berlakuMulai: string } | null;
 
 /** Bentuk seragam slip untuk tampilan: dari hasil hitung (pratinjau) maupun dari slip tersimpan. */
 export type DataSlip = {
@@ -34,7 +41,10 @@ export type DataSlip = {
   gajiPokok: number;
   tunjJabatan: number;
   tunjKeluarga: number;
-  tunjLain: { nama: string; nominal: number }[];
+  tunjLain: { nama: string; nominal: number; sumber: string }[];
+  /** Asal nominal tiap komponen tetap, contoh "Gaji pokok Golongan II, berlaku mulai Desember 2026 (NOM-0021)". */
+  sumberGajiPokok: string;
+  sumberJabatan: string;
   potonganAbsen: number;
   bruto: number;
   brutoSetahun: number;
@@ -58,7 +68,24 @@ export type BahanGaji = {
   golongan: string;
   jumlahPresensi: number;
   input: InputGaji;
+  /** Versi nominal yang berlaku di periode ini untuk tiap komponen (disimpan di slip). */
+  versiGajiPokok: RefVersi;
+  versiJabatan: RefVersi;
+  versiTunjangan: { kode: string; nama: string; versi: RefVersi }[];
+  /** Komponen yang belum punya nominal disetujui dan berlaku di periode ini (slip tidak bisa dihitung). */
+  kurang: string[];
 };
+
+const ref = (v: { kode: string; berlakuMulai: string } | null): RefVersi => (v ? { kode: v.kode, berlakuMulai: v.berlakuMulai } : null);
+
+/** Sidik versi komponen dari bahan hitung terbaru (dibandingkan dengan sidik slip draf). */
+export const sidikBahan = (b: BahanGaji) =>
+  sidikVersiSlip({
+    settingKode: b.settingKode,
+    versiGajiPokokKode: b.versiGajiPokok?.kode ?? null,
+    versiJabatanKode: b.versiJabatan?.kode ?? null,
+    tunjangan: b.versiTunjangan.map((t) => ({ kode: t.kode, versiKode: t.versi?.kode ?? null })),
+  });
 
 const sertaiVersi = {
   karyawan: true,
@@ -92,10 +119,11 @@ export async function versiBerlakuPeriode(klien: DbAtauTx, periode: string, kary
  * Crew event dibayar lewat fee event. Versi setting dipilih per periode, jadi slip bulan lama tetap memakai gaji lama
  * walau promosi berlaku sesudahnya sudah disetujui.
  */
-export async function muatBahanGaji(klien: DbAtauTx, periode: string, karyawanKode?: string): Promise<BahanGaji[]> {
+export async function muatBahanGaji(klien: DbAtauTx, periode: string, karyawanKode?: string, petaSiap?: PetaNominal): Promise<BahanGaji[]> {
   const setting = (await versiBerlakuPeriode(klien, periode, karyawanKode)).filter(
     (s) => s.karyawan.aktif && s.karyawan.jenis === "INHOUSE" && s.jabatan.kelompok === "INHOUSE",
   );
+  const peta = petaSiap ?? (await muatPetaNominal(klien));
   const presensi = await klien.presensi.findMany({
     where: { karyawanKode: { in: setting.map((s) => s.karyawanKode) }, tanggal: { gte: keDate(`${periode}-01`), lte: keDate(hariTerakhir(periode)) } },
     select: { karyawanKode: true, absensi: true, jamMasuk: true, jamKeluar: true, terlambat: true },
@@ -103,6 +131,15 @@ export async function muatBahanGaji(klien: DbAtauTx, periode: string, karyawanKo
   return setting.map((s) => {
     const milik = presensi.filter((p) => p.karyawanKode === s.karyawanKode);
     const jadwal = s.jabatan.jadwalKerja;
+    // Nominal tiap komponen = versi yang berlaku di periode slip (bukan nilai master saat ini).
+    const vGapok = peta.pada("GOLONGAN", s.golonganKode, periode);
+    const vJabatan = peta.pada("JABATAN", s.jabatanKode, periode);
+    const tunj = s.tunjangan.filter((t) => t.tunjangan.aktif).map((t) => ({ t, v: peta.pada("TUNJANGAN", t.tunjanganKode, periode) }));
+    const kurang = [
+      ...(vGapok ? [] : [`gaji pokok ${s.golongan.nama}`]),
+      ...(vJabatan ? [] : [`tunjangan jabatan ${s.jabatan.nama}`]),
+      ...tunj.filter((x) => !x.v).map((x) => `tunjangan ${x.t.tunjangan.nama}`),
+    ];
     return {
       karyawanKode: s.karyawanKode,
       settingKode: s.kode,
@@ -114,12 +151,16 @@ export async function muatBahanGaji(klien: DbAtauTx, periode: string, karyawanKo
       jumlahPresensi: milik.length,
       input: {
         statusPtkp: s.karyawan.statusPtkp as KodePtkp,
-        jabatan: { kode: s.jabatan.kode, tunjJabatan: s.jabatan.tunjJabatan, tunjKeluarga: s.jabatan.tunjKeluarga, akunBebanKode: s.jabatan.akunBebanKode },
-        golongan: { kode: s.golongan.kode, jumlah: s.golongan.jumlah },
+        jabatan: { kode: s.jabatan.kode, tunjJabatan: vJabatan?.tunjJabatan ?? 0, tunjKeluarga: vJabatan?.tunjKeluarga ?? 0, akunBebanKode: s.jabatan.akunBebanKode },
+        golongan: { kode: s.golongan.kode, jumlah: vGapok?.nominal ?? 0 },
         jadwal: jadwal ? { kode: jadwal.kode, hariKerja: jadwal.hariKerja } : null,
-        tunjangan: s.tunjangan.filter((t) => t.tunjangan.aktif).map((t) => ({ kode: t.tunjangan.kode, nama: t.tunjangan.nama, nominal: t.tunjangan.nominal })),
+        tunjangan: tunj.map(({ t, v }) => ({ kode: t.tunjangan.kode, nama: t.tunjangan.nama, nominal: v?.nominal ?? 0 })),
         presensi: milik,
       },
+      versiGajiPokok: ref(vGapok),
+      versiJabatan: ref(vJabatan),
+      versiTunjangan: tunj.map(({ t, v }) => ({ kode: t.tunjanganKode, nama: t.tunjangan.nama, versi: ref(v) })),
+      kurang,
     };
   });
 }
@@ -149,7 +190,9 @@ export function dataSlipDariHasil(b: BahanGaji, h: HasilGaji, periode: string): 
     gajiPokok: h.gajiPokok,
     tunjJabatan: h.tunjJabatan,
     tunjKeluarga: h.tunjKeluarga,
-    tunjLain: h.tunjLain.map((t) => ({ nama: t.nama, nominal: t.nominal })),
+    tunjLain: h.tunjLain.map((t) => ({ nama: t.nama, nominal: t.nominal, sumber: labelSumberVersi("TUNJANGAN", t.nama, b.versiTunjangan.find((x) => x.kode === t.kode)?.versi ?? null) })),
+    sumberGajiPokok: labelSumberVersi("GOLONGAN", b.golongan, b.versiGajiPokok),
+    sumberJabatan: labelSumberVersi("JABATAN", b.jabatan, b.versiJabatan),
     potonganAbsen: h.potonganAbsen,
     bruto: h.bruto,
     brutoSetahun: h.brutoSetahun,
@@ -163,7 +206,15 @@ export function dataSlipDariHasil(b: BahanGaji, h: HasilGaji, periode: string): 
   };
 }
 
-const sertaiSlip = { karyawan: true, jabatan: true, golongan: true, tunjangan: true } as const;
+const pilihRef = { select: { kode: true, berlakuMulai: true } } as const;
+const sertaiSlip = {
+  karyawan: true,
+  jabatan: true,
+  golongan: true,
+  tunjangan: { include: { versi: pilihRef }, orderBy: { tunjanganKode: "asc" } },
+  versiGajiPokok: pilihRef,
+  versiJabatan: pilihRef,
+} as const;
 
 export async function ambilSlip(no: string): Promise<DataSlip | null> {
   const s = await db.slipGaji.findUnique({ where: { no }, include: sertaiSlip });
@@ -202,7 +253,9 @@ function dataSlipDariDb(s: SlipDb): DataSlip {
     gajiPokok: s.gajiPokok,
     tunjJabatan: s.tunjJabatan,
     tunjKeluarga: s.tunjKeluarga,
-    tunjLain: s.tunjangan.map((t) => ({ nama: t.nama, nominal: t.nominal })),
+    tunjLain: s.tunjangan.map((t) => ({ nama: t.nama, nominal: t.nominal, sumber: labelSumberVersi("TUNJANGAN", t.nama, t.versi) })),
+    sumberGajiPokok: labelSumberVersi("GOLONGAN", s.golongan.nama, s.versiGajiPokok),
+    sumberJabatan: labelSumberVersi("JABATAN", s.jabatan.nama, s.versiJabatan),
     potonganAbsen: s.potonganAbsen,
     bruto: s.bruto,
     brutoSetahun: s.brutoSetahun,
@@ -230,6 +283,10 @@ export type BarisGaji = {
   perluHitungUlang: boolean;
   /** Slip draf dihitung dengan versi setting gaji lain dari versi yang sekarang berlaku di periode ini. */
   settingBerubah: boolean;
+  /** Slip draf dihitung dengan versi nominal komponen (gaji pokok, tunjangan) yang sekarang sudah tidak berlaku di periode ini. */
+  nominalBerubah: boolean;
+  /** Komponen tanpa nominal berlaku di periode ini (slip tidak bisa dihitung sampai Owner menyetujui nominalnya). */
+  nominalKurang: string[];
   /**
    * Versi setting yang dipakai baris ini: versi tersimpan di slip bila slip sudah diajukan atau dibayar (angkanya terkunci),
    * selain itu versi yang berlaku di periode ini. kode null = slip lama sebelum riwayat setting (versinya tidak tercatat).
@@ -246,10 +303,15 @@ const versiRingkasSemua = () =>
     select: { kode: true, karyawanKode: true, status: true, berlakuMulai: true, jenisPerubahan: true, jabatan: { select: { nama: true } }, golongan: { select: { nama: true } } },
   });
 
+/** Kolom slip untuk sidik versi komponen (setting, gaji pokok, jabatan, tunjangan). */
+export const pilihSidik = { settingKode: true, versiGajiPokokKode: true, versiJabatanKode: true, tunjangan: { select: { tunjanganKode: true, versiKode: true } } } as const;
+export const sidikSlip = (s: { settingKode: string | null; versiGajiPokokKode: string | null; versiJabatanKode: string | null; tunjangan: { tunjanganKode: string; versiKode: string | null }[] }) =>
+  sidikVersiSlip({ ...s, tunjangan: s.tunjangan.map((t) => ({ kode: t.tunjanganKode, versiKode: t.versiKode })) });
+
 export async function barisHitungGaji(periode: string): Promise<BarisGaji[]> {
   const [bahan, slip, semuaVersi] = await Promise.all([
     muatBahanGaji(db, periode),
-    db.slipGaji.findMany({ where: { periodeId: periode }, select: { no: true, karyawanKode: true, status: true, bruto: true, pph21: true, thp: true, alasanTolak: true, settingKode: true } }),
+    db.slipGaji.findMany({ where: { periodeId: periode }, select: { no: true, karyawanKode: true, status: true, bruto: true, pph21: true, thp: true, alasanTolak: true, ...pilihSidik } }),
     versiRingkasSemua(),
   ]);
   const petaVersi = new Map(semuaVersi.map((v) => [v.kode, v]));
@@ -260,6 +322,7 @@ export async function barisHitungGaji(periode: string): Promise<BarisGaji[]> {
     const tersimpan = lengkap.find((x) => x.karyawanKode === b.karyawanKode) ?? null;
     const beku = sl && sl.status !== "DRAFT" && tersimpan;
     const settingBerubah = !!sl && sl.status === "DRAFT" && sl.settingKode !== b.settingKode;
+    const nominalBerubah = !!sl && sl.status === "DRAFT" && !settingBerubah && sidikSlip(sl) !== sidikBahan(b);
     // Slip terkunci memakai versi yang tersimpan di slip; selain itu versi yang berlaku di periode ini.
     const kodeVersi = beku ? sl.settingKode : b.settingKode;
     const v = kodeVersi ? petaVersi.get(kodeVersi) : undefined;
@@ -282,8 +345,10 @@ export async function barisHitungGaji(periode: string): Promise<BarisGaji[]> {
       slipNo: sl?.no ?? null,
       slipStatus: sl?.status ?? null,
       alasanTolak: sl?.alasanTolak ?? null,
-      perluHitungUlang: !!sl && sl.status === "DRAFT" && (settingBerubah || sl.bruto !== hasil.bruto || sl.pph21 !== hasil.pph21 || sl.thp !== hasil.thp),
+      perluHitungUlang: !!sl && sl.status === "DRAFT" && (settingBerubah || nominalBerubah || sl.bruto !== hasil.bruto || sl.pph21 !== hasil.pph21 || sl.thp !== hasil.thp),
       settingBerubah,
+      nominalBerubah,
+      nominalKurang: b.kurang,
       versi,
       catatanVersi,
     };
@@ -306,6 +371,8 @@ export type KesiapanGaji = {
   slipStatus: StatusPersetujuan | null;
   perluHitungUlang: boolean;
   settingBerubah: boolean;
+  nominalBerubah: boolean;
+  nominalKurang: string[];
 };
 
 /**
@@ -335,6 +402,8 @@ export async function kesiapanGaji(periode: string, baris: BarisGaji[]): Promise
     slipStatus: b.slipStatus,
     perluHitungUlang: b.perluHitungUlang,
     settingBerubah: b.settingBerubah,
+    nominalBerubah: b.nominalBerubah,
+    nominalKurang: b.nominalKurang,
   }));
   for (const k of tanpaSetting) {
     const nanti = k.settingGaji.find((v) => v.status === "DISETUJUI" && v.berlakuMulai > periode);
@@ -344,7 +413,7 @@ export async function kesiapanGaji(periode: string, baris: BarisGaji[]): Promise
       : tunggu
         ? `Pengajuan berlaku ${labelPeriode(tunggu.berlakuMulai)} menunggu Owner`
         : null;
-    hasil.push({ karyawanKode: k.kode, nama: k.nama, jabatan: null, adaSetting: false, catatanSetting, hariKerja: null, presensi: k._count.presensi, slipNo: null, slipStatus: null, perluHitungUlang: false, settingBerubah: false });
+    hasil.push({ karyawanKode: k.kode, nama: k.nama, jabatan: null, adaSetting: false, catatanSetting, hariKerja: null, presensi: k._count.presensi, slipNo: null, slipStatus: null, perluHitungUlang: false, settingBerubah: false, nominalBerubah: false, nominalKurang: [] });
   }
   return hasil.sort((a, b) => a.karyawanKode.localeCompare(b.karyawanKode));
 }

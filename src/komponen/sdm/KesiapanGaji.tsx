@@ -9,7 +9,8 @@ import Lencana, { LencanaStatus } from "@/komponen/ui/Lencana";
 import Tabel from "@/komponen/ui/Tabel";
 import { DaftarHP, KartuHP, RincianHP, TabelLebar } from "@/komponen/fee-event/Ringkas";
 import { denganPeriode, labelBulanTahun } from "@/lib/inti/tanggal";
-import type { KesiapanGaji as DataKesiapan } from "@/lib/data/sdm/gaji";
+import type { BarisGaji, KesiapanGaji as DataKesiapan } from "@/lib/data/sdm/gaji";
+import KeadaanKosong from "@/komponen/ui/KeadaanKosong";
 
 const ALAMAT_SETTING = "/sdm/setting-gaji";
 
@@ -56,7 +57,7 @@ function Slip({ k }: { k: DataKesiapan }) {
   return (
     <span className="inline-flex flex-wrap items-center gap-1">
       <LencanaStatus jenis="slip" status={k.slipStatus} />
-      {k.perluHitungUlang && <Lencana warna="kuning">{k.settingBerubah ? "setting berubah, hitung ulang" : "hitung ulang"}</Lencana>}
+      {k.perluHitungUlang && <Lencana warna="kuning">{k.settingBerubah ? "setting berubah, hitung ulang" : k.nominalBerubah ? "nominal berubah, hitung ulang" : "hitung ulang"}</Lencana>}
     </span>
   );
 }
@@ -69,6 +70,7 @@ function TindakLanjut({ k, periode }: { k: DataKesiapan; periode: string }) {
   if (k.slipStatus === "DIAJUKAN") return <span className="text-slate-600">Menunggu keputusan Owner</span>;
   if (!k.presensi) return <Link className="font-medium underline" href={presensi}>Isi presensi</Link>;
   if (k.hariKerja !== null && k.presensi < k.hariKerja) return <Link className="font-medium underline" href={presensi}>Lengkapi presensi</Link>;
+  if (k.nominalKurang.length) return <Link className="font-medium underline" href="/master/sdm?tab=struktur">Nominal {k.nominalKurang.join(", ")} belum berlaku</Link>;
   if (!k.slipStatus) return <span className="text-slate-600">Siap dihitung</span>;
   if (k.perluHitungUlang) return <span className="text-amber-700">Hitung ulang slip</span>;
   return <span className="text-emerald-700">Siap</span>;
@@ -114,6 +116,41 @@ export function KesiapanGaji({ daftar, periode }: { daftar: DataKesiapan[]; peri
           </tbody>
         </Tabel>
       </TabelLebar>
+    </Kartu>
+  );
+}
+
+/**
+ * Versi nominal komponen yang dipakai Hitung Gaji bulan ini: tiap gaji pokok, tunjangan jabatan, dan tunjangan lain
+ * disebut dengan versi dan bulan berlakunya. Slip terkunci (diajukan atau dibayar) memakai versi yang tersimpan di slip.
+ */
+export function PanelVersiNominal({ baris, periode }: { baris: BarisGaji[]; periode: string }) {
+  const sumber = new Map<string, Set<string>>();
+  for (const b of baris) {
+    const t = b.tampil;
+    for (const x of [t.sumberGajiPokok, t.sumberJabatan, ...t.tunjLain.map((l) => l.sumber)]) {
+      sumber.set(x, new Set([...(sumber.get(x) ?? []), b.nama]));
+    }
+  }
+  const daftar = [...sumber.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  return (
+    <Kartu rapat>
+      <KepalaKartu
+        judul={`Versi nominal komponen · ${labelBulanTahun(periode)}`}
+        keterangan="Nominal gaji pokok, tunjangan jabatan, dan tunjangan lain diambil dari versi yang berlaku di bulan slip (Master SDM, tab Struktur gaji). Kenaikan yang baru berlaku bulan depan tidak mengubah slip bulan ini walau dihitung ulang."
+      />
+      {daftar.length === 0 ? (
+        <KeadaanKosong judul="Belum ada komponen yang dipakai" />
+      ) : (
+        <ul className="divide-y divide-slate-100 text-[13px]" aria-label="Versi nominal komponen">
+          {daftar.map(([teks, orang]) => (
+            <li key={teks} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-4 py-2 sm:px-5">
+              <span className="min-w-0 font-medium text-slate-800">{teks}</span>
+              <span className="text-xs text-slate-500">{orang.size} karyawan</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </Kartu>
   );
 }

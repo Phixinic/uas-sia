@@ -2,8 +2,10 @@
  * Kueri baca halaman fee event (Event & Kehadiran, Laporan & Fee). Hanya untuk komponen server.
  * Hasil berupa objek biasa (tanggal sudah jadi string) supaya aman dikirim ke komponen klien.
  */
+import { muatPetaNominal } from "@/lib/server/nominal";
 import { db } from "@/lib/server/db";
 import { dariDate } from "@/lib/inti/tanggal";
+import { labelSumberVersi } from "@/lib/inti/nominal";
 import type { PeranEvent, SatuanTarif, StatusEvent, StatusPersetujuan } from "@/generated/prisma/enums";
 
 export type RingkasEvent = {
@@ -52,17 +54,21 @@ export async function daftarEvent(): Promise<RingkasEvent[]> {
 export type OpsiCrew = { kode: string; nama: string; aktif: boolean };
 export type OpsiJabatanEvent = { kode: string; nama: string; peranEvent: PeranEvent; satuanTarif: SatuanTarif; tarif: number; aktif: boolean };
 
-/** Karyawan berjenis EVENT dan jabatan berkelompok EVENT untuk form penugasan. */
-export async function opsiPenugasan(): Promise<{ crew: OpsiCrew[]; jabatan: OpsiJabatanEvent[] }> {
-  const [crew, jabatan] = await Promise.all([
+/**
+ * Karyawan berjenis EVENT dan jabatan berkelompok EVENT untuk form penugasan. Tarif = versi yang berlaku di bulan tarif
+ * event (bulan tanggal selesai); 0 bila jabatan belum punya tarif disetujui di bulan itu.
+ */
+export async function opsiPenugasan(periodeTarif: string): Promise<{ crew: OpsiCrew[]; jabatan: OpsiJabatanEvent[] }> {
+  const [crew, jabatan, peta] = await Promise.all([
     db.karyawan.findMany({ where: { jenis: "EVENT" }, orderBy: { kode: "asc" }, select: { kode: true, nama: true, aktif: true } }),
     db.jabatan.findMany({ where: { kelompok: "EVENT" }, orderBy: { kode: "asc" } }),
+    muatPetaNominal(db),
   ]);
   return {
     crew,
     jabatan: jabatan
       .filter((j) => j.peranEvent && j.satuanTarif)
-      .map((j) => ({ kode: j.kode, nama: j.nama, peranEvent: j.peranEvent!, satuanTarif: j.satuanTarif!, tarif: j.tarif, aktif: j.aktif })),
+      .map((j) => ({ kode: j.kode, nama: j.nama, peranEvent: j.peranEvent!, satuanTarif: j.satuanTarif!, tarif: peta.pada("JABATAN_EVENT", j.kode, periodeTarif)?.nominal ?? 0, aktif: j.aktif })),
   };
 }
 
@@ -143,6 +149,8 @@ export type DataSlipFee = {
   peranEvent: PeranEvent;
   satuanTarif: SatuanTarif;
   tarif: number;
+  /** Asal tarif, contoh "Tarif event Crew Event, berlaku mulai Oktober 2026 (NOM-0018)". */
+  sumberTarif: string;
   jumlahSesi: number;
   menitTercatat: number;
   menitDiakui: number;
@@ -161,7 +169,7 @@ export async function slipFeeLaporan(laporanNo: string, karyawanKode?: string): 
   const d = await db.slipFee.findMany({
     where: { laporanNo, ...(karyawanKode ? { karyawanKode } : {}) },
     orderBy: [{ peranEvent: "asc" }, { karyawanKode: "asc" }],
-    include: { karyawan: true, jabatan: { select: { nama: true } }, event: true, laporan: { select: { jurnalNo: true, diputuskanPada: true } } },
+    include: { karyawan: true, jabatan: { select: { nama: true } }, event: true, laporan: { select: { jurnalNo: true, diputuskanPada: true } }, versiTarif: { select: { kode: true, berlakuMulai: true } } },
   });
   return d.map((s) => ({
     no: s.no,
@@ -180,6 +188,7 @@ export async function slipFeeLaporan(laporanNo: string, karyawanKode?: string): 
     peranEvent: s.peranEvent,
     satuanTarif: s.satuanTarif,
     tarif: s.tarif,
+    sumberTarif: labelSumberVersi("JABATAN_EVENT", s.jabatan.nama, s.versiTarif),
     jumlahSesi: s.jumlahSesi,
     menitTercatat: s.menitTercatat,
     menitDiakui: s.menitDiakui,

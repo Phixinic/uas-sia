@@ -83,6 +83,15 @@ enum JenisPerubahanGaji {
   PENYESUAIAN
 }
 
+/// Jenis item master yang nominalnya berversi (tabel versi_nominal). JABATAN = tunjangan jabatan dan tunjangan istri/anak
+/// jabatan inhouse, JABATAN_EVENT = tarif jabatan event.
+enum JenisNominal {
+  GOLONGAN
+  TUNJANGAN
+  JABATAN
+  JABATAN_EVENT
+}
+
 enum StatusPeriode {
   TERBUKA
   TERKUNCI
@@ -220,6 +229,8 @@ model Pengguna {
   investasiDiputuskan InvestasiKas[]   @relation("InvestasiDiputuskan")
   settingDiajukan     SettingGaji[]    @relation("SettingDiajukan")
   settingDiputuskan   SettingGaji[]    @relation("SettingDiputuskan")
+  nominalDiajukan     VersiNominal[]   @relation("NominalDiajukan")
+  nominalDiputuskan   VersiNominal[]   @relation("NominalDiputuskan")
 
   @@map("pengguna")
 }
@@ -299,24 +310,26 @@ model Akun {
 
 /// Periode akuntansi bulanan, id berbentuk "YYYY-MM".
 model Periode {
-  id           String        @id @map("periode")
+  id          String        @id @map("periode")
   /// Bulan (1-12) dan tahun dari id "YYYY-MM". Kolom generated di PostgreSQL (GENERATED ALWAYS AS ... STORED),
   /// jadi selalu terisi dan tidak pernah ditulis aplikasi. Lihat migrasi 20261123120000_setting_gaji_riwayat.
-  bulan        Int           @default(dbgenerated()) @db.SmallInt
-  tahun        Int           @default(dbgenerated()) @db.SmallInt
-  status       StatusPeriode @default(TERBUKA)
-  dikunciOleh  Int?          @map("dikunci_oleh")
-  dikunciPada  DateTime?     @map("dikunci_pada")
+  bulan       Int           @default(dbgenerated()) @db.SmallInt
+  tahun       Int           @default(dbgenerated()) @db.SmallInt
+  status      StatusPeriode @default(TERBUKA)
+  dikunciOleh Int?          @map("dikunci_oleh")
+  dikunciPada DateTime?     @map("dikunci_pada")
 
-  pengunci   Pengguna?          @relation(fields: [dikunciOleh], references: [id])
-  riwayat    RiwayatPeriode[]
-  jurnal     Jurnal[]
-  jadwal     JadwalPenyusutan[]
-  opname     Opname?
-  slipGaji   SlipGaji[]
-  penggajian Penggajian[]
+  pengunci     Pengguna?          @relation(fields: [dikunciOleh], references: [id])
+  riwayat      RiwayatPeriode[]
+  jurnal       Jurnal[]
+  jadwal       JadwalPenyusutan[]
+  opname       Opname?
+  slipGaji     SlipGaji[]
+  penggajian   Penggajian[]
   /// Versi setting gaji yang mulai berlaku di periode ini.
-  settingGaji SettingGaji[]
+  settingGaji  SettingGaji[]
+  /// Versi nominal master yang mulai berlaku di periode ini.
+  versiNominal VersiNominal[]
 
   @@index([tahun, bulan])
   @@map("periode")
@@ -338,23 +351,23 @@ model RiwayatPeriode {
 }
 
 model Jurnal {
-  no             String            @id @map("no_jurnal")
-  tanggal        DateTime          @db.Date
-  periodeId      String            @map("periode")
-  jenis          JenisJurnal
-  keterangan     String
-  status         StatusPersetujuan @default(DRAFT)
-  alasanTolak    String?           @map("alasan_tolak")
-  sumberTipe     SumberJurnal?     @map("sumber_tipe")
+  no              String            @id @map("no_jurnal")
+  tanggal         DateTime          @db.Date
+  periodeId       String            @map("periode")
+  jenis           JenisJurnal
+  keterangan      String
+  status          StatusPersetujuan @default(DRAFT)
+  alasanTolak     String?           @map("alasan_tolak")
+  sumberTipe      SumberJurnal?     @map("sumber_tipe")
   /// Nomor dokumen sumber (no pembelian, periode penyusutan, no opname, no pelepasan, no penggajian).
-  sumberId       String?           @map("sumber_id")
+  sumberId        String?           @map("sumber_id")
   /// Jurnal pembalik menunjuk jurnal asli yang dibaliknya (1:0..1).
-  pembalikDariNo String?           @unique @map("pembalik_dari")
-  dibuatOlehId   Int               @map("dibuat_oleh")
-  dibuatPada     DateTime          @default(now()) @map("dibuat_pada")
-  diajukanPada   DateTime?         @map("diajukan_pada")
-  disetujuiOlehId Int?             @map("disetujui_oleh")
-  disetujuiPada  DateTime?         @map("disetujui_pada")
+  pembalikDariNo  String?           @unique @map("pembalik_dari")
+  dibuatOlehId    Int               @map("dibuat_oleh")
+  dibuatPada      DateTime          @default(now()) @map("dibuat_pada")
+  diajukanPada    DateTime?         @map("diajukan_pada")
+  disetujuiOlehId Int?              @map("disetujui_oleh")
+  disetujuiPada   DateTime?         @map("disetujui_pada")
 
   periode       Periode        @relation(fields: [periodeId], references: [id])
   pembalikDari  Jurnal?        @relation("Pembalik", fields: [pembalikDariNo], references: [no])
@@ -484,28 +497,28 @@ model Perlengkapan {
 }
 
 model Pembelian {
-  no              String          @id @map("no_pembelian")
-  jenis           JenisPembelian
-  tanggal         DateTime        @db.Date
+  no               String          @id @map("no_pembelian")
+  jenis            JenisPembelian
+  tanggal          DateTime        @db.Date
   /// Kosong untuk cara bayar INVESTASI (barang disetor pemilik).
-  supplierKode    String?         @map("id_supplier")
-  caraBayar       CaraBayar       @map("cara_bayar")
-  jatuhTempo      DateTime?       @db.Date @map("jatuh_tempo")
-  keterangan      String          @default("")
-  total           Int
-  status          StatusPembelian @default(DRAFT)
-  alasanTolak     String?         @map("alasan_tolak")
-  jurnalNo        String?         @unique @map("jurnal_no")
-  jurnalPembalikNo String?        @unique @map("jurnal_pembalik")
-  alasanBalik     String?         @map("alasan_balik")
-  dibuatOlehId    Int             @map("dibuat_oleh")
-  dibuatPada      DateTime        @default(now()) @map("dibuat_pada")
-  diubahPada      DateTime        @updatedAt @map("diubah_pada")
+  supplierKode     String?         @map("id_supplier")
+  caraBayar        CaraBayar       @map("cara_bayar")
+  jatuhTempo       DateTime?       @map("jatuh_tempo") @db.Date
+  keterangan       String          @default("")
+  total            Int
+  status           StatusPembelian @default(DRAFT)
+  alasanTolak      String?         @map("alasan_tolak")
+  jurnalNo         String?         @unique @map("jurnal_no")
+  jurnalPembalikNo String?         @unique @map("jurnal_pembalik")
+  alasanBalik      String?         @map("alasan_balik")
+  dibuatOlehId     Int             @map("dibuat_oleh")
+  dibuatPada       DateTime        @default(now()) @map("dibuat_pada")
+  diubahPada       DateTime        @updatedAt @map("diubah_pada")
   /// Yang memposting (Admin atau Owner). Posting = status DISETUJUI.
-  disetujuiOlehId Int?            @map("disetujui_oleh")
-  disetujuiPada   DateTime?       @map("disetujui_pada")
-  dibalikOlehId   Int?            @map("dibalik_oleh")
-  dibalikPada     DateTime?       @map("dibalik_pada")
+  disetujuiOlehId  Int?            @map("disetujui_oleh")
+  disetujuiPada    DateTime?       @map("disetujui_pada")
+  dibalikOlehId    Int?            @map("dibalik_oleh")
+  dibalikPada      DateTime?       @map("dibalik_pada")
 
   supplier       Supplier?         @relation(fields: [supplierKode], references: [kode])
   jurnal         Jurnal?           @relation("PembelianJurnal", fields: [jurnalNo], references: [no])
@@ -552,13 +565,13 @@ model Aset {
   kategoriKode      String     @map("id_kategori")
   /// Salinan nama peralatan saat diperoleh.
   nama              String
-  tglPerolehan      DateTime   @db.Date @map("tgl_perolehan")
+  tglPerolehan      DateTime   @map("tgl_perolehan") @db.Date
   /// Periode penyusutan pertama ("YYYY-MM").
   bulanMulai        String     @map("bulan_mulai")
   nilaiPerolehan    Int        @map("nilai_perolehan")
   residu            Int
   garansiBulan      Int        @map("garansi_bulan")
-  garansiSampai     DateTime?  @db.Date @map("garansi_sampai")
+  garansiSampai     DateTime?  @map("garansi_sampai") @db.Date
   masaManfaatBulan  Int        @map("masa_manfaat_bulan")
   dasarN            DasarN     @map("dasar_n")
   /// Jumlah periode penyusutan.
@@ -573,7 +586,7 @@ model Aset {
   akunAkumulasiKode String     @map("akun_akumulasi")
   akunBebanKode     String     @map("akun_beban")
   status            StatusAset @default(AKTIF)
-  tanggalLepas      DateTime?  @db.Date @map("tanggal_lepas")
+  tanggalLepas      DateTime?  @map("tanggal_lepas") @db.Date
 
   detailPembelian DetailPembelian    @relation(fields: [pembelianNo, noUrut], references: [pembelianNo, noUrut])
   peralatan       Peralatan          @relation(fields: [peralatanKode], references: [kode])
@@ -699,52 +712,52 @@ model Karyawan {
   @@map("karyawan")
 }
 
+/// Nominal jabatan (tunjangan jabatan dan tunjangan istri/anak untuk inhouse, tarif untuk event) tidak disimpan di sini,
+/// tetapi di versi_nominal (riwayat dengan bulan berlaku dan persetujuan Owner).
 model Jabatan {
   kode          String          @id @map("id_jabatan")
   nama          String
-  tunjJabatan   Int             @default(0) @map("tunj_jabatan")
-  /// Tunjangan istri/anak, hanya untuk karyawan berstatus PTKP K/*.
-  tunjKeluarga  Int             @default(0) @map("tunj_keluarga")
   akunBebanKode String          @map("akun_beban")
   /// Data lama otomatis INHOUSE. Jabatan EVENT dipakai di penugasan event dan hanya diubah Owner.
   kelompok      KelompokJabatan @default(INHOUSE)
-  /// Hanya jabatan EVENT: peran dalam event, satuan tarif, dan tarif (rupiah per hari atau per jam).
+  /// Hanya jabatan EVENT: peran dalam event dan satuan tarif (per hari atau per jam). Tarifnya di versi_nominal.
   peranEvent    PeranEvent?     @map("peran_event")
   satuanTarif   SatuanTarif?    @map("satuan_tarif")
-  tarif         Int             @default(0)
   aktif         Boolean         @default(true)
 
-  akunBeban   Akun             @relation(fields: [akunBebanKode], references: [kode])
-  jadwalKerja JadwalKerja?
-  settingGaji SettingGaji[]
-  slipGaji    SlipGaji[]
-  penugasan   PenugasanEvent[]
-  slipFee     SlipFee[]
+  akunBeban    Akun             @relation(fields: [akunBebanKode], references: [kode])
+  jadwalKerja  JadwalKerja?
+  settingGaji  SettingGaji[]
+  slipGaji     SlipGaji[]
+  penugasan    PenugasanEvent[]
+  slipFee      SlipFee[]
+  versiNominal VersiNominal[]
 
   @@map("jabatan")
 }
 
-/// Gaji pokok per golongan.
+/// Golongan gaji pokok. Gaji pokoknya di versi_nominal (riwayat dengan bulan berlaku dan persetujuan Owner).
 model Golongan {
-  kode   String  @id @map("id_golongan")
-  nama   String
-  jumlah Int
-  aktif  Boolean @default(true)
+  kode  String  @id @map("id_golongan")
+  nama  String
+  aktif Boolean @default(true)
 
-  settingGaji SettingGaji[]
-  slipGaji    SlipGaji[]
+  settingGaji  SettingGaji[]
+  slipGaji     SlipGaji[]
+  versiNominal VersiNominal[]
 
   @@map("golongan")
 }
 
+/// Tunjangan lain. Nominal per bulannya di versi_nominal (riwayat dengan bulan berlaku dan persetujuan Owner).
 model Tunjangan {
-  kode    String  @id @map("id_tunjangan")
-  nama    String
-  nominal Int
-  aktif   Boolean @default(true)
+  kode  String  @id @map("id_tunjangan")
+  nama  String
+  aktif Boolean @default(true)
 
-  setting SettingTunjangan[]
-  slip    SlipTunjangan[]
+  setting      SettingTunjangan[]
+  slip         SlipTunjangan[]
+  versiNominal VersiNominal[]
 
   @@map("tunjangan")
 }
@@ -802,6 +815,53 @@ model SettingGaji {
   @@map("setting_gaji")
 }
 
+/// Satu versi nominal satu item master (riwayat, tidak pernah ditimpa): gaji pokok golongan, nominal tunjangan, tunjangan
+/// jabatan dan tunjangan istri/anak jabatan inhouse, atau tarif jabatan event. Setiap versi diajukan HRD atau Owner (tarif
+/// event hanya Owner) dengan bulan berlaku, lalu disetujui atau ditolak Owner. Nominal berlaku di periode P = versi
+/// DISETUJUI dengan berlaku_mulai <= P yang paling akhir (sama dengan pemilih versi setting gaji). Tepat satu dari
+/// id_golongan, id_tunjangan, id_jabatan terisi sesuai jenis (dijaga CHECK).
+model VersiNominal {
+  kode             String            @id @map("id_versi")
+  jenis            JenisNominal
+  golonganKode     String?           @map("id_golongan")
+  tunjanganKode    String?           @map("id_tunjangan")
+  jabatanKode      String?           @map("id_jabatan")
+  /// GOLONGAN: gaji pokok per bulan. TUNJANGAN: nominal per bulan. JABATAN_EVENT: tarif per satuan jabatan. JABATAN: 0.
+  nominal          Int               @default(0)
+  /// Hanya JABATAN (inhouse): tunjangan jabatan dan tunjangan istri/anak (dibayar bila PTKP K/*). Jenis lain 0.
+  tunjJabatan      Int               @default(0) @map("tunj_jabatan")
+  tunjKeluarga     Int               @default(0) @map("tunj_keluarga")
+  /// Periode "YYYY-MM" mulai berlakunya versi ini.
+  berlakuMulai     String            @map("berlaku_mulai")
+  alasan           String            @default("")
+  /// DIAJUKAN, DISETUJUI, atau DITOLAK (DRAFT tidak dipakai, dijaga CHECK).
+  status           StatusPersetujuan @default(DIAJUKAN)
+  alasanTolak      String?           @map("alasan_tolak")
+  /// Kosong untuk versi hasil migrasi yang pengajunya tidak tercatat.
+  diajukanOlehId   Int?              @map("diajukan_oleh")
+  diajukanPada     DateTime          @default(now()) @map("diajukan_pada")
+  diputuskanOlehId Int?              @map("diputuskan_oleh")
+  diputuskanPada   DateTime?         @map("diputuskan_pada")
+
+  golongan       Golongan?       @relation(fields: [golonganKode], references: [kode], onDelete: Restrict)
+  tunjangan      Tunjangan?      @relation(fields: [tunjanganKode], references: [kode], onDelete: Restrict)
+  jabatan        Jabatan?        @relation(fields: [jabatanKode], references: [kode], onDelete: Restrict)
+  periodeBerlaku Periode         @relation(fields: [berlakuMulai], references: [id])
+  diajukanOleh   Pengguna?       @relation("NominalDiajukan", fields: [diajukanOlehId], references: [id])
+  diputuskanOleh Pengguna?       @relation("NominalDiputuskan", fields: [diputuskanOlehId], references: [id])
+  slipGajiPokok  SlipGaji[]      @relation("SlipVersiGajiPokok")
+  slipJabatan    SlipGaji[]      @relation("SlipVersiJabatan")
+  slipTunjangan  SlipTunjangan[]
+  slipFee        SlipFee[]
+
+  @@index([jenis, status, berlakuMulai])
+  @@index([golonganKode])
+  @@index([tunjanganKode])
+  @@index([jabatanKode])
+  @@index([status])
+  @@map("versi_nominal")
+}
+
 model SettingTunjangan {
   settingKode   String @map("id_setting")
   tunjanganKode String @map("id_tunjangan")
@@ -814,17 +874,17 @@ model SettingTunjangan {
 }
 
 model Presensi {
-  id           Int       @id @default(autoincrement()) @map("id_presensi")
-  karyawanKode String    @map("id_karyawan")
-  tanggal      DateTime  @db.Date
-  jadwalKode   String    @map("id_jadwal")
+  id           Int      @id @default(autoincrement()) @map("id_presensi")
+  karyawanKode String   @map("id_karyawan")
+  tanggal      DateTime @db.Date
+  jadwalKode   String   @map("id_jadwal")
   absensi      Absensi
-  jamMasuk     String?   @map("jam_masuk")
-  jamKeluar    String?   @map("jam_keluar")
+  jamMasuk     String?  @map("jam_masuk")
+  jamKeluar    String?  @map("jam_keluar")
   /// Menit terlambat dibanding jam masuk jadwal.
-  terlambat    Int       @default(0)
-  dibuatOlehId Int       @map("dibuat_oleh")
-  dibuatPada   DateTime  @default(now()) @map("dibuat_pada")
+  terlambat    Int      @default(0)
+  dibuatOlehId Int      @map("dibuat_oleh")
+  dibuatPada   DateTime @default(now()) @map("dibuat_pada")
 
   karyawan   Karyawan    @relation(fields: [karyawanKode], references: [kode])
   jadwal     JadwalKerja @relation(fields: [jadwalKode], references: [kode])
@@ -837,74 +897,83 @@ model Presensi {
 
 /// Slip gaji satu karyawan untuk satu periode. Status DISETUJUI ditampilkan sebagai "Dibayar".
 model SlipGaji {
-  no              String            @id @map("id_slip")
-  periodeId       String            @map("periode")
-  karyawanKode    String            @map("id_karyawan")
-  jabatanKode     String            @map("id_jabatan")
-  golonganKode    String            @map("id_golongan")
-  jadwalKode      String?           @map("id_jadwal")
-  akunBebanKode   String            @map("akun_beban")
-  statusPtkp      StatusPtkp        @map("status_ptkp")
-  hariKerja       Int               @map("hari_kerja")
-  jumlahPresensi  Int               @map("jumlah_presensi")
-  hadir           Int
-  izin            Int
-  sakit           Int
-  cuti            Int
-  alpa            Int
-  jamKerja        Float             @map("jam_kerja")
-  terlambatMenit  Int               @map("terlambat_menit")
-  gajiPokok       Int               @map("gaji_pokok")
-  tunjJabatan     Int               @map("tunj_jabatan")
-  tunjKeluarga    Int               @map("tunj_keluarga")
+  no                 String            @id @map("id_slip")
+  periodeId          String            @map("periode")
+  karyawanKode       String            @map("id_karyawan")
+  jabatanKode        String            @map("id_jabatan")
+  golonganKode       String            @map("id_golongan")
+  jadwalKode         String?           @map("id_jadwal")
+  akunBebanKode      String            @map("akun_beban")
+  statusPtkp         StatusPtkp        @map("status_ptkp")
+  hariKerja          Int               @map("hari_kerja")
+  jumlahPresensi     Int               @map("jumlah_presensi")
+  hadir              Int
+  izin               Int
+  sakit              Int
+  cuti               Int
+  alpa               Int
+  jamKerja           Float             @map("jam_kerja")
+  terlambatMenit     Int               @map("terlambat_menit")
+  gajiPokok          Int               @map("gaji_pokok")
+  tunjJabatan        Int               @map("tunj_jabatan")
+  tunjKeluarga       Int               @map("tunj_keluarga")
   /// Jumlah tunjangan lain; rinciannya di SlipTunjangan.
-  tunjLain        Int               @map("tunj_lain")
-  potonganAbsen   Int               @map("potongan_absen")
-  bruto           Int
-  brutoSetahun    Int               @map("bruto_setahun")
-  biayaJabatan    Int               @map("biaya_jabatan")
-  netoSetahun     Int               @map("neto_setahun")
-  ptkp            Int
-  pkp             Int
-  pphSetahun      Int               @map("pph_setahun")
-  pph21           Int
-  thp             Int
-  status          StatusPersetujuan @default(DRAFT)
-  alasanTolak     String?           @map("alasan_tolak")
-  penggajianNo    String?           @map("no_penggajian")
+  tunjLain           Int               @map("tunj_lain")
+  potonganAbsen      Int               @map("potongan_absen")
+  bruto              Int
+  brutoSetahun       Int               @map("bruto_setahun")
+  biayaJabatan       Int               @map("biaya_jabatan")
+  netoSetahun        Int               @map("neto_setahun")
+  ptkp               Int
+  pkp                Int
+  pphSetahun         Int               @map("pph_setahun")
+  pph21              Int
+  thp                Int
+  status             StatusPersetujuan @default(DRAFT)
+  alasanTolak        String?           @map("alasan_tolak")
+  penggajianNo       String?           @map("no_penggajian")
   /// Versi setting gaji yang dipakai saat slip dihitung. Slip draf dengan versi lain dari versi berlaku = perlu dihitung ulang.
-  settingKode     String?           @map("id_setting")
-  dibuatOlehId    Int               @map("dibuat_oleh")
-  dihitungPada    DateTime          @default(now()) @map("dihitung_pada")
-  disetujuiOlehId Int?              @map("disetujui_oleh")
-  disetujuiPada   DateTime?         @map("disetujui_pada")
+  settingKode        String?           @map("id_setting")
+  /// Versi nominal gaji pokok (golongan) dan nominal jabatan (tunjangan jabatan, tunjangan istri/anak) yang dipakai saat
+  /// slip dihitung. Kosong = slip lama yang nilainya tidak cocok dengan versi awal hasil migrasi.
+  versiGajiPokokKode String?           @map("id_versi_gaji_pokok")
+  versiJabatanKode   String?           @map("id_versi_jabatan")
+  dibuatOlehId       Int               @map("dibuat_oleh")
+  dihitungPada       DateTime          @default(now()) @map("dihitung_pada")
+  disetujuiOlehId    Int?              @map("disetujui_oleh")
+  disetujuiPada      DateTime?         @map("disetujui_pada")
 
-  periode       Periode         @relation(fields: [periodeId], references: [id])
-  karyawan      Karyawan        @relation(fields: [karyawanKode], references: [kode])
-  jabatan       Jabatan         @relation(fields: [jabatanKode], references: [kode])
-  golongan      Golongan        @relation(fields: [golonganKode], references: [kode])
-  jadwal        JadwalKerja?    @relation(fields: [jadwalKode], references: [kode])
-  akunBeban     Akun            @relation(fields: [akunBebanKode], references: [kode])
-  penggajian    Penggajian?     @relation(fields: [penggajianNo], references: [no])
-  setting       SettingGaji?    @relation(fields: [settingKode], references: [kode])
-  dibuatOleh    Pengguna        @relation("SlipDibuat", fields: [dibuatOlehId], references: [id])
-  disetujuiOleh Pengguna?       @relation("SlipDisetujui", fields: [disetujuiOlehId], references: [id])
-  tunjangan     SlipTunjangan[]
+  periode        Periode         @relation(fields: [periodeId], references: [id])
+  karyawan       Karyawan        @relation(fields: [karyawanKode], references: [kode])
+  jabatan        Jabatan         @relation(fields: [jabatanKode], references: [kode])
+  golongan       Golongan        @relation(fields: [golonganKode], references: [kode])
+  jadwal         JadwalKerja?    @relation(fields: [jadwalKode], references: [kode])
+  akunBeban      Akun            @relation(fields: [akunBebanKode], references: [kode])
+  penggajian     Penggajian?     @relation(fields: [penggajianNo], references: [no])
+  setting        SettingGaji?    @relation(fields: [settingKode], references: [kode])
+  versiGajiPokok VersiNominal?   @relation("SlipVersiGajiPokok", fields: [versiGajiPokokKode], references: [kode])
+  versiJabatan   VersiNominal?   @relation("SlipVersiJabatan", fields: [versiJabatanKode], references: [kode])
+  dibuatOleh     Pengguna        @relation("SlipDibuat", fields: [dibuatOlehId], references: [id])
+  disetujuiOleh  Pengguna?       @relation("SlipDisetujui", fields: [disetujuiOlehId], references: [id])
+  tunjangan      SlipTunjangan[]
 
   @@unique([periodeId, karyawanKode])
   @@index([penggajianNo])
   @@map("slip_gaji")
 }
 
-/// Rincian tunjangan lain di slip (salinan nama dan nominal saat dihitung).
+/// Rincian tunjangan lain di slip (salinan nama dan nominal saat dihitung, beserta versi nominal yang dipakai).
 model SlipTunjangan {
-  slipNo        String @map("id_slip")
-  tunjanganKode String @map("id_tunjangan")
+  slipNo        String  @map("id_slip")
+  tunjanganKode String  @map("id_tunjangan")
   nama          String
   nominal       Int
+  /// Kosong = slip lama yang nominalnya tidak cocok dengan versi awal hasil migrasi.
+  versiKode     String? @map("id_versi")
 
-  slip      SlipGaji  @relation(fields: [slipNo], references: [no], onDelete: Cascade)
-  tunjangan Tunjangan @relation(fields: [tunjanganKode], references: [kode])
+  slip      SlipGaji      @relation(fields: [slipNo], references: [no], onDelete: Cascade)
+  tunjangan Tunjangan     @relation(fields: [tunjanganKode], references: [kode])
+  versi     VersiNominal? @relation(fields: [versiKode], references: [kode])
 
   @@id([slipNo, tunjanganKode])
   @@map("slip_tunjangan")
@@ -1050,32 +1119,36 @@ model LaporanFee {
 
 /// Slip fee satu orang untuk satu event, dibuat saat Owner menyetujui laporan (status selalu "Dibayar").
 model SlipFee {
-  no            String      @id @map("id_slip_fee")
-  laporanNo     String      @map("no_laporan")
-  eventKode     String      @map("id_event")
-  karyawanKode  String      @map("id_karyawan")
-  jabatanKode   String      @map("id_jabatan")
-  akunBebanKode String      @map("akun_beban")
-  peranEvent    PeranEvent  @map("peran_event")
-  satuanTarif   SatuanTarif @map("satuan_tarif")
-  tarif         Int
-  jumlahSesi    Int         @map("jumlah_sesi")
-  menitTercatat Int         @map("menit_tercatat")
-  menitDiakui   Int         @map("menit_diakui")
-  jumlahHari    Int         @map("jumlah_hari")
-  feeUsulan     Int         @map("fee_usulan")
+  no             String      @id @map("id_slip_fee")
+  laporanNo      String      @map("no_laporan")
+  eventKode      String      @map("id_event")
+  karyawanKode   String      @map("id_karyawan")
+  jabatanKode    String      @map("id_jabatan")
+  akunBebanKode  String      @map("akun_beban")
+  peranEvent     PeranEvent  @map("peran_event")
+  satuanTarif    SatuanTarif @map("satuan_tarif")
+  tarif          Int
+  /// Versi tarif jabatan event yang dipakai (berlaku di bulan tanggal selesai event). Kosong = slip lama yang tarifnya
+  /// tidak cocok dengan versi awal hasil migrasi.
+  versiTarifKode String?     @map("id_versi_tarif")
+  jumlahSesi     Int         @map("jumlah_sesi")
+  menitTercatat  Int         @map("menit_tercatat")
+  menitDiakui    Int         @map("menit_diakui")
+  jumlahHari     Int         @map("jumlah_hari")
+  feeUsulan      Int         @map("fee_usulan")
   /// Fee akhir dari Owner = bruto.
-  feeAkhir      Int         @map("fee_akhir")
-  alasanUbah    String?     @map("alasan_ubah")
-  dpp           Int
-  pph21         Int
-  dibayar       Int
+  feeAkhir       Int         @map("fee_akhir")
+  alasanUbah     String?     @map("alasan_ubah")
+  dpp            Int
+  pph21          Int
+  dibayar        Int
 
-  laporan   LaporanFee @relation(fields: [laporanNo], references: [no])
-  event     Event      @relation(fields: [eventKode], references: [kode])
-  karyawan  Karyawan   @relation(fields: [karyawanKode], references: [kode])
-  jabatan   Jabatan    @relation(fields: [jabatanKode], references: [kode])
-  akunBeban Akun       @relation(fields: [akunBebanKode], references: [kode])
+  laporan    LaporanFee    @relation(fields: [laporanNo], references: [no])
+  event      Event         @relation(fields: [eventKode], references: [kode])
+  karyawan   Karyawan      @relation(fields: [karyawanKode], references: [kode])
+  jabatan    Jabatan       @relation(fields: [jabatanKode], references: [kode])
+  akunBeban  Akun          @relation(fields: [akunBebanKode], references: [kode])
+  versiTarif VersiNominal? @relation(fields: [versiTarifKode], references: [kode])
 
   @@unique([eventKode, karyawanKode])
   @@index([laporanNo])

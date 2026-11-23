@@ -4,7 +4,7 @@
  *
  * Format (sama dengan app lama):
  *   dokumen bertahun : AWALAN-YYYY-NNNN   (JU, JP, JB, BP, BL, PLP, PAY, EVT, FEE, INV), penghitung per tahun
- *   aset             : AST-NNNN
+ *   aset             : AST-NNNN, versi nominal NOM-NNNN
  *   master           : AWALAN-NN          (SUP, ALT, LKP, KAT, KRY, JBT, GP, TNJ, TM, SET)
  *   turunan          : OPN-YYYY-MM, SLP-YYYY-MM-<kode karyawan>, SFE-<kode event>-<kode karyawan> (tidak memakai penghitung)
  */
@@ -32,6 +32,8 @@ export const AWALAN = {
   TUNJANGAN: "TNJ",
   JADWAL_KERJA: "TM",
   SETTING_GAJI: "SET",
+  /** Versi nominal master, 4 digit: NOM-0021 (kodeBerikutnya(tx, AWALAN.VERSI_NOMINAL, 4)). */
+  VERSI_NOMINAL: "NOM",
 } as const;
 
 async function naikkan(tx: DbAtauTx, kunci: string): Promise<number> {

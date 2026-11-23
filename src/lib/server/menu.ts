@@ -6,15 +6,16 @@ import type { Peran } from "@/lib/peran";
 
 export async function hitunganMenu(peran: Peran, penggunaId: number): Promise<Record<string, number>> {
   if (peran === "OWNER") {
-    const [jp, lepas, gaji, fee, setoran, setting] = await Promise.all([
+    const [jp, lepas, gaji, fee, setoran, setting, nominal] = await Promise.all([
       db.jurnal.count({ where: { jenis: "PENYESUAIAN", status: "DIAJUKAN" } }),
       db.pelepasan.count({ where: { status: "DIAJUKAN" } }),
       db.penggajian.count({ where: { status: "DIAJUKAN" } }),
       db.laporanFee.count({ where: { status: "DIAJUKAN" } }),
       db.investasiKas.count({ where: { status: "DIAJUKAN" } }),
       db.settingGaji.count({ where: { status: "DIAJUKAN" } }),
+      db.versiNominal.count({ where: { status: "DIAJUKAN" } }),
     ]);
-    return { "/pelaporan/jurnal-penyesuaian": jp, "/konversi/pelepasan": lepas, "/sdm/distribusi": gaji, "/fee-event/keputusan": fee, "/modal/investasi-kas": setoran, "/sdm/setting-gaji": setting };
+    return { "/pelaporan/jurnal-penyesuaian": jp, "/konversi/pelepasan": lepas, "/sdm/distribusi": gaji, "/fee-event/keputusan": fee, "/modal/investasi-kas": setoran, "/sdm/setting-gaji": setting, "/master/sdm": nominal };
   }
   if (peran === "KAPTEN") {
     // Event yang dipegang kapten ini dan masih dalam tahap penilaian.

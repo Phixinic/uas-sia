@@ -1,6 +1,7 @@
 /*
  * Rincian satu slip gaji dalam dua blok: komponen tetap dari Setting Gaji (biaya tetap) dan penyesuaian bulan ini dari
- * presensi (potongan absen, bruto, PPh 21, THP), ditambah perhitungan PPh 21.
+ * presensi (potongan absen, bruto, PPh 21, THP), ditambah perhitungan PPh 21. Setiap komponen tetap menyebut versi
+ * nominal asalnya (riwayat nominal), contoh "Gaji pokok Golongan II, berlaku mulai Desember 2026 (NOM-0021)".
  * Tanpa hook dan tanpa akses database, jadi dipakai di tabel (baris yang dibuka) dan di slip cetak.
  */
 import type { DataSlip } from "@/lib/data/sdm/gaji";
@@ -8,9 +9,9 @@ import { labelPtkp, rupiah } from "@/lib/format";
 import Rupiah from "@/komponen/ui/Rupiah";
 
 export function RincianSlip({ s, bukaPph }: { s: DataSlip; bukaPph?: boolean }) {
-  const tetap: [string, number][] = [["Gaji pokok", s.gajiPokok], ["Tunjangan jabatan", s.tunjJabatan]];
-  if (s.tunjKeluarga) tetap.push(["Tunjangan istri/anak", s.tunjKeluarga]);
-  for (const t of s.tunjLain) tetap.push([`Tunjangan ${t.nama.toLowerCase()}`, t.nominal]);
+  const tetap: [string, number, string][] = [["Gaji pokok", s.gajiPokok, s.sumberGajiPokok], ["Tunjangan jabatan", s.tunjJabatan, s.sumberJabatan]];
+  if (s.tunjKeluarga) tetap.push(["Tunjangan istri/anak", s.tunjKeluarga, s.sumberJabatan]);
+  for (const t of s.tunjLain) tetap.push([`Tunjangan ${t.nama.toLowerCase()}`, t.nominal, t.sumber]);
   const jumlahTetap = tetap.reduce((x, [, n]) => x + n, 0);
   const rumusPotongan = s.alpa ? `${rupiah(s.gajiPokok)} / ${s.hariKerja} hari kerja x ${s.alpa} hari alpa` : "tidak ada alpa";
 
@@ -30,9 +31,12 @@ export function RincianSlip({ s, bukaPph }: { s: DataSlip; bukaPph?: boolean }) 
           </h3>
           <table className="tabel" aria-label="Komponen tetap (dari Setting Gaji)">
             <tbody>
-              {tetap.map(([nama, nilai]) => (
+              {tetap.map(([nama, nilai, sumber]) => (
                 <tr key={nama}>
-                  <td>{nama}</td>
+                  <td>
+                    {nama}
+                    <div className="text-[11px] text-slate-500">{sumber}</div>
+                  </td>
                   <td className="kolom-angka"><Rupiah nilai={nilai} polos /></td>
                 </tr>
               ))}

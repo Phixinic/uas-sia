@@ -57,6 +57,10 @@ export const IZIN = {
   // Setting gaji inhouse: setiap versi (setting awal, promosi, demosi, penyesuaian) diajukan lalu diputuskan Owner.
   "setting-gaji.ajukan": ["HRD", "OWNER"],
   "setting-gaji.putuskan": ["OWNER"],
+  // Nominal master (gaji pokok, tunjangan, tunjangan jabatan): setiap perubahan diajukan dengan bulan berlaku lalu
+  // diputuskan Owner. Tarif jabatan event hanya boleh diajukan Owner (tarif-event.ubah).
+  "nominal.ajukan": ["HRD", "OWNER"],
+  "nominal.putuskan": ["OWNER"],
   "master.akun-kategori": ["OWNER"],
   "master.nonaktifkan": ["OWNER"],
   "profil.ubah": ["OWNER"],

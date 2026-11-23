@@ -8,13 +8,14 @@ import { AKUN } from "@/lib/inti/akun";
 import { dariDate, denganPeriode, hariIni, keDate, labelPeriode, periodeIni, tambahHari } from "@/lib/inti/tanggal";
 import { rupiah } from "@/lib/format";
 import type { Peran } from "@/lib/peran";
+import { LABEL_JENIS_NOMINAL } from "@/lib/inti/nominal";
 
 export type Tindakan = { judul: string; uraian: string; href: string; peran: Peran[] };
 
 export async function dataDashboard(periode: string) {
   const hari = hariIni();
   const sekarang = periodeIni();
-  const [kas, mutasiAkun, tipeAkun, jadwalP, susutDisetujui, susutMenunggu, gaji, jurnalTunggu, pelepasanTunggu, penggajianTunggu, statusP, terbaru, feeTunggu, fee, setoranTunggu, settingTunggu] = await Promise.all([
+  const [kas, mutasiAkun, tipeAkun, jadwalP, susutDisetujui, susutMenunggu, gaji, jurnalTunggu, pelepasanTunggu, penggajianTunggu, statusP, terbaru, feeTunggu, fee, setoranTunggu, settingTunggu, nominalTunggu] = await Promise.all([
     saldoAkun(db, AKUN.KAS, periode),
     db.detailJurnal.groupBy({ by: ["akunKode"], where: { jurnal: { status: "DISETUJUI", periodeId: { lte: periode } } }, _sum: { debit: true, kredit: true } }),
     db.akun.findMany({ select: { kode: true, tipe: true } }),
@@ -35,6 +36,11 @@ export async function dataDashboard(periode: string) {
     db.detailJurnal.aggregate({ where: { jurnal: { status: "DISETUJUI", sumberTipe: "FEE_EVENT", periodeId: periode } }, _sum: { debit: true } }),
     db.investasiKas.aggregate({ where: { status: "DIAJUKAN" }, _sum: { jumlah: true }, _count: true }),
     db.settingGaji.findMany({ where: { status: "DIAJUKAN" }, orderBy: { diajukanPada: "asc" }, select: { berlakuMulai: true, karyawan: { select: { nama: true } } } }),
+    db.versiNominal.findMany({
+      where: { status: "DIAJUKAN" },
+      orderBy: { diajukanPada: "asc" },
+      select: { jenis: true, berlakuMulai: true, golongan: { select: { nama: true } }, tunjangan: { select: { nama: true } }, jabatan: { select: { nama: true } } },
+    }),
   ]);
 
   // Total aset bersih = aset (bersaldo debit) dikurangi kontra aset (akumulasi penyusutan), dari buku besar sampai periode.
@@ -80,6 +86,14 @@ export async function dataDashboard(periode: string) {
       peran: ["OWNER"],
     });
   }
+  if (nominalTunggu.length) {
+    tindakan.push({
+      judul: `${nominalTunggu.length} pengajuan nominal gaji atau tarif menunggu keputusan`,
+      uraian: `${nominalTunggu.map((v) => `${LABEL_JENIS_NOMINAL[v.jenis]} ${v.golongan?.nama ?? v.tunjangan?.nama ?? v.jabatan?.nama ?? ""} (berlaku ${labelPeriode(v.berlakuMulai)})`).join(", ")}. Owner membandingkan nominal lama dan baru lalu menyetujui atau menolak.`,
+      href: "/master/sdm?tab=struktur",
+      peran: ["OWNER"],
+    });
+  }
   if (pelepasanTunggu) tindakan.push({ judul: `${pelepasanTunggu} pengajuan pelepasan peralatan`, uraian: "Menunggu keputusan Owner.", href: "/konversi/pelepasan", peran: ["OWNER"] });
   if (slipDraf) tindakan.push({ judul: `${slipDraf} slip gaji masih draf`, uraian: "HRD mengajukan distribusinya ke Owner.", href: denganPeriode("/sdm/distribusi", slipDrafPertama?.periodeId ?? periode), peran: ["HRD"] });
   if (penggajianTunggu) tindakan.push({ judul: `${penggajianTunggu} pengajuan penggajian menunggu persetujuan`, uraian: "Owner menyetujui supaya gaji dijurnal dan dibayar.", href: denganPeriode("/sdm/distribusi", penggajianPertama?.periodeId ?? periode), peran: ["OWNER"] });
@@ -109,7 +123,8 @@ export async function dataDashboard(periode: string) {
       fee: feeTunggu.length,
       setoran: setoranTunggu._count,
       setting: settingTunggu.length,
-      total: jurnalTunggu + pelepasanTunggu + penggajianTunggu + feeTunggu.length + setoranTunggu._count + settingTunggu.length,
+      nominal: nominalTunggu.length,
+      total: jurnalTunggu + pelepasanTunggu + penggajianTunggu + feeTunggu.length + setoranTunggu._count + settingTunggu.length + nominalTunggu.length,
     },
     statusPeriode: statusP ? ("TERKUNCI" as const) : ("TERBUKA" as const),
     tindakan,

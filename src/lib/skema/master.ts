@@ -5,6 +5,7 @@
  */
 import { z } from "./zod";
 import type { KunciIzin } from "@/lib/peran";
+import type { JenisNominal } from "@/lib/inti/nominal";
 
 export const JENIS_MASTER = ["supplier", "peralatan", "perlengkapan", "kategori", "akun", "karyawan", "jabatan", "jabatanEvent", "golongan", "tunjangan", "jadwal", "setgaji"] as const;
 export type JenisMaster = (typeof JENIS_MASTER)[number];
@@ -26,6 +27,11 @@ export type DefIsian = {
   tetap?: boolean;
   /** Nilai awal di form data baru. */
   bawaan?: string;
+  /**
+   * Isian nominal yang berversi (gaji pokok, tunjangan, tunjangan jabatan, tarif event). Hanya diisi saat data baru
+   * (menjadi pengajuan nominal awal dengan bulan berlaku); sesudahnya diubah lewat "Ajukan perubahan nominal".
+   */
+  nominal?: boolean;
 };
 
 export type DefMaster = {
@@ -119,19 +125,19 @@ export const DEF_MASTER: Record<JenisMaster, DefMaster> = {
     jenis: "jabatan", label: "Jabatan", kelompok: "sdm", izin: "master-sdm.ubah",
     isian: [
       { kunci: "nama", label: "Nama jabatan", tipe: "teks", wajib: true },
-      { kunci: "tunjJabatan", label: "Tunjangan jabatan (Rp)", tipe: "angka" },
-      { kunci: "tunjKeluarga", label: "Tunj. istri/anak (Rp)", tipe: "angka", petunjuk: "Hanya untuk karyawan berstatus PTKP K/*." },
+      { kunci: "tunjJabatan", label: "Tunjangan jabatan (Rp)", tipe: "angka", nominal: true },
+      { kunci: "tunjKeluarga", label: "Tunj. istri/anak (Rp)", tipe: "angka", petunjuk: "Hanya untuk karyawan berstatus PTKP K/*.", nominal: true },
       { kunci: "akunBebanKode", label: "Akun biaya gaji", tipe: "pilih", sumber: "akun", wajib: true },
     ],
   },
   jabatanEvent: {
     jenis: "jabatanEvent", label: "Jabatan event", kelompok: "sdm", izin: "tarif-event.ubah",
-    petunjuk: "Jabatan event (Kapten, Crew) dan tarifnya hanya bisa diubah Owner. Tarif baru langsung dipakai untuk usulan fee yang belum disetujui.",
+    petunjuk: "Jabatan event (Kapten, Crew) dan tarifnya hanya bisa diubah Owner. Tarif punya riwayat: perubahan diajukan dengan bulan berlaku lalu disetujui Owner, dan fee event memakai tarif yang berlaku di bulan tanggal selesai event.",
     isian: [
       { kunci: "nama", label: "Nama jabatan", tipe: "teks", wajib: true },
       { kunci: "peranEvent", label: "Peran di event", tipe: "pilih", sumber: "peranEvent", wajib: true },
-      { kunci: "satuanTarif", label: "Satuan tarif", tipe: "pilih", sumber: "satuanTarif", wajib: true },
-      { kunci: "tarif", label: "Tarif (Rp)", tipe: "angka", wajib: true, maks: 100_000_000, petunjuk: "Bawaan: Kapten Rp200.000 per hari, Crew Rp20.000 per jam (Rp160.000 untuk 8 jam)." },
+      { kunci: "satuanTarif", label: "Satuan tarif", tipe: "pilih", sumber: "satuanTarif", wajib: true, petunjuk: "Tidak bisa diubah sesudah jabatan dipakai di penugasan event." },
+      { kunci: "tarif", label: "Tarif (Rp)", tipe: "angka", wajib: true, maks: 100_000_000, petunjuk: "Bawaan: Kapten Rp200.000 per hari, Crew Rp20.000 per jam (Rp160.000 untuk 8 jam).", nominal: true },
       { kunci: "akunBebanKode", label: "Akun biaya fee", tipe: "pilih", sumber: "akun", wajib: true, bawaan: "6-230" },
     ],
   },
@@ -139,14 +145,14 @@ export const DEF_MASTER: Record<JenisMaster, DefMaster> = {
     jenis: "golongan", label: "Gaji pokok", kelompok: "sdm", izin: "master-sdm.ubah",
     isian: [
       { kunci: "nama", label: "Golongan", tipe: "teks", wajib: true },
-      { kunci: "jumlah", label: "Gaji pokok (Rp)", tipe: "angka", wajib: true },
+      { kunci: "jumlah", label: "Gaji pokok (Rp)", tipe: "angka", wajib: true, nominal: true },
     ],
   },
   tunjangan: {
     jenis: "tunjangan", label: "Tunjangan", kelompok: "sdm", izin: "master-sdm.ubah",
     isian: [
       { kunci: "nama", label: "Nama tunjangan", tipe: "teks", wajib: true },
-      { kunci: "nominal", label: "Nominal per bulan (Rp)", tipe: "angka", wajib: true },
+      { kunci: "nominal", label: "Nominal per bulan (Rp)", tipe: "angka", wajib: true, nominal: true },
     ],
   },
   jadwal: {
@@ -182,6 +188,15 @@ export const DAFTAR_KELOMPOK: Record<KelompokMaster, JenisMaster[]> = {
 export const JENIS_STRUKTUR = ["jabatan", "jabatanEvent", "golongan", "tunjangan"] as const satisfies readonly JenisMaster[];
 export type JenisStruktur = (typeof JENIS_STRUKTUR)[number];
 export const termasukStruktur = (j: string): j is JenisStruktur => (JENIS_STRUKTUR as readonly string[]).includes(j);
+
+/** Jenis nominal berversi untuk tiap master struktur gaji (tabel versi_nominal). */
+export const NOMINAL_STRUKTUR: Record<JenisStruktur, JenisNominal> = { jabatan: "JABATAN", jabatanEvent: "JABATAN_EVENT", golongan: "GOLONGAN", tunjangan: "TUNJANGAN" };
+export const JENIS_STRUKTUR_DARI_NOMINAL: Record<JenisNominal, JenisStruktur> = { JABATAN: "jabatan", JABATAN_EVENT: "jabatanEvent", GOLONGAN: "golongan", TUNJANGAN: "tunjangan" };
+
+/** Isian yang tampil di form: data baru memuat isian nominal, ubah data tidak (nominal diubah lewat pengajuan). */
+export const isianForm = (def: DefMaster, baru: boolean) => def.isian.filter((d) => baru || !d.nominal);
+/** true bila master ini punya nominal berversi (form data baru meminta bulan dan tahun berlaku). */
+export const punyaNominal = (def: DefMaster) => def.isian.some((d) => d.nominal);
 
 /** Tab Master SDM, urut tampil. Tautan lama ?tab=jabatan, jabatanEvent, golongan, tunjangan dialihkan ke tab struktur. */
 export const TAB_SDM = [
@@ -226,14 +241,25 @@ function skemaIsian(d: DefIsian): z.ZodType {
   }
 }
 
-/** Skema isi satu jenis master, lengkap dengan aturan lintas isian (sama dengan validate/mSave di app lama). */
-export function skemaIsiMaster(jenis: JenisMaster) {
+const skemaBulanBerlaku = z.coerce.number({ error: "Pilih bulan berlaku." }).int("Pilih bulan berlaku.").min(1, "Pilih bulan berlaku.").max(12, "Pilih bulan berlaku.");
+const skemaTahunBerlaku = z.coerce.number({ error: "Pilih tahun berlaku." }).int("Pilih tahun berlaku.").min(2000, "Pilih tahun berlaku.").max(2999, "Pilih tahun berlaku.");
+
+/**
+ * Skema isi satu jenis master, lengkap dengan aturan lintas isian (sama dengan validate/mSave di app lama).
+ * Ubah data (baru = false) tidak memuat isian nominal. Data baru bernominal memuat bulan dan tahun berlaku nominal awalnya.
+ */
+export function skemaIsiMaster(jenis: JenisMaster, opsi: { baru?: boolean } = { baru: true }) {
   const def = DEF_MASTER[jenis];
-  const bentuk = Object.fromEntries(def.isian.map((d) => [d.kunci, skemaIsian(d)]));
+  const baru = opsi.baru ?? true;
+  const bentuk: Record<string, z.ZodType> = Object.fromEntries(isianForm(def, baru).map((d) => [d.kunci, skemaIsian(d)]));
+  if (baru && punyaNominal(def)) {
+    bentuk.bulan = skemaBulanBerlaku;
+    bentuk.tahun = skemaTahunBerlaku;
+  }
   return z.object(bentuk).superRefine((v, ctx) => {
     const x = v as Record<string, unknown>;
     const galat = (path: string, message: string) => ctx.addIssue({ code: "custom", path: [path], message });
-    for (const d of def.isian) {
+    for (const d of isianForm(def, baru)) {
       const statis = d.sumber ? OPSI_STATIS[d.sumber] : undefined;
       if (statis && x[d.kunci] && !statis.some((o) => o.nilai === x[d.kunci])) galat(d.kunci, `${d.label} tidak valid.`);
     }

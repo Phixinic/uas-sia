@@ -22,6 +22,8 @@ import { pph21BukanPegawai } from "@/lib/inti/fee-event";
 import { rupiah } from "@/lib/format";
 import { kunciEvent, muatBahanEvent } from "@/lib/data/fee-event/bahan";
 import { skemaSetujuiFee, skemaTolakFee } from "@/lib/skema/fee-event";
+import { tahanKunciSetting } from "@/lib/server/setting-gaji";
+import { labelPeriode } from "@/lib/inti/tanggal";
 
 export async function setujuiFee(input: unknown): Promise<HasilAksi<{ jurnalNo: string }>> {
   return aksiAman(async () => {
@@ -35,8 +37,11 @@ export async function setujuiFee(input: unknown): Promise<HasilAksi<{ jurnalNo: 
       const klaim = await tx.laporanFee.updateMany({ where: { no: d.no, status: "DIAJUKAN" }, data: { status: "DISETUJUI", diputuskanOlehId: pengguna.id, diputuskanPada: new Date() } });
       if (klaim.count !== 1) throw new GalatAksi("Laporan ini baru saja diputuskan pengguna lain.");
 
+      // Kunci bersama: persetujuan perubahan tarif menunggu sampai fee ini selesai disetujui (atau sebaliknya).
+      await tahanKunciSetting(tx);
       const b = await muatBahanEvent(tx, lap.eventKode);
       if (!b || !b.orang.length) throw new GalatAksi("Event ini tidak punya penugasan.");
+      if (b.tarifKurang.length) throw new GalatAksi(`Tarif ${b.tarifKurang.join(", ")} belum punya versi yang disetujui dan berlaku di ${labelPeriode(b.periodeTarif)}. Setujui tarifnya dulu di Master SDM, tab Struktur gaji.`);
       const kiriman = new Map(d.fee.map((f) => [f.karyawanKode, f]));
       if (kiriman.size !== d.fee.length || kiriman.size !== b.orang.length || b.orang.some((o) => !kiriman.has(o.karyawanKode))) {
         throw new GalatAksi("Daftar orang di form tidak sama dengan data event. Muat ulang halaman lalu coba lagi.");
@@ -79,6 +84,7 @@ export async function setujuiFee(input: unknown): Promise<HasilAksi<{ jurnalNo: 
           peranEvent: x.o.peranEvent,
           satuanTarif: x.o.satuanTarif,
           tarif: x.o.usulan.tarif,
+          versiTarifKode: x.o.versiTarif?.kode ?? null,
           jumlahSesi: x.o.usulan.jumlahSesi,
           menitTercatat: x.o.usulan.menitTercatat,
           menitDiakui: x.o.usulan.menitDiakui,

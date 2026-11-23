@@ -369,7 +369,7 @@ async function formDetail(b: BahanEvent, cari: CariEvent, dasar: string): Promis
   if (cari.tugas) {
     const o = cari.tugas === "baru" ? null : b.orang.find((x) => String(x.penugasanId) === cari.tugas);
     if (cari.tugas !== "baru" && !o) return <Peringatan jenis="galat">Penugasan tidak ditemukan.</Peringatan>;
-    const opsi = await opsiPenugasan();
+    const opsi = await opsiPenugasan(b.periodeTarif);
     const crew = opsi.crew.filter((c) => c.kode === o?.karyawanKode || !b.orang.some((x) => x.karyawanKode === c.kode));
     return (
       <FormPenugasan

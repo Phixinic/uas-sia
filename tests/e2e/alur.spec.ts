@@ -638,8 +638,9 @@ const TAB_MASTER: DefTab[] = [
 ];
 
 /** Jabatan, golongan, dan tunjangan ada di tab Struktur gaji Master SDM; jenis lain tetap satu tab per jenis. */
+const STRUKTUR = ["jabatan", "jabatanEvent", "golongan", "tunjangan"];
 const alamatMaster = (t: { kel: string; tab: string }, baru: boolean) =>
-  ["jabatan", "jabatanEvent", "golongan", "tunjangan"].includes(t.tab)
+  STRUKTUR.includes(t.tab)
     ? `/master/sdm?tab=struktur&jenis=${t.tab}${baru ? "&form=baru" : ""}`
     : `/master/${t.kel}?tab=${t.tab}${baru ? "&form=baru" : ""}`;
 
@@ -666,6 +667,13 @@ for (const t of TAB_MASTER) {
     await form.getByRole("button", { name: "Simpan" }).click();
     await expect(form).toBeHidden();
     await expect(baris(p, t.cari).first()).toBeVisible();
+    // Nominal master berversi: nominal awal data baru menjadi pengajuan (berlaku bulan berjalan), Owner menyetujuinya.
+    if (STRUKTUR.includes(t.tab)) {
+      const ajuan = p.getByRole("list", { name: "Pengajuan nominal menunggu Owner" }).locator("li", { hasText: t.cari });
+      await ajuan.getByRole("button", { name: /^Setujui/ }).click();
+      await konfirmasi(p);
+      await expect(ajuan).toHaveCount(0);
+    }
     await foto(p, "owner", `master-${t.tab}`);
     if (!t.nanti) await nonaktifkan(p, t.cari);
   });

@@ -59,6 +59,11 @@ describe("validasi isian master", () => {
     expect(galat("golongan", { nama: "I", jumlah: "0" }).jumlah).toBeTruthy();
     expect(galat("golongan", { nama: "I", jumlah: "-5" }).jumlah).toBeTruthy();
     expect(galat("golongan", { nama: "I", jumlah: "1.5" }).jumlah).toBeTruthy();
-    expect(galat("golongan", { nama: "I", jumlah: "4500000" })).toEqual({});
+    expect(galat("golongan", { nama: "I", jumlah: "4500000", bulan: "12", tahun: "2026" })).toEqual({});
+  });
+  it("golongan baru: nominal awal wajib punya bulan dan tahun berlaku", () => {
+    const g = galat("golongan", { nama: "I", jumlah: "4500000" });
+    expect(g.bulan).toBeTruthy();
+    expect(g.tahun).toBeTruthy();
   });
 });

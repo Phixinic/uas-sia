@@ -7,6 +7,7 @@ import { AKUN } from "@/lib/inti/akun";
 import { barisGaji } from "@/lib/inti/jurnal";
 import { hariTerakhir } from "@/lib/inti/tanggal";
 import type { StatusPersetujuan } from "@/generated/prisma/enums";
+import { muatBahanGaji, pilihSidik, sidikBahan, sidikSlip } from "@/lib/data/sdm/gaji";
 
 export type SlipRingkas = {
   no: string;
@@ -36,6 +37,8 @@ export type PengajuanGaji = {
 export type DataDistribusi = {
   saldoKas: number;
   draf: SlipRingkas[];
+  /** Slip draf yang dihitung dengan versi setting atau nominal komponen yang sekarang tidak berlaku (pengajuan ditolak sistem). */
+  usang: string[];
   barisJurnalDraf: ReturnType<typeof barisGaji>;
   pengajuan: PengajuanGaji[];
   dibayar: (SlipRingkas & { tanggal: string; jurnalNo: string | null })[];
@@ -46,7 +49,7 @@ export async function dataDistribusi(periode: string): Promise<DataDistribusi> {
     db.slipGaji.findMany({
       where: { periodeId: periode },
       orderBy: { karyawanKode: "asc" },
-      include: { karyawan: { select: { nama: true } }, jabatan: { select: { nama: true } }, penggajian: { select: { jurnalNo: true } } },
+      include: { karyawan: { select: { nama: true } }, jabatan: { select: { nama: true } }, penggajian: { select: { jurnalNo: true } }, tunjangan: pilihSidik.tunjangan },
     }),
     db.penggajian.findMany({
       where: { periodeId: periode },
@@ -66,10 +69,18 @@ export async function dataDistribusi(periode: string): Promise<DataDistribusi> {
     thp: s.thp,
     penggajianNo: s.penggajianNo,
   });
-  const draf = slip.filter((s) => s.status === "DRAFT").map(ringkas);
+  const drafDb = slip.filter((s) => s.status === "DRAFT");
+  const draf = drafDb.map(ringkas);
+  // Aturan sama dengan ajukanPenggajian: slip draf dengan sidik versi lain dari bahan hitung terbaru harus dihitung ulang.
+  const bahan = drafDb.length ? new Map((await muatBahanGaji(db, periode)).map((b) => [b.karyawanKode, b])) : new Map();
+  const usang = drafDb.filter((s) => {
+    const b = bahan.get(s.karyawanKode);
+    return s.settingKode === null || !b || sidikSlip(s) !== sidikBahan(b);
+  }).map((s) => s.no);
   return {
     saldoKas,
     draf,
+    usang,
     barisJurnalDraf: barisGaji(draf.map((s) => ({ akunBeban: s.akunBeban, bruto: s.bruto, pph21: s.pph21, thp: s.thp }))),
     pengajuan: pengajuan.map((g) => ({
       no: g.no,

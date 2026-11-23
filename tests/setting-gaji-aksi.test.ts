@@ -171,7 +171,7 @@ describe.runIf(aktif)("riwayat setting gaji dan cek kas pembelian tunai", async 
     expect((await slip("2026-11", "KRY-02")).settingKode).toBe("SET-02");
 
     await masukSebagai("hrd");
-    expect(galat(await distribusi.ajukanPenggajian({ periode: "2026-11" }))).toMatch(/Setting gaji SLP-2026-11-KRY-02 sudah berubah sejak slipnya dihitung/);
+    expect(galat(await distribusi.ajukanPenggajian({ periode: "2026-11" }))).toMatch(/Setting gaji atau nominal komponen SLP-2026-11-KRY-02 sudah berubah sejak slipnya dihitung/);
     expect((await gaji.hitungSlipSatu({ periode: "2026-11", karyawanKode: "KRY-02" })).ok).toBe(true);
     const baru = await slip("2026-11", "KRY-02");
     expect(baru.settingKode).toBe(kode);

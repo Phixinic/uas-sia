@@ -71,7 +71,6 @@ erDiagram
   golongan {
     string id_golongan PK
     string nama
-    int jumlah
     boolean aktif
   }
   investasi_kas {
@@ -90,13 +89,10 @@ erDiagram
   jabatan {
     string id_jabatan PK
     string nama
-    int tunj_jabatan
-    int tunj_keluarga
     string akun_beban FK
     string kelompok
     string peran_event
     string satuan_tarif
-    int tarif
     boolean aktif
   }
   jadwal_kerja {
@@ -370,6 +366,7 @@ erDiagram
     string peran_event
     string satuan_tarif
     int tarif
+    string id_versi_tarif FK
     int jumlah_sesi
     int menit_tercatat
     int menit_diakui
@@ -417,6 +414,8 @@ erDiagram
     string alasan_tolak
     string no_penggajian FK
     string id_setting FK
+    string id_versi_gaji_pokok FK
+    string id_versi_jabatan FK
     int dibuat_oleh FK
     datetime dihitung_pada
     int disetujui_oleh FK
@@ -427,6 +426,7 @@ erDiagram
     string id_tunjangan PK, FK
     string nama
     int nominal
+    string id_versi FK
   }
   supplier {
     string id_supplier PK
@@ -440,8 +440,25 @@ erDiagram
   tunjangan {
     string id_tunjangan PK
     string nama
-    int nominal
     boolean aktif
+  }
+  versi_nominal {
+    string id_versi PK
+    string jenis
+    string id_golongan FK
+    string id_tunjangan FK
+    string id_jabatan FK
+    int nominal
+    int tunj_jabatan
+    int tunj_keluarga
+    string berlaku_mulai FK
+    string alasan
+    string status
+    string alasan_tolak
+    int diajukan_oleh FK
+    datetime diajukan_pada
+    int diputuskan_oleh FK
+    datetime diputuskan_pada
   }
   detail_pembelian ||--o{ aset : "no_pembelian, no_urut"
   peralatan ||--o{ aset : "id_peralatan"
@@ -525,6 +542,7 @@ erDiagram
   karyawan ||--o{ slip_fee : "id_karyawan"
   jabatan ||--o{ slip_fee : "id_jabatan"
   akun ||--o{ slip_fee : "akun_beban"
+  versi_nominal |o--o{ slip_fee : "id_versi_tarif"
   periode ||--o{ slip_gaji : "periode"
   karyawan ||--o{ slip_gaji : "id_karyawan"
   jabatan ||--o{ slip_gaji : "id_jabatan"
@@ -533,7 +551,16 @@ erDiagram
   akun ||--o{ slip_gaji : "akun_beban"
   penggajian |o--o{ slip_gaji : "no_penggajian"
   setting_gaji |o--o{ slip_gaji : "id_setting"
+  versi_nominal |o--o{ slip_gaji : "id_versi_gaji_pokok"
+  versi_nominal |o--o{ slip_gaji : "id_versi_jabatan"
   pengguna ||--o{ slip_gaji : "dibuat_oleh"
   pengguna |o--o{ slip_gaji : "disetujui_oleh"
   slip_gaji ||--o{ slip_tunjangan : "id_slip"
   tunjangan ||--o{ slip_tunjangan : "id_tunjangan"
+  versi_nominal |o--o{ slip_tunjangan : "id_versi"
+  golongan |o--o{ versi_nominal : "id_golongan"
+  tunjangan |o--o{ versi_nominal : "id_tunjangan"
+  jabatan |o--o{ versi_nominal : "id_jabatan"
+  periode ||--o{ versi_nominal : "berlaku_mulai"
+  pengguna |o--o{ versi_nominal : "diajukan_oleh"
+  pengguna |o--o{ versi_nominal : "diputuskan_oleh"

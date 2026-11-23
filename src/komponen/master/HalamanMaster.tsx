@@ -43,7 +43,7 @@ function NavMaster({ kelompok, aktif }: { kelompok: KelompokMaster; aktif: strin
   );
 }
 
-export default async function HalamanMaster({ kelompok, cari }: { kelompok: KelompokMaster; cari: { tab?: string; form?: string; karyawan?: string; jenis?: string } }) {
+export default async function HalamanMaster({ kelompok, cari }: { kelompok: KelompokMaster; cari: { tab?: string; form?: string; karyawan?: string; jenis?: string; nominal?: string; riwayat?: string } }) {
   const pengguna = await wajibMasuk();
   if (kelompok === "sdm" && cari.tab) {
     // Jabatan, jabatan event, golongan, dan tunjangan sekarang satu tab; tautan lama (termasuk ?form=) tetap berfungsi.

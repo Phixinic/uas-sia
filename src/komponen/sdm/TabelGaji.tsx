@@ -35,6 +35,8 @@ function KeteranganVersi({ b }: { b: BarisGaji }) {
       {b.slipStatus === "DISETUJUI" && <div className="text-slate-600">Angka slip terkunci saat dibayar</div>}
       {b.slipStatus === "DIAJUKAN" && <div className="text-slate-600">Angka slip terkunci saat diajukan</div>}
       {b.settingBerubah && <div className="font-medium text-amber-700">Perlu dihitung ulang: slip dihitung dengan versi setting lain</div>}
+      {b.nominalBerubah && <div className="font-medium text-amber-700">Perlu dihitung ulang: nominal komponen (gaji pokok atau tunjangan) yang dipakai slip sudah tidak berlaku di {labelPeriode(b.tampil.periode)}</div>}
+      {b.nominalKurang.length > 0 && <div className="font-medium text-rose-700">Belum bisa dihitung: {b.nominalKurang.join(", ")} belum punya nominal berlaku</div>}
     </div>
   );
 }
@@ -185,7 +187,7 @@ export default function TabelGaji({ baris, periode, bolehHitung, alamat }: { bar
               <div><dt className="text-slate-500">PPh 21</dt><dd className="kolom-angka font-medium"><Rupiah nilai={s.pph21} polos /></dd></div>
               <div><dt className="text-slate-500">THP</dt><dd className="kolom-angka font-semibold text-slate-900"><Rupiah nilai={s.thp} polos /></dd></div>
             </dl>
-            {b.perluHitungUlang && <div className="text-[11px] text-amber-700">{b.settingBerubah ? "Setting gaji berubah, hitung ulang" : "Data berubah, hitung ulang"}</div>}
+            {b.perluHitungUlang && <div className="text-[11px] text-amber-700">{b.settingBerubah ? "Setting gaji berubah, hitung ulang" : b.nominalBerubah ? "Nominal komponen berubah, hitung ulang" : "Data berubah, hitung ulang"}</div>}
             {b.slipStatus === "DRAFT" && b.alasanTolak && <div className="text-[11px] text-rose-700">Ditolak: {b.alasanTolak}</div>}
             {aksi(b, "")}
             {buka && <div className="rounded-lg bg-slate-50 p-3"><RincianSlip s={s} /></div>}
@@ -236,7 +238,7 @@ export default function TabelGaji({ baris, periode, bolehHitung, alamat }: { bar
                 <td className="kolom-angka font-semibold text-slate-900"><Rupiah nilai={s.thp} polos /></td>
                 <td>
                   {b.slipStatus ? <LencanaStatus jenis="slip" status={b.slipStatus} /> : b.jumlahPresensi ? <Lencana warna="abu">Belum disimpan</Lencana> : <Lencana warna="kuning">Belum ada presensi</Lencana>}
-                  {b.perluHitungUlang && <div className="mt-0.5 text-[11px] text-amber-700">{b.settingBerubah ? "Setting gaji berubah, hitung ulang" : "Data berubah, hitung ulang"}</div>}
+                  {b.perluHitungUlang && <div className="mt-0.5 text-[11px] text-amber-700">{b.settingBerubah ? "Setting gaji berubah, hitung ulang" : b.nominalBerubah ? "Nominal komponen berubah, hitung ulang" : "Data berubah, hitung ulang"}</div>}
                   {b.slipStatus === "DRAFT" && b.alasanTolak && <div className="mt-0.5 max-w-44 text-[11px] text-rose-700">Ditolak: {b.alasanTolak}</div>}
                 </td>
                 <td>

@@ -14,6 +14,7 @@ import { hashKataSandi } from "../src/lib/server/kata-sandi";
 import { dariDate, keDate, periodeDari } from "../src/lib/inti/tanggal";
 import { AKUN } from "../src/lib/inti/akun";
 import { muatJurnalBuku } from "../src/lib/server/jurnal";
+import { versiAwalSeed } from "../src/lib/server/nominal";
 import { neracaSaldo } from "../src/lib/inti/buku-besar";
 import { PENGGUNA_KAPTEN, seedFeeEvent } from "./seed-fee-event";
 import type { Peran, StatusPtkp, TipeAkun } from "../src/generated/prisma/enums";
@@ -113,10 +114,27 @@ async function main() {
     data: daftar("karyawan").map((k) => ({ kode: k.id, nama: k.nama, statusPtkp: ptkp(k.status_ptkp), bank: k.bank, noRek: k.no_rek, aktif: k.aktif !== false })),
   });
   await db.jabatan.createMany({
-    data: daftar("jabatan").map((j) => ({ kode: j.id, nama: j.nama, tunjJabatan: j.tunj_jabatan ?? 0, tunjKeluarga: j.tunj_keluarga ?? 0, akunBebanKode: j.akun_beban, aktif: j.aktif !== false })),
+    data: daftar("jabatan").map((j) => ({ kode: j.id, nama: j.nama, akunBebanKode: j.akun_beban, aktif: j.aktif !== false })),
   });
-  await db.golongan.createMany({ data: daftar("golongan").map((g) => ({ kode: g.id, nama: g.nama, jumlah: g.jumlah, aktif: g.aktif !== false })) });
-  await db.tunjangan.createMany({ data: daftar("tunjangan").map((t) => ({ kode: t.id, nama: t.nama, nominal: t.nominal, aktif: t.aktif !== false })) });
+  await db.golongan.createMany({ data: daftar("golongan").map((g) => ({ kode: g.id, nama: g.nama, aktif: g.aktif !== false })) });
+  await db.tunjangan.createMany({ data: daftar("tunjangan").map((t) => ({ kode: t.id, nama: t.nama, aktif: t.aktif !== false })) });
+  // Nominal master = riwayat versi (versi_nominal). Nominal data contoh menjadi versi awal DISETUJUI berlaku Oktober 2026,
+  // urutan dan aturannya sama dengan migrasi 20261124090000_nominal_riwayat (golongan, tunjangan, jabatan inhouse;
+  // tarif jabatan event dibuat seedFeeEvent).
+  await db.periode.createMany({ data: [{ id: "2026-10" }], skipDuplicates: true });
+  const versiAwal = { berlaku: "2026-10", alasan: "Nominal awal data contoh Oktober 2026.", olehId: idPeran.owner, pada: waktu("2026-10-01T08:00:00+07:00")! };
+  const kosong = { nominal: 0, tunjJabatan: 0, tunjKeluarga: 0 };
+  const versiItem = new Map<string, { kode: string; nominal: number; tunjJabatan: number; tunjKeluarga: number }>();
+  for (const x of [...daftar("golongan")].sort((a, b) => a.id.localeCompare(b.id))) {
+    versiItem.set(`G:${x.id}`, { kode: await versiAwalSeed(db, { ...kosong, ...versiAwal, jenis: "GOLONGAN", itemKode: x.id, nominal: x.jumlah }), ...kosong, nominal: x.jumlah });
+  }
+  for (const x of [...daftar("tunjangan")].sort((a, b) => a.id.localeCompare(b.id))) {
+    versiItem.set(`T:${x.id}`, { kode: await versiAwalSeed(db, { ...kosong, ...versiAwal, jenis: "TUNJANGAN", itemKode: x.id, nominal: x.nominal }), ...kosong, nominal: x.nominal });
+  }
+  for (const x of [...daftar("jabatan")].sort((a, b) => a.id.localeCompare(b.id))) {
+    const isi = { ...kosong, tunjJabatan: x.tunj_jabatan ?? 0, tunjKeluarga: x.tunj_keluarga ?? 0 };
+    versiItem.set(`J:${x.id}`, { kode: await versiAwalSeed(db, { ...versiAwal, ...isi, jenis: "JABATAN", itemKode: x.id }), ...isi });
+  }
   await db.jadwalKerja.createMany({
     data: daftar("jadwal").map((t) => ({ kode: t.id, jabatanKode: t.jabatan_id, jamMasuk: t.jam_masuk, jamKeluar: t.jam_keluar, hariKerja: t.hari_kerja, aktif: t.aktif !== false })),
   });
@@ -268,9 +286,21 @@ async function main() {
         potonganAbsen: s.potongan_absen, bruto: s.bruto, brutoSetahun: s.pajak.setahun, biayaJabatan: s.pajak.biaya, netoSetahun: s.pajak.neto,
         ptkp: s.pajak.ptkp, pkp: s.pajak.pkp, pphSetahun: s.pajak.pph_setahun, pph21: s.pph21, thp: s.thp, status: st, penggajianNo: s.ref ?? null,
         settingKode: daftar("setgaji").find((x) => x.karyawan_id === s.karyawan_id)?.id ?? null,
+        // Versi nominal yang dipakai: versi awal bila nilainya sama (aturan sama dengan backfill migrasi).
+        versiGajiPokokKode: versiItem.get(`G:${s.golongan_id}`)?.nominal === s.gaji_pokok ? versiItem.get(`G:${s.golongan_id}`)!.kode : null,
+        versiJabatanKode: (() => {
+          const v = versiItem.get(`J:${s.jabatan_id}`);
+          const keluarga = String(s.status_ptkp).startsWith("K") ? v?.tunjKeluarga : 0;
+          return v && v.tunjJabatan === s.tunj_jabatan && keluarga === s.tunj_keluarga ? v.kode : null;
+        })(),
         dibuatOlehId: oleh(s.dibuat_oleh)!, dihitungPada: waktu(s.dihitung_pada) ?? new Date(),
         disetujuiOlehId: st === "DISETUJUI" ? oleh(g?.disetujui_oleh) : null, disetujuiPada: st === "DISETUJUI" ? waktu(g?.disetujui_pada) : null,
-        tunjangan: { create: (s.tunj_lain ?? []).map((t: any) => ({ tunjanganKode: t.id, nama: t.nama, nominal: t.nominal })) },
+        tunjangan: {
+          create: (s.tunj_lain ?? []).map((t: any) => ({
+            tunjanganKode: t.id, nama: t.nama, nominal: t.nominal,
+            versiKode: versiItem.get(`T:${t.id}`)?.nominal === t.nominal ? versiItem.get(`T:${t.id}`)!.kode : null,
+          })),
+        },
       },
     });
   }

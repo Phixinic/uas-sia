@@ -6,6 +6,8 @@ import { hashKataSandi } from "../src/lib/server/kata-sandi";
 import type { DbAtauTx } from "../src/lib/server/db";
 import { keDate } from "../src/lib/inti/tanggal";
 import { muatBahanEvent } from "../src/lib/data/fee-event/bahan";
+import { versiAwalSeed } from "../src/lib/server/nominal";
+import { TARIF_BAWAAN } from "../src/lib/inti/fee-event";
 
 /** Akun kapten contoh (crew freelance). Ditautkan ke karyawan event di seedFeeEvent. */
 export const PENGGUNA_KAPTEN: { namaPengguna: string; nama: string; karyawanKode: string; sandi: string }[] = [
@@ -25,11 +27,20 @@ export async function seedFeeEvent(db: DbAtauTx, idPeran: Record<string, number>
   await db.akun.upsert({ where: { kode: "6-230" }, create: { kode: "6-230", nama: "Biaya Fee Crew Event (Freelance)", tipe: "BEBAN", saldoNormal: "D" }, update: {} });
   await db.jabatan.createMany({
     data: [
-      { kode: "JBT-05", nama: "Kapten Event", akunBebanKode: "6-230", kelompok: "EVENT", peranEvent: "KAPTEN", satuanTarif: "HARI", tarif: 200_000 },
-      { kode: "JBT-06", nama: "Crew Event", akunBebanKode: "6-230", kelompok: "EVENT", peranEvent: "CREW", satuanTarif: "JAM", tarif: 20_000 },
+      { kode: "JBT-05", nama: "Kapten Event", akunBebanKode: "6-230", kelompok: "EVENT", peranEvent: "KAPTEN", satuanTarif: "HARI" },
+      { kode: "JBT-06", nama: "Crew Event", akunBebanKode: "6-230", kelompok: "EVENT", peranEvent: "CREW", satuanTarif: "JAM" },
     ],
     skipDuplicates: true,
   });
+  // Tarif = versi nominal awal DISETUJUI berlaku Oktober 2026 (sama dengan migrasi riwayat nominal).
+  await db.periode.createMany({ data: [{ id: "2026-10" }], skipDuplicates: true });
+  for (const [itemKode, nominal] of [["JBT-05", TARIF_BAWAAN.KAPTEN_PER_HARI], ["JBT-06", TARIF_BAWAAN.CREW_PER_JAM]] as const) {
+    if (await db.versiNominal.count({ where: { jenis: "JABATAN_EVENT", jabatanKode: itemKode } })) continue;
+    await versiAwalSeed(db, {
+      jenis: "JABATAN_EVENT", itemKode, nominal, tunjJabatan: 0, tunjKeluarga: 0, berlaku: "2026-10", alasan: "Tarif awal data contoh fee event.",
+      olehId: idPeran.owner ?? null, pada: new Date("2026-10-01T01:00:00Z"),
+    });
+  }
   const crew: [string, string, StatusPtkp, string, string][] = [
     ["KRY-06", "Bima Satria", "K1", "BCA", "7710223344"],
     ["KRY-07", "Sari Wulandari", "TK0", "BRI", "005601112233"],

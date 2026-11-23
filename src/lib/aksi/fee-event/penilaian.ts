@@ -18,6 +18,7 @@ import { AWALAN, nomorDokumen } from "@/lib/server/nomor";
 import { catatLog } from "@/lib/server/log";
 import { durasiKeMenit, labelDurasi, menitTercatat } from "@/lib/inti/fee-event";
 import { kunciEvent, muatBahanEvent, pastikanKaptenEvent } from "@/lib/data/fee-event/bahan";
+import { tahanKunciSetting } from "@/lib/server/setting-gaji";
 import { skemaKirimLaporan, skemaPenilaian } from "@/lib/skema/fee-event";
 
 export async function nilaiKehadiran(input: unknown): Promise<HasilAksi> {
@@ -74,8 +75,11 @@ export async function kirimLaporan(input: unknown): Promise<HasilAksi<{ no: stri
       await pastikanKaptenEvent(tx, pengguna.id, eventKode);
       const e = await kunciEvent(tx, eventKode);
       if (e.status !== "PENILAIAN") throw new GalatAksi("Laporan event ini sudah dikirim ke Owner.");
+      // Kunci bersama: usulan fee dihitung dengan tarif yang tidak sedang diubah persetujuan Owner.
+      await tahanKunciSetting(tx);
       const b = await muatBahanEvent(tx, eventKode);
       if (!b) throw new GalatAksi("Event tidak ditemukan.");
+      if (b.tarifKurang.length) throw new GalatAksi("Tarif jabatan di event ini belum disetujui Owner. Hubungi Owner sebelum mengirim laporan.");
       if (!b.orang.some((o) => o.peranEvent === "KAPTEN")) throw new GalatAksi("Event ini belum punya kapten.");
       if (!b.orang.some((o) => o.kehadiran.length)) throw new GalatAksi("Belum ada kehadiran yang dicatat HRD di event ini.");
       if (b.crewBelumDinilai) throw new GalatAksi(`Masih ada ${b.crewBelumDinilai} kehadiran crew yang belum dinilai. Nilai semuanya dulu.`);

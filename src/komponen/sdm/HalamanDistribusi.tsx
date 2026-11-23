@@ -73,8 +73,17 @@ export default async function HalamanDistribusi({ cari }: { cari: CariDistribusi
             <h2 className="judul-kartu">Slip draf · {labelBulanTahun(periode)}</h2>
             <p className="mt-0.5 text-xs text-slate-500">Slip dibuat di menu Hitung Gaji.</p>
           </div>
-          {d.draf.length > 0 && bolehAjukan && <TombolAjukan periode={periode} jumlah={d.draf.length} thp={totalThp} />}
+          {d.draf.length > 0 && bolehAjukan && !d.usang.length && <TombolAjukan periode={periode} jumlah={d.draf.length} thp={totalThp} />}
         </div>
+        {d.usang.length > 0 && (
+          <div className="mt-3">
+            <Peringatan jenis="awas">
+              Slip {d.usang.join(", ")} perlu dihitung ulang: setting gaji atau nominal komponen yang dipakai sudah tidak berlaku di {labelPeriode(periode)}.
+              Pengajuan ditahan sampai slip itu dihitung ulang.{" "}
+              <Link className="font-medium underline" href={denganPeriode("/sdm/hitung-gaji", periode)}>Buka Hitung Gaji</Link>.
+            </Peringatan>
+          </div>
+        )}
         {d.draf.length === 0 ? (
           <p className="mt-3 text-sm text-slate-500">
             Tidak ada slip draf pada periode ini.{" "}

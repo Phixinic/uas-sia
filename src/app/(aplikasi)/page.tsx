@@ -108,7 +108,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           nilai={String(d.menunggu.total)}
           bukanUang
           ikon={<Hourglass className="size-4" />}
-          keterangan={`Jurnal ${d.menunggu.jurnal}, pelepasan ${d.menunggu.pelepasan}, penggajian ${d.menunggu.penggajian}, fee ${d.menunggu.fee}, setoran ${d.menunggu.setoran}, setting gaji ${d.menunggu.setting}`}
+          keterangan={`Jurnal ${d.menunggu.jurnal}, pelepasan ${d.menunggu.pelepasan}, penggajian ${d.menunggu.penggajian}, fee ${d.menunggu.fee}, setoran ${d.menunggu.setoran}, setting gaji ${d.menunggu.setting}, nominal ${d.menunggu.nominal}`}
           nada={d.menunggu.total ? "kuning" : "netral"}
         />
         <KartuRingkasan judul="Periode aktif" nilai={namaBulan(periode)} bukanUang ikon={<CalendarClock className="size-4" />} keterangan={`Tahun ${tahunDari(periode)} · ${d.statusPeriode === "TERKUNCI" ? "terkunci, menolak jurnal baru" : "terbuka untuk transaksi"}`} nada={d.statusPeriode === "TERKUNCI" ? "merah" : "netral"} />

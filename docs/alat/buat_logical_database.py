@@ -29,7 +29,7 @@ SKALAR = {"String", "Int", "Boolean", "DateTime", "Float", "Decimal", "BigInt", 
 KELOMPOK = [
     ("konv", "Siklus konversi", "#FDE7E4", ["supplier", "kategori_aset", "peralatan", "perlengkapan", "pembelian", "detail_pembelian",
                                            "aset", "jadwal_penyusutan", "opname", "detail_opname", "pelepasan"]),
-    ("sdm", "Siklus SDM: gaji inhouse", "#E3EFFA", ["karyawan", "jabatan", "golongan", "tunjangan", "jadwal_kerja", "setting_gaji", "setting_tunjangan",
+    ("sdm", "Siklus SDM: gaji inhouse", "#E3EFFA", ["karyawan", "jabatan", "golongan", "tunjangan", "versi_nominal", "jadwal_kerja", "setting_gaji", "setting_tunjangan",
                                       "presensi", "slip_gaji", "slip_tunjangan", "penggajian"]),
     ("fee", "Siklus SDM: fee event", "#ECE4F6", ["event", "sesi_event", "penugasan_event", "kehadiran_event", "laporan_fee", "slip_fee"]),
     ("lap", "Pelaporan", "#FFF3C4", ["akun", "periode", "riwayat_periode", "jurnal", "detail_jurnal", "investasi_kas"]),
@@ -253,7 +253,9 @@ TEPI_KIRI_KONVERSI = {("aset", "kategori_aset"): ("luar", "atas"), ("aset", "per
 KOLOM_KONVERSI = [["supplier", "kategori_aset", "peralatan", "perlengkapan", "detail_opname"],
                   ["pembelian", "detail_pembelian", "aset"],
                   ["jadwal_penyusutan", "pelepasan", "opname"]]
-KOLOM_SDM = [["penggajian", "slip_gaji", "slip_tunjangan"],
+# versi_nominal di bawah slip_tunjangan: dua garis slip_gaji -> versi_nominal dan slip_tunjangan -> versi_nominal turun lurus
+# di kolom kiri, garis ke golongan, tunjangan, dan jabatan menyeberang satu gutter tanpa memotong simbol lain.
+KOLOM_SDM = [["penggajian", "slip_gaji", "slip_tunjangan", "versi_nominal"],
              ["karyawan", "jabatan", "jadwal_kerja", "golongan", "tunjangan"],
              ["presensi", "setting_gaji", "setting_tunjangan"]]
 KOLOM_LAPORAN = [["periode", "riwayat_periode", "jurnal", "detail_jurnal", "akun", "investasi_kas"]]
@@ -269,7 +271,7 @@ KONFIG = {
         "gutter": [22, 24, 38, 26, 19, 22],
         "lajur_kiri": 5.0, "tepi_kiri": TEPI_KIRI_KONVERSI,
         "pita": [
-            {"x": "periode", "di_bawah": ["investasi_kas", "slip_tunjangan", "tunjangan", "setting_tunjangan"], "jarak": 22,
+            {"x": "periode", "di_bawah": ["investasi_kas", "slip_tunjangan", "versi_nominal", "setting_tunjangan"], "jarak": 22,
              "kolom": [["penugasan_event", "kehadiran_event"], ["event", "sesi_event"], ["laporan_fee"], ["slip_fee"]],
              "lebar": [96, 90, 98, 98], "gutter": [14, 16, 14]},
             {"x": 7.0, "di_bawah": ["aset", "detail_opname"], "jarak": 22,
@@ -281,7 +283,8 @@ KONFIG = {
         # siklus SDM, begitu juga slip_fee -> event yang akan memotong garis laporan_fee -> jurnal. Garisnya
         # digambar di diagram modul fee event. pengguna -> karyawan hanya ditulis di kolom (seperti FK ke pengguna).
         "tanpa_garis": {("penugasan_event", "karyawan"), ("penugasan_event", "jabatan"), ("kehadiran_event", "karyawan"),
-                        ("slip_fee", "karyawan"), ("slip_fee", "jabatan"), ("slip_fee", "event"), ("pengguna", "karyawan")},
+                        ("slip_fee", "karyawan"), ("slip_fee", "jabatan"), ("slip_fee", "event"), ("pengguna", "karyawan"),
+                        ("slip_fee", "versi_nominal")},
         "legenda": {"x": 7.0, "di_bawah": ["profil_usaha", "penghitung", "kehadiran_event", "slip_fee", "sesi_event"], "jarak": 10, "lebar": 771},
     },
     "logical-database-konversi": {
@@ -298,7 +301,8 @@ KONFIG = {
         # penugasan_event dan slip_fee sama-sama merujuk ke karyawan dan jabatan, jadi kedua induk itu ditaruh di
         # kolom tengah supaya keempat garisnya tidak bersilangan. pengguna ikut supaya relasi akun Kapten ke karyawan
         # (pengguna.id_karyawan, 0..1) tergambar.
-        "kolom": [["sesi_event", "kehadiran_event"], ["event", "penugasan_event"], ["jabatan", "karyawan", "pengguna"], ["laporan_fee", "slip_fee"]],
+        # versi_nominal (tarif berversi) di bawah pengguna supaya garis slip_fee -> versi_nominal tergambar di diagram ini.
+        "kolom": [["sesi_event", "kehadiran_event"], ["event", "penugasan_event"], ["jabatan", "karyawan", "pengguna", "versi_nominal"], ["laporan_fee", "slip_fee"]],
         "lebar": [100, 96, 100, 104], "gutter": [24, 26, 26], "grup_bersarang": True,
     },
     "logical-database-pelaporan": {
