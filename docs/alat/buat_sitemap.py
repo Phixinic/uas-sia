@@ -14,6 +14,9 @@ WARNA = {"ringkasan": "#EEEEEE", "modal": "#E6F2E4", "konversi": "#FDE7E4", "sdm
 GARIS = {"ringkasan": "#555555", "modal": "#2E6B3A", "konversi": "#8B1A1A", "sdm": "#1F5F99", "fee-event": "#5B3F8C", "pelaporan": "#8A6D00", "pengaturan": "#2E6B3A"}
 # Bagian di dalam halaman (tab, pilihan tahap, rincian) yang tidak tercatat di menu.ts. Tab master dibaca dari master.ts.
 BAGIAN = {
+    # Status jurnal dan keputusan Owner (Ajukan, Setujui, Tolak) juga tersedia di halaman sumbernya.
+    "Nilai Sisa Perlengkapan": ["Status dan keputusan"],
+    "Proses Penyusutan": ["Status dan keputusan"],
     "Setting Gaji": ["Pengajuan (HRD, Owner)", "Keputusan Owner", "Riwayat per karyawan"],
     "Presensi": ["Rekap", "Harian"],
     "Hitung Gaji": ["Ringkasan per tahun", "Slip"],
@@ -47,6 +50,10 @@ def baca_tab_master():
     tab = {"konversi": [], "sdm": []}
     for m in re.finditer(r'jenis:\s*"\w+",\s*label:\s*"([^"]+)",\s*kelompok:\s*"(\w+)"', t):
         tab[m.group(2)].append(m.group(1))
+    # Master SDM memakai daftar tab sendiri (TAB_SDM): jabatan, jabatan event, gaji pokok, dan tunjangan digabung di Struktur gaji.
+    sdm = re.search(r"TAB_SDM\s*=\s*\[(.*?)\]\s*as const", t, re.S)
+    if sdm:
+        tab["sdm"] = re.findall(r'\{\s*tab:\s*"\w+",\s*label:\s*"([^"]+)"\s*\}', sdm.group(1))
     return tab
 
 

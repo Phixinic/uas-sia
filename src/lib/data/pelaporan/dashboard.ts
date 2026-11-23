@@ -14,7 +14,7 @@ export type Tindakan = { judul: string; uraian: string; href: string; peran: Per
 export async function dataDashboard(periode: string) {
   const hari = hariIni();
   const sekarang = periodeIni();
-  const [kas, mutasiAkun, tipeAkun, jadwalP, susutDisetujui, gaji, jurnalTunggu, pelepasanTunggu, penggajianTunggu, statusP, terbaru, feeTunggu, fee, setoranTunggu, settingTunggu] = await Promise.all([
+  const [kas, mutasiAkun, tipeAkun, jadwalP, susutDisetujui, susutMenunggu, gaji, jurnalTunggu, pelepasanTunggu, penggajianTunggu, statusP, terbaru, feeTunggu, fee, setoranTunggu, settingTunggu] = await Promise.all([
     saldoAkun(db, AKUN.KAS, periode),
     db.detailJurnal.groupBy({ by: ["akunKode"], where: { jurnal: { status: "DISETUJUI", periodeId: { lte: periode } } }, _sum: { debit: true, kredit: true } }),
     db.akun.findMany({ select: { kode: true, tipe: true } }),
@@ -22,6 +22,8 @@ export async function dataDashboard(periode: string) {
     db.jadwalPenyusutan.aggregate({ where: { periodeId: periode, OR: [{ aset: { status: "AKTIF" } }, { jurnalNo: { not: null } }] }, _sum: { beban: true }, _count: true }),
     // Angka disetujui diambil dari jurnal penyusutan yang disetujui (sumber kebenaran), bukan dari jadwal aset aktif.
     db.detailJurnal.aggregate({ where: { jurnal: { status: "DISETUJUI", sumberTipe: "PENYUSUTAN", periodeId: periode } }, _sum: { debit: true } }),
+    // Sudah dijurnal tetapi belum berlaku (draf atau menunggu Owner): hanya untuk keterangan, tidak dijumlahkan ke angka kartu.
+    db.detailJurnal.aggregate({ where: { jurnal: { status: { in: ["DRAFT", "DIAJUKAN"] }, sumberTipe: "PENYUSUTAN", periodeId: periode } }, _sum: { debit: true } }),
     db.detailJurnal.aggregate({ where: { jurnal: { status: "DISETUJUI", sumberTipe: "PENGGAJIAN", periodeId: periode } }, _sum: { debit: true } }),
     db.jurnal.count({ where: { status: "DIAJUKAN" } }),
     db.pelepasan.count({ where: { status: "DIAJUKAN" } }),
@@ -96,7 +98,7 @@ export async function dataDashboard(periode: string) {
   return {
     kas,
     totalAset,
-    susut: { jadwal: jadwalP._sum.beban ?? 0, disetujui: susutDisetujui._sum.debit ?? 0, unit: jadwalP._count },
+    susut: { jadwal: jadwalP._sum.beban ?? 0, disetujui: susutDisetujui._sum.debit ?? 0, menunggu: susutMenunggu._sum.debit ?? 0, unit: jadwalP._count },
     bebanGaji: gaji._sum.debit ?? 0,
     /** Beban fee event (crew freelance) dari jurnal fee yang disetujui di periode ini. */
     bebanFee: fee._sum.debit ?? 0,

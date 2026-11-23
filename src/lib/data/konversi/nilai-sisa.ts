@@ -4,6 +4,7 @@
  */
 import { db, type DbAtauTx } from "@/lib/server/db";
 import { dariDate, daftarPeriode, periodeDari, periodeIni, tambahBulan } from "@/lib/inti/tanggal";
+import { jurnalPeriode, riwayatJurnalSumber } from "./persetujuan";
 import { bulanNilaiSisaTerlewat, saldoBukuPerlengkapan, tahanUrutanNilaiSisa, type BebanOpname, type PembelianLkp } from "./hitung";
 
 export type BarisSaldoLkp = { kode: string; nama: string; satuan: string; saldoBuku: number };
@@ -63,7 +64,7 @@ export async function periodeNilaiSisa(dipilih?: string) {
 }
 
 export async function dataNilaiSisa(periode: string) {
-  const [bahan, opname, riwayat] = await Promise.all([
+  const [bahan, opname, riwayat, riwayatJurnal] = await Promise.all([
     bahanNilaiSisa(db, periode),
     db.opname.findUnique({
       where: { periodeId: periode },
@@ -74,6 +75,7 @@ export async function dataNilaiSisa(periode: string) {
       },
     }),
     db.opname.findMany({ orderBy: { periodeId: "desc" }, include: { jurnal: { select: { no: true, status: true } } } }),
+    riwayatJurnalSumber("OPNAME"),
   ]);
   return {
     baris: bahan.saldo,
@@ -89,5 +91,9 @@ export async function dataNilaiSisa(periode: string) {
       detail: opname.detail.map((d) => ({ kode: d.perlengkapanKode, nama: d.perlengkapan.nama, satuan: d.perlengkapan.satuan, saldoBuku: d.saldoBuku, nilaiSisa: d.nilaiSisa, beban: d.saldoBuku - d.nilaiSisa })),
     },
     riwayat: riwayat.map((o) => ({ no: o.no, periode: o.periodeId, totalBeban: o.totalBeban, status: o.status, jurnalNo: o.jurnal?.no ?? null, statusJurnal: o.jurnal?.status ?? null })),
+    /** Semua jurnal biaya perlengkapan (termasuk yang ditolak) beserta status persetujuannya. */
+    riwayatJurnal,
+    /** Jurnal yang mewakili periode ini (berjalan, atau penolakan terakhir). */
+    jurnalIni: jurnalPeriode(riwayatJurnal, periode),
   };
 }

@@ -175,6 +175,23 @@ export const DAFTAR_KELOMPOK: Record<KelompokMaster, JenisMaster[]> = {
   sdm: JENIS_MASTER.filter((j) => DEF_MASTER[j].kelompok === "sdm"),
 };
 
+/**
+ * Empat master yang membentuk gaji dan fee. Di Master SDM keempatnya tampil bersama di tab Struktur gaji, tetapi
+ * tabelnya tetap terpisah (dipakai relasi slip, setting gaji, dan penugasan event) dan izinnya tetap per jenis.
+ */
+export const JENIS_STRUKTUR = ["jabatan", "jabatanEvent", "golongan", "tunjangan"] as const satisfies readonly JenisMaster[];
+export type JenisStruktur = (typeof JENIS_STRUKTUR)[number];
+export const termasukStruktur = (j: string): j is JenisStruktur => (JENIS_STRUKTUR as readonly string[]).includes(j);
+
+/** Tab Master SDM, urut tampil. Tautan lama ?tab=jabatan, jabatanEvent, golongan, tunjangan dialihkan ke tab struktur. */
+export const TAB_SDM = [
+  { tab: "karyawan", label: "Karyawan" },
+  { tab: "struktur", label: "Struktur gaji" },
+  { tab: "jadwal", label: "Jadwal kerja" },
+  { tab: "setgaji", label: "Setting gaji" },
+] as const;
+export type TabSdm = (typeof TAB_SDM)[number]["tab"];
+
 const MAKS_RUPIAH = 2_000_000_000;
 const POLA_JAM = /^([01]\d|2[0-3]):[0-5]\d$/;
 const POLA_KODE_AKUN = /^[0-9A-Za-z.\-]{1,20}$/;

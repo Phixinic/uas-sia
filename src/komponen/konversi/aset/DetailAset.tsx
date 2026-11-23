@@ -23,7 +23,9 @@ export default function DetailAset({ a, alamatTutup, bolehLepas }: { a: Aset; al
       {sub && <div className="text-[11px] text-slate-500">{sub}</div>}
     </div>
   );
-  const sudah = a.jadwal.filter((r) => r.jurnalNo).length;
+  // "Disetujui" hanya jurnal yang sudah diputuskan Owner; draf dan yang diajukan disebut terpisah.
+  const disetujui = a.jadwal.filter((r) => r.jurnalNo && r.statusJurnal === "DISETUJUI").length;
+  const menunggu = a.jadwal.filter((r) => r.jurnalNo && r.statusJurnal !== "DISETUJUI").length;
   return (
     <Kartu rapat>
       <KepalaKartu
@@ -63,7 +65,7 @@ Total = ${a.n - 1} × ${angka(a.d)} + ${angka(a.terakhir)} = ${angka((a.n - 1) *
         {a.jadwal.length > 0 ? (
           <details open className="rounded-lg border border-slate-200">
             <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-800">
-              Jadwal penyusutan ({a.jadwal.length} periode, {sudah} sudah dijurnal)
+              Jadwal penyusutan ({a.jadwal.length} periode, {disetujui} disetujui{menunggu ? `, ${menunggu} menunggu persetujuan` : ""})
             </summary>
             <div className="max-h-96 overflow-y-auto border-t border-slate-100">
               <Tabel label="Jadwal penyusutan">

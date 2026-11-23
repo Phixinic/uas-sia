@@ -1,11 +1,14 @@
 /*
  * Halaman Proses Penyusutan (komponen server). Satu jurnal penyesuaian per periode, dibuat dari baris jadwal
  * yang belum dijurnal. Periode lebih lama harus diproses dulu.
+ * Status persetujuan jurnal (Draf, Diajukan, Disetujui, Ditolak) dan tombol Ajukan, Setujui, Tolak tampil di sini juga,
+ * memakai aksi yang sama dengan halaman Jurnal Penyesuaian.
  */
 import Link from "next/link";
 import { wajibMasuk } from "@/lib/server/auth";
 import { boleh } from "@/lib/peran";
 import { petaAkun } from "@/lib/data/umum";
+import { LABEL_STATUS_PERSETUJUAN, rupiah } from "@/lib/format";
 import { dataPenyusutan, periodePenyusutan } from "@/lib/data/konversi/penyusutan";
 import { denganPeriode, labelBulanTahun, labelPeriode, periodeDariCari } from "@/lib/inti/tanggal";
 import LencanaPeriode from "@/komponen/ui/LencanaPeriode";
@@ -19,7 +22,7 @@ import Peringatan from "@/komponen/ui/Peringatan";
 import KeadaanKosong from "@/komponen/ui/KeadaanKosong";
 import TabelJurnal from "@/komponen/ui/TabelJurnal";
 import PemilihPeriode from "@/komponen/konversi/umum/PemilihPeriode";
-import TombolAjukanJurnal from "@/komponen/konversi/umum/TombolAjukanJurnal";
+import { PanelStatusJurnal, TabelRiwayatJurnal } from "@/komponen/konversi/umum/StatusJurnal";
 import TombolProses from "./TombolProses";
 import type { StatusPersetujuan } from "@/generated/prisma/enums";
 
@@ -30,7 +33,6 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
   const { periode, pilihan } = await periodePenyusutan(periodeDariCari(cari) ?? undefined);
   const [d, namaAkun] = await Promise.all([dataPenyusutan(periode), petaAkun()]);
   const bolehProses = boleh(pengguna.peran, "penyusutan.proses");
-  const bolehAjukan = boleh(pengguna.peran, "jurnal-penyesuaian.ajukan");
   const tertahan = d.periodeSebelumnyaBelum.length > 0 || d.terkunci;
 
   return (
@@ -44,8 +46,23 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <KartuRingkasan judul={`Aset disusutkan ${labelPeriode(periode)}`} nilai={String(d.baris.length)} bukanUang keterangan={`${d.belumDiproses} belum diproses`} nada={d.belumDiproses ? "kuning" : "netral"} />
-        <KartuRingkasan judul="Beban belum diproses" nilai={d.totalBelum} nada={d.totalBelum ? "kuning" : "hijau"} keterangan={d.totalBelum ? "Siap dibuatkan jurnal" : "Tidak ada yang tertunda"} />
-        <KartuRingkasan judul="Jurnal penyusutan" nilai={String(d.riwayat.length)} bukanUang keterangan={`${d.riwayat.filter((j) => j.status === "DISETUJUI").length} disetujui`} />
+        <KartuRingkasan
+          judul="Beban disetujui"
+          nilai={d.totalDisetujui}
+          nada={d.totalBeban && d.totalDisetujui === d.totalBeban ? "hijau" : d.totalBeban ? "kuning" : "netral"}
+          keterangan={
+            d.totalMenunggu ? `${rupiah(d.totalMenunggu)} masih draf atau diajukan`
+            : d.totalBelum ? `${rupiah(d.totalBelum)} belum diproses`
+            : d.totalBeban ? "Semua beban periode ini sudah disetujui" : "Tidak ada beban di periode ini"
+          }
+        />
+        <KartuRingkasan
+          judul={`Status jurnal ${labelPeriode(periode)}`}
+          nilai={d.jurnalIni ? LABEL_STATUS_PERSETUJUAN[d.jurnalIni.status] : "Belum diproses"}
+          bukanUang
+          nada={d.jurnalIni?.status === "DISETUJUI" ? "hijau" : d.jurnalIni?.status === "DITOLAK" ? "merah" : d.jurnalIni ? "kuning" : "netral"}
+          keterangan={d.jurnalIni ? `${d.jurnalIni.no}${d.jurnalIni.status === "DISETUJUI" ? ", sudah masuk buku besar" : d.jurnalIni.status === "DITOLAK" ? ", proses ulang" : ", belum masuk buku besar"}` : "Belum ada jurnal"}
+        />
       </div>
 
       {d.periodeSebelumnyaBelum.length > 0 && (
@@ -60,6 +77,8 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
           {d.penutup === periode ? `Periode ${labelPeriode(periode)} terkunci` : `Periode ${labelPeriode(periode)} tertutup karena ${labelPeriode(d.penutup)} sudah dikunci`}. Minta Owner membuka kunci sebelum memproses.
         </Peringatan>
       )}
+
+      {d.jurnalIni && <PanelStatusJurnal judul={`Jurnal penyusutan ${labelPeriode(periode)}`} j={d.jurnalIni} sumber="penyusutan" penggunaId={pengguna.id} peran={pengguna.peran} />}
 
       <Kartu rapat>
         <KepalaKartu judul={`Pratinjau · ${labelBulanTahun(periode)}`} keterangan={`${d.baris.length} aset, ${d.belumDiproses} belum diproses`} />
@@ -133,40 +152,16 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
         </Kartu>
       )}
 
-      <Kartu rapat>
-        <KepalaKartu judul="Riwayat proses" keterangan={`${d.riwayat.length} jurnal`} />
-        {d.riwayat.length === 0 ? (
-          <KeadaanKosong judul="Belum ada jurnal penyusutan" />
-        ) : (
-          <Tabel label="Riwayat proses penyusutan">
-            <thead>
-              <tr>
-                <th>Jurnal</th>
-                <th>Periode</th>
-                <th className="kolom-angka">Aset</th>
-                <th className="kolom-angka">Total (Rp)</th>
-                <th>Status</th>
-                <th className="text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {d.riwayat.map((j) => (
-                <tr key={j.no}>
-                  <td className="kode">{j.no}</td>
-                  <td><Link className="hover:underline" href={denganPeriode(ALAMAT, j.periode)}>{labelPeriode(j.periode)}</Link></td>
-                  <td className="kolom-angka">{j.jumlahAset}</td>
-                  <td className="kolom-angka"><Rupiah nilai={j.total} polos /></td>
-                  <td>
-                    <LencanaStatus jenis="persetujuan" status={j.status} />
-                    {j.alasanTolak && <div className="mt-0.5 text-[11px] text-rose-600">{j.alasanTolak}</div>}
-                  </td>
-                  <td><div className="flex justify-end">{j.status === "DRAFT" && bolehAjukan && <TombolAjukanJurnal no={j.no} varian="garis" />}</div></td>
-                </tr>
-              ))}
-            </tbody>
-          </Tabel>
-        )}
-      </Kartu>
+      <TabelRiwayatJurnal
+        judul="Riwayat proses dan persetujuan"
+        riwayat={d.riwayat}
+        sumber="penyusutan"
+        alamat={ALAMAT}
+        penggunaId={pengguna.id}
+        peran={pengguna.peran}
+        tombolDiAtas={d.jurnalIni?.no}
+        kolomTambahan={{ judul: "Aset", isi: (j) => (j.status === "DITOLAK" ? "-" : (d.jumlahAset[j.no] ?? 0)) }}
+      />
     </>
   );
 }

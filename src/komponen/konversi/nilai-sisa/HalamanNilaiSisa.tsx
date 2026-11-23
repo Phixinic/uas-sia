@@ -1,6 +1,7 @@
 /*
  * Halaman Nilai Sisa Perlengkapan (komponen server). Periode ada di query string (?periode=YYYY-MM).
- * Ringkasan di atas, hitung fisik atau hasil input di tengah, riwayat di bawah.
+ * Ringkasan di atas, status jurnal periode ini (dengan tombol Ajukan, Setujui, Tolak yang sama dengan halaman
+ * Jurnal Penyesuaian), hitung fisik atau hasil input di tengah, riwayat jurnal di bawah.
  */
 import { wajibMasuk } from "@/lib/server/auth";
 import { boleh } from "@/lib/peran";
@@ -14,11 +15,12 @@ import KartuRingkasan from "@/komponen/ui/KartuRingkasan";
 import Tabel from "@/komponen/ui/Tabel";
 import Rupiah from "@/komponen/ui/Rupiah";
 import { LencanaStatus } from "@/komponen/ui/Lencana";
+import { LABEL_STATUS_PERSETUJUAN } from "@/lib/format";
 import Peringatan from "@/komponen/ui/Peringatan";
 import KeadaanKosong from "@/komponen/ui/KeadaanKosong";
 import TabelJurnal from "@/komponen/ui/TabelJurnal";
 import PemilihPeriode from "@/komponen/konversi/umum/PemilihPeriode";
-import TombolAjukanJurnal from "@/komponen/konversi/umum/TombolAjukanJurnal";
+import { PanelStatusJurnal, TabelRiwayatJurnal } from "@/komponen/konversi/umum/StatusJurnal";
 import FormNilaiSisa from "./FormNilaiSisa";
 
 export default async function HalamanNilaiSisa({ cari }: { cari: { periode?: string; bulan?: string; tahun?: string } }) {
@@ -26,13 +28,13 @@ export default async function HalamanNilaiSisa({ cari }: { cari: { periode?: str
   const { periode, pilihan } = await periodeNilaiSisa(periodeDariCari(cari) ?? undefined);
   const [d, namaAkun, terkunci] = await Promise.all([dataNilaiSisa(periode), petaAkun(), periodeTerkunciSemua()]);
   const bolehInput = boleh(pengguna.peran, "nilai-sisa.input");
-  const bolehAjukan = boleh(pengguna.peran, "jurnal-penyesuaian.ajukan");
   const o = d.opname && d.opname.status !== "DITOLAK" ? d.opname : null;
   const ditolak = d.opname?.status === "DITOLAK" ? d.opname : null;
   // Tertutup bila periode ini atau periode sesudahnya sudah dikunci (kunci berurutan).
   const penutup = kunciPenutup(periode, terkunci);
   const periodeTerkunci = penutup !== null;
   const totalSaldo = d.baris.reduce((s, b) => s + b.saldoBuku, 0);
+  const tanpaJurnal = d.riwayat.filter((r) => !r.jurnalNo && r.status === "DISETUJUI");
 
   return (
     <>
@@ -48,10 +50,14 @@ export default async function HalamanNilaiSisa({ cari }: { cari: { periode?: str
         <KartuRingkasan judul="Biaya perlengkapan" nilai={o ? o.totalBeban : "Belum diinput"} nada={o ? "hijau" : "kuning"} keterangan={o ? `Opname ${o.no}` : "Isi hasil hitung fisik di bawah"} />
         <KartuRingkasan
           judul="Status jurnal"
-          nilai={o ? (o.jurnal ? { DRAFT: "Draf", DIAJUKAN: "Diajukan", DISETUJUI: "Disetujui", DITOLAK: "Ditolak" }[o.jurnal.status] : "Tanpa jurnal") : "-"}
+          nilai={o ? (o.jurnal ? LABEL_STATUS_PERSETUJUAN[o.jurnal.status] : "Tanpa jurnal") : ditolak ? "Ditolak" : "-"}
           bukanUang
-          nada={o?.jurnal?.status === "DISETUJUI" ? "hijau" : o?.jurnal ? "kuning" : "netral"}
-          keterangan={o?.jurnal ? o.jurnal.no : o ? "Biaya 0, tidak perlu jurnal" : undefined}
+          nada={o?.jurnal?.status === "DISETUJUI" ? "hijau" : o?.jurnal ? "kuning" : ditolak ? "merah" : "netral"}
+          keterangan={
+            o?.jurnal ? `${o.jurnal.no}${o.jurnal.status === "DISETUJUI" ? ", sudah masuk buku besar" : ", belum masuk buku besar"}`
+            : o ? "Biaya 0, tidak perlu jurnal"
+            : ditolak ? "Input ulang di bawah" : undefined
+          }
         />
       </div>
 
@@ -60,14 +66,14 @@ export default async function HalamanNilaiSisa({ cari }: { cari: { periode?: str
           {penutup === periode ? `Periode ${labelPeriode(periode)} sudah dikunci` : `Periode ${labelPeriode(periode)} tertutup karena ${labelPeriode(penutup)} sudah dikunci`}, jadi nilai sisanya tidak bisa diinput. Minta Owner membuka kunci dulu.
         </Peringatan>
       )}
-      {ditolak && <Peringatan jenis="galat">Input sebelumnya ditolak{ditolak.alasanTolak ? `: ${ditolak.alasanTolak}` : ""}. Silakan input ulang.</Peringatan>}
+      {d.jurnalIni && <PanelStatusJurnal judul={`Jurnal biaya perlengkapan ${labelPeriode(periode)}`} j={d.jurnalIni} sumber="opname" penggunaId={pengguna.id} peran={pengguna.peran} />}
+      {ditolak && !d.jurnalIni && <Peringatan jenis="galat">Input sebelumnya ditolak{ditolak.alasanTolak ? `: ${ditolak.alasanTolak}` : ""}. Silakan input ulang.</Peringatan>}
 
       {o ? (
         <Kartu rapat>
           <KepalaKartu
             judul={<span className="flex flex-wrap items-center gap-2">Nilai sisa {labelPeriode(periode)} sudah diinput <LencanaStatus jenis="persetujuan" status={o.status} /></span>}
             keterangan={`Diinput oleh ${o.dibuatOleh}. Bila jurnalnya ditolak Owner, form ini terbuka lagi untuk diinput ulang.`}
-            aksi={o.jurnal?.status === "DRAFT" && bolehAjukan ? <TombolAjukanJurnal no={o.jurnal.no} /> : null}
           />
           <Tabel label="Hasil input nilai sisa">
             <thead>
@@ -112,33 +118,20 @@ export default async function HalamanNilaiSisa({ cari }: { cari: { periode?: str
         <FormNilaiSisa key={periode} periode={periode} baris={d.baris} bolehInput={bolehInput} namaAkun={namaAkun} />
       )}
 
-      <Kartu rapat>
-        <KepalaKartu judul="Riwayat input" keterangan={`${d.riwayat.length} periode`} />
-        {d.riwayat.length === 0 ? (
-          <KeadaanKosong judul="Belum ada input nilai sisa" />
-        ) : (
-          <Tabel label="Riwayat input nilai sisa">
-            <thead>
-              <tr>
-                <th>Periode</th>
-                <th className="kolom-angka">Biaya (Rp)</th>
-                <th>Jurnal</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {d.riwayat.map((r) => (
-                <tr key={r.no}>
-                  <td>{labelPeriode(r.periode)}</td>
-                  <td className="kolom-angka"><Rupiah nilai={r.totalBeban} polos /></td>
-                  <td className="kode">{r.jurnalNo ?? "-"}</td>
-                  <td><LencanaStatus jenis="persetujuan" status={r.status} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </Tabel>
-        )}
-      </Kartu>
+      <TabelRiwayatJurnal
+        judul="Riwayat jurnal dan persetujuan"
+        riwayat={d.riwayatJurnal}
+        sumber="opname"
+        alamat="/konversi/nilai-sisa"
+        penggunaId={pengguna.id}
+        peran={pengguna.peran}
+        tombolDiAtas={d.jurnalIni?.no}
+      />
+      {tanpaJurnal.length > 0 && (
+        <p className="teks-redup">
+          Periode tanpa biaya perlengkapan (langsung berlaku tanpa jurnal): {tanpaJurnal.map((r) => labelPeriode(r.periode)).join(", ")}.
+        </p>
+      )}
     </>
   );
 }

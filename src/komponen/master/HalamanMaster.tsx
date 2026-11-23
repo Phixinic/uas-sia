@@ -2,6 +2,8 @@
  * Halaman Master Konversi dan Master SDM (komponen server). Satu komponen untuk dua kelompok:
  * tab jenis master, daftar, form tambah/ubah, dan (Master Konversi) profil usaha.
  * Keadaan di URL: ?tab=<jenis>&form=baru | ?form=<kode>.
+ * Master SDM punya tab Struktur gaji (jabatan, jabatan event, golongan, tunjangan dalam satu halaman, lihat
+ * BagianStrukturGaji); tautan lama ke tab keempat jenis itu dialihkan ke sana.
  */
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -10,7 +12,7 @@ import { wajibMasuk } from "@/lib/server/auth";
 import { boleh, LABEL_PERAN } from "@/lib/peran";
 import { profilUsaha } from "@/lib/data/umum";
 import { daftarMaster, opsiMaster } from "@/lib/data/master/master";
-import { DAFTAR_KELOMPOK, DEF_MASTER, type JenisMaster, type KelompokMaster } from "@/lib/skema/master";
+import { DAFTAR_KELOMPOK, DEF_MASTER, TAB_SDM, termasukStruktur, type JenisMaster, type KelompokMaster } from "@/lib/skema/master";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
 import Tabel from "@/komponen/ui/Tabel";
@@ -22,10 +24,44 @@ import FormMaster from "./FormMaster";
 import AksiMaster from "./AksiMaster";
 import FormProfil from "./FormProfil";
 import { ALAMAT_SETTING_GAJI } from "./HalamanSettingGaji";
+import BagianStrukturGaji, { ALAMAT_STRUKTUR, alamatBagian } from "./BagianStrukturGaji";
 
-export default async function HalamanMaster({ kelompok, cari }: { kelompok: KelompokMaster; cari: { tab?: string; form?: string; karyawan?: string } }) {
+/** Tab navigasi: Master Konversi per jenis master, Master SDM menurut TAB_SDM. */
+function NavMaster({ kelompok, aktif }: { kelompok: KelompokMaster; aktif: string }) {
+  const daftar =
+    kelompok === "sdm"
+      ? TAB_SDM.map((t) => ({ kunci: t.tab as string, label: t.label as string, href: t.tab === "setgaji" ? ALAMAT_SETTING_GAJI : t.tab === "struktur" ? ALAMAT_STRUKTUR : `/master/sdm?tab=${t.tab}` }))
+      : DAFTAR_KELOMPOK.konversi.map((j) => ({ kunci: j as string, label: DEF_MASTER[j].label, href: `/master/konversi?tab=${j}` }));
+  return (
+    <nav className="flex flex-wrap gap-2" aria-label="Jenis master">
+      {daftar.map((t) => (
+        <Link key={t.kunci} href={t.href} aria-current={t.kunci === aktif ? "page" : undefined} className={`tombol tombol-kecil ${t.kunci === aktif ? "tombol-gelap" : "tombol-garis"}`}>
+          {t.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+export default async function HalamanMaster({ kelompok, cari }: { kelompok: KelompokMaster; cari: { tab?: string; form?: string; karyawan?: string; jenis?: string } }) {
   const pengguna = await wajibMasuk();
-  const jenisAda = DAFTAR_KELOMPOK[kelompok];
+  if (kelompok === "sdm" && cari.tab) {
+    // Jabatan, jabatan event, golongan, dan tunjangan sekarang satu tab; tautan lama (termasuk ?form=) tetap berfungsi.
+    if (termasukStruktur(cari.tab)) redirect(alamatBagian(cari.tab, cari.form));
+    if (cari.tab === "struktur") {
+      return (
+        <>
+          <KepalaHalaman
+            judul="Master SDM"
+            keterangan="Struktur gaji menyatukan jabatan inhouse, jabatan event, golongan (gaji pokok), dan tunjangan lain di satu halaman. Data master tidak pernah dihapus, hanya dinonaktifkan oleh Owner."
+          />
+          <NavMaster kelompok="sdm" aktif="struktur" />
+          <BagianStrukturGaji peran={pengguna.peran} cari={cari} />
+        </>
+      );
+    }
+  }
+  const jenisAda = kelompok === "sdm" ? DAFTAR_KELOMPOK.sdm.filter((j) => !termasukStruktur(j)) : DAFTAR_KELOMPOK[kelompok];
   const jenis: JenisMaster = jenisAda.find((j) => j === cari.tab) ?? jenisAda[0];
   // Setting gaji punya halaman sendiri (riwayat versi dan persetujuan Owner); tautan lama tab ini dialihkan ke sana.
   if (jenis === "setgaji") {
@@ -63,13 +99,7 @@ export default async function HalamanMaster({ kelompok, cari }: { kelompok: Kelo
         aksi={bolehUbah && !form ? <TautanTombol href={`${alamatDaftar}&form=baru`} varian="utama" ikon={<Plus className="size-4" />}>{def.label} baru</TautanTombol> : null}
       />
 
-      <nav className="flex flex-wrap gap-2" aria-label="Jenis master">
-        {jenisAda.map((j) => (
-          <Link key={j} href={j === "setgaji" ? ALAMAT_SETTING_GAJI : `${dasar}?tab=${j}`} aria-current={j === jenis ? "page" : undefined} className={`tombol tombol-kecil ${j === jenis ? "tombol-gelap" : "tombol-garis"}`}>
-            {DEF_MASTER[j].label}
-          </Link>
-        ))}
-      </nav>
+      <NavMaster kelompok={kelompok} aktif={jenis} />
 
       {!bolehUbah && <Peringatan>Peran {LABEL_PERAN[pengguna.peran]} hanya bisa melihat {def.label.toLowerCase()}. Yang boleh mengubah: {def.izin === "master.akun-kategori" || def.izin === "tarif-event.ubah" ? "Owner" : kunciMaster}.</Peringatan>}
       {form}

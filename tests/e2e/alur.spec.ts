@@ -267,7 +267,7 @@ test("3a. Admin input nilai sisa November", async () => {
   await isiNilaiSisa(sesi.admin.page, 0.5);
 });
 
-test("3b. Admin proses penyusutan November", async () => {
+test("3b. Admin proses penyusutan November lalu mengajukannya dari halaman Proses Penyusutan", async () => {
   const p = sesi.admin.page;
   await bukaHalaman(p, "/konversi/penyusutan?periode=2026-11");
   await expect(p.getByText("11 belum diproses").first()).toBeVisible();
@@ -276,20 +276,68 @@ test("3b. Admin proses penyusutan November", async () => {
   await konfirmasi(p);
   await expect(p.getByText(/Riwayat proses/)).toBeVisible();
   await expect(baris(p, "November 2026").filter({ hasText: "Draf" })).toBeVisible();
+  // Panel status periode ini: Draf, belum masuk buku besar, tombol Ajukan untuk Admin.
+  const panel = p.getByRole("region", { name: "Jurnal penyusutan November 2026" });
+  await expect(panel).toContainText("Draf");
+  await expect(panel).toContainText("Belum masuk buku besar");
+  await expect(panel.getByRole("button", { name: "Setujui" })).toHaveCount(0);
+  await panel.getByRole("button", { name: "Ajukan ke Owner" }).click();
+  await konfirmasi(p);
+  await expect(panel).toContainText("Diajukan");
+  await expect(panel).toContainText("Menunggu keputusan Owner");
+  // Admin tidak punya tombol keputusan; kartu ringkasan tidak menyebut beban ini sebagai disetujui.
+  await expect(p.getByRole("button", { name: "Setujui" })).toHaveCount(0);
+  await expect(p.getByRole("button", { name: "Tolak" })).toHaveCount(0);
+  await expect(p.getByText("Status jurnal November 2026").locator("..").locator("..")).toContainText("Diajukan");
 });
 
-test("3c. Admin mengajukan kedua jurnal penyesuaian ke Owner", async () => {
+test("3b2. Owner menolak penyusutan di halamannya (alasan wajib), Admin memproses ulang, Owner menyetujui", async () => {
+  const po = sesi.owner.page;
+  await bukaHalaman(po, "/konversi/penyusutan?periode=2026-11");
+  const panel = po.getByRole("region", { name: "Jurnal penyusutan November 2026" });
+  await expect(panel).toContainText("Diajukan");
+  await expect(panel.getByRole("button", { name: "Setujui" })).toBeVisible();
+  await panel.getByRole("button", { name: "Tolak" }).click();
+  await expect(po.getByRole("dialog").locator('button[type="submit"]')).toBeDisabled();
+  await konfirmasi(po, "Beban AST-0002 perlu dicek ulang");
+  await expect(panel).toContainText("Ditolak");
+  await expect(panel).toContainText("Beban AST-0002 perlu dicek ulang");
+  await expect(panel).toContainText("Ditolak Owner D'Production");
+  await expect(baris(po, "November 2026").filter({ hasText: "Ditolak" })).toContainText("Beban AST-0002 perlu dicek ulang");
+
+  // Jadwal dibuka lagi: Admin melihat alasan dan bisa memproses ulang.
+  const pa = sesi.admin.page;
+  await bukaHalaman(pa, "/konversi/penyusutan?periode=2026-11");
+  await expect(pa.getByRole("region", { name: "Jurnal penyusutan November 2026" })).toContainText("Beban AST-0002 perlu dicek ulang");
+  await expect(pa.getByText("11 belum diproses").first()).toBeVisible();
+  await pa.getByRole("button", { name: "Buat jurnal penyusutan" }).click();
+  await konfirmasi(pa);
+  const panelA = pa.getByRole("region", { name: "Jurnal penyusutan November 2026" });
+  await expect(panelA).toContainText("Draf");
+  await panelA.getByRole("button", { name: "Ajukan ke Owner" }).click();
+  await konfirmasi(pa);
+  await expect(panelA).toContainText("Diajukan");
+
+  await bukaHalaman(po, "/konversi/penyusutan?periode=2026-11");
+  await panel.getByRole("button", { name: "Setujui" }).click();
+  await konfirmasi(po);
+  await expect(panel).toContainText("Disetujui");
+  await expect(panel).toContainText("Sudah masuk buku besar");
+  // Riwayat periode ini: satu ditolak (dengan alasan) dan satu disetujui.
+  await expect(baris(po, "November 2026").filter({ hasText: "Ditolak" })).toHaveCount(1);
+  await expect(baris(po, "November 2026").filter({ hasText: "Disetujui" })).toHaveCount(1);
+});
+
+test("3c. Admin mengajukan jurnal nilai sisa ke Owner dari menu Jurnal Penyesuaian", async () => {
   const p = sesi.admin.page;
   await bukaHalaman(p, "/pelaporan/jurnal-penyesuaian?status=DRAFT");
-  await expect(p.getByRole("button", { name: "Ajukan ke Owner" })).toHaveCount(2);
-  for (let i = 0; i < 2; i++) {
-    await p.getByRole("button", { name: "Ajukan ke Owner" }).first().click();
-    await konfirmasi(p);
-    await expect(p.getByRole("button", { name: "Ajukan ke Owner" })).toHaveCount(1 - i);
-  }
+  await expect(p.getByRole("button", { name: "Ajukan ke Owner" })).toHaveCount(1);
+  await p.getByRole("button", { name: "Ajukan ke Owner" }).first().click();
+  await konfirmasi(p);
+  await expect(p.getByRole("button", { name: "Ajukan ke Owner" })).toHaveCount(0);
 });
 
-test("3d. Owner menolak jurnal nilai sisa (alasan wajib) dan menyetujui jurnal penyusutan", async () => {
+test("3d. Owner menolak jurnal nilai sisa (alasan wajib) di menu Jurnal Penyesuaian", async () => {
   const p = sesi.owner.page;
   await bukaHalaman(p, "/pelaporan/jurnal-penyesuaian?status=DIAJUKAN");
   const opname = kartu(p, "Biaya perlengkapan November 2026");
@@ -297,11 +345,13 @@ test("3d. Owner menolak jurnal nilai sisa (alasan wajib) dan menyetujui jurnal p
   // Alasan kosong tidak bisa dikirim.
   await expect(p.getByRole("dialog").locator('button[type="submit"]')).toBeDisabled();
   await konfirmasi(p, "Hasil hitung fisik terlalu rendah, hitung ulang");
-  const susut = kartu(p, "Penyusutan peralatan November 2026");
-  await susut.getByRole("button", { name: "Setujui" }).click();
-  await konfirmasi(p);
   await bukaHalaman(p, "/pelaporan/jurnal-penyesuaian?status=DITOLAK");
   await expect(p.getByText("Hasil hitung fisik terlalu rendah")).toBeVisible();
+  // Alasan yang sama terbaca di halaman Nilai Sisa beserta status Ditolak.
+  await bukaHalaman(p, "/konversi/nilai-sisa?periode=2026-11");
+  const panel = p.getByRole("region", { name: "Jurnal biaya perlengkapan November 2026" });
+  await expect(panel).toContainText("Ditolak");
+  await expect(panel).toContainText("Hasil hitung fisik terlalu rendah");
 });
 
 test("3e. Admin input ulang nilai sisa, lalu Owner menyetujui jurnalnya", async () => {
@@ -587,6 +637,12 @@ const TAB_MASTER: DefTab[] = [
   },
 ];
 
+/** Jabatan, golongan, dan tunjangan ada di tab Struktur gaji Master SDM; jenis lain tetap satu tab per jenis. */
+const alamatMaster = (t: { kel: string; tab: string }, baru: boolean) =>
+  ["jabatan", "jabatanEvent", "golongan", "tunjangan"].includes(t.tab)
+    ? `/master/sdm?tab=struktur&jenis=${t.tab}${baru ? "&form=baru" : ""}`
+    : `/master/${t.kel}?tab=${t.tab}${baru ? "&form=baru" : ""}`;
+
 test("7a. Form master dikirim kosong: pesan Indonesia, isian salah pertama difokuskan dan menunjuk pesannya", async () => {
   const p = sesi.owner.page;
   await bukaHalaman(p, "/master/konversi?tab=supplier&form=baru");
@@ -603,7 +659,7 @@ test("7a. Form master dikirim kosong: pesan Indonesia, isian salah pertama difok
 for (const t of TAB_MASTER) {
   test(`7. Master ${t.kel}/${t.label}: Owner tambah${t.nanti ? "" : " lalu nonaktifkan"} satu data`, async () => {
     const p = sesi.owner.page;
-    await bukaHalaman(p, `/master/${t.kel}?tab=${t.tab}&form=baru`);
+    await bukaHalaman(p, alamatMaster(t, true));
     const form = p.getByRole("form", { name: `Form ${t.label}` });
     await expect(form).toBeVisible();
     await t.isi(form);
@@ -650,7 +706,7 @@ test("7. Setting gaji: Owner mengajukan setting awal Karyawan Uji E2E lalu menye
 for (const t of TAB_MASTER.filter((x) => x.nanti)) {
   test(`7. Master ${t.kel}/${t.label}: Owner menonaktifkan data uji`, async () => {
     const p = sesi.owner.page;
-    await bukaHalaman(p, `/master/${t.kel}?tab=${t.tab}`);
+    await bukaHalaman(p, alamatMaster(t, false));
     await nonaktifkan(p, t.cari);
   });
 }

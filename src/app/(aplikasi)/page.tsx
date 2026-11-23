@@ -54,13 +54,16 @@ const TAUTAN_LAPORAN: Tautan[] = [
 ];
 
 
-/** Keterangan kartu penyusutan: angka disetujui berasal dari jurnal penyusutan yang disetujui. */
-function ketPenyusutan(s: { jadwal: number; disetujui: number; unit: number }) {
-  const sisa = Math.max(s.jadwal - s.disetujui, 0);
-  if (!s.unit && !s.disetujui) return "Tidak ada jadwal di periode ini";
-  if (s.disetujui && !sisa) return "Dari jurnal penyusutan yang disetujui";
-  if (s.disetujui) return `Dari jurnal yang disetujui; ${rupiah(sisa)} lagi belum disetujui`;
-  return `Jadwal ${s.unit} unit, belum dijurnal atau belum disetujui`;
+/**
+ * Keterangan kartu penyusutan. Angka kartu hanya jurnal penyusutan yang DISETUJUI; draf dan yang menunggu Owner
+ * disebut terpisah di keterangan supaya tidak terbaca sebagai beban yang sudah berlaku.
+ */
+function ketPenyusutan(s: { jadwal: number; disetujui: number; menunggu: number; unit: number }) {
+  const belum = Math.max(s.jadwal - s.disetujui - s.menunggu, 0);
+  if (!s.unit && !s.disetujui && !s.menunggu) return "Tidak ada jadwal di periode ini";
+  const sisa = [s.menunggu ? `${rupiah(s.menunggu)} menunggu persetujuan` : "", belum ? `${rupiah(belum)} belum diproses` : ""].filter(Boolean).join(", ");
+  if (!sisa) return "Dari jurnal penyusutan yang disetujui";
+  return s.disetujui ? `Disetujui; ${sisa}` : `Belum ada yang disetujui; ${sisa}`;
 }
 
 export default async function Dashboard({ searchParams }: { searchParams: Promise<{ periode?: string; bulan?: string; tahun?: string }> }) {
@@ -89,8 +92,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         <KartuRingkasan judul="Saldo kas" nilai={d.kas} ikon={<Banknote className="size-4" />} keterangan={`Menurut buku besar sampai akhir ${labelPeriode(periode)}`} nada="hijau" />
         <KartuRingkasan judul="Total aset bersih" nilai={d.totalAset} ikon={<IdCard className="size-4" />} keterangan="Aset dikurangi akumulasi penyusutan" />
         <KartuRingkasan
-          judul="Beban penyusutan bulan ini"
-          nilai={d.susut.disetujui || d.susut.jadwal}
+          judul="Beban penyusutan disetujui"
+          nilai={d.susut.disetujui}
           ikon={<TrendingDown className="size-4" />}
           keterangan={ketPenyusutan(d.susut)}
         />

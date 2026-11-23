@@ -4,6 +4,7 @@
 import { db } from "@/lib/server/db";
 import { daftarPeriode, periodeIni } from "@/lib/inti/tanggal";
 import { barisPenyusutan } from "@/lib/inti/jurnal";
+import { jurnalPeriode, riwayatJurnalSumber } from "./persetujuan";
 
 export async function periodePenyusutan(dipilih?: string) {
   const sekarang = periodeIni();
@@ -28,11 +29,7 @@ export async function dataPenyusutan(periode: string) {
       include: { aset: { select: { nama: true, n: true, status: true, akunBebanKode: true, akunAkumulasiKode: true } }, jurnal: { select: { status: true } } },
     }),
     db.jadwalPenyusutan.findMany({ where: { periodeId: { lt: periode }, jurnalNo: null, aset: { status: "AKTIF" } }, distinct: ["periodeId"], orderBy: { periodeId: "asc" }, select: { periodeId: true } }),
-    db.jurnal.findMany({
-      where: { sumberTipe: "PENYUSUTAN" },
-      orderBy: [{ periodeId: "desc" }, { no: "desc" }],
-      select: { no: true, periodeId: true, status: true, alasanTolak: true, detail: { select: { debit: true } }, _count: { select: { jadwalPenyusutan: true } } },
-    }),
+    riwayatJurnalSumber("PENYUSUTAN"),
     // Tertutup bila periode ini atau periode sesudahnya terkunci (kunci berurutan).
     db.periode.findFirst({ where: { id: { gte: periode }, status: "TERKUNCI" }, orderBy: { id: "asc" }, select: { id: true } }),
   ]);
@@ -49,6 +46,10 @@ export async function dataPenyusutan(periode: string) {
     statusJurnal: r.jurnal?.status ?? null,
   }));
   const belum = jadwal.filter((r) => !r.jurnalNo);
+  // Jumlah aset per jurnal dari jadwal yang menunjuknya. Jurnal ditolak sudah melepas jadwalnya, jadi tidak punya angka.
+  const asetPerJurnal = await db.jadwalPenyusutan.groupBy({ by: ["jurnalNo"], where: { jurnalNo: { in: riwayat.map((j) => j.no) } }, _count: true });
+  const jumlahAset = Object.fromEntries(asetPerJurnal.map((g) => [g.jurnalNo!, g._count]));
+  const bebanStatus = (cocok: (s: string | null) => boolean) => jadwal.filter((r) => r.jurnalNo && cocok(r.jurnal?.status ?? null)).reduce((s, r) => s + r.beban, 0);
   return {
     baris,
     totalBeban: jadwal.reduce((s, r) => s + r.beban, 0),
@@ -58,6 +59,12 @@ export async function dataPenyusutan(periode: string) {
     periodeSebelumnyaBelum: sebelumnya.map((x) => x.periodeId),
     terkunci: !!terkunci,
     penutup: terkunci?.id ?? null,
-    riwayat: riwayat.map((j) => ({ no: j.no, periode: j.periodeId, status: j.status, alasanTolak: j.alasanTolak, total: j.detail.reduce((s, d) => s + d.debit, 0), jumlahAset: j._count.jadwalPenyusutan })),
+    /** Beban periode ini yang jurnalnya sudah disetujui, dan yang sudah dijurnal tetapi masih draf atau diajukan. */
+    totalDisetujui: bebanStatus((s) => s === "DISETUJUI"),
+    totalMenunggu: bebanStatus((s) => s === "DRAFT" || s === "DIAJUKAN"),
+    riwayat,
+    jumlahAset,
+    /** Jurnal yang mewakili periode ini (berjalan, atau penolakan terakhir). */
+    jurnalIni: jurnalPeriode(riwayat, periode),
   };
 }

@@ -1,0 +1,154 @@
+/*
+ * Uji E2E tab Struktur gaji (Master SDM) dan potret halaman status persetujuan penyusutan dan nilai sisa.
+ * - Tautan lama ?tab=jabatan, jabatanEvent, golongan, tunjangan dialihkan ke tab Struktur gaji.
+ * - HRD mengubah golongan (gaji pokok); jabatan event hanya bisa dilihat. Owner mengubah tarif jabatan event.
+ * - Admin hanya melihat.
+ * Dijalankan sesudah alur.spec.ts (urutan nama berkas), jadi penyusutan November sudah punya jurnal ditolak dan
+ * disetujui. Potret 1440 dan 390 disimpan di E2E_POTRET (bawaan /tmp/sia-e2e/struktur-gaji).
+ */
+import fs from "node:fs";
+import { expect, test, type Browser, type BrowserContext, type Page } from "@playwright/test";
+
+const BASE = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${process.env.E2E_PORT ?? 3200}`;
+const POTRET = process.env.E2E_POTRET ?? "/tmp/sia-e2e/struktur-gaji";
+const galatKonsol: string[] = [];
+
+type Sesi = { ctx: BrowserContext; page: Page };
+const sesi: Record<"admin" | "hrd" | "owner", Sesi> = {} as never;
+
+async function bukaSesi(browser: Browser, nama: string, sandi: string): Promise<Sesi> {
+  const ctx = await browser.newContext({ baseURL: BASE, locale: "id-ID", timezoneId: "Asia/Jakarta", viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  page.on("pageerror", (e) => galatKonsol.push(`[${nama}] pageerror ${e.message}`));
+  page.on("console", (m) => {
+    if (m.type() === "error" && !/favicon|Failed to load resource/.test(m.text())) galatKonsol.push(`[${nama}] ${page.url()} ${m.text().slice(0, 200)}`);
+  });
+  await page.goto("/masuk");
+  await page.getByLabel("Nama pengguna").fill(nama);
+  await page.getByLabel("Kata sandi").fill(sandi);
+  await page.getByRole("button", { name: "Masuk" }).click();
+  await page.waitForURL((u) => !u.pathname.startsWith("/masuk"));
+  return { ctx, page };
+}
+
+async function buka(p: Page, alamat: string) {
+  await p.goto(alamat);
+  await expect(p.locator("main h1").first()).toBeVisible();
+  await p.waitForLoadState("networkidle");
+}
+
+/** Potret 1440 dan 390. Di 390 halaman tidak boleh melebar (scrollWidth <= 390); tabel lebar menggulir di pembungkusnya. */
+async function potret(p: Page, nama: string) {
+  fs.mkdirSync(POTRET, { recursive: true });
+  for (const lebar of [1440, 390]) {
+    await p.setViewportSize({ width: lebar, height: lebar === 390 ? 844 : 900 });
+    await p.waitForLoadState("networkidle");
+    await p.waitForTimeout(500);
+    const lebih = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(lebih, `${nama} melebar ${lebih}px di ${lebar}`).toBeLessThanOrEqual(1);
+    if (lebar === 390) expect(await p.evaluate(() => document.documentElement.scrollWidth), `${nama} scrollWidth di 390`).toBeLessThanOrEqual(390);
+    await p.screenshot({ path: `${POTRET}/${nama}-${lebar}.png`, fullPage: true });
+  }
+  await p.setViewportSize({ width: 1440, height: 900 });
+}
+
+const bagian = (p: Page, judul: string) => p.getByRole("region", { name: judul, exact: true });
+
+test.describe.configure({ mode: "serial" });
+
+test.beforeAll(async ({ browser }) => {
+  sesi.admin = await bukaSesi(browser, "admin", "admin123");
+  sesi.hrd = await bukaSesi(browser, "hrd", "hrd12345");
+  sesi.owner = await bukaSesi(browser, "owner", "owner123");
+});
+
+test.afterAll(async () => {
+  for (const s of Object.values(sesi)) await s.ctx.close();
+  if (galatKonsol.length) console.log("Galat konsol:\n" + galatKonsol.join("\n"));
+});
+
+test("navigasi Master SDM: empat tab, tautan lama dialihkan ke Struktur gaji", async () => {
+  const p = sesi.owner.page;
+  await buka(p, "/master/sdm");
+  const nav = p.getByRole("navigation", { name: "Jenis master" });
+  await expect(nav.getByRole("link")).toHaveText(["Karyawan", "Struktur gaji", "Jadwal kerja", "Setting gaji"]);
+  await nav.getByRole("link", { name: "Struktur gaji" }).click();
+  await expect(p).toHaveURL(/\/master\/sdm\?tab=struktur/);
+  for (const judul of ["Ringkasan struktur gaji", "Jabatan inhouse", "Jabatan event", "Golongan (gaji pokok)", "Tunjangan lain"]) await expect(bagian(p, judul)).toBeVisible();
+  for (const [lama, judul] of [["jabatan", "Jabatan inhouse"], ["jabatanEvent", "Jabatan event"], ["golongan", "Golongan (gaji pokok)"], ["tunjangan", "Tunjangan lain"]]) {
+    await buka(p, `/master/sdm?tab=${lama}`);
+    await expect(p).toHaveURL(new RegExp(`tab=struktur&jenis=${lama}`));
+    await expect(bagian(p, judul)).toBeVisible();
+  }
+  // Tautan lama dengan form tetap membuka form yang sama.
+  await buka(p, "/master/sdm?tab=golongan&form=GP-02");
+  await expect(p.getByRole("form", { name: "Form Gaji pokok" })).toBeVisible();
+  await expect(p.getByRole("form", { name: "Form Gaji pokok" }).getByLabel("Golongan")).toHaveValue("Golongan II");
+});
+
+test("HRD mengubah gaji pokok Golongan I; jabatan event hanya bisa dilihat", async () => {
+  const p = sesi.hrd.page;
+  await buka(p, "/master/sdm?tab=struktur");
+  const gol = bagian(p, "Golongan (gaji pokok)");
+  await gol.getByRole("row", { name: /GP-01/ }).getByRole("link", { name: "Ubah" }).click();
+  const f = p.getByRole("form", { name: "Form Gaji pokok" });
+  await expect(f).toBeVisible();
+  await f.getByLabel("Gaji pokok (Rp)").fill("3950000");
+  await f.getByRole("button", { name: "Simpan" }).click();
+  await expect(f).toBeHidden();
+  await expect(gol.getByRole("row", { name: /GP-01/ })).toContainText("3.950.000");
+  // Ringkasan per golongan ikut memakai nominal baru.
+  await expect(p.getByRole("list", { name: "Pemakaian per golongan" }).locator("li", { hasText: "Golongan I" }).first()).toContainText("3.950.000");
+
+  const ev = bagian(p, "Jabatan event");
+  await expect(ev).toContainText("hanya bisa melihat jabatan event");
+  await expect(ev.getByRole("link", { name: "Ubah" })).toHaveCount(0);
+  await expect(p.getByRole("link", { name: "Jabatan event baru" })).toHaveCount(0);
+  await expect(bagian(p, "Jabatan inhouse").getByRole("link", { name: "Jabatan baru" })).toBeVisible();
+  await expect(p.getByRole("button", { name: "Nonaktifkan" })).toHaveCount(0);
+  await potret(p, "struktur-gaji-hrd");
+});
+
+test("Owner mengubah tarif Crew Event lewat Struktur gaji", async () => {
+  const p = sesi.owner.page;
+  await buka(p, "/master/sdm?tab=struktur");
+  const ev = bagian(p, "Jabatan event");
+  await ev.getByRole("row", { name: /JBT-06/ }).getByRole("link", { name: "Ubah" }).click();
+  const f = p.getByRole("form", { name: "Form Jabatan event" });
+  await expect(f).toBeVisible();
+  await f.getByLabel("Tarif (Rp)").fill("22000");
+  await f.getByRole("button", { name: "Simpan" }).click();
+  await expect(f).toBeHidden();
+  await expect(ev.getByRole("row", { name: /JBT-06/ })).toContainText("22.000");
+  await expect(ev.getByRole("row", { name: /JBT-05/ })).toContainText("200.000");
+  await potret(p, "struktur-gaji-owner");
+});
+
+test("Admin hanya melihat Struktur gaji", async () => {
+  const p = sesi.admin.page;
+  await buka(p, "/master/sdm?tab=struktur");
+  await expect(p.getByText("hanya bisa melihat struktur gaji")).toBeVisible();
+  await expect(p.getByRole("link", { name: /baru$/ })).toHaveCount(0);
+  await expect(p.getByRole("link", { name: "Ubah" })).toHaveCount(0);
+});
+
+test("potret status persetujuan: Proses Penyusutan (Admin, Owner) dan Nilai Sisa", async () => {
+  for (const peran of ["admin", "owner"] as const) {
+    const p = sesi[peran].page;
+    await buka(p, "/konversi/penyusutan?periode=2026-11");
+    const panel = p.getByRole("region", { name: "Jurnal penyusutan November 2026" });
+    await expect(panel).toContainText("Disetujui");
+    await expect(p.getByRole("region", { name: "Riwayat proses dan persetujuan" }).getByRole("row", { name: /Ditolak/ }).first()).toContainText("Alasan:");
+    await potret(p, `penyusutan-status-${peran}`);
+  }
+  for (const peran of ["admin", "owner"] as const) {
+    const p = sesi[peran].page;
+    await buka(p, "/konversi/nilai-sisa?periode=2026-11");
+    await expect(p.getByRole("region", { name: "Jurnal biaya perlengkapan November 2026" })).toContainText("Disetujui");
+    await potret(p, `penyusutan-status-nilai-sisa-${peran}`);
+  }
+});
+
+test("tidak ada galat konsol", async () => {
+  expect(galatKonsol, galatKonsol.join("\n")).toEqual([]);
+});

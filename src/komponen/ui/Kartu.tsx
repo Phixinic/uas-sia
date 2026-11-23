@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
 /** Kartu putih. `rapat` untuk kartu berisi tabel (tanpa padding). */
-export default function Kartu({ rapat, className = "", children }: { rapat?: boolean; className?: string; children: ReactNode }) {
-  return <section className={`kartu ${rapat ? "kartu-rapat" : ""} ${className}`}>{children}</section>;
+export default function Kartu({ rapat, className = "", id, label, children }: { rapat?: boolean; className?: string; id?: string; label?: string; children: ReactNode }) {
+  return <section id={id} aria-label={label} className={`kartu ${rapat ? "kartu-rapat" : ""} ${className}`}>{children}</section>;
 }
 
 /** Kepala kartu: judul, keterangan kecil, dan aksi di kanan. Dipakai di dalam <Kartu rapat>. */
