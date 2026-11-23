@@ -54,6 +54,9 @@ export const IZIN = {
   "master-konversi.ubah": ["ADMIN", "OWNER"],
   "master-konversi.tambah-cepat": ["ADMIN"],
   "master-sdm.ubah": ["HRD", "OWNER"],
+  // Setting gaji inhouse: setiap versi (setting awal, promosi, demosi, penyesuaian) diajukan lalu diputuskan Owner.
+  "setting-gaji.ajukan": ["HRD", "OWNER"],
+  "setting-gaji.putuskan": ["OWNER"],
   "master.akun-kategori": ["OWNER"],
   "master.nonaktifkan": ["OWNER"],
   "profil.ubah": ["OWNER"],

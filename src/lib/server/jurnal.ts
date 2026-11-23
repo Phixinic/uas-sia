@@ -152,6 +152,24 @@ export async function muatJurnalBuku(klien: DbAtauTx = db, sampai?: string | nul
   }));
 }
 
+/** Mutasi bersih (debit - kredit) satu akun per periode dari jurnal DISETUJUI. */
+export async function mutasiAkunPerPeriode(klien: DbAtauTx, kode: string): Promise<{ periode: string; net: number }[]> {
+  const baris = await klien.$queryRaw<{ periode: string; net: bigint }[]>`
+    SELECT j."periode" AS periode, SUM(d."debit" - d."kredit")::bigint AS net
+    FROM "detail_jurnal" d JOIN "jurnal" j ON j."no_jurnal" = d."no_jurnal"
+    WHERE d."kode_akun" = ${kode} AND j."status" = 'DISETUJUI'
+    GROUP BY j."periode"`;
+  return baris.map((b) => ({ periode: b.periode, net: Number(b.net) }));
+}
+
+/**
+ * Kunci advisory 7410003: pembayaran tunai yang memeriksa saldo kas diserialkan supaya dua posting bersamaan tidak
+ * sama-sama lolos cek lalu membuat kas minus.
+ */
+export async function tahanKunciKas(tx: DbAtauTx) {
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(7410003)`;
+}
+
 /** Saldo satu akun dari jurnal DISETUJUI sampai akhir periode (null = semua), bertanda sesuai saldo normal. */
 export async function saldoAkun(klien: DbAtauTx, kode: string, sampai: string | null = null): Promise<number> {
   const [akun, jumlah] = await Promise.all([

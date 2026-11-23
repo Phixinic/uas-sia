@@ -12,7 +12,7 @@ import { saldoAkun } from "@/lib/server/jurnal";
 import { AKUN } from "@/lib/inti/akun";
 import { barisFeeEvent } from "@/lib/inti/jurnal";
 import { labelDurasi, pph21BukanPegawai } from "@/lib/inti/fee-event";
-import { labelTanggal } from "@/lib/inti/tanggal";
+import { denganPeriode, labelTanggal } from "@/lib/inti/tanggal";
 import { LABEL_PERAN_EVENT, LABEL_SATUAN_TARIF, labelWaktu, rupiah } from "@/lib/format";
 import { petaAkun, profilUsaha } from "@/lib/data/umum";
 import { muatBahanEvent, type BahanEvent, type OrangBahan } from "@/lib/data/fee-event/bahan";
@@ -297,7 +297,7 @@ async function Disetujui({ l }: { l: RingkasLaporan }) {
         <KartuRingkasan judul="Jurnal" nilai={l.jurnalNo ?? "-"} bukanUang keterangan={`Tanggal ${labelTanggal(l.tanggalSelesai)}`} />
       </div>
       <Kartu rapat>
-        <KepalaKartu judul="Slip fee" keterangan="Satu slip per orang, status Dibayar" aksi={l.jurnalNo ? <Link href={`/pelaporan/jurnal-umum?periode=${l.tanggalSelesai.slice(0, 7)}`} className="text-[13px] font-semibold text-aksen hover:underline">Lihat jurnal umum</Link> : undefined} />
+        <KepalaKartu judul="Slip fee" keterangan="Satu slip per orang, status Dibayar" aksi={l.jurnalNo ? <Link href={denganPeriode("/pelaporan/jurnal-umum", l.tanggalSelesai.slice(0, 7))} className="text-[13px] font-semibold text-aksen hover:underline">Lihat jurnal umum</Link> : undefined} />
         <DaftarHP label="Slip fee">
           {daftar.map((s) => (
             <KartuHP key={s.no} judul={s.karyawan} sub={<><span className="kode">{s.no}</span> · {LABEL_PERAN_EVENT[s.peranEvent]}</>} kanan={<Rupiah nilai={s.dibayar} className="font-semibold" />}>

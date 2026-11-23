@@ -13,6 +13,7 @@ import { catatLog } from "@/lib/server/log";
 import { skemaIdPresensi, skemaPresensi } from "@/lib/skema/sdm";
 import { hitungTerlambat } from "@/lib/inti/penggajian";
 import { keDate, labelPeriode, periodeDari } from "@/lib/inti/tanggal";
+import { versiBerlakuPeriode } from "@/lib/data/sdm/gaji";
 
 async function pastikanBelumTerkunci(tx: Tx, karyawanKode: string, periode: string) {
   const slip = await tx.slipGaji.findUnique({ where: { periodeId_karyawanKode: { periodeId: periode, karyawanKode } }, select: { status: true } });
@@ -29,14 +30,14 @@ export async function simpanPresensi(input: unknown): Promise<HasilAksi> {
     const periode = periodeDari(d.tanggal);
 
     await db.$transaction(async (tx) => {
-      const karyawan = await tx.karyawan.findUnique({
-        where: { kode: d.karyawanKode },
-        select: { aktif: true, jenis: true, settingGaji: { select: { aktif: true, jabatan: { select: { jadwalKerja: { select: { kode: true, jamMasuk: true } } } } } } },
-      });
+      const karyawan = await tx.karyawan.findUnique({ where: { kode: d.karyawanKode }, select: { aktif: true, jenis: true } });
       if (!karyawan || !karyawan.aktif) throw new GalatAksi("Karyawan tidak ditemukan atau sudah nonaktif.", { karyawanKode: "Karyawan tidak ditemukan." });
       if (karyawan.jenis !== "INHOUSE") throw new GalatAksi("Crew event tidak memakai presensi bulanan. Catat kehadirannya di menu Event & Kehadiran.", { karyawanKode: "Karyawan event." });
-      const jadwal = karyawan.settingGaji?.aktif ? karyawan.settingGaji.jabatan.jadwalKerja : null;
-      if (!jadwal) throw new GalatAksi("Karyawan ini belum punya Setting Gaji, atau jabatannya belum punya jadwal kerja.", { karyawanKode: "Setting gaji atau jadwal kerja belum ada." });
+      // Jadwal kerja mengikuti jabatan di versi setting gaji yang berlaku pada bulan tanggal presensi.
+      const [versi] = await versiBerlakuPeriode(tx, periode, d.karyawanKode);
+      const jadwal = versi?.jabatan.jadwalKerja ?? null;
+      if (!versi) throw new GalatAksi(`Karyawan ini belum punya setting gaji yang disetujui dan berlaku di ${labelPeriode(periode)}.`, { karyawanKode: "Belum ada setting gaji berlaku di bulan ini." });
+      if (!jadwal) throw new GalatAksi("Jabatan karyawan ini belum punya jadwal kerja.", { karyawanKode: "Jadwal kerja belum ada." });
 
       await pastikanBelumTerkunci(tx, d.karyawanKode, periode);
 

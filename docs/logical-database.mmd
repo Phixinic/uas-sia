@@ -74,6 +74,19 @@ erDiagram
     int jumlah
     boolean aktif
   }
+  investasi_kas {
+    string no_investasi PK
+    datetime tanggal
+    int jumlah
+    string keterangan
+    string status
+    string alasan_tolak
+    string jurnal_no FK
+    int dibuat_oleh FK
+    datetime dibuat_pada
+    int diputuskan_oleh FK
+    datetime diputuskan_pada
+  }
   jabatan {
     string id_jabatan PK
     string nama
@@ -275,6 +288,8 @@ erDiagram
   }
   periode {
     string periode PK
+    int bulan
+    int tahun
     string status
     int dikunci_oleh FK
     datetime dikunci_pada
@@ -331,6 +346,15 @@ erDiagram
     string id_jabatan FK
     string id_golongan FK
     boolean aktif
+    string berlaku_mulai FK
+    string jenis_perubahan
+    string alasan
+    string status
+    string alasan_tolak
+    int diajukan_oleh FK
+    datetime diajukan_pada
+    int diputuskan_oleh FK
+    datetime diputuskan_pada
   }
   setting_tunjangan {
     string id_setting PK, FK
@@ -392,6 +416,7 @@ erDiagram
     string status
     string alasan_tolak
     string no_penggajian FK
+    string id_setting FK
     int dibuat_oleh FK
     datetime dihitung_pada
     int disetujui_oleh FK
@@ -432,6 +457,9 @@ erDiagram
   peralatan |o--o{ detail_pembelian : "id_peralatan"
   perlengkapan |o--o{ detail_pembelian : "id_perlengkapan"
   pengguna ||--o{ event : "dibuat_oleh"
+  jurnal |o--o| investasi_kas : "jurnal_no"
+  pengguna ||--o{ investasi_kas : "dibuat_oleh"
+  pengguna |o--o{ investasi_kas : "diputuskan_oleh"
   akun ||--o{ jabatan : "akun_beban"
   jabatan ||--o| jadwal_kerja : "id_jabatan"
   aset ||--o{ jadwal_penyusutan : "id_aset"
@@ -484,9 +512,12 @@ erDiagram
   pengguna ||--o{ riwayat_periode : "oleh"
   pengguna ||--o{ sesi : "pengguna_id"
   event ||--o{ sesi_event : "id_event"
-  karyawan ||--o| setting_gaji : "id_karyawan"
+  karyawan ||--o{ setting_gaji : "id_karyawan"
   jabatan ||--o{ setting_gaji : "id_jabatan"
   golongan ||--o{ setting_gaji : "id_golongan"
+  periode ||--o{ setting_gaji : "berlaku_mulai"
+  pengguna |o--o{ setting_gaji : "diajukan_oleh"
+  pengguna |o--o{ setting_gaji : "diputuskan_oleh"
   setting_gaji ||--o{ setting_tunjangan : "id_setting"
   tunjangan ||--o{ setting_tunjangan : "id_tunjangan"
   laporan_fee ||--o{ slip_fee : "no_laporan"
@@ -501,6 +532,7 @@ erDiagram
   jadwal_kerja |o--o{ slip_gaji : "id_jadwal"
   akun ||--o{ slip_gaji : "akun_beban"
   penggajian |o--o{ slip_gaji : "no_penggajian"
+  setting_gaji |o--o{ slip_gaji : "id_setting"
   pengguna ||--o{ slip_gaji : "dibuat_oleh"
   pengguna |o--o{ slip_gaji : "disetujui_oleh"
   slip_gaji ||--o{ slip_tunjangan : "id_slip"

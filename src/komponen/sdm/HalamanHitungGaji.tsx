@@ -1,5 +1,5 @@
 /*
- * Halaman Hitung Gaji (komponen server). Keadaan di URL: ?periode=2026-10&slip=<no slip>|semua.
+ * Halaman Hitung Gaji (komponen server). Keadaan di URL: ?bulan=10&tahun=2026&slip=<no slip>|semua.
  * Gaji dihitung dari Setting Gaji dan rekap presensi (rumus di src/lib/inti/penggajian.ts), disimpan sebagai slip DRAFT,
  * lalu diajukan lewat Distribusi Gaji.
  */
@@ -7,8 +7,10 @@ import LencanaBiaya from "@/komponen/sdm/LencanaBiaya";
 import { wajibMasuk } from "@/lib/server/auth";
 import { boleh } from "@/lib/peran";
 import { periodeTerkunciSemua, profilUsaha } from "@/lib/data/umum";
-import { kunciPenutup, labelPeriode } from "@/lib/inti/tanggal";
-import { opsiPeriodeSdm, periodeDipilih } from "@/lib/data/sdm/umum";
+import { denganPeriode, kunciPenutup, labelBulanTahun, labelPeriode } from "@/lib/inti/tanggal";
+import LencanaPeriode from "@/komponen/ui/LencanaPeriode";
+import { PanelPeriodeLaporan } from "@/komponen/master/HalamanSettingGaji";
+import { opsiPeriodeSdm, periodeDipilih, type CariPeriode } from "@/lib/data/sdm/umum";
 import { ambilSlip, barisHitungGaji, daftarSlipPeriode, kesiapanGaji } from "@/lib/data/sdm/gaji";
 import { KesiapanGaji, PanelBiayaTetap } from "./KesiapanGaji";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
@@ -22,17 +24,18 @@ import { TautanTombol } from "@/komponen/ui/Tombol";
 import { Printer } from "lucide-react";
 import PilihPeriode from "./PilihPeriode";
 import TabelGaji from "./TabelGaji";
+import RingkasanTahunGaji from "./RingkasanTahunGaji";
 import SlipGaji from "./SlipGaji";
 import { TombolHitungSemua } from "./AksiGaji";
 import { labelPtkp } from "@/lib/format";
 
 const ALAMAT = "/sdm/hitung-gaji";
 
-export type CariGaji = { periode?: string; slip?: string };
+export type CariGaji = CariPeriode & { slip?: string };
 
 export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
   const pengguna = await wajibMasuk();
-  const periode = periodeDipilih(cari.periode);
+  const periode = periodeDipilih(cari);
   const bolehHitung = boleh(pengguna.peran, "gaji.hitung");
 
   const [opsiPeriode, baris, tersimpan, terkunci, profil] = await Promise.all([
@@ -44,7 +47,8 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
   ]);
 
   const kesiapan = await kesiapanGaji(periode, baris);
-  const alamatPeriode = `${ALAMAT}?periode=${periode}`;
+  const alamatPeriode = denganPeriode(ALAMAT, periode);
+  const usang = baris.filter((b) => b.settingBerubah);
   const slipDibuka = cari.slip === "semua" ? tersimpan : cari.slip ? [await ambilSlip(cari.slip)].filter((s) => s !== null) : [];
   // Tertutup bila periode ini atau periode sesudahnya sudah dikunci (kunci berurutan).
   const penutup = kunciPenutup(periode, terkunci);
@@ -62,8 +66,8 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
       <div className={`space-y-5 ${cari.slip && slipDibuka.length ? "tanpa-cetak" : ""}`}>
         <KepalaHalaman
           judul="Hitung Gaji"
-          lencana={<LencanaBiaya jenis="tetap" />}
-          keterangan="Gaji bulanan karyawan inhouse (biaya tetap), dihitung dari Setting Gaji dan rekap presensi. Crew event dibayar lewat menu Fee event (biaya variabel). Hasilnya disimpan sebagai slip draf, lalu diajukan lewat Distribusi Gaji."
+          lencana={<><LencanaBiaya jenis="tetap" /><LencanaPeriode periode={periode} /></>}
+          keterangan="Gaji bulanan karyawan inhouse (biaya tetap), dihitung dari versi Setting Gaji yang berlaku di bulan itu dan rekap presensi. Crew event dibayar lewat menu Fee event (biaya variabel). Hasilnya disimpan sebagai slip draf, lalu diajukan lewat Distribusi Gaji."
           aksi={
             <>
               <PilihPeriode terpilih={periode} opsi={opsiPeriode} />
@@ -83,6 +87,11 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
           </Peringatan>
         )}
         {!bolehHitung && <Peringatan>Hitung gaji dijalankan oleh HRD. Kamu bisa melihat hasil dan slipnya.</Peringatan>}
+        {usang.length > 0 && (
+          <Peringatan jenis="awas">
+            Setting gaji {usang.map((b) => b.nama).join(", ")} berubah sesudah slip draf {usang.map((b) => b.slipNo).join(", ")} dihitung. Hitung ulang slip itu dulu; Distribusi Gaji menolak slip yang dihitung dengan setting lama.
+          </Peringatan>
+        )}
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <KartuRingkasan judul="Karyawan" nilai={String(baris.length)} bukanUang keterangan={`${jumlahSimpan} slip tersimpan`} />
@@ -91,11 +100,13 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
           <KartuRingkasan judul="Take home pay" nilai={jumlah((b) => b.tampil.thp)} nada="hijau" keterangan="Kas keluar saat dibayar" />
         </div>
 
+        <RingkasanTahunGaji periode={periode} alamat={ALAMAT} />
         <PanelBiayaTetap />
+        <PanelPeriodeLaporan />
         <KesiapanGaji daftar={kesiapan} periode={periode} />
 
         <Kartu rapat>
-          <KepalaKartu judul={`Proses hitung gaji ${labelPeriode(periode)}`} keterangan="Tekan Rincian untuk melihat komponen gaji dan PPh 21 tiap karyawan" />
+          <KepalaKartu judul={`Proses hitung gaji · ${labelBulanTahun(periode)}`} keterangan="Tekan Rincian untuk melihat komponen gaji dan PPh 21 tiap karyawan" />
           {baris.length === 0 ? (
             <KeadaanKosong judul="Belum ada Setting Gaji" keterangan="Tambahkan setting gaji karyawan di Master SDM." />
           ) : (
@@ -104,7 +115,7 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
         </Kartu>
 
         <Kartu rapat>
-          <KepalaKartu judul={`PPh 21 ${labelPeriode(periode)}`} keterangan="Metode disetahunkan: (bruto x 12 - biaya jabatan - PTKP) x tarif progresif / 12. Simulasi untuk tugas, belum memakai tarif efektif (TER)." />
+          <KepalaKartu judul={`PPh 21 · ${labelBulanTahun(periode)}`} keterangan="Metode disetahunkan: (bruto x 12 - biaya jabatan - PTKP) x tarif progresif / 12. Simulasi untuk tugas, belum memakai tarif efektif (TER)." />
           {tersimpan.length === 0 ? (
             <KeadaanKosong judul="Belum ada slip pada periode ini" keterangan="Jalankan hitung gaji dulu." />
           ) : (

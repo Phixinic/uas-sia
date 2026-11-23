@@ -62,7 +62,8 @@ describe.runIf(aktif)("nilai sisa sesudah pembelian bertanggal mundur", async ()
     const sebelum = (await saldoBukuLkp(db, "2026-11")).reduce((s, x) => s + x.saldoBuku, 0);
     await masukSebagai("admin");
     const h = await beli.simpanPembelian({
-      jenis: "PERLENGKAPAN", tanggal: "2026-09-20", caraBayar: "TUNAI", supplierKode: "SUP-01", keterangan: "uji tanggal mundur",
+      // Kredit: kas baru ada sejak setoran Oktober, jadi pembelian tunai bertanggal September ditolak cek saldo kas.
+      jenis: "PERLENGKAPAN", tanggal: "2026-09-20", caraBayar: "KREDIT", jatuhTempo: "2026-10-20", supplierKode: "SUP-01", keterangan: "uji tanggal mundur",
       baris: [{ barangKode: "LKP-01", qty: 4, harga: 25_000 }], posting: true,
     });
     expect(h.ok).toBe(true);

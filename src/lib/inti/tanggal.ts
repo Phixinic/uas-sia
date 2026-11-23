@@ -60,6 +60,73 @@ export function kunciPenutup(periode: string, terkunci: readonly string[]): stri
 export const labelPeriode = (periode: string | null | undefined) =>
   periode ? `${NAMA_BULAN[+periode.slice(5, 7) - 1]} ${periode.slice(0, 4)}` : "-";
 
+/** Bulan (1-12) dan tahun dari periode "YYYY-MM". */
+export const bulanDari = (periode: string) => +periode.slice(5, 7);
+export const tahunDari = (periode: string) => +periode.slice(0, 4);
+
+/** (11, 2026) -> "2026-11", atau null bila bulan atau tahunnya tidak sah. */
+export function periodeDariBulanTahun(bulan: unknown, tahun: unknown): string | null {
+  const b = Number(bulan);
+  const t = Number(tahun);
+  if (!Number.isInteger(b) || !Number.isInteger(t) || b < 1 || b > 12 || t < 2000 || t > 2999) return null;
+  return `${t}-${pad(b)}`;
+}
+
+/** "2026-11" -> "November". */
+export const namaBulan = (periode: string) => NAMA_BULAN[bulanDari(periode) - 1] ?? "-";
+
+/**
+ * Label periode dengan bulan dan tahun terpisah untuk judul layar dan kepala cetak: "Bulan: November · Tahun: 2026".
+ * Pesan singkat (toast, galat) tetap memakai labelPeriode ("November 2026").
+ */
+export const labelBulanTahun = (periode: string | null | undefined) =>
+  periode && POLA_PERIODE.test(periode) ? `Bulan: ${namaBulan(periode)} · Tahun: ${periode.slice(0, 4)}` : "-";
+
+type NilaiCari = string | string[] | undefined;
+const satu = (v: NilaiCari) => (Array.isArray(v) ? v[0] : v);
+
+/**
+ * Periode dari query string: `?bulan=11&tahun=2026` (bentuk baru) atau `?periode=2026-11` (tautan lama, biasanya sudah
+ * dialihkan oleh proxy). `?tahun=semua` (atau `?periode=semua`) = semua periode bila halamannya punya pilihan itu.
+ * Mengembalikan null bila tidak ada pilihan yang sah, supaya halaman memakai bawaannya.
+ */
+export function periodeDariCari(cari: { bulan?: NilaiCari; tahun?: NilaiCari; periode?: NilaiCari }): string | null {
+  const tahun = satu(cari.tahun);
+  if (tahun === "semua" || satu(cari.periode) === "semua") return "semua";
+  const baru = periodeDariBulanTahun(satu(cari.bulan), tahun);
+  if (baru) return baru;
+  const lama = satu(cari.periode);
+  return lama && POLA_PERIODE.test(lama) ? lama : null;
+}
+
+/** Parameter URL periode bentuk baru: "2026-11" -> "bulan=11&tahun=2026", "semua" -> "tahun=semua". */
+export function paramPeriode(periode: string): string {
+  if (periode === "semua") return "tahun=semua";
+  return `bulan=${bulanDari(periode)}&tahun=${tahunDari(periode)}`;
+}
+
+/** Tambah parameter periode ke alamat: denganPeriode("/sdm/presensi?tab=harian", "2026-11"). */
+export const denganPeriode = (alamat: string, periode: string) => `${alamat}${alamat.includes("?") ? "&" : "?"}${paramPeriode(periode)}`;
+
+/**
+ * Pengalihan tautan lama: query string berisi `periode=YYYY-MM` atau `periode=semua` diganti `bulan` dan `tahun`,
+ * parameter lain dipertahankan. Mengembalikan query string baru (tanpa "?"), atau null bila tidak perlu dialihkan.
+ */
+export function cariTanpaPeriodeLama(search: string): string | null {
+  const p = new URLSearchParams(search);
+  const lama = p.get("periode");
+  if (lama === null || !(lama === "semua" || POLA_PERIODE.test(lama))) return null;
+  p.delete("periode");
+  if (!p.has("bulan") && !p.has("tahun")) {
+    if (lama === "semua") p.set("tahun", "semua");
+    else {
+      p.set("bulan", String(bulanDari(lama)));
+      p.set("tahun", String(tahunDari(lama)));
+    }
+  }
+  return p.toString();
+}
+
 /** "2026-10-05" -> "05/10/2026". */
 export const labelTanggal = (tanggal: string | null | undefined) =>
   tanggal ? `${tanggal.slice(8, 10)}/${tanggal.slice(5, 7)}/${tanggal.slice(0, 4)}` : "-";

@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import Lencana from "@/komponen/ui/Lencana";
 import Rupiah from "@/komponen/ui/Rupiah";
-import { labelPeriode, labelTanggal } from "@/lib/inti/tanggal";
+import { denganPeriode, labelPeriode, labelTanggal } from "@/lib/inti/tanggal";
 import { AKUN } from "@/lib/inti/akun";
 import { rupiah } from "@/lib/format";
 import type { RincianSumber, RingkasanModal } from "@/lib/inti/modal";
@@ -58,7 +58,7 @@ function Cocok({ ok, saldo, akun, periode }: { ok: boolean; saldo: number; akun:
     <div className="mt-2 flex flex-wrap items-center gap-2 text-[12px] text-slate-500">
       {ok ? <Lencana warna="hijau">sama dengan buku besar</Lencana> : <Lencana warna="merah">beda dengan buku besar</Lencana>}
       <span>
-        Saldo {akun} di <Link className="font-medium underline" href={`/pelaporan/buku-besar?akun=${akun}&periode=${periode}`}>Buku Besar</Link>: <Rupiah nilai={saldo} />
+        Saldo {akun} di <Link className="font-medium underline" href={denganPeriode(`/pelaporan/buku-besar?akun=${akun}`, periode)}>Buku Besar</Link>: <Rupiah nilai={saldo} />
       </span>
     </div>
   );

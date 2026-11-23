@@ -4,6 +4,7 @@
  * Keadaan di URL: ?tab=<jenis>&form=baru | ?form=<kode>.
  */
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Plus } from "lucide-react";
 import { wajibMasuk } from "@/lib/server/auth";
 import { boleh, LABEL_PERAN } from "@/lib/peran";
@@ -20,11 +21,19 @@ import Peringatan from "@/komponen/ui/Peringatan";
 import FormMaster from "./FormMaster";
 import AksiMaster from "./AksiMaster";
 import FormProfil from "./FormProfil";
+import { ALAMAT_SETTING_GAJI } from "./HalamanSettingGaji";
 
-export default async function HalamanMaster({ kelompok, cari }: { kelompok: KelompokMaster; cari: { tab?: string; form?: string } }) {
+export default async function HalamanMaster({ kelompok, cari }: { kelompok: KelompokMaster; cari: { tab?: string; form?: string; karyawan?: string } }) {
   const pengguna = await wajibMasuk();
   const jenisAda = DAFTAR_KELOMPOK[kelompok];
   const jenis: JenisMaster = jenisAda.find((j) => j === cari.tab) ?? jenisAda[0];
+  // Setting gaji punya halaman sendiri (riwayat versi dan persetujuan Owner); tautan lama tab ini dialihkan ke sana.
+  if (jenis === "setgaji") {
+    const q = new URLSearchParams();
+    if (cari.form) q.set("form", "baru");
+    if (cari.karyawan) q.set("karyawan", cari.karyawan);
+    redirect(`${ALAMAT_SETTING_GAJI}${q.size ? `?${q}` : ""}`);
+  }
   const def = DEF_MASTER[jenis];
   const dasar = kelompok === "konversi" ? "/master/konversi" : "/master/sdm";
   const alamatDaftar = `${dasar}?tab=${jenis}`;
@@ -56,7 +65,7 @@ export default async function HalamanMaster({ kelompok, cari }: { kelompok: Kelo
 
       <nav className="flex flex-wrap gap-2" aria-label="Jenis master">
         {jenisAda.map((j) => (
-          <Link key={j} href={`${dasar}?tab=${j}`} aria-current={j === jenis ? "page" : undefined} className={`tombol tombol-kecil ${j === jenis ? "tombol-gelap" : "tombol-garis"}`}>
+          <Link key={j} href={j === "setgaji" ? ALAMAT_SETTING_GAJI : `${dasar}?tab=${j}`} aria-current={j === jenis ? "page" : undefined} className={`tombol tombol-kecil ${j === jenis ? "tombol-gelap" : "tombol-garis"}`}>
             {DEF_MASTER[j].label}
           </Link>
         ))}

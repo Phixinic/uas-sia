@@ -16,7 +16,7 @@ import { IsianRupiah } from "@/komponen/ui/Isian";
 import Peringatan from "@/komponen/ui/Peringatan";
 import TabelJurnal from "@/komponen/ui/TabelJurnal";
 import { barisOpname } from "@/lib/inti/jurnal";
-import { labelPeriode } from "@/lib/inti/tanggal";
+import { labelBulanTahun } from "@/lib/inti/tanggal";
 import { rupiah } from "@/lib/format";
 import { useFokusGalat } from "@/komponen/ui/useFokusGalat";
 
@@ -56,7 +56,7 @@ export default function FormNilaiSisa({ periode, baris, bolehInput, namaAkun }: 
   return (
     <div ref={akar}>
       <Kartu rapat>
-        <KepalaKartu judul={`Hitung fisik ${labelPeriode(periode)}`} keterangan="Input nilai sisa perlengkapan dari hitung fisik akhir bulan." />
+        <KepalaKartu judul={`Hitung fisik · ${labelBulanTahun(periode)}`} keterangan="Input nilai sisa perlengkapan dari hitung fisik akhir bulan." />
         <Tabel label="Hitung fisik perlengkapan">
           <thead>
             <tr>

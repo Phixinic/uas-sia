@@ -9,12 +9,14 @@ sys.path.insert(0, os.path.dirname(__file__))
 from svgkit import Svg, lebar_teks
 
 AKAR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-W, H = 785.0, 440.0
-WARNA = {"ringkasan": "#EEEEEE", "konversi": "#FDE7E4", "sdm": "#E3EFFA", "fee-event": "#ECE4F6", "pelaporan": "#FFF3C4", "pengaturan": "#E6F2E4"}
-GARIS = {"ringkasan": "#555555", "konversi": "#8B1A1A", "sdm": "#1F5F99", "fee-event": "#5B3F8C", "pelaporan": "#8A6D00", "pengaturan": "#2E6B3A"}
+W, H = 1080.0, 440.0  # tujuh grup menu (Modal pemilik ditambah) butuh kanvas lebih lebar
+WARNA = {"ringkasan": "#EEEEEE", "modal": "#E6F2E4", "konversi": "#FDE7E4", "sdm": "#E3EFFA", "fee-event": "#ECE4F6", "pelaporan": "#FFF3C4", "pengaturan": "#E6F2E4"}
+GARIS = {"ringkasan": "#555555", "modal": "#2E6B3A", "konversi": "#8B1A1A", "sdm": "#1F5F99", "fee-event": "#5B3F8C", "pelaporan": "#8A6D00", "pengaturan": "#2E6B3A"}
 # Bagian di dalam halaman (tab, pilihan tahap, rincian) yang tidak tercatat di menu.ts. Tab master dibaca dari master.ts.
 BAGIAN = {
+    "Setting Gaji": ["Pengajuan (HRD, Owner)", "Keputusan Owner", "Riwayat per karyawan"],
     "Presensi": ["Rekap", "Harian"],
+    "Hitung Gaji": ["Ringkasan per tahun", "Slip"],
     "Event & Kehadiran": ["Sesi event", "Penugasan", "Kehadiran per sesi"],
     "Laporan & Fee": ["Keputusan Owner", "Slip fee"],
     "Penilaian Crew": ["Nilai progres crew", "Kirim laporan"],
@@ -33,7 +35,9 @@ def baca_menu():
         bagian = t[pos:potong]
         # penanda peran hanya untuk halaman yang dibatasi ke satu peran (Pengguna untuk Owner, Penilaian Crew untuk Kapten)
         tanda = lambda p: {"OWNER": "Owner", "KAPTEN": "Kapten"}.get(p.replace('"', "").strip()) if p and "," not in p else None
-        tautan = [(h, l, tanda(p)) for h, l, p in re.findall(r'href:\s*"([^"]+)",\s*label:\s*"([^"]+)",\s*ikon:\s*"[^"]+"(?:,\s*peran:\s*\[([^\]]*)\])?\s*\}', bagian)]
+        # peran berupa daftar ["OWNER"] atau IZIN["kunci"] (Investasi Kas: Admin dan Owner)
+        tautan = [(h, l, "Admin, Owner" if iz == "investasi-kas.lihat" else tanda(p))
+                  for h, l, p, iz in re.findall(r'href:\s*"([^"]+)",\s*label:\s*"([^"]+)",\s*ikon:\s*"[^"]+"(?:,\s*peran:\s*(?:\[([^\]]*)\]|IZIN\["([\w.\-]+)"\]))?\s*\}', bagian)]
         grup.append((kunci, judul, tautan))
     return grup
 
@@ -54,7 +58,7 @@ def kotak(svg, x, y, w, h, teks, ukuran, fill, stroke, tebal=False, putus=False,
 def main():
     grup = baca_menu()
     tab = baca_tab_master()
-    assert len(grup) == 6, [g[0] for g in grup]
+    assert len(grup) == 7, [g[0] for g in grup]
     svg = Svg(W, H)
     UK, UK_H, UK_T, UK_HREF = 9.2, 9.8, 8.6, 7.0
     # akar
@@ -140,7 +144,7 @@ def main():
     x2 = 35 + lebar_teks("halaman (menu samping)", 8.0) + 16
     svg.rect(x2, ly - 9, 20, 11, "#F7F7F7", "#888", 0.7, 3, dash="3 2"); svg.teks(x2 + 25, ly, "tab atau bagian di dalam halaman", 8.0, "#333")
     x3 = x2 + 25 + lebar_teks("tab atau bagian di dalam halaman", 8.0) + 16
-    svg.teks(x3, ly, "Admin, HRD, dan Owner membuka semua halaman kecuali Penilaian Crew. Pengguna hanya untuk Owner. Tombol aksi dibatasi per peran.", 8.0, "#333")
+    svg.teks(x3, ly, "Admin, HRD, dan Owner membuka semua halaman kecuali Penilaian Crew. Investasi Kas hanya Admin dan Owner, Pengguna hanya Owner. Tombol aksi dibatasi per peran.", 8.0, "#333")
     d = os.path.join(AKAR, "docs")
     svg.simpan(os.path.join(d, "sitemap.svg"), os.path.join(d, "sitemap.png"))
     print("sitemap:", sum(len(t[2]) for t in grup), "halaman di", n, "grup; kanvas", W, "x", H, "pt")

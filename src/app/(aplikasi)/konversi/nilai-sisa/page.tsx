@@ -3,6 +3,6 @@ import HalamanNilaiSisa from "@/komponen/konversi/nilai-sisa/HalamanNilaiSisa";
 
 export const metadata: Metadata = { title: "Nilai Sisa Perlengkapan" };
 
-export default async function Halaman({ searchParams }: { searchParams: Promise<{ periode?: string }> }) {
+export default async function Halaman({ searchParams }: { searchParams: Promise<{ periode?: string; bulan?: string; tahun?: string }> }) {
   return <HalamanNilaiSisa cari={await searchParams} />;
 }

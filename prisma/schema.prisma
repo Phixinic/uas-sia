@@ -75,6 +75,14 @@ enum SumberJurnal {
   INVESTASI_KAS
 }
 
+/// Jenis perubahan setting gaji (riwayat). SETTING_AWAL hanya untuk karyawan yang belum punya versi disetujui.
+enum JenisPerubahanGaji {
+  SETTING_AWAL
+  PROMOSI
+  DEMOSI
+  PENYESUAIAN
+}
+
 enum StatusPeriode {
   TERBUKA
   TERKUNCI
@@ -210,6 +218,8 @@ model Pengguna {
   laporanDiputuskan   LaporanFee[]     @relation("LaporanDiputuskan")
   investasiDibuat     InvestasiKas[]   @relation("InvestasiDibuat")
   investasiDiputuskan InvestasiKas[]   @relation("InvestasiDiputuskan")
+  settingDiajukan     SettingGaji[]    @relation("SettingDiajukan")
+  settingDiputuskan   SettingGaji[]    @relation("SettingDiputuskan")
 
   @@map("pengguna")
 }
@@ -290,6 +300,10 @@ model Akun {
 /// Periode akuntansi bulanan, id berbentuk "YYYY-MM".
 model Periode {
   id           String        @id @map("periode")
+  /// Bulan (1-12) dan tahun dari id "YYYY-MM". Kolom generated di PostgreSQL (GENERATED ALWAYS AS ... STORED),
+  /// jadi selalu terisi dan tidak pernah ditulis aplikasi. Lihat migrasi 20261123120000_setting_gaji_riwayat.
+  bulan        Int           @default(dbgenerated()) @db.SmallInt
+  tahun        Int           @default(dbgenerated()) @db.SmallInt
   status       StatusPeriode @default(TERBUKA)
   dikunciOleh  Int?          @map("dikunci_oleh")
   dikunciPada  DateTime?     @map("dikunci_pada")
@@ -301,7 +315,10 @@ model Periode {
   opname     Opname?
   slipGaji   SlipGaji[]
   penggajian Penggajian[]
+  /// Versi setting gaji yang mulai berlaku di periode ini.
+  settingGaji SettingGaji[]
 
+  @@index([tahun, bulan])
   @@map("periode")
 }
 
@@ -670,7 +687,8 @@ model Karyawan {
   jenis      JenisKaryawan @default(INHOUSE)
   aktif      Boolean       @default(true)
 
-  settingGaji SettingGaji?
+  /// Riwayat setting gaji (semua versi). Versi berlaku per periode dipilih oleh pilihVersiBerlaku.
+  settingGaji SettingGaji[]
   presensi    Presensi[]
   slipGaji    SlipGaji[]
   pengguna    Pengguna?
@@ -747,19 +765,40 @@ model JadwalKerja {
   @@map("jadwal_kerja")
 }
 
-/// Setting gaji per karyawan (karyawan 1:0..1 setting).
+/// Satu versi setting gaji karyawan inhouse (riwayat, tidak pernah ditimpa). Setiap versi lewat pengajuan HRD atau Owner
+/// dan persetujuan Owner. Versi berlaku di periode P = versi DISETUJUI dengan berlaku_mulai <= P yang paling akhir
+/// (berlaku_mulai terbesar, lalu diputuskan_pada terakhir). Slip tetap menyalin nilai saat dihitung dan menyimpan id versinya.
 model SettingGaji {
-  kode         String  @id @map("id_setting")
-  karyawanKode String  @unique @map("id_karyawan")
-  jabatanKode  String  @map("id_jabatan")
-  golonganKode String  @map("id_golongan")
-  aktif        Boolean @default(true)
+  kode             String             @id @map("id_setting")
+  karyawanKode     String             @map("id_karyawan")
+  jabatanKode      String             @map("id_jabatan")
+  golonganKode     String             @map("id_golongan")
+  /// Kolom lama. Versi yang dinonaktifkan sebelum riwayat ada dianggap tidak berlaku; versi baru selalu aktif.
+  aktif            Boolean            @default(true)
+  /// Periode "YYYY-MM" mulai berlakunya versi ini.
+  berlakuMulai     String             @map("berlaku_mulai")
+  jenisPerubahan   JenisPerubahanGaji @default(SETTING_AWAL) @map("jenis_perubahan")
+  alasan           String             @default("")
+  /// DIAJUKAN, DISETUJUI, atau DITOLAK (DRAFT tidak dipakai, dijaga CHECK).
+  status           StatusPersetujuan  @default(DIAJUKAN)
+  alasanTolak      String?            @map("alasan_tolak")
+  /// Kosong untuk versi hasil migrasi yang pengajunya tidak tercatat.
+  diajukanOlehId   Int?               @map("diajukan_oleh")
+  diajukanPada     DateTime           @default(now()) @map("diajukan_pada")
+  diputuskanOlehId Int?               @map("diputuskan_oleh")
+  diputuskanPada   DateTime?          @map("diputuskan_pada")
 
-  karyawan  Karyawan           @relation(fields: [karyawanKode], references: [kode])
-  jabatan   Jabatan            @relation(fields: [jabatanKode], references: [kode])
-  golongan  Golongan           @relation(fields: [golonganKode], references: [kode])
-  tunjangan SettingTunjangan[]
+  karyawan       Karyawan           @relation(fields: [karyawanKode], references: [kode])
+  jabatan        Jabatan            @relation(fields: [jabatanKode], references: [kode])
+  golongan       Golongan           @relation(fields: [golonganKode], references: [kode])
+  periodeBerlaku Periode            @relation(fields: [berlakuMulai], references: [id])
+  diajukanOleh   Pengguna?          @relation("SettingDiajukan", fields: [diajukanOlehId], references: [id])
+  diputuskanOleh Pengguna?          @relation("SettingDiputuskan", fields: [diputuskanOlehId], references: [id])
+  tunjangan      SettingTunjangan[]
+  slipGaji       SlipGaji[]
 
+  @@index([karyawanKode, status, berlakuMulai])
+  @@index([status])
   @@map("setting_gaji")
 }
 
@@ -833,6 +872,8 @@ model SlipGaji {
   status          StatusPersetujuan @default(DRAFT)
   alasanTolak     String?           @map("alasan_tolak")
   penggajianNo    String?           @map("no_penggajian")
+  /// Versi setting gaji yang dipakai saat slip dihitung. Slip draf dengan versi lain dari versi berlaku = perlu dihitung ulang.
+  settingKode     String?           @map("id_setting")
   dibuatOlehId    Int               @map("dibuat_oleh")
   dihitungPada    DateTime          @default(now()) @map("dihitung_pada")
   disetujuiOlehId Int?              @map("disetujui_oleh")
@@ -845,6 +886,7 @@ model SlipGaji {
   jadwal        JadwalKerja?    @relation(fields: [jadwalKode], references: [kode])
   akunBeban     Akun            @relation(fields: [akunBebanKode], references: [kode])
   penggajian    Penggajian?     @relation(fields: [penggajianNo], references: [no])
+  setting       SettingGaji?    @relation(fields: [settingKode], references: [kode])
   dibuatOleh    Pengguna        @relation("SlipDibuat", fields: [dibuatOlehId], references: [id])
   disetujuiOleh Pengguna?       @relation("SlipDisetujui", fields: [disetujuiOlehId], references: [id])
   tunjangan     SlipTunjangan[]

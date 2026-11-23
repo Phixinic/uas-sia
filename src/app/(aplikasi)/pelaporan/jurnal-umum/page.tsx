@@ -3,7 +3,9 @@ import { wajibMasuk } from "@/lib/server/auth";
 import { petaAkun, profilUsaha } from "@/lib/data/umum";
 import { daftarJurnalUmum } from "@/lib/data/pelaporan/jurnal";
 import { semuaPeriode } from "@/lib/data/pelaporan/periode";
-import { labelPeriode, labelTanggal } from "@/lib/inti/tanggal";
+import { labelBulanTahun, labelTanggal, periodeDariCari } from "@/lib/inti/tanggal";
+import PilihBulanTahun from "@/komponen/ui/PilihBulanTahun";
+import LencanaPeriode from "@/komponen/ui/LencanaPeriode";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu from "@/komponen/ui/Kartu";
 import Tabel from "@/komponen/ui/Tabel";
@@ -21,26 +23,28 @@ const OPSI_JENIS = [
   { nilai: "PEMBALIK", label: "Pembalik saja" },
 ];
 
-export default async function Halaman({ searchParams }: { searchParams: Promise<{ periode?: string; jenis?: string }> }) {
+export default async function Halaman({ searchParams }: { searchParams: Promise<{ periode?: string; bulan?: string; tahun?: string; jenis?: string }> }) {
   await wajibMasuk();
   const cari = await searchParams;
   const semua = await semuaPeriode();
-  const periode = cari.periode && semua.includes(cari.periode) ? cari.periode : "semua";
+  const dipilih = periodeDariCari(cari);
+  const periode = dipilih && semua.includes(dipilih) ? dipilih : "semua";
   const jenis = cari.jenis === "UMUM" || cari.jenis === "PEMBALIK" ? cari.jenis : null;
   const [daftar, namaAkun, usaha] = await Promise.all([daftarJurnalUmum(periode === "semua" ? null : periode, jenis), petaAkun(), profilUsaha()]);
   const totalD = daftar.reduce((s, j) => s + j.baris.reduce((x, b) => x + b.debit, 0), 0);
   const totalK = daftar.reduce((s, j) => s + j.baris.reduce((x, b) => x + b.kredit, 0), 0);
-  const ketPeriode = periode === "semua" ? "Semua periode" : labelPeriode(periode);
+  const ketPeriode = periode === "semua" ? "Semua periode" : labelBulanTahun(periode);
 
   return (
     <>
       <KepalaHalaman
         judul="Jurnal Umum"
+        lencana={<LencanaPeriode periode={periode} />}
         keterangan="Dibuat otomatis saat pembelian diposting, pelepasan dan penggajian disetujui, dan saat pembelian dibalik. Hanya jurnal yang sudah disetujui yang tampil."
         aksi={<TombolCetak />}
       />
       <div className="tanpa-cetak flex flex-wrap gap-3">
-        <FilterUrl nama="periode" label="Periode" nilai={periode} opsi={[{ nilai: "semua", label: "Semua periode" }, ...[...semua].reverse().map((p) => ({ nilai: p, label: labelPeriode(p) }))]} />
+        <PilihBulanTahun periode={periode} tersedia={semua} semua="Semua periode" />
         <FilterUrl nama="jenis" label="Jenis" nilai={jenis ?? "semua"} opsi={OPSI_JENIS} />
       </div>
       <KepalaCetak usaha={usaha.nama} judul="Jurnal Umum" keterangan={ketPeriode} />

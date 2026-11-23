@@ -6,7 +6,8 @@ import { wajibMasuk } from "@/lib/server/auth";
 import { boleh } from "@/lib/peran";
 import { petaAkun, periodeTerkunciSemua } from "@/lib/data/umum";
 import { dataNilaiSisa, periodeNilaiSisa } from "@/lib/data/konversi/nilai-sisa";
-import { kunciPenutup, labelPeriode } from "@/lib/inti/tanggal";
+import { kunciPenutup, labelPeriode, periodeDariCari } from "@/lib/inti/tanggal";
+import LencanaPeriode from "@/komponen/ui/LencanaPeriode";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
 import KartuRingkasan from "@/komponen/ui/KartuRingkasan";
@@ -20,11 +21,9 @@ import PemilihPeriode from "@/komponen/konversi/umum/PemilihPeriode";
 import TombolAjukanJurnal from "@/komponen/konversi/umum/TombolAjukanJurnal";
 import FormNilaiSisa from "./FormNilaiSisa";
 
-const ALAMAT = "/konversi/nilai-sisa";
-
-export default async function HalamanNilaiSisa({ cari }: { cari: { periode?: string } }) {
+export default async function HalamanNilaiSisa({ cari }: { cari: { periode?: string; bulan?: string; tahun?: string } }) {
   const pengguna = await wajibMasuk();
-  const { periode, pilihan } = await periodeNilaiSisa(cari.periode);
+  const { periode, pilihan } = await periodeNilaiSisa(periodeDariCari(cari) ?? undefined);
   const [d, namaAkun, terkunci] = await Promise.all([dataNilaiSisa(periode), petaAkun(), periodeTerkunciSemua()]);
   const bolehInput = boleh(pengguna.peran, "nilai-sisa.input");
   const bolehAjukan = boleh(pengguna.peran, "jurnal-penyesuaian.ajukan");
@@ -39,8 +38,9 @@ export default async function HalamanNilaiSisa({ cari }: { cari: { periode?: str
     <>
       <KepalaHalaman
         judul="Nilai Sisa Perlengkapan"
+        lencana={<LencanaPeriode periode={periode} />}
         keterangan="Biaya perlengkapan = saldo buku dikurangi nilai sisa hasil hitung fisik. Sistem membuat jurnal penyesuaian draf, lalu Admin mengajukannya ke Owner."
-        aksi={<PemilihPeriode alamat={ALAMAT} periode={periode} pilihan={pilihan} />}
+        aksi={<PemilihPeriode periode={periode} pilihan={pilihan} />}
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

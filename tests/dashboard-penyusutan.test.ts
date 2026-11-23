@@ -85,14 +85,17 @@ describe.runIf(aktif)("dashboard: penyusutan dan periode", async () => {
     }
   });
 
-  it("periode bawaan halaman SDM = periode berjalan (sama dengan dashboard); tautan tindakan membawa ?periode", async () => {
-    expect(periodeDipilih()).toBe(periodeIni());
-    expect(periodeDipilih("2026-10")).toBe("2026-10");
+  it("periode bawaan halaman SDM = periode berjalan (sama dengan dashboard); tautan tindakan membawa ?bulan&tahun", async () => {
+    expect(periodeDipilih({})).toBe(periodeIni());
+    expect(periodeDipilih({ bulan: "10", tahun: "2026" })).toBe("2026-10");
+    // Tautan lama ?periode= tetap terbaca.
+    expect(periodeDipilih({ periode: "2026-10" })).toBe("2026-10");
     // Pengajuan penggajian Oktober yang menunggu: tautannya mendarat di Oktober, bukan di periode yang sedang dilihat.
     await db.penggajian.updateMany({ where: { periodeId: "2026-10" }, data: { status: "DIAJUKAN" } });
     const d = await dataDashboard("2026-11");
-    expect(d.tindakan.find((t) => t.judul.includes("pengajuan penggajian"))?.href).toBe("/sdm/distribusi?periode=2026-10");
-    for (const t of d.tindakan.filter((x) => x.href.startsWith("/sdm/") || x.href.startsWith("/konversi/penyusutan"))) expect(t.href).toMatch(/\?periode=\d{4}-\d{2}$/);
+    expect(d.tindakan.find((t) => t.judul.includes("pengajuan penggajian"))?.href).toBe("/sdm/distribusi?bulan=10&tahun=2026");
+    const berperiode = d.tindakan.filter((x) => (x.href.startsWith("/sdm/") && !x.href.startsWith("/sdm/setting-gaji")) || x.href.startsWith("/konversi/penyusutan"));
+    for (const t of berperiode) expect(t.href).toMatch(/\?bulan=\d{1,2}&tahun=\d{4}$/);
   });
 });
 

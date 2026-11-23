@@ -1,5 +1,5 @@
 /*
- * Halaman Distribusi Gaji (komponen server). Keadaan di URL: ?periode=2026-10.
+ * Halaman Distribusi Gaji (komponen server). Keadaan di URL: ?bulan=10&tahun=2026.
  * HRD mengajukan semua slip draf satu periode; Owner menyetujui (jurnal dan pembayaran) atau menolak dengan alasan.
  */
 import LencanaBiaya from "@/komponen/sdm/LencanaBiaya";
@@ -7,9 +7,10 @@ import Link from "next/link";
 import { wajibMasuk } from "@/lib/server/auth";
 import { boleh } from "@/lib/peran";
 import { petaAkun } from "@/lib/data/umum";
-import { labelPeriode } from "@/lib/inti/tanggal";
+import { denganPeriode, labelBulanTahun, labelPeriode } from "@/lib/inti/tanggal";
+import LencanaPeriode from "@/komponen/ui/LencanaPeriode";
 import { labelTanggal, rupiah } from "@/lib/format";
-import { opsiPeriodeSdm, periodeDipilih } from "@/lib/data/sdm/umum";
+import { opsiPeriodeSdm, periodeDipilih, type CariPeriode } from "@/lib/data/sdm/umum";
 import { dataDistribusi } from "@/lib/data/sdm/distribusi";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
@@ -23,12 +24,13 @@ import { LencanaStatus } from "@/komponen/ui/Lencana";
 import { TautanTombol } from "@/komponen/ui/Tombol";
 import PilihPeriode from "./PilihPeriode";
 import { AksiPengajuan, TombolAjukan } from "./AksiGaji";
+import RingkasanTahunGaji from "./RingkasanTahunGaji";
 
-export type CariDistribusi = { periode?: string };
+export type CariDistribusi = CariPeriode;
 
 export default async function HalamanDistribusi({ cari }: { cari: CariDistribusi }) {
   const pengguna = await wajibMasuk();
-  const periode = periodeDipilih(cari.periode);
+  const periode = periodeDipilih(cari);
   const bolehAjukan = boleh(pengguna.peran, "penggajian.ajukan");
   const bolehPutuskan = boleh(pengguna.peran, "penggajian.putuskan");
 
@@ -44,7 +46,7 @@ export default async function HalamanDistribusi({ cari }: { cari: CariDistribusi
     <>
       <KepalaHalaman
         judul="Distribusi Gaji"
-        lencana={<LencanaBiaya jenis="tetap" />}
+        lencana={<><LencanaBiaya jenis="tetap" /><LencanaPeriode periode={periode} /></>}
         keterangan="Slip draf satu periode diajukan HRD sekaligus. Setelah Owner menyetujui, sistem membuat satu jurnal umum (biaya gaji, utang PPh 21, dan kas) dan semua slip menjadi Dibayar."
         aksi={<PilihPeriode terpilih={periode} opsi={opsiPeriode} />}
       />
@@ -56,6 +58,8 @@ export default async function HalamanDistribusi({ cari }: { cari: CariDistribusi
         <KartuRingkasan judul="Saldo kas saat ini" nilai={d.saldoKas} nada={kasKurang ? "merah" : "netral"} keterangan={kasKurang ? "Kurang dari THP yang diajukan" : "Dari jurnal yang disetujui"} />
       </div>
 
+      <RingkasanTahunGaji periode={periode} alamat="/sdm/distribusi" />
+
       {kasKurang && bolehPutuskan && (
         <Peringatan jenis="awas">
           Saldo kas {rupiah(d.saldoKas)} lebih kecil dari THP yang diajukan ({rupiah(thpMenunggu)}), kurang {rupiah(thpMenunggu - d.saldoKas)}. Persetujuan akan ditolak sistem sampai kas cukup.{" "}
@@ -66,7 +70,7 @@ export default async function HalamanDistribusi({ cari }: { cari: CariDistribusi
       <Kartu>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="judul-kartu">Slip draf {labelPeriode(periode)}</h2>
+            <h2 className="judul-kartu">Slip draf · {labelBulanTahun(periode)}</h2>
             <p className="mt-0.5 text-xs text-slate-500">Slip dibuat di menu Hitung Gaji.</p>
           </div>
           {d.draf.length > 0 && bolehAjukan && <TombolAjukan periode={periode} jumlah={d.draf.length} thp={totalThp} />}
@@ -74,7 +78,7 @@ export default async function HalamanDistribusi({ cari }: { cari: CariDistribusi
         {d.draf.length === 0 ? (
           <p className="mt-3 text-sm text-slate-500">
             Tidak ada slip draf pada periode ini.{" "}
-            <TautanTombol href={`/sdm/hitung-gaji?periode=${periode}`} varian="hantu" kecil>Buka Hitung Gaji</TautanTombol>
+            <TautanTombol href={denganPeriode("/sdm/hitung-gaji", periode)} varian="hantu" kecil>Buka Hitung Gaji</TautanTombol>
           </p>
         ) : (
           <div className="mt-4 space-y-4">
@@ -166,7 +170,7 @@ export default async function HalamanDistribusi({ cari }: { cari: CariDistribusi
                   <td>Gaji {labelPeriode(periode)} a.n. {s.karyawan}</td>
                   <td className="kolom-angka"><Rupiah nilai={s.bruto} polos /></td>
                   <td className="kolom-angka"><Rupiah nilai={s.thp} polos /></td>
-                  <td className="text-right"><TautanTombol href={`/sdm/hitung-gaji?periode=${periode}&slip=${s.no}`} kecil varian="hantu">Slip</TautanTombol></td>
+                  <td className="text-right"><TautanTombol href={`${denganPeriode("/sdm/hitung-gaji", periode)}&slip=${s.no}`} kecil varian="hantu">Slip</TautanTombol></td>
                 </tr>
               ))}
             </tbody>

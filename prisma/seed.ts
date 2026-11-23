@@ -30,6 +30,23 @@ export const PENGGUNA_DEMO: { namaPengguna: string; nama: string; peran: Peran; 
 ];
 
 
+/** Contoh riwayat setting gaji: promosi KRY-04 disetujui berlaku Desember 2026, penyesuaian KRY-05 menunggu Owner. */
+const CONTOH_SETTING: {
+  kode: string; karyawanKode: string; jabatanKode: string; golonganKode: string; tunjangan: string[]; berlakuMulai: string;
+  jenis: "PROMOSI" | "PENYESUAIAN"; status: "DISETUJUI" | "DIAJUKAN"; alasan: string; diajukanPada: string; diputuskanPada: string | null;
+}[] = [
+  {
+    kode: "SET-06", karyawanKode: "KRY-04", jabatanKode: "JBT-03", golonganKode: "GP-02", tunjangan: ["TNJ-01", "TNJ-02"], berlakuMulai: "2026-12",
+    jenis: "PROMOSI", status: "DISETUJUI", alasan: "Promosi dari Crew Produksi menjadi Operator Sound & Lighting setelah lulus evaluasi kinerja.",
+    diajukanPada: "2026-11-16T09:00:00+07:00", diputuskanPada: "2026-11-17T10:30:00+07:00",
+  },
+  {
+    kode: "SET-07", karyawanKode: "KRY-05", jabatanKode: "JBT-02", golonganKode: "GP-01", tunjangan: ["TNJ-01", "TNJ-02", "TNJ-04"], berlakuMulai: "2027-01",
+    jenis: "PENYESUAIAN", status: "DIAJUKAN", alasan: "Penambahan tunjangan kesehatan sesuai kebijakan tahun 2027.",
+    diajukanPada: "2026-11-20T14:00:00+07:00", diputuskanPada: null,
+  },
+];
+
 const TIPE_AKUN: Record<string, TipeAkun> = { Aset: "ASET", "Kontra aset": "KONTRA_ASET", Liabilitas: "LIABILITAS", Ekuitas: "EKUITAS", Pendapatan: "PENDAPATAN", Beban: "BEBAN" };
 const ptkp = (s: string) => s.replace("/", "") as StatusPtkp;
 // Nilai lama huruf kecil ("disetujui") -> enum Prisma ("DISETUJUI").
@@ -103,14 +120,32 @@ async function main() {
   await db.jadwalKerja.createMany({
     data: daftar("jadwal").map((t) => ({ kode: t.id, jabatanKode: t.jabatan_id, jamMasuk: t.jam_masuk, jamKeluar: t.jam_keluar, hariKerja: t.hari_kerja, aktif: t.aktif !== false })),
   });
+  // Setting gaji = riwayat versi. Data lama menjadi versi DISETUJUI berjenis Setting awal yang berlaku Oktober 2026
+  // (aturan sama dengan migrasi 20261123120000_setting_gaji_riwayat), lalu satu contoh promosi disetujui yang berlaku
+  // Desember 2026 dan satu pengajuan penyesuaian yang menunggu Owner. Gaji Oktober dan November tidak berubah.
+  await db.periode.createMany({ data: ["2026-10", "2026-12", "2027-01"].map((id) => ({ id })), skipDuplicates: true });
+  const awalSetting = waktu("2026-10-01T08:00:00+07:00")!;
   for (const s of daftar("setgaji")) {
     await db.settingGaji.create({
       data: {
         kode: s.id, karyawanKode: s.karyawan_id, jabatanKode: s.jabatan_id, golonganKode: s.golongan_id, aktif: s.aktif !== false,
+        berlakuMulai: "2026-10", jenisPerubahan: "SETTING_AWAL", status: "DISETUJUI", alasan: "Setting awal karyawan inhouse (data contoh Oktober 2026).",
+        diajukanOlehId: idPeran.hrd, diajukanPada: awalSetting, diputuskanOlehId: idPeran.owner, diputuskanPada: awalSetting,
         tunjangan: { create: (s.tunjangan_ids ?? []).map((t: string) => ({ tunjanganKode: t })) },
       },
     });
   }
+  for (const c of CONTOH_SETTING) {
+    await db.settingGaji.create({
+      data: {
+        kode: c.kode, karyawanKode: c.karyawanKode, jabatanKode: c.jabatanKode, golonganKode: c.golonganKode, berlakuMulai: c.berlakuMulai,
+        jenisPerubahan: c.jenis, status: c.status, alasan: c.alasan, diajukanOlehId: idPeran.hrd, diajukanPada: waktu(c.diajukanPada)!,
+        diputuskanOlehId: c.status === "DISETUJUI" ? idPeran.owner : null, diputuskanPada: c.status === "DISETUJUI" ? waktu(c.diputuskanPada) : null,
+        tunjangan: { create: c.tunjangan.map((tunjanganKode) => ({ tunjanganKode })) },
+      },
+    });
+  }
+  await db.penghitung.upsert({ where: { kunci: "SET" }, create: { kunci: "SET", nilai: 7 }, update: { nilai: 7 } });
 
   // ---------- Jurnal ----------
   for (const j of daftar("jurnal").sort((a, b) => a.id.localeCompare(b.id))) {
@@ -232,6 +267,7 @@ async function main() {
         tunjJabatan: s.tunj_jabatan, tunjKeluarga: s.tunj_keluarga, tunjLain: (s.tunj_lain ?? []).reduce((x: number, t: any) => x + t.nominal, 0),
         potonganAbsen: s.potongan_absen, bruto: s.bruto, brutoSetahun: s.pajak.setahun, biayaJabatan: s.pajak.biaya, netoSetahun: s.pajak.neto,
         ptkp: s.pajak.ptkp, pkp: s.pajak.pkp, pphSetahun: s.pajak.pph_setahun, pph21: s.pph21, thp: s.thp, status: st, penggajianNo: s.ref ?? null,
+        settingKode: daftar("setgaji").find((x) => x.karyawan_id === s.karyawan_id)?.id ?? null,
         dibuatOlehId: oleh(s.dibuat_oleh)!, dihitungPada: waktu(s.dihitung_pada) ?? new Date(),
         disetujuiOlehId: st === "DISETUJUI" ? oleh(g?.disetujui_oleh) : null, disetujuiPada: st === "DISETUJUI" ? waktu(g?.disetujui_pada) : null,
         tunjangan: { create: (s.tunj_lain ?? []).map((t: any) => ({ tunjanganKode: t.id, nama: t.nama, nominal: t.nominal })) },

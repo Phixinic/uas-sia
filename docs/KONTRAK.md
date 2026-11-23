@@ -33,13 +33,14 @@ tests/                          vitest: tes inti (tanpa DB) dan tes integrasi (U
 | Rute | Halaman | Pemilik |
 |---|---|---|
 | `/` | Dashboard | Pelaporan |
-| `/modal/investasi-kas` | Investasi Kas: setoran modal pemilik berupa kas dan ringkasan "Dari mana kas dan modal" (`?form=baru`, `?periode=2026-11\|semua`). Hanya Admin dan Owner | Modal |
+| `/modal/investasi-kas` | Investasi Kas: setoran modal pemilik berupa kas dan ringkasan "Dari mana kas dan modal" (`?form=baru`, `?bulan=11&tahun=2026` atau `?tahun=semua`). Hanya Admin dan Owner | Modal |
 | `/konversi/pembelian-peralatan` | Pembelian Peralatan (**sudah jadi, pola rujukan**) | Konversi |
 | `/konversi/pembelian-perlengkapan` | Pembelian Perlengkapan (sudah jadi, komponen sama) | Konversi |
 | `/konversi/nilai-sisa` | Nilai Sisa Perlengkapan (opname) | Konversi |
 | `/konversi/penyusutan` | Proses Penyusutan | Konversi |
 | `/konversi/kartu-aset` | Kartu Aset (`?aset=AST-0001` membuka rinciannya) | Konversi |
 | `/konversi/pelepasan` | Pelepasan Peralatan | Konversi |
+| `/sdm/setting-gaji` | Setting Gaji: versi berlaku per karyawan, pengajuan menunggu Owner, riwayat (`?form=baru&karyawan=KRY-01`, `?riwayat=KRY-01`). Tab Setting gaji di Master SDM dialihkan ke sini | SDM |
 | `/sdm/presensi` | Presensi (rekap dan harian) | SDM |
 | `/sdm/hitung-gaji` | Hitung Gaji (slip, PPh 21) | SDM |
 | `/sdm/distribusi` | Distribusi Gaji (pengajuan penggajian) | SDM |
@@ -48,8 +49,8 @@ tests/                          vitest: tes inti (tanpa DB) dan tes integrasi (U
 | `/kapten` | Penilaian Crew (hanya peran Kapten, `?lihat=EVT-2026-0001`) | SDM (fee event) |
 | `/pelaporan/jurnal-penyesuaian` | Jurnal Penyesuaian (ajukan, setujui, tolak) | Pelaporan |
 | `/pelaporan/jurnal-umum` | Jurnal Umum (umum + pembalik yang disetujui) | Pelaporan |
-| `/pelaporan/buku-besar` | Buku Besar (`?akun=1-110&periode=2026-10&tahap=sebelum\|setelah`, bawaan `setelah`) | Pelaporan |
-| `/pelaporan/neraca-saldo` | Neraca Saldo (`?periode=2026-10&tahap=sebelum\|setelah`; `setelah` = neraca lajur ringkas) | Pelaporan |
+| `/pelaporan/buku-besar` | Buku Besar (`?akun=1-110&bulan=10&tahun=2026&tahap=sebelum\|setelah`, bawaan `setelah`) | Pelaporan |
+| `/pelaporan/neraca-saldo` | Neraca Saldo (`?bulan=10&tahun=2026&tahap=sebelum\|setelah`; `setelah` = neraca lajur ringkas) | Pelaporan |
 | `/pelaporan/tutup-periode` | Tutup Periode | Pelaporan |
 | `/master/konversi` | Supplier, peralatan, perlengkapan, kategori aset, bagan akun, profil usaha | Pelaporan |
 | `/master/sdm` | Karyawan, jabatan, gaji pokok, tunjangan, jadwal kerja, setting gaji | Pelaporan |
@@ -89,7 +90,9 @@ Peran **Kapten** (crew freelance yang memimpin event) ditolak secara bawaan: `wa
 | `periode.kunci` | Owner | tutup periode (mengunci periode, tanpa jurnal penutup) dan buka kunci periode (alasan wajib saat buka); berurutan: kunci dari periode paling lama, buka dari periode terkunci paling akhir |
 | `master-konversi.ubah` | Admin, Owner | tambah/ubah supplier, peralatan, perlengkapan |
 | `master-konversi.tambah-cepat` | Admin | tambah supplier/barang langsung dari form pembelian (extend) |
-| `master-sdm.ubah` | HRD, Owner | tambah/ubah master SDM |
+| `master-sdm.ubah` | HRD, Owner | tambah/ubah master SDM (kecuali setting gaji) |
+| `setting-gaji.ajukan` | HRD, Owner | ajukan versi setting gaji: setting awal, promosi, demosi, penyesuaian, dengan bulan berlaku |
+| `setting-gaji.putuskan` | Owner | setujui atau tolak (alasan wajib) pengajuan setting gaji; Owner boleh menyetujui pengajuannya sendiri |
 | `master.akun-kategori` | Owner | bagan akun dan kategori aset |
 | `master.nonaktifkan` | Owner | aktifkan/nonaktifkan data master (master tidak pernah dihapus) |
 | `profil.ubah` | Owner | nama usaha |
@@ -107,6 +110,7 @@ Enum `StatusPersetujuan` (DRAFT, DIAJUKAN, DISETUJUI, DITOLAK) dipakai jurnal, p
 | Jurnal otomatis (pembelian, pelepasan, penggajian, fee event, investasi kas, pembalik, saldo awal) | dibuat langsung DISETUJUI |
 | Opname | ikut status jurnalnya; total beban 0 = langsung DISETUJUI tanpa jurnal |
 | Pelepasan | dibuat DIAJUKAN → Owner DISETUJUI (jurnal umum dibuat, aset DILEPAS, jadwal yang belum dijurnal dihapus) / DITOLAK |
+| Setting gaji | dibuat DIAJUKAN oleh HRD atau Owner (bulan berlaku harus periode terbuka) → Owner DISETUJUI (tanpa jurnal, berlaku mulai bulan itu) / DITOLAK (alasan wajib). Baris tidak pernah ditimpa |
 | Slip | DRAFT (boleh dihitung ulang/hapus) → DIAJUKAN (bersama penggajian) → DISETUJUI (dibayar); bila penggajian ditolak slip kembali DRAFT, `penggajianNo` dikosongkan, `alasanTolak` diisi |
 | Penggajian | dibuat DIAJUKAN → Owner DISETUJUI (cek saldo kas ≥ total THP, jurnal umum dibuat, slip DISETUJUI) / DITOLAK |
 | Event (fee event) | `StatusEvent`: PENILAIAN (HRD mencatat, kapten menilai) → kapten kirim laporan → DIAJUKAN (data terkunci) → Owner setujui → SELESAI; Owner tolak → kembali PENILAIAN dengan `alasan_tolak` |
@@ -151,7 +155,7 @@ Aturan:
 - Cek periode tertutup memakai `pastikanTerbuka(tx, periode)` (otomatis di `buatJurnal`), selalu di dalam transaksi: fungsi ini memegang kunci advisory bersama sampai commit, sedangkan aksi kunci/buka periode memegang kunci eksklusif, jadi periode tidak bisa dikunci di tengah posting. Jangan memeriksa status baris periode sendiri. Baris periode baru dibuat dengan `pastikanPeriode`.
 - Setiap aksi yang mengubah data mencatat `catatLog`.
 - Nilai rupiah selalu bilangan bulat. Hitungan memakai fungsi di `src/lib/inti`, jangan menulis ulang rumus di komponen.
-- Tanggal di database kolom `@db.Date`: tulis dengan `keDate("2026-10-05")`, baca dengan `dariDate(d)`. Periode selalu string `"YYYY-MM"`. Hari ini: `hariIni()` (zona Asia/Jakarta).
+- Tanggal di database kolom `@db.Date`: tulis dengan `keDate("2026-10-05")`, baca dengan `dariDate(d)`. Periode di kode dan relasi selalu string `"YYYY-MM"`; di URL dan layar dipisah menjadi Bulan dan Tahun (lihat Keputusan "Bulan dan Tahun dipisah"). Hari ini: `hariIni()` (zona Asia/Jakarta).
 
 Di klien: `useAksi()` untuk menjalankan aksi (memuat, toast, refresh), atau `TombolAksi` untuk tombol satu aksi dengan dialog konfirmasi (`perluAlasan` untuk tolak/balik/buka kunci).
 
@@ -159,7 +163,7 @@ Di klien: `useAksi()` untuk menjalankan aksi (memuat, toast, refresh), atau `Tom
 
 - `page.tsx` adalah komponen server. Panggil `wajibMasuk()` (atau `wajibPeranHalaman([...])`) di awal, walau layout sudah memeriksa.
 - Data dibaca lewat fungsi di `src/lib/data/<siklus>/`. Yang dikirim ke komponen klien harus objek biasa (tanggal sudah jadi string).
-- Keadaan halaman (periode terpilih, form terbuka, dokumen yang dilihat) disimpan di query string, contoh `?periode=2026-10`, `?form=baru`, `?lihat=BP-2026-0001`.
+- Keadaan halaman (periode terpilih, form terbuka, dokumen yang dilihat) disimpan di query string, contoh `?bulan=10&tahun=2026`, `?form=baru`, `?lihat=BP-2026-0001`. Pemilih periode memakai `PilihBulanTahun`, server membaca `periodeDariCari`, tautan dibuat dengan `denganPeriode`.
 - Pakai komponen `src/komponen/ui`: `KepalaHalaman`, `Kartu`/`KepalaKartu`, `KartuRingkasan`, `Tabel`/`BarisKosong`, `Bidang`/`Isian`/`Pilihan`/`AreaTeks`/`IsianRupiah`, `Tombol`/`TautanTombol`, `TombolAksi`, `DialogKonfirmasi`, `LencanaStatus`, `Rupiah`, `TabelJurnal`, `Peringatan`, `KeadaanKosong`. Jangan menulis gaya baru kalau komponennya sudah ada; kalau butuh komponen bersama baru, minta ke koordinator.
 - Teks UI dan komentar berbahasa Indonesia. Hindari tanda pisah panjang di teks.
 
@@ -178,7 +182,8 @@ Dibuat oleh `src/lib/server/nomor.ts`, penghitung atomik di tabel `penghitung` (
 | Investasi Kas | `INV-2026-0003` (tahun dari tanggal setoran; penghitung `INV2026` melanjutkan hasil backfill dan seed) | `nomorDokumen(tx, AWALAN.INVESTASI_KAS, tanggal)` |
 | Slip fee | `SFE-EVT-2026-0001-KRY-06` (satu per orang per event) | `nomorSlipFee(eventKode, karyawanKode)` |
 | Aset | `AST-0010` | `kodeBerikutnya(tx, AWALAN.ASET, 4)` |
-| Master | `SUP-04`, `ALT-07`, `LKP-06`, `KAT-05`, `KRY-06`, `JBT-05`, `GP-05`, `TNJ-05`, `TM-05`, `SET-06` | `kodeBerikutnya(tx, AWALAN.X)` |
+| Master | `SUP-04`, `ALT-07`, `LKP-06`, `KAT-05`, `KRY-06`, `JBT-05`, `GP-05`, `TNJ-05`, `TM-05` | `kodeBerikutnya(tx, AWALAN.X)` |
+| Versi setting gaji | `SET-08` (satu kode per versi, melanjutkan kode setting lama) | `kodeBerikutnya(tx, AWALAN.SETTING_GAJI)` |
 | Akun | kode diketik Owner (`1-110`), tidak bisa diubah sesudah dibuat | |
 | Opname | `OPN-2026-10` (satu per periode) | `nomorOpname(periode)` |
 | Slip | `SLP-2026-10-KRY-01` (satu per karyawan per periode) | `nomorSlip(periode, kode)` |
@@ -221,7 +226,7 @@ Selesai mengerjakan: `npm run cek-tipe`, `npm run lint`, `npm run uji`, dan `npm
 - Kunci periode berurutan (audit putaran kedua): tanpa aturan ini November bisa dikunci saat Oktober masih terbuka, lalu pembelian bertanggal 30 Oktober ikut mengubah saldo November. Halaman Tutup Periode hanya menampilkan tombol kunci atau buka yang sesuai urutan.
 - Skema zod mengimpor `z` dari `src/lib/skema/zod.ts`, bukan dari `"zod"`, supaya pesan bawaan (isian tidak terkirim, tipe salah) berbahasa Indonesia di server maupun form klien. Pesan per isian tetap ditulis di skemanya.
 - Petunjuk akun demo di halaman masuk hanya tampil bila `TAMPILKAN_AKUN_DEMO=1` (`.env.example` dan server uji E2E), tidak di docker-compose maupun VPS.
-- Periode bawaan halaman SDM = periode berjalan, sama dengan dashboard. Tautan cepat dashboard ke halaman berperiode membawa `?periode` yang sedang dipilih; tautan "Perlu tindakan" SDM membawa periode pekerjaan yang tertunda.
+- Periode bawaan halaman SDM = periode berjalan, sama dengan dashboard. Tautan cepat dashboard ke halaman berperiode membawa `?bulan=&tahun=` yang sedang dipilih; tautan "Perlu tindakan" SDM membawa periode pekerjaan yang tertunda.
 - Kartu penyusutan di dashboard mengambil angka disetujui dari jurnal penyusutan yang disetujui, jadi aset yang dilepas sesudah penyusutannya disetujui tetap terhitung. Tabel halaman Proses Penyusutan juga memuat baris aset yang sudah dilepas (diberi lencana "dilepas"), sehingga total tabel sama dengan jurnal periodenya.
 - Kontrol form (`Isian`, `Pilihan`, `AreaTeks`, `IsianRupiah`) otomatis menunjuk pesan galat `<id>-galat` lewat `aria-describedby`. Form yang memakai galat per isian memanggil `useFokusGalat` supaya isian salah pertama difokuskan sesudah kirim gagal. Laci menu layar kecil `inert` saat tertutup, Esc menutupnya, dan fokus pindah ke "Tutup menu" lalu kembali ke "Buka menu".
 
@@ -255,7 +260,7 @@ Alasan fitur: aplikasi ini sengaja hanya mencakup siklus konversi (peralatan, pe
 - **Keputusan sumber jurnal**: jurnal setoran lama diubah sumbernya ke `INVESTASI_KAS` supaya jejaknya sama dengan dokumen lain (jurnal menunjuk dokumen sumber, dokumen menunjuk jurnal) dan ringkasan cukup menggolongkan per sumber. Nilai `SALDO_AWAL` tetap ada di enum; jurnal SALDO_AWAL yang tidak berpola setoran (misalnya dari `prisma/tambah-dummy.ts` bila dijalankan lagi di database baru) tidak dipindah dan tampil di pos "lainnya" ringkasan.
 - **Seed**: dua setoran data contoh (JU-2026-0001 Rp30.000.000 dan JU-2026-0010 Rp75.000.000) menjadi INV-2026-0001 dan INV-2026-0002 dengan aturan yang sama dengan backfill, jadi nomor jurnal berikutnya tetap JU-2026-0012 dan neraca Oktober tetap Rp145.622.573.
 - **Ringkasan "Dari mana kas dan modal"** (`ringkasModal` di `src/lib/inti/modal.ts`, dites di `tests/modal.test.ts`): dihitung dari jurnal DISETUJUI per periode atau kumulatif. Modal Pemilik = setoran kas (sumber INVESTASI_KAS) + setoran barang (sumber PEMBELIAN, pembaliknya mengurangi) + lainnya. Kas masuk = Investasi Kas + hasil penjualan aset (PELEPASAN) + lainnya; kas keluar = siklus konversi (pembelian tunai dikurangi pembaliknya; pelunasan utang usaha belum ada di aplikasi) + siklus SDM (PENGGAJIAN, FEE_EVENT) + lainnya. Setiap baris jurnal Kas dan Modal masuk tepat satu pos, jadi saldo akhir ringkasan selalu sama dengan saldo buku besar; halaman membandingkannya dengan `saldoAkun` dan menampilkan lencana "sama dengan buku besar".
-- **Kas kurang**: persetujuan penggajian dan fee event menolak dengan `pesanKasKurang` (menyebut kekurangannya dan mengarahkan ke menu Investasi Kas); peringatan di halaman Distribusi Gaji dan keputusan fee memberi tautan ke form setoran. Posting pembelian tunai tidak memeriksa saldo kas (perilaku lama, tidak diubah).
+- **Kas kurang**: persetujuan penggajian dan fee event menolak dengan `pesanKasKurang` (menyebut kekurangannya dan mengarahkan ke menu Investasi Kas); peringatan di halaman Distribusi Gaji dan keputusan fee memberi tautan ke form setoran. Posting pembelian tunai juga memeriksa saldo kas (lihat Keputusan "Cek kas pembelian tunai").
 - **Dashboard dan menu**: Owner melihat "N setoran modal menunggu keputusan" di Perlu tindakan, dan lencana angka di menu Investasi Kas. Menu ditaruh di grup baru **Modal pemilik** di atas Siklus konversi, karena kas dari setoran ini menjadi masukan kedua siklus; Jurnal & laporan berisi keluaran siklus akuntansi.
 
 ### Biaya tetap dan biaya variabel (siklus SDM)
@@ -263,7 +268,35 @@ Alasan fitur: aplikasi ini sengaja hanya mencakup siklus konversi (peralatan, pe
 - **Gaji inhouse = biaya tetap.** Komponennya (jabatan, golongan atau gaji pokok, tunjangan jabatan, tunjangan keluarga, tunjangan lain) diatur sekali di Master SDM, Setting Gaji, dan tidak dibuat ulang tiap bulan. Tiap bulan HRD cukup mengisi presensi lalu Hitung Gaji; yang berubah hanya potongan absen (gaji pokok / hari kerja x alpa), lalu PPh 21 dan THP. Terlambat tidak memotong gaji.
 - **Fee crew event = biaya variabel**: tarif per jam x jam diakui (crew) atau tarif per hari x jumlah hari hadir (kapten), per event.
 - Rumus tidak diubah (`hitungGaji`, `hitungSlipSemua`, `src/lib/inti/fee-event.ts`). Yang ditambah hanya tampilan: label grup menu "Siklus SDM: gaji inhouse (biaya tetap)" dan "Siklus SDM: fee event (biaya variabel)", lencana Biaya tetap atau Biaya variabel di judul halaman Presensi, Hitung Gaji, Distribusi Gaji, Event & Kehadiran, Laporan & Fee, slip gaji, dan slip fee.
-- **Hitung Gaji**: panel penjelasan komponen tetap lawan isian bulanan, dan tabel "Kesiapan gaji" per karyawan inhouse aktif (setting gaji ada atau tidak, presensi x dari y hari, status slip, tautan ke Setting Gaji atau Presensi bila belum siap; `kesiapanGaji` di `src/lib/data/sdm/gaji.ts`).
+- **Hitung Gaji**: panel penjelasan komponen tetap lawan isian bulanan, dan tabel "Kesiapan gaji" per karyawan inhouse aktif (setting gaji berlaku di bulan itu atau tidak, presensi x dari y hari, status slip, tautan ke Setting Gaji atau Presensi bila belum siap; `kesiapanGaji` di `src/lib/data/sdm/gaji.ts`).
 - **Slip gaji** (layar dan cetak) dua blok: "Komponen tetap (dari Setting Gaji)" dan "Penyesuaian bulan ini (dari presensi)" berisi rekap hadir, izin, sakit, cuti, alpa, terlambat, potongan absen beserta rumusnya, bruto, PPh 21, THP.
 - **Slip fee dan halaman keputusan** menampilkan rumus biaya variabel per orang, contoh "Rp20.000/jam x 6 jam 30 mnt diakui = Rp130.000".
 - **Biaya SDM di ringkasan Investasi Kas** (`ringkasModal().biayaSdm`): biaya tetap = bruto jurnal PENGGAJIAN, biaya variabel = bruto jurnal FEE_EVENT (semua baris selain Kas dan Utang PPh 21), per periode atau kumulatif. Biaya tetap + biaya variabel - PPh 21 dipotong = kas keluar siklus SDM (dites dan ditampilkan dengan lencana "sama dengan kas keluar SDM"). Biaya dicatat bruto, sedangkan kas keluar sudah dikurangi PPh 21 yang menjadi utang.
+
+### Riwayat setting gaji (promosi, demosi, penyesuaian)
+
+Masalah lama: `simpanMaster` jenis `setgaji` menimpa baris `setting_gaji`, tanpa persetujuan, tanpa tanggal berlaku, dan log hanya "master.ubah". Riwayat hilang, dan slip draf bulan lalu yang dihitung ulang sesudah promosi ikut memakai gaji baru.
+
+- **Struktur**: `setting_gaji` diperluas menjadi tabel riwayat (unique per karyawan dihapus). Satu baris = satu versi: karyawan, jabatan, golongan, tunjangan (`setting_tunjangan`), `berlaku_mulai` (FK ke `periode`), `jenis_perubahan` (SETTING_AWAL, PROMOSI, DEMOSI, PENYESUAIAN), `alasan`, `status` (DIAJUKAN, DISETUJUI, DITOLAK; CHECK tanpa DRAFT, DITOLAK wajib beralasan, keputusan wajib bertanggal), `alasan_tolak`, `diajukan_oleh/pada`, `diputuskan_oleh/pada`. Tidak dipakai tabel riwayat terpisah dengan `setting_gaji` sebagai penunjuk versi aktif, karena versi aktif bergantung pada bulan yang dihitung (November memakai versi lama, Desember versi promosi); penunjuk statis harus digeser tiap bulan dan bisa basi. Versi dipilih saat dibaca. Kolom lama `aktif` tetap ada: versi lama yang sudah dinonaktifkan dianggap tidak berlaku; versi baru selalu aktif dan tidak bisa dinonaktifkan (`ubahStatusMaster` menolak `setgaji`).
+- **Pemilih versi** (`pilihVersiBerlaku` di `src/lib/inti/setting-gaji.ts`): periode P memakai versi DISETUJUI dengan `berlaku_mulai <= P` yang paling akhir; bila dua versi disetujui berlaku di bulan yang sama (koreksi), yang diputuskan belakangan menang dan yang lama tampil "digantikan". `muatBahanGaji`, `kesiapanGaji`, presensi (jadwal kerja dari jabatan versi bulan itu), dan Hitung Gaji memakai pemilih ini. Karyawan tanpa versi berlaku tampil "Belum ada setting gaji berlaku" di kesiapan, dengan catatan pengajuan yang menunggu atau versi yang baru berlaku nanti.
+- **Pengaman** (`pengamanBerlaku`, dicek saat mengajukan dan sekali lagi saat menyetujui): bulan berlaku harus periode terbuka; karyawan belum punya slip DIAJUKAN atau DISETUJUI di bulan berlaku atau sesudahnya (pesan menyebut bulan paling awal yang boleh); bulan berlaku tidak lebih awal dari versi yang dipakai slip non-draf terakhir; tidak ada pengajuan DIAJUKAN lain untuk karyawan dan bulan yang sama; jenis SETTING_AWAL hanya untuk karyawan tanpa versi disetujui; isi yang sama persis dengan versi berlaku ditolak. Karyawan dan rujukannya (jabatan inhouse, golongan, tunjangan) harus aktif.
+- **Slip draf**: persetujuan tidak menghapus slip draf. Slip menyimpan versi yang dipakai (`slip_gaji.id_setting`); slip draf dengan versi lain dari versi yang berlaku untuk bulannya ditandai "perlu dihitung ulang" dan `ajukanPenggajian` menolaknya sampai dihitung ulang. Alasannya: data tidak hilang diam-diam, dan gaji yang diajukan dan dibayar selalu sesuai setting yang berlaku. Peringatan muncul di form pengajuan (pratinjau), di kartu pengajuan Owner, di toast setujui, dan di Hitung Gaji.
+- **Serialisasi**: kunci advisory 7410002 (eksklusif saat menyetujui, bersama saat Hitung Gaji dan pengajuan penggajian) dan `SELECT ... FOR UPDATE` baris karyawan saat mengajukan dan memutuskan.
+- **Log**: `setting-gaji.ajukan`, `setting-gaji.setujui`, `setting-gaji.tolak` mencatat nilai lama (versi yang berlaku di bulan itu) dan baru: jabatan, golongan dan gaji pokok, tunjangan jabatan, tunjangan lain, berlaku mulai, alasan, dan slip draf yang terdampak (`keteranganLog`).
+- **Masuk laporan keuangan periode apa**: mengajukan dan menyetujui setting gaji tidak membuat jurnal. Dampaknya muncul di slip dan penggajian bulan berlaku dan sesudahnya; jurnal gajinya bertanggal akhir bulan itu saat Owner menyetujui penggajiannya. Slip yang sudah diajukan atau dibayar tidak berubah, dan slip bulan sebelum bulan berlaku tetap memakai setting lama walau dihitung ulang. Teks ini tampil di halaman Setting Gaji dan Hitung Gaji.
+- **Hitung Gaji** per baris menampilkan versi yang dipakai (kode, jabatan, golongan, berlaku mulai; slip terkunci memakai versi yang tersimpan di slip), versi lebih baru yang belum berlaku atau pengajuan yang menunggu, "Angka slip terkunci saat diajukan/dibayar", dan tombol "Hitung ulang" untuk slip draf yang perlu dihitung ulang. Hitung Gaji dan Distribusi punya ringkasan per tahun (12 bulan: belum ada presensi, presensi tanpa slip, slip draf, diajukan, dibayar, dan total THP).
+- **Menu dan dashboard**: menu Setting Gaji di grup Siklus SDM gaji inhouse dengan lencana angka pengajuan yang menunggu (Owner); dashboard Owner menampilkan "N pengajuan setting gaji menunggu keputusan" di Perlu tindakan dan menghitungnya di kartu Menunggu persetujuan.
+- **Migrasi** `20261123120000_setting_gaji_riwayat`: setiap setting lama menjadi versi DISETUJUI berjenis SETTING_AWAL, berlaku mulai bulan presensi atau slip pertama karyawan itu (atau 2026-10), pengaju dan waktunya dari log `master.tambah` bila ada. Nilai lama setting yang pernah ditimpa (log `master.ubah`) tidak tersimpan di mana pun, jadi isi sekarang menjadi versi awal. Slip lama diberi `id_setting` hanya bila jabatan, golongan, dan tunjangannya sama dengan setting itu; selain itu kosong dan tampil "Setting lama (sebelum riwayat)". Jurnal, detail jurnal, dan nilai slip tidak berubah.
+- **Seed**: SET-01 sampai SET-05 setting awal DISETUJUI berlaku Oktober 2026, SET-06 promosi KRY-04 (Crew Produksi ke Operator Sound & Lighting, Golongan II) DISETUJUI berlaku Desember 2026, SET-07 penyesuaian KRY-05 (tambah tunjangan kesehatan) berlaku Januari 2027 menunggu Owner. Gaji Oktober dan November tidak berubah. `prisma/tambah-dummy.ts` membuat setting awal karyawan barunya lewat ajukan lalu setujui (berlaku Oktober 2026).
+- **Belum dicakup**: nominal di master Jabatan, Golongan, dan Tunjangan tidak berversi. Mengubah nominal master langsung memengaruhi semua slip yang belum terkunci, termasuk draf bulan lalu.
+
+### Bulan dan Tahun dipisah
+
+- Semua pilihan periode (dashboard, Jurnal Umum, Buku Besar, Neraca Saldo, Investasi Kas, Presensi, Hitung Gaji, Distribusi, Nilai Sisa, Penyusutan) memakai `PilihBulanTahun`: kontrol Bulan dan Tahun terpisah, parameter `?bulan=11&tahun=2026` (`?tahun=semua` untuk Jurnal Umum dan Investasi Kas). Tahun tampil sendiri, dan pilihan Bulan hanya berisi bulan yang tersedia di tahun itu. Halaman SDM menjangkau semua baris tabel periode (di produksi 2026-10 sampai 2034-10) ditambah bulan berjalan, bulan lalu, bulan depan, dan bulan yang punya presensi, slip, atau versi setting. Pilihan berlaku mulai di form setting gaji: semua baris periode ditambah 12 bulan ke depan. Jurnal Penyesuaian dan Tutup Periode tidak punya pemilih periode; Tutup Periode menulis judul kartu "Bulan: Oktober · Tahun: 2026". Fee event tidak punya filter periode.
+- Tautan lama `?periode=2026-11` (dan `?periode=semua`) dialihkan proxy (307, hanya GET dan HEAD, parameter lain dipertahankan) oleh `cariTanpaPeriodeLama`. Halaman juga tetap bisa membaca `?periode=` lewat `periodeDariCari`.
+- Judul layar memakai lencana "Bulan: November · Tahun: 2026" (`LencanaPeriode`), laporan saldo kumulatif menulis "Sampai akhir · Bulan: ... · Tahun: ...". Kepala cetak Buku Besar "Bulan: ... · Tahun: ...", Neraca Saldo "Saldo sampai akhir periode · Bulan: ... · Tahun: ...". Pesan singkat (toast, galat) tetap "November 2026".
+- **Database**: `periode` punya kolom `bulan` (1-12) dan `tahun`, generated column (`GENERATED ALWAYS AS (...) STORED`), jadi selalu terisi untuk semua baris lama dan baru tanpa diisi aplikasi (`@default(dbgenerated())` di skema, Prisma tidak menulisnya). Id `"YYYY-MM"` tetap kunci utama supaya semua relasi lama (jurnal, slip, penggajian, jadwal, opname, setting) tidak berubah. Tabel lain (slip_gaji, penggajian, setting_gaji) tidak diberi kolom bulan dan tahun sendiri: semuanya FK ke `periode`, jadi laporan per bulan atau tahun cukup join ke `periode`.
+
+### Cek kas pembelian tunai
+
+Posting pembelian tunai (`postingDalamTransaksi`, juga Simpan dan posting) menolak bila saldo kas tidak cukup, dengan `pesanKasKurang` yang mengarah ke Investasi Kas. Yang dicek adalah saldo kas terendah di akhir bulan tanggal pembelian dan setiap bulan sesudahnya (`saldoKasTerendah`), karena pembelian bertanggal mundur mengurangi saldo semua bulan itu; penggajian dan fee event tetap memakai saldo total. Periode tertutup dilaporkan lebih dulu. Kunci advisory 7410003 menyerialkan posting tunai. Data contoh dan `prisma/tambah-dummy-konversi.ts` (yang meniru cek yang sama) lolos. Tes `nilai-sisa-mundur` kini memakai pembelian kredit bertanggal September, karena kas baru ada sejak setoran Oktober.

@@ -7,7 +7,9 @@ import { dataBukuBesar } from "@/lib/data/pelaporan/jurnal";
 import { periodeLaporanBawaan, semuaPeriode } from "@/lib/data/pelaporan/periode";
 import { AKUN } from "@/lib/inti/akun";
 import { rupiah } from "@/lib/format";
-import { hariTerakhir, labelPeriode, labelTanggal } from "@/lib/inti/tanggal";
+import { bulanDari, hariTerakhir, labelBulanTahun, labelTanggal, periodeDariCari, tahunDari } from "@/lib/inti/tanggal";
+import PilihBulanTahun from "@/komponen/ui/PilihBulanTahun";
+import LencanaPeriode from "@/komponen/ui/LencanaPeriode";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
 import Tabel, { BarisKosong } from "@/komponen/ui/Tabel";
@@ -18,7 +20,7 @@ import { KepalaCetak, TombolCetak } from "@/komponen/pelaporan/Cetak";
 import PilihTahap, { judulTahap } from "@/komponen/pelaporan/PilihTahap";
 import { tahapDari } from "@/lib/inti/buku-besar";
 
-type Cari = { akun?: string; periode?: string; tahap?: string };
+type Cari = { akun?: string; periode?: string; bulan?: string; tahun?: string; tahap?: string };
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<Cari> }): Promise<Metadata> {
   return { title: judulTahap("Buku Besar", tahapDari((await searchParams).tahap)) };
@@ -35,7 +37,8 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
     db.akun.findMany({ orderBy: { kode: "asc" }, select: { kode: true, nama: true } }),
     profilUsaha(),
   ]);
-  const periode = cari.periode && semua.includes(cari.periode) ? cari.periode : bawaan;
+  const dipilih = periodeDariCari(cari);
+  const periode = dipilih && semua.includes(dipilih) ? dipilih : bawaan;
   const kode = cari.akun && daftarAkun.some((a) => a.kode === cari.akun) ? cari.akun : AKUN.KAS;
   const bb = await dataBukuBesar(kode, periode, tahap);
 
@@ -43,6 +46,7 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
     <>
       <KepalaHalaman
         judul={judul}
+        lencana={<LencanaPeriode periode={periode} />}
         keterangan={
           tahap === "sebelum"
             ? "Saldo berjalan per akun dari jurnal umum dan pembalik yang disetujui. Saldo awal sudah memuat jurnal penyesuaian periode lalu; jurnal penyesuaian periode ini belum dihitung."
@@ -52,14 +56,14 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
       />
       <div className="tanpa-cetak flex flex-wrap gap-3">
         <FilterUrl nama="akun" label="Akun" nilai={kode} opsi={daftarAkun.map((a) => ({ nilai: a.kode, label: `${a.kode} · ${a.nama}` }))} />
-        <FilterUrl nama="periode" label="Periode" nilai={periode} opsi={[...semua].reverse().map((p) => ({ nilai: p, label: labelPeriode(p) }))} />
-        <PilihTahap alamat="/pelaporan/buku-besar" tahap={tahap} param={{ akun: kode, periode }} />
+        <PilihBulanTahun periode={periode} tersedia={semua} />
+        <PilihTahap alamat="/pelaporan/buku-besar" tahap={tahap} param={{ akun: kode, bulan: String(bulanDari(periode)), tahun: String(tahunDari(periode)) }} />
       </div>
       {bb && (
         <>
-          <KepalaCetak usaha={usaha.nama} judul={`${judul}: ${bb.akun.kode} ${bb.akun.nama}`} keterangan={labelPeriode(periode)} />
+          <KepalaCetak usaha={usaha.nama} judul={`${judul}: ${bb.akun.kode} ${bb.akun.nama}`} keterangan={labelBulanTahun(periode)} />
           <Kartu rapat>
-            <KepalaKartu judul={`${bb.akun.kode} · ${bb.akun.nama}`} keterangan={`Saldo normal ${bb.akun.saldoNormal === "D" ? "debit" : "kredit"} · ${labelPeriode(periode)}${bb.adaPenyesuaian ? ` · sebelum penyesuaian ${rupiah(bb.saldoSebelumPenyesuaian)}, penyesuaian ${rupiah(bb.mutasiPenyesuaian)}` : ""}`} />
+            <KepalaKartu judul={`${bb.akun.kode} · ${bb.akun.nama}`} keterangan={`Saldo normal ${bb.akun.saldoNormal === "D" ? "debit" : "kredit"} · ${labelBulanTahun(periode)}${bb.adaPenyesuaian ? ` · sebelum penyesuaian ${rupiah(bb.saldoSebelumPenyesuaian)}, penyesuaian ${rupiah(bb.mutasiPenyesuaian)}` : ""}`} />
             <Tabel label="Buku besar">
               <thead>
                 <tr>

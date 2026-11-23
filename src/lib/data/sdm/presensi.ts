@@ -5,6 +5,7 @@ import { db } from "@/lib/server/db";
 import { dariDate, keDate, hariTerakhir } from "@/lib/inti/tanggal";
 import { jamKerjaHarian, rekapPresensi, type RekapPresensi } from "@/lib/inti/penggajian";
 import type { Absensi } from "@/generated/prisma/enums";
+import { versiBerlakuPeriode } from "@/lib/data/sdm/gaji";
 
 export type BarisRekap = {
   kode: string;
@@ -19,13 +20,17 @@ export type BarisRekap = {
 const awalBulan = (periode: string) => keDate(`${periode}-01`);
 const akhirBulan = (periode: string) => keDate(hariTerakhir(periode));
 
-/** Karyawan inhouse aktif beserta jabatan dan jadwal kerjanya (dari setting gaji). Crew event tidak memakai presensi bulanan. */
-async function karyawanAktif() {
-  return db.karyawan.findMany({
-    where: { aktif: true, jenis: "INHOUSE" },
-    orderBy: { kode: "asc" },
-    select: { kode: true, nama: true, settingGaji: { select: { aktif: true, jabatan: { select: { nama: true, jadwalKerja: { select: { kode: true, hariKerja: true, jamMasuk: true, jamKeluar: true } } } } } } },
-  });
+/**
+ * Karyawan inhouse aktif beserta jabatan dan jadwal kerjanya dari versi setting gaji yang berlaku di periode itu.
+ * Crew event tidak memakai presensi bulanan.
+ */
+async function karyawanAktif(periode: string) {
+  const [daftar, versi] = await Promise.all([
+    db.karyawan.findMany({ where: { aktif: true, jenis: "INHOUSE" }, orderBy: { kode: "asc" }, select: { kode: true, nama: true } }),
+    versiBerlakuPeriode(db, periode),
+  ]);
+  const peta = new Map(versi.map((v) => [v.karyawanKode, v.jabatan]));
+  return daftar.map((k) => ({ ...k, jabatan: peta.get(k.kode) ?? null }));
 }
 
 /** Kode karyawan yang slipnya di periode ini bukan DRAFT (presensinya terkunci). */
@@ -36,12 +41,12 @@ export async function karyawanTerkunci(periode: string): Promise<Set<string>> {
 
 export async function rekapBulanan(periode: string): Promise<BarisRekap[]> {
   const [karyawan, presensi, kunci] = await Promise.all([
-    karyawanAktif(),
+    karyawanAktif(periode),
     db.presensi.findMany({ where: { tanggal: { gte: awalBulan(periode), lte: akhirBulan(periode) } }, select: { karyawanKode: true, absensi: true, jamMasuk: true, jamKeluar: true, terlambat: true } }),
     karyawanTerkunci(periode),
   ]);
   return karyawan.map((k) => {
-    const jabatan = k.settingGaji?.jabatan;
+    const jabatan = k.jabatan;
     return {
       kode: k.kode,
       nama: k.nama,
@@ -91,15 +96,15 @@ export async function presensiHarian(periode: string, karyawanKode?: string): Pr
   }));
 }
 
-/** Pilihan karyawan untuk form dan filter. `siapInput` = punya setting gaji aktif dan jadwal kerja. */
-export async function opsiKaryawanPresensi() {
-  const daftar = await karyawanAktif();
+/** Pilihan karyawan untuk form dan filter. `siapInput` = punya setting gaji berlaku di periode ini dan jadwal kerja. */
+export async function opsiKaryawanPresensi(periode: string) {
+  const daftar = await karyawanAktif(periode);
   return daftar.map((k) => ({
     kode: k.kode,
     nama: k.nama,
-    siapInput: !!k.settingGaji?.aktif && !!k.settingGaji.jabatan.jadwalKerja,
-    jamMasuk: k.settingGaji?.jabatan.jadwalKerja?.jamMasuk ?? "",
-    jamKeluar: k.settingGaji?.jabatan.jadwalKerja?.jamKeluar ?? "",
+    siapInput: !!k.jabatan?.jadwalKerja,
+    jamMasuk: k.jabatan?.jadwalKerja?.jamMasuk ?? "",
+    jamKeluar: k.jabatan?.jadwalKerja?.jamKeluar ?? "",
   }));
 }
 

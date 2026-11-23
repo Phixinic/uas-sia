@@ -142,10 +142,11 @@
 <text x="181.10" y="421.43" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Ajukan distribusi</tspan></text>
 <text x="181.10" y="429.94" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">gaji</tspan></text>
 <ellipse cx="533.00" cy="238.70" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
-<text x="533.00" y="237.03" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Setujui atau tolak</tspan></text>
-<text x="533.00" y="245.54" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">penggajian</tspan></text>
+<text x="533.00" y="237.03" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Setujui/tolak penggajian</tspan></text>
+<text x="533.00" y="245.54" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">dan setting gaji</tspan></text>
 <ellipse cx="127.80" cy="306.20" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
-<text x="127.80" y="308.78" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kelola master SDM</tspan></text>
+<text x="127.80" y="304.53" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kelola master SDM,</tspan></text>
+<text x="127.80" y="313.04" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">ajukan setting gaji</tspan></text>
 <ellipse cx="655.90" cy="191.70" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
 <text x="655.90" y="190.03" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Tutup periode (mengunci</tspan></text>
 <text x="655.90" y="198.54" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">periode) dan buka kunci</tspan></text>

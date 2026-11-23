@@ -8,10 +8,10 @@ import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
 import Lencana, { LencanaStatus } from "@/komponen/ui/Lencana";
 import Tabel from "@/komponen/ui/Tabel";
 import { DaftarHP, KartuHP, RincianHP, TabelLebar } from "@/komponen/fee-event/Ringkas";
-import { labelPeriode } from "@/lib/inti/tanggal";
+import { denganPeriode, labelBulanTahun } from "@/lib/inti/tanggal";
 import type { KesiapanGaji as DataKesiapan } from "@/lib/data/sdm/gaji";
 
-const ALAMAT_SETTING = "/master/sdm?tab=setgaji";
+const ALAMAT_SETTING = "/sdm/setting-gaji";
 
 export function PanelBiayaTetap() {
   return (
@@ -21,7 +21,7 @@ export function PanelBiayaTetap() {
           <h2 className="font-semibold text-slate-900">Komponen tetap, diatur sekali</h2>
           <p className="mt-1 text-slate-600">
             Jabatan, golongan (gaji pokok), tunjangan jabatan, tunjangan keluarga, dan tunjangan lain diambil dari{" "}
-            <Link className="font-medium underline" href={ALAMAT_SETTING}>Setting Gaji di Master SDM</Link>. Setting ini tidak perlu dibuat ulang tiap bulan, jadi gaji inhouse adalah biaya tetap.
+            <Link className="font-medium underline" href={ALAMAT_SETTING}>Setting Gaji</Link> versi yang berlaku di bulan itu. Setting ini tidak perlu dibuat ulang tiap bulan, jadi gaji inhouse adalah biaya tetap. Promosi, demosi, atau penyesuaian menjadi versi baru dengan bulan berlaku setelah disetujui Owner.
           </p>
         </div>
         <div>
@@ -36,7 +36,13 @@ export function PanelBiayaTetap() {
 }
 
 function Setting({ k }: { k: DataKesiapan }) {
-  return k.adaSetting ? <Lencana warna="hijau">Ada</Lencana> : <Lencana warna="merah">Belum ada</Lencana>;
+  if (k.adaSetting) return <Lencana warna="hijau">Berlaku</Lencana>;
+  return (
+    <span className="inline-flex flex-col items-start gap-0.5">
+      <Lencana warna="merah">Belum ada setting gaji berlaku</Lencana>
+      {k.catatanSetting && <span className="text-[11px] text-slate-500">{k.catatanSetting}</span>}
+    </span>
+  );
 }
 
 function Presensi({ k }: { k: DataKesiapan }) {
@@ -50,14 +56,14 @@ function Slip({ k }: { k: DataKesiapan }) {
   return (
     <span className="inline-flex flex-wrap items-center gap-1">
       <LencanaStatus jenis="slip" status={k.slipStatus} />
-      {k.perluHitungUlang && <Lencana warna="kuning">hitung ulang</Lencana>}
+      {k.perluHitungUlang && <Lencana warna="kuning">{k.settingBerubah ? "setting berubah, hitung ulang" : "hitung ulang"}</Lencana>}
     </span>
   );
 }
 
 function TindakLanjut({ k, periode }: { k: DataKesiapan; periode: string }) {
-  const presensi = `/sdm/presensi?periode=${periode}&tab=harian&karyawan=${k.karyawanKode}`;
-  if (!k.adaSetting) return <Link className="font-medium underline" href={ALAMAT_SETTING}>Buat setting gaji</Link>;
+  const presensi = `${denganPeriode("/sdm/presensi", periode)}&tab=harian&karyawan=${k.karyawanKode}`;
+  if (!k.adaSetting) return <Link className="font-medium underline" href={`${ALAMAT_SETTING}?form=baru&karyawan=${k.karyawanKode}`}>{k.catatanSetting ? "Lihat setting gaji" : "Ajukan setting gaji"}</Link>;
   // Slip yang sudah diajukan atau dibayar mengunci presensi periodenya, jadi tidak ada lagi yang perlu dilengkapi.
   if (k.slipStatus === "DISETUJUI") return <span className="text-emerald-700">Selesai, gaji dibayar</span>;
   if (k.slipStatus === "DIAJUKAN") return <span className="text-slate-600">Menunggu keputusan Owner</span>;
@@ -72,7 +78,7 @@ export function KesiapanGaji({ daftar, periode }: { daftar: DataKesiapan[]; peri
   const siap = daftar.filter((k) => k.adaSetting && k.presensi > 0).length;
   return (
     <Kartu rapat>
-      <KepalaKartu judul={`Kesiapan gaji ${labelPeriode(periode)}`} keterangan={`${siap} dari ${daftar.length} karyawan inhouse punya setting gaji dan presensi`} />
+      <KepalaKartu judul={`Kesiapan gaji · ${labelBulanTahun(periode)}`} keterangan={`${siap} dari ${daftar.length} karyawan inhouse punya setting gaji berlaku dan presensi`} />
       <DaftarHP label="Kesiapan gaji per karyawan">
         {daftar.map((k) => (
           <KartuHP key={k.karyawanKode} judul={k.nama} sub={`${k.karyawanKode}${k.jabatan ? ` · ${k.jabatan}` : ""}`} kanan={<Slip k={k} />}>
@@ -86,7 +92,7 @@ export function KesiapanGaji({ daftar, periode }: { daftar: DataKesiapan[]; peri
           <thead>
             <tr>
               <th>Karyawan</th>
-              <th>Setting gaji (komponen tetap)</th>
+              <th>Setting gaji berlaku (komponen tetap)</th>
               <th>Presensi bulan ini</th>
               <th>Slip</th>
               <th>Tindak lanjut</th>

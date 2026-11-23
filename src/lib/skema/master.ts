@@ -159,7 +159,8 @@ export const DEF_MASTER: Record<JenisMaster, DefMaster> = {
     ],
   },
   setgaji: {
-    jenis: "setgaji", label: "Setting gaji", kelompok: "sdm", izin: "master-sdm.ubah",
+    jenis: "setgaji", label: "Setting gaji", kelompok: "sdm", izin: "setting-gaji.ajukan",
+    petunjuk: "Setting gaji tidak pernah ditimpa. Setiap setting awal, promosi, demosi, atau penyesuaian diajukan HRD atau Owner dengan bulan berlaku, lalu disetujui atau ditolak Owner. Riwayatnya tersimpan per karyawan.",
     isian: [
       { kunci: "karyawanKode", label: "Karyawan", tipe: "pilih", sumber: "karyawan", wajib: true },
       { kunci: "jabatanKode", label: "Jabatan", tipe: "pilih", sumber: "jabatan", wajib: true },

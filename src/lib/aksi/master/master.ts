@@ -108,10 +108,10 @@ async function simpan(tx: Tx, jenis: JenisMaster, kodeLama: string | null, v: Ni
       const jenisBaru = (s("jenis") || "INHOUSE") as JenisKaryawan;
       const data = { nama: s("nama"), statusPtkp: s("statusPtkp") as StatusPtkp, bank: s("bank"), noRek: s("noRek"), jenis: jenisBaru };
       if (baru) return (await tx.karyawan.create({ data: { kode: await kodeBerikutnya(tx, AWALAN.KARYAWAN), ...data } })).kode;
-      const lama = await tx.karyawan.findUniqueOrThrow({ where: { kode: kodeLama }, select: { jenis: true, settingGaji: { select: { kode: true } }, _count: { select: { presensi: true, slipGaji: true, penugasan: true, kehadiran: true } }, pengguna: { select: { id: true } } } });
+      const lama = await tx.karyawan.findUniqueOrThrow({ where: { kode: kodeLama }, select: { jenis: true, _count: { select: { settingGaji: true, presensi: true, slipGaji: true, penugasan: true, kehadiran: true } }, pengguna: { select: { id: true } } } });
       if (lama.jenis !== jenisBaru) {
         const c = lama._count;
-        if (jenisBaru === "EVENT" && (lama.settingGaji || c.presensi || c.slipGaji)) {
+        if (jenisBaru === "EVENT" && (c.settingGaji || c.presensi || c.slipGaji)) {
           throw new GalatAksi("Karyawan ini sudah punya setting gaji, presensi, atau slip gaji inhouse, jadi jenisnya tidak bisa diubah menjadi Event. Buat data karyawan baru untuk crew event.", { jenis: "Sudah dipakai di gaji inhouse." });
         }
         if (jenisBaru === "INHOUSE" && (c.penugasan || c.kehadiran || lama.pengguna)) {
@@ -166,31 +166,9 @@ async function simpan(tx: Tx, jenis: JenisMaster, kodeLama: string | null, v: Ni
       await tx.jadwalKerja.update({ where: { kode: kodeLama }, data });
       return kodeLama;
     }
-    case "setgaji": {
-      const lama = kodeLama ? await tx.settingGaji.findUnique({ where: { kode: kodeLama }, include: { tunjangan: true } }) : null;
-      const kodeTunj = [...new Set((v.tunjanganKodes as string[] | undefined) ?? [])];
-      const tunjDb = kodeTunj.length ? await tx.tunjangan.findMany({ where: { kode: { in: kodeTunj } }, select: { kode: true, aktif: true } }) : [];
-      if (tunjDb.length !== kodeTunj.length) throw new GalatAksi("Ada tunjangan yang tidak ditemukan.", { tunjanganKodes: "Tunjangan tidak ditemukan." });
-      const dipakai = new Set(lama?.tunjangan.map((t) => t.tunjanganKode));
-      if (tunjDb.some((t) => !t.aktif && !dipakai.has(t.kode))) throw new GalatAksi("Ada tunjangan yang sudah dinonaktifkan.", { tunjanganKodes: "Tunjangan nonaktif dipilih." });
-      await pastikanRujukan([
-        await ada("karyawan", s("karyawanKode"), "Karyawan", "karyawanKode", lama?.karyawanKode === s("karyawanKode")),
-        await ada("jabatan", s("jabatanKode"), "Jabatan", "jabatanKode", lama?.jabatanKode === s("jabatanKode")),
-        await ada("golongan", s("golonganKode"), "Gaji pokok", "golonganKode", lama?.golonganKode === s("golonganKode")),
-      ]);
-      await pastikanInhouse(tx, { karyawanKode: s("karyawanKode"), jabatanKode: s("jabatanKode") });
-      const bentrok = await tx.settingGaji.findFirst({ where: { karyawanKode: s("karyawanKode"), ...(kodeLama ? { kode: { not: kodeLama } } : {}) }, select: { kode: true } });
-      if (bentrok) throw new GalatAksi("Karyawan ini sudah punya setting gaji. Ubah data yang ada.", { karyawanKode: "Sudah punya setting gaji." });
-      const data = { karyawanKode: s("karyawanKode"), jabatanKode: s("jabatanKode"), golonganKode: s("golonganKode") };
-      if (baru) {
-        const kode = await kodeBerikutnya(tx, AWALAN.SETTING_GAJI);
-        await tx.settingGaji.create({ data: { kode, ...data, tunjangan: { create: kodeTunj.map((tunjanganKode) => ({ tunjanganKode })) } } });
-        return kode;
-      }
-      await tx.settingTunjangan.deleteMany({ where: { settingKode: kodeLama } });
-      await tx.settingGaji.update({ where: { kode: kodeLama }, data: { ...data, tunjangan: { create: kodeTunj.map((tunjanganKode) => ({ tunjanganKode })) } } });
-      return kodeLama;
-    }
+    case "setgaji":
+      // Setting gaji tidak pernah ditimpa: setiap versi lewat pengajuan dan persetujuan Owner (src/lib/aksi/master/setting-gaji.ts).
+      throw new GalatAksi("Setting gaji diubah lewat pengajuan di tab Setting gaji, lalu disetujui Owner.");
   }
 }
 
@@ -229,6 +207,7 @@ export async function ubahStatusMaster(input: unknown): Promise<HasilAksi> {
   return aksiAman(async () => {
     const pengguna = await wajibPeran(IZIN["master.nonaktifkan"]);
     const { jenis, kode, aktif } = validasi(skemaStatusMaster, input);
+    if (jenis === "setgaji") throw new GalatAksi("Versi setting gaji tidak dinonaktifkan. Ajukan perubahan setting, atau nonaktifkan karyawannya.");
     await db.$transaction(async (tx) => {
       const model = tx[MODEL[jenis] as "supplier"] as unknown as { updateMany: (a: unknown) => Promise<{ count: number }> };
       const n = await model.updateMany({ where: { kode }, data: { aktif } });

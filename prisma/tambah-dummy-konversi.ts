@@ -37,7 +37,8 @@ import { db, type Tx } from "../src/lib/server/db";
 import { GalatAksi, validasi } from "../src/lib/server/aksi";
 import { AWALAN, kodeBerikutnya, nomorDokumen, nomorOpname } from "../src/lib/server/nomor";
 import { pastikanPeriode, pastikanTerbuka } from "../src/lib/server/periode";
-import { ajukanJurnal, buatJurnal, muatJurnalBuku, saldoAkun, setujuiJurnal, tolakJurnal } from "../src/lib/server/jurnal";
+import { ajukanJurnal, buatJurnal, muatJurnalBuku, mutasiAkunPerPeriode, saldoAkun, setujuiJurnal, tahanKunciKas, tolakJurnal } from "../src/lib/server/jurnal";
+import { pesanKasKurang, saldoKasTerendah } from "../src/lib/inti/modal";
 import { catatLog } from "../src/lib/server/log";
 import { AKUN } from "../src/lib/inti/akun";
 import { barisOpname, barisPelepasan, barisPembalik, barisPembelian, barisPenyusutan, hitungPelepasan } from "../src/lib/inti/jurnal";
@@ -468,6 +469,15 @@ async function posting(tx: Tx, k: Konteks, no: string, olehId: number, pada: str
     } else {
       debit[AKUN.PERLENGKAPAN] = (debit[AKUN.PERLENGKAPAN] ?? 0) + d.qty * d.harga;
     }
+  }
+
+  // Cek saldo kas pembelian tunai, sama dengan postingDalamTransaksi (saldo akhir periode tanggal pembelian dan sesudahnya).
+  if (b.caraBayar === "TUNAI") {
+    await pastikanTerbuka(tx, mulai);
+    await tahanKunciKas(tx);
+    const total = Object.values(debit).reduce((s, x) => s + x, 0);
+    const kas = saldoKasTerendah(await mutasiAkunPerPeriode(tx, AKUN.KAS), mulai);
+    if (kas.saldo < total) throw new GalatAksi(pesanKasKurang(kas.saldo, total, `pembelian tunai ${no}`));
   }
 
   const namaSupplier = b.supplier?.nama ?? "Setoran pemilik";

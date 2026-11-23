@@ -1,14 +1,15 @@
 /*
- * Halaman Presensi (komponen server). Keadaan di URL: ?periode=2026-10&tab=rekap|harian&karyawan=KRY-01&form=baru|<id>.
+ * Halaman Presensi (komponen server). Keadaan di URL: ?bulan=10&tahun=2026&tab=rekap|harian&karyawan=KRY-01&form=baru|<id>.
  * Tombol input, ubah, dan hapus hanya untuk HRD; presensi terkunci bila slip periodenya sudah diajukan atau dibayar.
  */
 import LencanaBiaya from "@/komponen/sdm/LencanaBiaya";
 import { Plus } from "lucide-react";
 import { wajibMasuk } from "@/lib/server/auth";
 import { boleh } from "@/lib/peran";
-import { hariIni, labelPeriode, periodeDari } from "@/lib/inti/tanggal";
+import { denganPeriode, hariIni, labelBulanTahun, labelPeriode, periodeDari } from "@/lib/inti/tanggal";
 import { LABEL_ABSENSI } from "@/lib/format";
-import { opsiPeriodeSdm, periodeDipilih } from "@/lib/data/sdm/umum";
+import { opsiPeriodeSdm, periodeDipilih, type CariPeriode } from "@/lib/data/sdm/umum";
+import LencanaPeriode from "@/komponen/ui/LencanaPeriode";
 import { ambilPresensi, opsiKaryawanPresensi, presensiHarian, rekapBulanan } from "@/lib/data/sdm/presensi";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
@@ -28,21 +29,21 @@ const ALAMAT = "/sdm/presensi";
 const WARNA_ABSENSI: Record<Absensi, "hijau" | "merah" | "kuning" | "biru"> = { HADIR: "hijau", ALPA: "merah", SAKIT: "kuning", IZIN: "kuning", CUTI: "biru" };
 const jumlah = (n: number) => (n ? String(n) : "0");
 
-export type CariPresensi = { periode?: string; tab?: string; karyawan?: string; form?: string };
+export type CariPresensi = CariPeriode & { tab?: string; karyawan?: string; form?: string };
 
 export default async function HalamanPresensi({ cari }: { cari: CariPresensi }) {
   const pengguna = await wajibMasuk();
-  const periode = periodeDipilih(cari.periode);
+  const periode = periodeDipilih(cari);
   const tab = cari.tab === "harian" ? "harian" : "rekap";
   const bolehKelola = boleh(pengguna.peran, "presensi.kelola");
-  const dasar = `${ALAMAT}?periode=${periode}`;
+  const dasar = denganPeriode(ALAMAT, periode);
   const alamatTab = (t: string, kar?: string) => `${dasar}&tab=${t}${kar ? `&karyawan=${kar}` : ""}`;
 
   const [opsiPeriode, rekap, harian, karyawan] = await Promise.all([
     opsiPeriodeSdm(periode),
     rekapBulanan(periode),
     presensiHarian(periode, cari.karyawan || undefined),
-    opsiKaryawanPresensi(),
+    opsiKaryawanPresensi(periode),
   ]);
 
   // ----- Form -----
@@ -68,7 +69,7 @@ export default async function HalamanPresensi({ cari }: { cari: CariPresensi }) 
     <>
       <KepalaHalaman
         judul="Presensi"
-        lencana={<LencanaBiaya jenis="tetap" />}
+        lencana={<><LencanaBiaya jenis="tetap" /><LencanaPeriode periode={periode} /></>}
         keterangan="Catatan kehadiran harian karyawan inhouse dan rekapnya per periode. Kehadiran crew event dicatat di menu Event & Kehadiran. Jam kerja dikurangi istirahat 1 jam. Presensi terkunci setelah gaji periodenya diajukan."
         aksi={
           <>
@@ -99,7 +100,7 @@ export default async function HalamanPresensi({ cari }: { cari: CariPresensi }) 
 
       {tab === "rekap" ? (
         <Kartu rapat>
-          <KepalaKartu judul={`Rekap presensi ${labelPeriode(periode)}`} keterangan="Angka ini dipakai saat hitung gaji" />
+          <KepalaKartu judul={`Rekap presensi · ${labelBulanTahun(periode)}`} keterangan="Angka ini dipakai saat hitung gaji" />
           {rekap.length === 0 ? (
             <KeadaanKosong judul="Belum ada karyawan aktif" keterangan="Tambahkan karyawan di Master SDM." />
           ) : (
@@ -160,7 +161,7 @@ export default async function HalamanPresensi({ cari }: { cari: CariPresensi }) 
       ) : (
         <Kartu rapat>
           <KepalaKartu
-            judul={`Presensi harian ${labelPeriode(periode)}`}
+            judul={`Presensi harian · ${labelBulanTahun(periode)}`}
             keterangan={`${harian.length} catatan${filter ? ` untuk ${filter.nama}` : ""}`}
             aksi={filter ? <TautanTombol href={alamatTab("harian")} kecil varian="garis">Tampilkan semua karyawan</TautanTombol> : undefined}
           />

@@ -176,13 +176,16 @@ test("1d. Halaman masuk: petunjuk akun demo tampil karena server uji memasang TA
 
 test("1e. Dashboard HRD: tautan cepat SDM membawa periode yang sedang dipilih", async () => {
   const p = sesi.hrd.page;
+  // Tautan lama ?periode= dialihkan ke ?bulan=&tahun=; tautan cepat membawa bulan dan tahun yang dipilih.
   await bukaHalaman(p, "/?periode=2026-10");
+  await expect(p).toHaveURL(/\/\?bulan=10&tahun=2026$/);
   const cepat = kartu(p, "Tautan cepat");
-  await expect(cepat.getByRole("link", { name: "Presensi", exact: true })).toHaveAttribute("href", "/sdm/presensi?periode=2026-10");
-  await expect(cepat.getByRole("link", { name: "Hitung gaji", exact: true })).toHaveAttribute("href", "/sdm/hitung-gaji?periode=2026-10");
+  await expect(cepat.getByRole("link", { name: "Presensi", exact: true })).toHaveAttribute("href", "/sdm/presensi?bulan=10&tahun=2026");
+  await expect(cepat.getByRole("link", { name: "Hitung gaji", exact: true })).toHaveAttribute("href", "/sdm/hitung-gaji?bulan=10&tahun=2026");
   await cepat.getByRole("link", { name: "Distribusi gaji", exact: true }).click();
-  await p.waitForURL(/\/sdm\/distribusi\?periode=2026-10/);
-  await expect(p.locator("#pilih-periode")).toHaveValue("2026-10");
+  await p.waitForURL(/\/sdm\/distribusi\?bulan=10&tahun=2026/);
+  await expect(p.locator("#pilih-bulan")).toHaveValue("10");
+  await expect(p.locator("#pilih-tahun")).toHaveValue("2026");
 });
 
 /* ------------------------------------------------------------------ 2. Admin: pembelian */
@@ -362,7 +365,7 @@ test("5a. HRD input presensi November", async () => {
     }
   }
   await bukaHalaman(p, "/sdm/presensi?periode=2026-11");
-  await expect(p.getByText("Rekap presensi November 2026")).toBeVisible();
+  await expect(p.getByText("Rekap presensi · Bulan: November · Tahun: 2026")).toBeVisible();
   await foto(p, "hrd", "presensi-november");
   const sel = (kode: string, i: number) => baris(p, kode).locator("td").nth(i);
   await expect(sel("KRY-01", 3)).toHaveText("2");
@@ -463,7 +466,7 @@ test("6a2. Tahap penyesuaian: menu urut siklus, buku besar beban penyusutan Okto
   // Pilihan tahap membawa akun dan periode yang sedang dipilih.
   await p.getByRole("link", { name: "Setelah penyesuaian" }).click();
   await expect(p.getByRole("heading", { name: "Buku Besar Setelah Penyesuaian", level: 1 })).toBeVisible();
-  for (const q of [/akun=6-110/, /periode=2026-10/, /tahap=setelah/]) await expect(p).toHaveURL(q);
+  for (const q of [/akun=6-110/, /bulan=10&tahun=2026/, /tahap=setelah/]) await expect(p).toHaveURL(q);
   const jp = baris(p, "JP-2026-0001");
   await expect(jp.getByText("Penyesuaian", { exact: true })).toBeVisible();
   expect(angkaDari(await jp.locator("td").nth(3).innerText())).toBe(1_492_915);
@@ -476,10 +479,10 @@ test("6b. Tutup Oktober lulus, transaksi di Oktober ditolak, buka kembali dengan
   const po = sesi.owner.page;
   await bukaHalaman(po, "/pelaporan/tutup-periode");
   // Kunci berurutan: November baru bisa dikunci sesudah Oktober.
-  const nov = po.locator(".kartu", { has: po.getByRole("heading", { name: "November 2026" }) });
+  const nov = po.locator(".kartu", { has: po.getByRole("heading", { name: "Bulan: November · Tahun: 2026" }) });
   await expect(nov.getByText("Kunci Oktober 2026 dulu")).toBeVisible();
   await expect(nov.getByRole("button", { name: "Kunci periode" })).toHaveCount(0);
-  const okt = po.locator(".kartu", { has: po.getByRole("heading", { name: "Oktober 2026" }) });
+  const okt = po.locator(".kartu", { has: po.getByRole("heading", { name: "Bulan: Oktober · Tahun: 2026" }) });
   await expect(okt.getByText("Belum:", { exact: false })).toHaveCount(0);
   await okt.getByRole("button", { name: "Kunci periode" }).click();
   await konfirmasi(po);
@@ -495,7 +498,7 @@ test("6b. Tutup Oktober lulus, transaksi di Oktober ditolak, buka kembali dengan
   await expect(pa).toHaveURL(/form=baru/);
 
   await bukaHalaman(po, "/pelaporan/tutup-periode");
-  const okt2 = po.locator(".kartu", { has: po.getByRole("heading", { name: "Oktober 2026" }) });
+  const okt2 = po.locator(".kartu", { has: po.getByRole("heading", { name: "Bulan: Oktober · Tahun: 2026" }) });
   await okt2.getByRole("button", { name: "Buka kunci" }).click();
   await konfirmasi(po, "Koreksi uji E2E");
   await expect(okt2).toContainText("Terbuka");
@@ -582,15 +585,6 @@ const TAB_MASTER: DefTab[] = [
       await f.getByLabel("Hari kerja per bulan").fill("22");
     },
   },
-  {
-    kel: "sdm", tab: "setgaji", label: "Setting gaji", cari: "Karyawan Uji E2E",
-    isi: async (f) => {
-      await pilihTeks(f, "Karyawan", "Karyawan Uji E2E");
-      await pilihTeks(f, "Jabatan", "Jabatan Uji E2E");
-      await pilihTeks(f, "Gaji pokok", "Golongan Uji E2E");
-      await f.getByLabel(/Tunjangan Uji E2E/).check();
-    },
-  },
 ];
 
 test("7a. Form master dikirim kosong: pesan Indonesia, isian salah pertama difokuskan dan menunjuk pesannya", async () => {
@@ -627,6 +621,30 @@ async function nonaktifkan(p: Page, cari: string) {
   await konfirmasi(p);
   await expect(baris(p, cari).first()).toContainText("Nonaktif");
 }
+
+/*
+ * Setting gaji tidak lagi lewat form master: tautan lama tab Setting gaji dialihkan ke halaman Setting Gaji, Owner
+ * mengajukan setting awal (berlaku bulan berjalan) lalu menyetujuinya sendiri.
+ */
+test("7. Setting gaji: Owner mengajukan setting awal Karyawan Uji E2E lalu menyetujuinya", async () => {
+  const p = sesi.owner.page;
+  await bukaHalaman(p, "/master/sdm?tab=setgaji&form=baru");
+  await expect(p).toHaveURL(/\/sdm\/setting-gaji\?form=baru/);
+  const form = p.getByRole("form", { name: "Form pengajuan setting gaji" });
+  await pilihTeks(form, "Karyawan", "Karyawan Uji E2E");
+  await expect(form.getByLabel("Jenis perubahan")).toHaveValue("SETTING_AWAL");
+  await pilihTeks(form, "Jabatan", "Jabatan Uji E2E");
+  await pilihTeks(form, "Gaji pokok", "Golongan Uji E2E");
+  await form.getByLabel(/Tunjangan Uji E2E/).check();
+  await form.getByLabel("Alasan pengajuan").fill("Karyawan baru uji E2E");
+  await form.getByRole("button", { name: "Ajukan ke Owner" }).click();
+  await expect(form).toBeHidden();
+  const ajuan = p.getByRole("list", { name: "Pengajuan setting gaji menunggu Owner" }).locator("li", { hasText: "Karyawan Uji E2E" });
+  await ajuan.getByRole("button", { name: /^Setujui/ }).click();
+  await konfirmasi(p);
+  await expect(baris(p, "Karyawan Uji E2E").first()).toContainText("Golongan Uji E2E");
+  await foto(p, "owner", "master-setgaji");
+});
 
 // Data yang dipakai jadwal dan setting gaji baru boleh dinonaktifkan setelah keduanya dibuat.
 for (const t of TAB_MASTER.filter((x) => x.nanti)) {

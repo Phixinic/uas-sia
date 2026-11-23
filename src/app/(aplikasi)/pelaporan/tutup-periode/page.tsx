@@ -3,7 +3,7 @@ import { Check, X } from "lucide-react";
 import { wajibMasuk } from "@/lib/server/auth";
 import { boleh } from "@/lib/peran";
 import { dataTutupPeriode } from "@/lib/data/pelaporan/periode";
-import { labelPeriode } from "@/lib/inti/tanggal";
+import { labelBulanTahun, labelPeriode } from "@/lib/inti/tanggal";
 import { labelWaktu } from "@/lib/format";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu from "@/komponen/ui/Kartu";
@@ -30,7 +30,7 @@ export default async function Halaman() {
             <Kartu key={p.id} className="space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <h2 className="judul-kartu">{labelPeriode(p.id)}</h2>
+                  <h2 className="judul-kartu">{labelBulanTahun(p.id)}</h2>
                   <LencanaStatus jenis="periode" status={p.status} />
                 </div>
                 {bolehKunci && (
@@ -49,7 +49,7 @@ export default async function Halaman() {
                 <p className="text-sm text-amber-700">Tertutup untuk transaksi karena {labelPeriode(p.tertutupOleh)} sudah dikunci.</p>
               )}
               {p.periksa ? (
-                <ul className="grid gap-1.5 sm:grid-cols-2" aria-label={`Pemeriksaan ${labelPeriode(p.id)}`}>
+                <ul className="grid gap-1.5 sm:grid-cols-2" aria-label={`Pemeriksaan ${labelBulanTahun(p.id)}`}>
                   {p.periksa.map((x) => (
                     <li key={x.label} className="flex items-start gap-2 text-sm">
                       <span className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full ${x.lulus ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>

@@ -32,6 +32,7 @@ describe.runIf(aktif)("fee event lewat server action", async () => {
   const putus = await import("@/lib/aksi/fee-event/keputusan");
   const presensi = await import("@/lib/aksi/sdm/presensi");
   const master = await import("@/lib/aksi/master/master");
+  const settingGaji = await import("@/lib/aksi/master/setting-gaji");
   const { muatBahanGaji } = await import("@/lib/data/sdm/gaji");
   const { muatBahanEvent } = await import("@/lib/data/fee-event/bahan");
   const { saldoAkun, muatJurnalBuku } = await import("@/lib/server/jurnal");
@@ -56,6 +57,9 @@ describe.runIf(aktif)("fee event lewat server action", async () => {
     expect(p.ok).toBe(false);
     const s = await master.simpanMaster({ jenis: "setgaji", nilai: { karyawanKode: "KRY-08", jabatanKode: "JBT-02", golonganKode: "GP-01" } });
     expect(s.ok).toBe(false);
+    const a = await settingGaji.ajukanSettingGaji({ karyawanKode: "KRY-08", jenisPerubahan: "SETTING_AWAL", jabatanKode: "JBT-02", golonganKode: "GP-01", bulan: 12, tahun: 2026, alasan: "uji karyawan event" });
+    expect(a.ok).toBe(false);
+    if (!a.ok) expect(a.galat).toMatch(/Karyawan event tidak memakai setting gaji/);
   });
 
   it("tarif jabatan event hanya diubah Owner; HRD tidak bisa menyentuh jabatan event lewat tab Jabatan", async () => {

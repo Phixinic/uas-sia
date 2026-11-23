@@ -9,7 +9,8 @@ import { boleh, IZIN } from "@/lib/peran";
 import { petaAkun } from "@/lib/data/umum";
 import { semuaPeriode } from "@/lib/data/pelaporan/periode";
 import { daftarSetoran, ringkasanKasModal } from "@/lib/data/modal/investasi-kas";
-import { hariIni, labelPeriode, labelTanggal, periodeIni } from "@/lib/inti/tanggal";
+import { hariIni, labelPeriode, labelTanggal, periodeDariCari, periodeIni } from "@/lib/inti/tanggal";
+import PilihBulanTahun from "@/komponen/ui/PilihBulanTahun";
 import { rupiah } from "@/lib/format";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
@@ -20,7 +21,6 @@ import { LencanaStatus } from "@/komponen/ui/Lencana";
 import { TautanTombol } from "@/komponen/ui/Tombol";
 import Peringatan from "@/komponen/ui/Peringatan";
 import KeadaanKosong from "@/komponen/ui/KeadaanKosong";
-import FilterUrl from "@/komponen/pelaporan/FilterUrl";
 import { DaftarHP, KartuHP, RincianHP, TabelLebar } from "@/komponen/fee-event/Ringkas";
 import FormInvestasiKas from "./FormInvestasiKas";
 import AksiInvestasiKas from "./AksiInvestasiKas";
@@ -28,10 +28,11 @@ import RingkasanKasModal from "./RingkasanKasModal";
 
 const ALAMAT = "/modal/investasi-kas";
 
-export default async function HalamanInvestasiKas({ cari }: { cari: { form?: string; periode?: string } }) {
+export default async function HalamanInvestasiKas({ cari }: { cari: { form?: string; periode?: string; bulan?: string; tahun?: string } }) {
   const pengguna = await wajibPeranHalaman(IZIN["investasi-kas.lihat"]);
   const semua = await semuaPeriode();
-  const periode = cari.periode && semua.includes(cari.periode) ? cari.periode : null;
+  const dipilih = periodeDariCari(cari);
+  const periode = dipilih && semua.includes(dipilih) ? dipilih : null;
   const [setoran, namaAkun, { ringkasan, bukuBesar }] = await Promise.all([daftarSetoran(), petaAkun(), ringkasanKasModal(periode)]);
   const bolehCatat = boleh(pengguna.peran, "investasi-kas.catat");
   const owner = boleh(pengguna.peran, "investasi-kas.putuskan");
@@ -122,7 +123,7 @@ export default async function HalamanInvestasiKas({ cari }: { cari: { form?: str
         <KepalaKartu
           judul="Dari mana kas dan modal"
           keterangan="Dihitung dari jurnal yang sudah disetujui, sama dengan Buku Besar akun Kas dan Modal Pemilik."
-          aksi={<FilterUrl nama="periode" label="Rentang" nilai={periode ?? "semua"} opsi={[{ nilai: "semua", label: "Kumulatif (semua periode)" }, ...[...semua].reverse().map((p) => ({ nilai: p, label: labelPeriode(p) }))]} />}
+          aksi={<PilihBulanTahun periode={periode ?? "semua"} tersedia={semua} semua="Kumulatif" idAwalan="rentang" />}
         />
         <RingkasanKasModal r={ringkasan} bb={bukuBesar} periodeBuku={periodeBuku} />
       </Kartu>

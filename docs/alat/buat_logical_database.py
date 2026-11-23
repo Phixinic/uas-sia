@@ -32,7 +32,7 @@ KELOMPOK = [
     ("sdm", "Siklus SDM: gaji inhouse", "#E3EFFA", ["karyawan", "jabatan", "golongan", "tunjangan", "jadwal_kerja", "setting_gaji", "setting_tunjangan",
                                       "presensi", "slip_gaji", "slip_tunjangan", "penggajian"]),
     ("fee", "Siklus SDM: fee event", "#ECE4F6", ["event", "sesi_event", "penugasan_event", "kehadiran_event", "laporan_fee", "slip_fee"]),
-    ("lap", "Pelaporan", "#FFF3C4", ["akun", "periode", "riwayat_periode", "jurnal", "detail_jurnal"]),
+    ("lap", "Pelaporan", "#FFF3C4", ["akun", "periode", "riwayat_periode", "jurnal", "detail_jurnal", "investasi_kas"]),
     ("sis", "Pengguna dan sistem", "#E6F2E4", ["pengguna", "sesi", "log_aktivitas", "profil_usaha", "penghitung"]),
 ]
 GRUP_TABEL = {t: kode for kode, _, _, tabs in KELOMPOK for t in tabs}
@@ -256,7 +256,7 @@ KOLOM_KONVERSI = [["supplier", "kategori_aset", "peralatan", "perlengkapan", "de
 KOLOM_SDM = [["penggajian", "slip_gaji", "slip_tunjangan"],
              ["karyawan", "jabatan", "jadwal_kerja", "golongan", "tunjangan"],
              ["presensi", "setting_gaji", "setting_tunjangan"]]
-KOLOM_LAPORAN = [["periode", "riwayat_periode", "jurnal", "detail_jurnal", "akun"]]
+KOLOM_LAPORAN = [["periode", "riwayat_periode", "jurnal", "detail_jurnal", "akun", "investasi_kas"]]
 SISTEM = ["pengguna", "sesi", "log_aktivitas", "profil_usaha", "penghitung"]
 FEE = ["event", "sesi_event", "penugasan_event", "kehadiran_event", "laporan_fee", "slip_fee"]
 
@@ -269,7 +269,7 @@ KONFIG = {
         "gutter": [22, 24, 38, 26, 19, 22],
         "lajur_kiri": 5.0, "tepi_kiri": TEPI_KIRI_KONVERSI,
         "pita": [
-            {"x": "periode", "di_bawah": ["akun", "slip_tunjangan", "tunjangan", "setting_tunjangan"], "jarak": 22,
+            {"x": "periode", "di_bawah": ["investasi_kas", "slip_tunjangan", "tunjangan", "setting_tunjangan"], "jarak": 22,
              "kolom": [["penugasan_event", "kehadiran_event"], ["event", "sesi_event"], ["laporan_fee"], ["slip_fee"]],
              "lebar": [96, 90, 98, 98], "gutter": [14, 16, 14]},
             {"x": 7.0, "di_bawah": ["aset", "detail_opname"], "jarak": 22,

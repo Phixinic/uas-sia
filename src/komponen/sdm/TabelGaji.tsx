@@ -17,6 +17,27 @@ import Rupiah from "@/komponen/ui/Rupiah";
 import Tabel from "@/komponen/ui/Tabel";
 import { RincianSlip } from "./RincianSlip";
 import type { BarisGaji } from "@/lib/data/sdm/gaji";
+import { denganPeriode, labelPeriode } from "@/lib/inti/tanggal";
+
+/**
+ * Versi setting gaji yang dipakai baris ini, versi lebih baru yang belum berlaku, dan status angka slip:
+ * slip yang sudah diajukan atau dibayar angkanya terkunci; slip draf dengan versi lain ditandai perlu dihitung ulang.
+ */
+function KeteranganVersi({ b }: { b: BarisGaji }) {
+  const v = b.versi;
+  return (
+    <div className="mt-0.5 space-y-0.5 text-[11px] leading-snug">
+      <div className="text-slate-500">
+        Setting {v.kode ?? "lama (sebelum riwayat)"}: {v.jabatan}, {v.golongan}
+        {v.berlakuMulai ? `, berlaku mulai ${labelPeriode(v.berlakuMulai)}` : ""}
+      </div>
+      {b.catatanVersi && <div className="text-teal-800">{b.catatanVersi}</div>}
+      {b.slipStatus === "DISETUJUI" && <div className="text-slate-600">Angka slip terkunci saat dibayar</div>}
+      {b.slipStatus === "DIAJUKAN" && <div className="text-slate-600">Angka slip terkunci saat diajukan</div>}
+      {b.settingBerubah && <div className="font-medium text-amber-700">Perlu dihitung ulang: slip dihitung dengan versi setting lain</div>}
+    </div>
+  );
+}
 
 /*
  * Aksi per karyawan: satu tombol utama sesuai keadaan slip, sisanya di menu titik tiga.
@@ -29,7 +50,7 @@ function AksiGaji({ b, periode, alamat, bolehHitung, buka, balik, kelas }: { b: 
   const pemicu = useRef<HTMLButtonElement>(null);
   const bisaHitung = bolehHitung && b.jumlahPresensi > 0 && (!b.slipStatus || b.slipStatus === "DRAFT");
   const bisaHapus = bolehHitung && !!b.slipNo && b.slipStatus === "DRAFT";
-  const href = b.slipNo ? `${alamat}?periode=${periode}&slip=${b.slipNo}` : "";
+  const href = b.slipNo ? `${denganPeriode(alamat, periode)}&slip=${b.slipNo}` : "";
 
   useEffect(() => {
     if (!menu) return;
@@ -66,7 +87,7 @@ function AksiGaji({ b, periode, alamat, bolehHitung, buka, balik, kelas }: { b: 
     <div className={`flex items-center gap-1.5 ${kelas}`}>
       {bisaHitung ? (
         <TombolAksi aksi={() => hitungSlipSatu({ periode, karyawanKode: b.karyawanKode })} ikon={<Calculator className="size-4" />} judul={b.slipNo ? "Hitung ulang slip" : "Simpan slip"}>
-          {b.slipNo ? "Hitung" : "Simpan"}
+          {b.perluHitungUlang ? "Hitung ulang" : b.slipNo ? "Hitung" : "Simpan"}
         </TombolAksi>
       ) : b.slipNo ? (
         <TautanTombol href={href} kecil ikon={<Eye className="size-4" />}>Slip</TautanTombol>
@@ -153,6 +174,7 @@ export default function TabelGaji({ baris, periode, bolehHitung, alamat }: { bar
                   {b.jabatan} · hadir {s.hadir}/{s.hariKerja}
                   {s.alpa > 0 && `, ${s.alpa} alpa`}
                 </div>
+                <KeteranganVersi b={b} />
               </div>
               <div className="shrink-0 text-right">
                 {b.slipStatus ? <LencanaStatus jenis="slip" status={b.slipStatus} /> : b.jumlahPresensi ? <Lencana warna="abu">Belum disimpan</Lencana> : <Lencana warna="kuning">Belum ada presensi</Lencana>}
@@ -163,7 +185,7 @@ export default function TabelGaji({ baris, periode, bolehHitung, alamat }: { bar
               <div><dt className="text-slate-500">PPh 21</dt><dd className="kolom-angka font-medium"><Rupiah nilai={s.pph21} polos /></dd></div>
               <div><dt className="text-slate-500">THP</dt><dd className="kolom-angka font-semibold text-slate-900"><Rupiah nilai={s.thp} polos /></dd></div>
             </dl>
-            {b.perluHitungUlang && <div className="text-[11px] text-amber-700">Data berubah, hitung ulang</div>}
+            {b.perluHitungUlang && <div className="text-[11px] text-amber-700">{b.settingBerubah ? "Setting gaji berubah, hitung ulang" : "Data berubah, hitung ulang"}</div>}
             {b.slipStatus === "DRAFT" && b.alasanTolak && <div className="text-[11px] text-rose-700">Ditolak: {b.alasanTolak}</div>}
             {aksi(b, "")}
             {buka && <div className="rounded-lg bg-slate-50 p-3"><RincianSlip s={s} /></div>}
@@ -200,7 +222,7 @@ export default function TabelGaji({ baris, periode, bolehHitung, alamat }: { bar
               <tr>
                 <td>
                   <div className="font-medium text-slate-900">{b.nama}</div>
-                  <div className="text-[11px] text-slate-500">{b.jabatan}</div>
+                  <div className="max-w-64"><KeteranganVersi b={b} /></div>
                 </td>
                 <td className="kolom-angka">
                   {s.hadir}/{s.hariKerja}
@@ -214,7 +236,7 @@ export default function TabelGaji({ baris, periode, bolehHitung, alamat }: { bar
                 <td className="kolom-angka font-semibold text-slate-900"><Rupiah nilai={s.thp} polos /></td>
                 <td>
                   {b.slipStatus ? <LencanaStatus jenis="slip" status={b.slipStatus} /> : b.jumlahPresensi ? <Lencana warna="abu">Belum disimpan</Lencana> : <Lencana warna="kuning">Belum ada presensi</Lencana>}
-                  {b.perluHitungUlang && <div className="mt-0.5 text-[11px] text-amber-700">Data berubah, hitung ulang</div>}
+                  {b.perluHitungUlang && <div className="mt-0.5 text-[11px] text-amber-700">{b.settingBerubah ? "Setting gaji berubah, hitung ulang" : "Data berubah, hitung ulang"}</div>}
                   {b.slipStatus === "DRAFT" && b.alasanTolak && <div className="mt-0.5 max-w-44 text-[11px] text-rose-700">Ditolak: {b.alasanTolak}</div>}
                 </td>
                 <td>

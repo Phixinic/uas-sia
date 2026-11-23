@@ -6,7 +6,9 @@ import {
 import { wajibMasuk } from "@/lib/server/auth";
 import { dataDashboard } from "@/lib/data/pelaporan/dashboard";
 import { semuaPeriode } from "@/lib/data/pelaporan/periode";
-import { labelPeriode, labelTanggal, periodeIni } from "@/lib/inti/tanggal";
+import { denganPeriode, labelPeriode, labelTanggal, namaBulan, periodeDariCari, periodeIni, tahunDari } from "@/lib/inti/tanggal";
+import PilihBulanTahun from "@/komponen/ui/PilihBulanTahun";
+import LencanaPeriode from "@/komponen/ui/LencanaPeriode";
 import { LABEL_JENIS_JURNAL, rupiah } from "@/lib/format";
 import { LABEL_PERAN, type Peran } from "@/lib/peran";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
@@ -15,12 +17,11 @@ import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
 import Tabel, { BarisKosong } from "@/komponen/ui/Tabel";
 import Rupiah from "@/komponen/ui/Rupiah";
 import Lencana, { LencanaStatus } from "@/komponen/ui/Lencana";
-import FilterUrl from "@/komponen/pelaporan/FilterUrl";
 import DashboardKapten from "@/komponen/fee-event/DashboardKapten";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
-/** `berperiode`: halaman tujuan membaca ?periode, jadi tautannya membawa periode yang sedang dipilih di dashboard. */
+/** `berperiode`: halaman tujuan membaca ?bulan&tahun, jadi tautannya membawa periode yang sedang dipilih di dashboard. */
 type Tautan = { href: string; label: string; ikon: React.ReactNode; berperiode?: boolean };
 
 const TAUTAN: Record<Exclude<Peran, "KAPTEN">, Tautan[]> = {
@@ -52,7 +53,6 @@ const TAUTAN_LAPORAN: Tautan[] = [
   { href: "/pelaporan/neraca-saldo", label: "Neraca saldo", ikon: <Scale className="size-4" />, berperiode: true },
 ];
 
-const denganPeriode = (href: string, periode: string) => `${href}${href.includes("?") ? "&" : "?"}periode=${periode}`;
 
 /** Keterangan kartu penyusutan: angka disetujui berasal dari jurnal penyusutan yang disetujui. */
 function ketPenyusutan(s: { jadwal: number; disetujui: number; unit: number }) {
@@ -63,14 +63,15 @@ function ketPenyusutan(s: { jadwal: number; disetujui: number; unit: number }) {
   return `Jadwal ${s.unit} unit, belum dijurnal atau belum disetujui`;
 }
 
-export default async function Dashboard({ searchParams }: { searchParams: Promise<{ periode?: string }> }) {
+export default async function Dashboard({ searchParams }: { searchParams: Promise<{ periode?: string; bulan?: string; tahun?: string }> }) {
   const pengguna = await wajibMasuk({ kapten: true });
   // Kapten (crew freelance) tidak melihat angka keuangan; dashboard-nya hanya berisi pekerjaan penilaian.
   if (pengguna.peran === "KAPTEN") return <DashboardKapten pengguna={pengguna} />;
   const peran = pengguna.peran;
   const cari = await searchParams;
   const semua = await semuaPeriode();
-  const periode = cari.periode && semua.includes(cari.periode) ? cari.periode : periodeIni();
+  const dipilih = periodeDariCari(cari);
+  const periode = dipilih && semua.includes(dipilih) ? dipilih : periodeIni();
   const d = await dataDashboard(periode);
   // Pekerjaan untuk peran yang sedang masuk ditaruh paling atas.
   const tindakan = [...d.tindakan].sort((a, b) => Number(b.peran.includes(pengguna.peran)) - Number(a.peran.includes(pengguna.peran)));
@@ -79,22 +80,22 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     <>
       <KepalaHalaman
         judul="Dashboard"
-        keterangan={`Selamat datang, ${pengguna.nama} (${LABEL_PERAN[pengguna.peran]}). Angka mengikuti periode yang dipilih.`}
-        lencana={<LencanaStatus jenis="periode" status={d.statusPeriode} />}
-        aksi={<FilterUrl nama="periode" label="Periode" nilai={periode} opsi={[...semua].reverse().map((p) => ({ nilai: p, label: labelPeriode(p) + (p === periodeIni() ? " (berjalan)" : "") }))} />}
+        keterangan={`Selamat datang, ${pengguna.nama} (${LABEL_PERAN[pengguna.peran]}). Angka mengikuti bulan dan tahun yang dipilih${periode === periodeIni() ? " (bulan berjalan)" : ""}.`}
+        lencana={<><LencanaPeriode periode={periode} /><LencanaStatus jenis="periode" status={d.statusPeriode} /></>}
+        aksi={<PilihBulanTahun periode={periode} tersedia={semua} />}
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <KartuRingkasan judul="Saldo kas" nilai={d.kas} ikon={<Banknote className="size-4" />} keterangan={`Menurut buku besar sampai ${labelPeriode(periode)}`} nada="hijau" />
+        <KartuRingkasan judul="Saldo kas" nilai={d.kas} ikon={<Banknote className="size-4" />} keterangan={`Menurut buku besar sampai akhir ${labelPeriode(periode)}`} nada="hijau" />
         <KartuRingkasan judul="Total aset bersih" nilai={d.totalAset} ikon={<IdCard className="size-4" />} keterangan="Aset dikurangi akumulasi penyusutan" />
         <KartuRingkasan
-          judul={`Beban penyusutan ${labelPeriode(periode)}`}
+          judul="Beban penyusutan bulan ini"
           nilai={d.susut.disetujui || d.susut.jadwal}
           ikon={<TrendingDown className="size-4" />}
           keterangan={ketPenyusutan(d.susut)}
         />
         <KartuRingkasan
-          judul={`Beban gaji dan fee ${labelPeriode(periode)}`}
+          judul="Beban gaji dan fee bulan ini"
           nilai={d.bebanGaji + d.bebanFee}
           ikon={<Coins className="size-4" />}
           keterangan={d.bebanGaji || d.bebanFee ? `Gaji inhouse ${rupiah(d.bebanGaji)}, fee event ${rupiah(d.bebanFee)}` : "Belum ada penggajian atau fee disetujui"}
@@ -104,10 +105,10 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           nilai={String(d.menunggu.total)}
           bukanUang
           ikon={<Hourglass className="size-4" />}
-          keterangan={`Jurnal ${d.menunggu.jurnal}, pelepasan ${d.menunggu.pelepasan}, penggajian ${d.menunggu.penggajian}, fee ${d.menunggu.fee}, setoran ${d.menunggu.setoran}`}
+          keterangan={`Jurnal ${d.menunggu.jurnal}, pelepasan ${d.menunggu.pelepasan}, penggajian ${d.menunggu.penggajian}, fee ${d.menunggu.fee}, setoran ${d.menunggu.setoran}, setting gaji ${d.menunggu.setting}`}
           nada={d.menunggu.total ? "kuning" : "netral"}
         />
-        <KartuRingkasan judul="Periode aktif" nilai={labelPeriode(periode)} bukanUang ikon={<CalendarClock className="size-4" />} keterangan={d.statusPeriode === "TERKUNCI" ? "Terkunci, menolak jurnal baru" : "Terbuka untuk transaksi"} nada={d.statusPeriode === "TERKUNCI" ? "merah" : "netral"} />
+        <KartuRingkasan judul="Periode aktif" nilai={namaBulan(periode)} bukanUang ikon={<CalendarClock className="size-4" />} keterangan={`Tahun ${tahunDari(periode)} · ${d.statusPeriode === "TERKUNCI" ? "terkunci, menolak jurnal baru" : "terbuka untuk transaksi"}`} nada={d.statusPeriode === "TERKUNCI" ? "merah" : "netral"} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

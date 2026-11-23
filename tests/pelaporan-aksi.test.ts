@@ -28,6 +28,7 @@ describe.runIf(aktif)("aksi pelaporan, master, dan pengguna", async () => {
   const jurnal = await import("@/lib/aksi/pelaporan/jurnal");
   const periode = await import("@/lib/aksi/pelaporan/periode");
   const master = await import("@/lib/aksi/master/master");
+  const settingGaji = await import("@/lib/aksi/master/setting-gaji");
   const pengguna = await import("@/lib/aksi/pengguna/pengguna");
   const { buatJurnal } = await import("@/lib/server/jurnal");
   const { cekPeriode } = await import("@/lib/data/pelaporan/periode");
@@ -172,19 +173,23 @@ describe.runIf(aktif)("aksi pelaporan, master, dan pengguna", async () => {
     expect(await db.akun.findUnique({ where: { kode: "9-999" } })).toBeNull();
   });
 
-  it("master SDM: jadwal ganda per jabatan dan setting ganda per karyawan ditolak; nonaktif lalu aktif", async () => {
+  it("master SDM: jadwal ganda per jabatan dan setting ganda per karyawan ditolak; setting tidak bisa ditimpa; nonaktif lalu aktif", async () => {
     await masukSebagai("hrd");
     const jadwal = await db.jadwalKerja.findFirstOrThrow();
     const dupJ = await master.simpanMaster({ jenis: "jadwal", nilai: { jabatanKode: jadwal.jabatanKode, jamMasuk: "08:00", jamKeluar: "16:00", hariKerja: 22 } });
     expect(dupJ.ok).toBe(false);
-    const setting = await db.settingGaji.findFirstOrThrow();
+    const setting = await db.settingGaji.findFirstOrThrow({ where: { kode: "SET-01" }, include: { tunjangan: true } });
+    // Setting gaji tidak lagi disimpan lewat form master: tambah dan ubah (menimpa) sama-sama ditolak.
     const dupS = await master.simpanMaster({ jenis: "setgaji", nilai: { karyawanKode: setting.karyawanKode, jabatanKode: setting.jabatanKode, golonganKode: setting.golonganKode, tunjanganKodes: [] } });
     expect(dupS.ok).toBe(false);
-    // ubah tunjangan setting yang ada
     const tunj = await db.tunjangan.findMany({ take: 2 });
     const h = await master.simpanMaster({ jenis: "setgaji", kode: setting.kode, nilai: { karyawanKode: setting.karyawanKode, jabatanKode: setting.jabatanKode, golonganKode: setting.golonganKode, tunjanganKodes: tunj.map((t) => t.kode) } });
-    expect(h.ok).toBe(true);
-    expect(await db.settingTunjangan.count({ where: { settingKode: setting.kode } })).toBe(tunj.length);
+    expect(h.ok).toBe(false);
+    if (!h.ok) expect(h.galat).toMatch(/lewat pengajuan/);
+    expect(await db.settingTunjangan.count({ where: { settingKode: setting.kode } })).toBe(setting.tunjangan.length);
+    // Setting awal kedua untuk karyawan yang sudah punya setting ditolak lewat jalur pengajuan juga.
+    const kedua = await settingGaji.ajukanSettingGaji({ karyawanKode: setting.karyawanKode, jenisPerubahan: "SETTING_AWAL", jabatanKode: setting.jabatanKode, golonganKode: "GP-01", tunjanganKodes: [], bulan: 12, tahun: 2026, alasan: "uji setting ganda" });
+    expect(kedua.ok).toBe(false);
     await masukSebagai("owner");
     expect((await master.ubahStatusMaster({ jenis: "karyawan", kode: "KRY-01", aktif: false })).ok).toBe(true);
     expect((await db.karyawan.findUniqueOrThrow({ where: { kode: "KRY-01" } })).aktif).toBe(false);

@@ -20,6 +20,8 @@ import { skemaNoDanAlasan, skemaNoDokumen, skemaPeriode } from "@/lib/skema/sdm"
 import { AKUN } from "@/lib/inti/akun";
 import { barisGaji } from "@/lib/inti/jurnal";
 import { hariTerakhir, labelPeriode } from "@/lib/inti/tanggal";
+import { tahanKunciSetting } from "@/lib/server/setting-gaji";
+import { versiBerlakuPeriode } from "@/lib/data/sdm/gaji";
 
 export async function ajukanPenggajian(input: unknown): Promise<HasilAksi<{ no: string }>> {
   return aksiAman(async () => {
@@ -27,8 +29,16 @@ export async function ajukanPenggajian(input: unknown): Promise<HasilAksi<{ no: 
     const { periode } = validasi(skemaPeriode, input);
     const hasil = await db.$transaction(async (tx) => {
       await pastikanTerbuka(tx, periode);
-      const draf = await tx.slipGaji.findMany({ where: { periodeId: periode, status: "DRAFT" }, select: { no: true, bruto: true, pph21: true, thp: true } });
+      await tahanKunciSetting(tx);
+      const draf = await tx.slipGaji.findMany({ where: { periodeId: periode, status: "DRAFT" }, select: { no: true, karyawanKode: true, settingKode: true, bruto: true, pph21: true, thp: true } });
       if (!draf.length) throw new GalatAksi(`Tidak ada slip draf di ${labelPeriode(periode)}. Hitung gaji dulu di menu Hitung Gaji.`);
+      // Slip draf yang dihitung dengan versi setting lain dari versi yang sekarang berlaku (misalnya promosi baru disetujui)
+      // harus dihitung ulang dulu, supaya gaji yang diajukan dan dibayar sesuai setting yang berlaku.
+      const berlaku = new Map((await versiBerlakuPeriode(tx, periode)).map((v) => [v.karyawanKode, v.kode]));
+      const usang = draf.filter((s) => s.settingKode === null || s.settingKode !== berlaku.get(s.karyawanKode));
+      if (usang.length) {
+        throw new GalatAksi(`Setting gaji ${usang.map((s) => s.no).join(", ")} sudah berubah sejak slipnya dihitung. Hitung ulang slip itu di menu Hitung Gaji, lalu ajukan lagi.`);
+      }
       const no = await nomorDokumen(tx, AWALAN.PENGGAJIAN, hariTerakhir(periode));
       // Klaim slip lebih dulu (bersyarat DRAFT) supaya dua pengajuan bersamaan tidak memakai slip yang sama.
       const klaim = await tx.slipGaji.updateMany({ where: { no: { in: draf.map((s) => s.no) }, status: "DRAFT" }, data: { status: "DIAJUKAN", penggajianNo: null, alasanTolak: null } });

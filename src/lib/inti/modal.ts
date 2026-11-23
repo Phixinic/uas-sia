@@ -27,6 +27,24 @@ export function pesanKasKurang(kas: number, perlu: number, untuk: string): strin
   return `Saldo kas ${rupiah(kas)} tidak cukup untuk membayar ${untuk} ${rupiah(perlu)}. Kurang ${rupiah(perlu - kas)}. Catat setoran modal di menu Investasi Kas, minta Owner menyetujuinya, lalu ulangi.`;
 }
 
+/**
+ * Saldo kas terendah di akhir periode `sejak` dan setiap periode sesudahnya, dari mutasi bersih kas per periode
+ * (debit - kredit jurnal DISETUJUI). Dipakai cek kas pembelian tunai: pembelian bertanggal mundur mengurangi saldo
+ * akhir periode tanggalnya dan semua periode sesudahnya, jadi yang harus cukup adalah saldo terendah itu.
+ */
+export function saldoKasTerendah(mutasi: readonly { periode: string; net: number }[], sejak: string): { saldo: number; periode: string } {
+  const urut = [...mutasi].sort((a, b) => a.periode.localeCompare(b.periode));
+  let saldo = 0;
+  for (const m of urut) if (m.periode <= sejak) saldo += m.net;
+  let hasil = { saldo, periode: sejak };
+  for (const m of urut) {
+    if (m.periode <= sejak) continue;
+    saldo += m.net;
+    if (saldo < hasil.saldo) hasil = { saldo, periode: m.periode };
+  }
+  return hasil;
+}
+
 /** Bentuk jurnal yang dibutuhkan ringkasan (dibaca dari tabel jurnal beserta sumbernya). */
 export type JurnalSumber = {
   no: string;

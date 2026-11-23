@@ -35,7 +35,9 @@ import { neracaSaldo } from "../src/lib/inti/buku-besar";
 import { hitungGaji, hitungTerlambat, type JenisAbsensi } from "../src/lib/inti/penggajian";
 import { durasiKeMenit, menitTercatat, pph21BukanPegawai } from "../src/lib/inti/fee-event";
 import { hariTerakhir, keDate, keMenit, labelPeriode, labelTanggal } from "../src/lib/inti/tanggal";
-import { muatBahanGaji, type BahanGaji } from "../src/lib/data/sdm/gaji";
+import { muatBahanGaji, versiBerlakuPeriode, type BahanGaji } from "../src/lib/data/sdm/gaji";
+import { isiVersi } from "../src/lib/server/setting-gaji";
+import { keteranganLog } from "../src/lib/inti/setting-gaji";
 import { kunciEvent, muatBahanEvent, pastikanKaptenEvent } from "../src/lib/data/fee-event/bahan";
 import { skemaPresensi } from "../src/lib/skema/sdm";
 import { skemaEvent, skemaKehadiran, skemaKirimLaporan, skemaPenilaian, skemaSesi, skemaSetujuiFee, skemaTolakFee } from "../src/lib/skema/fee-event";
@@ -45,6 +47,8 @@ const PENANDA = "data-dummy.tambah";
 const SANDI_KAPTEN = "kapten123";
 const PERIODE_GAJI = "2026-11";
 const SETORAN_MODAL = 75_000_000;
+/** Setting awal karyawan inhouse baru: disetujui, berlaku Oktober 2026 (sama dengan data contoh). */
+const BERLAKU_SETTING_AWAL = "2026-10";
 const COBA = process.argv.includes("--coba");
 
 /** Waktu WIB: waktu("2026-10-05 10:00") -> Date. */
@@ -451,13 +455,12 @@ const kunciHadir = (i: number, orang: string) => `${i}|${orang}`;
 async function tambahPresensi(tx: Tx, k: Konteks, input: { karyawanKode: string; tanggal: string; absensi: JenisAbsensi; jamMasuk?: string; jamKeluar?: string }) {
   const d = validasi(skemaPresensi, input);
   const hadir = d.absensi === "HADIR";
-  const karyawan = await tx.karyawan.findUnique({
-    where: { kode: d.karyawanKode },
-    select: { aktif: true, jenis: true, settingGaji: { select: { aktif: true, jabatan: { select: { jadwalKerja: { select: { kode: true, jamMasuk: true } } } } } } },
-  });
+  const karyawan = await tx.karyawan.findUnique({ where: { kode: d.karyawanKode }, select: { aktif: true, jenis: true } });
   if (!karyawan || !karyawan.aktif || karyawan.jenis !== "INHOUSE") throw new GalatAksi(`${d.karyawanKode} bukan karyawan inhouse aktif.`);
-  const jadwal = karyawan.settingGaji?.aktif ? karyawan.settingGaji.jabatan.jadwalKerja : null;
-  if (!jadwal) throw new GalatAksi(`${d.karyawanKode} belum punya setting gaji atau jadwal kerja.`);
+  // Jadwal dari versi setting gaji yang berlaku di bulan tanggal presensi (sama dengan simpanPresensi).
+  const [versi] = await versiBerlakuPeriode(tx, d.tanggal.slice(0, 7), d.karyawanKode);
+  const jadwal = versi?.jabatan.jadwalKerja ?? null;
+  if (!jadwal) throw new GalatAksi(`${d.karyawanKode} belum punya setting gaji berlaku atau jadwal kerja.`);
   const slip = await tx.slipGaji.findUnique({ where: { periodeId_karyawanKode: { periodeId: d.tanggal.slice(0, 7), karyawanKode: d.karyawanKode } }, select: { status: true } });
   if (slip && slip.status !== "DRAFT") throw new GalatAksi(`Presensi ${d.karyawanKode} ${d.tanggal} terkunci.`);
   const bentrok = await tx.presensi.findUnique({ where: { karyawanKode_tanggal: { karyawanKode: d.karyawanKode, tanggal: keDate(d.tanggal) } }, select: { id: true } });
@@ -475,7 +478,7 @@ async function tambahPresensi(tx: Tx, k: Konteks, input: { karyawanKode: string;
 
 /** Presensi satu bulan penuh: hari kerja Senin sampai Jumat, ditambah Sabtu awal bulan bila kurang dari hari kerja jadwal. */
 async function presensiSebulan(tx: Tx, k: Konteks, karyawanKode: string, profil: Profil) {
-  const s = await tx.settingGaji.findUnique({ where: { karyawanKode }, select: { jabatan: { select: { jadwalKerja: true } } } });
+  const [s] = await versiBerlakuPeriode(tx, PERIODE_GAJI, karyawanKode);
   const jadwal = s?.jabatan.jadwalKerja;
   if (!jadwal) throw new GalatAksi(`${karyawanKode} belum punya jadwal kerja.`);
   const akhir = Number(hariTerakhir(PERIODE_GAJI).slice(8));
@@ -763,7 +766,7 @@ async function gajiSebulan(tx: Tx, k: Konteks, periode: string) {
         hariKerja: h.hariKerja, jumlahPresensi: h.rekap.jumlah, hadir: h.rekap.hadir, izin: h.rekap.izin, sakit: h.rekap.sakit, cuti: h.rekap.cuti, alpa: h.rekap.alpa,
         jamKerja: h.rekap.jamKerja, terlambatMenit: h.rekap.terlambatMenit, gajiPokok: h.gajiPokok, tunjJabatan: h.tunjJabatan, tunjKeluarga: h.tunjKeluarga,
         tunjLain: h.totalTunjLain, potonganAbsen: h.potonganAbsen, bruto: h.bruto, brutoSetahun: h.brutoSetahun, biayaJabatan: h.biayaJabatan, netoSetahun: h.netoSetahun,
-        ptkp: h.ptkp, pkp: h.pkp, pphSetahun: h.pphSetahun, pph21: h.pph21, thp: h.thp, alasanTolak: null, dibuatOlehId: k.hrd, dihitungPada: new Date(),
+        ptkp: h.ptkp, pkp: h.pkp, pphSetahun: h.pphSetahun, pph21: h.pph21, thp: h.thp, alasanTolak: null, settingKode: b.settingKode, dibuatOlehId: k.hrd, dihitungPada: new Date(),
       },
     });
     if (h.tunjLain.length) await tx.slipTunjangan.createMany({ data: h.tunjLain.map((t) => ({ slipNo: no, tunjanganKode: t.kode, nama: t.nama, nominal: t.nominal })) });
@@ -845,9 +848,20 @@ async function tambahMaster(tx: Tx, k: Konteks, hashKapten: Record<string, strin
     const adaGp = await tx.golongan.count({ where: { kode: golonganKode, aktif: true } });
     const adaTnj = await tx.tunjangan.count({ where: { kode: { in: tunjangan }, aktif: true } });
     if (!ada || !adaGp || adaTnj !== tunjangan.length) throw new GalatAksi(`Master untuk ${p.nama} tidak lengkap (jabatan ${jabatanKode}, golongan ${golonganKode}, tunjangan ${tunjangan.join(",")}).`);
+    // Setting awal lewat jalur riwayat: HRD mengajukan (berlaku Oktober 2026), Owner menyetujui (ajukanSettingGaji, setujuiSettingGaji).
+    await pastikanTerbuka(tx, BERLAKU_SETTING_AWAL);
     const set = await kodeBerikutnya(tx, AWALAN.SETTING_GAJI);
-    await tx.settingGaji.create({ data: { kode: set, karyawanKode: kode, jabatanKode, golonganKode, tunjangan: { create: tunjangan.map((tunjanganKode) => ({ tunjanganKode })) } } });
-    await log("setgaji", set, k.hrd);
+    await tx.settingGaji.create({
+      data: {
+        kode: set, karyawanKode: kode, jabatanKode, golonganKode, berlakuMulai: BERLAKU_SETTING_AWAL, jenisPerubahan: "SETTING_AWAL", status: "DIAJUKAN",
+        alasan: "Setting awal karyawan baru.", diajukanOlehId: k.hrd, tunjangan: { create: tunjangan.map((tunjanganKode) => ({ tunjanganKode })) },
+      },
+    });
+    const isiBaru = (await isiVersi(tx, set))!;
+    await catatLog(tx, k.hrd, "setting-gaji.ajukan", "setgaji", set, `${p.nama}. ${keteranganLog("SETTING_AWAL", null, isiBaru, "Alasan: Setting awal karyawan baru.")}`);
+    const klaim = await tx.settingGaji.updateMany({ where: { kode: set, status: "DIAJUKAN" }, data: { status: "DISETUJUI", diputuskanOlehId: k.owner, diputuskanPada: new Date() } });
+    if (klaim.count !== 1) throw new GalatAksi(`Pengajuan ${set} sudah diputuskan.`);
+    await catatLog(tx, k.owner, "setting-gaji.setujui", "setgaji", set, `${p.nama}. ${keteranganLog("SETTING_AWAL", null, isiBaru, "Tidak ada slip draf yang terdampak.")}`);
     inhouseBaru.push({ kode, profil: p.profil });
   }
 
@@ -898,8 +912,8 @@ async function prasyarat(tx: Tx) {
   if (lama.length !== Object.values(CREW_LAMA).length) throw new GalatAksi("Dibatalkan: crew event contoh KRY-06 dan KRY-08 sampai KRY-12 harus ada dan aktif.");
   const bima = await tx.pengguna.findFirst({ where: { karyawanKode: CREW_LAMA.bima, peran: "KAPTEN", aktif: true }, select: { id: true } });
   if (!bima) throw new GalatAksi(`Dibatalkan: akun kapten untuk ${CREW_LAMA.bima} tidak ditemukan.`);
-  const setting = await tx.settingGaji.count({ where: { karyawanKode: { in: Object.keys(PROFIL_LAMA) }, aktif: true, karyawan: { aktif: true, jenis: "INHOUSE" } } });
-  if (setting !== Object.keys(PROFIL_LAMA).length) throw new GalatAksi("Dibatalkan: karyawan inhouse KRY-01 sampai KRY-05 harus punya setting gaji aktif.");
+  const setting = (await versiBerlakuPeriode(tx, PERIODE_GAJI)).filter((v) => v.karyawanKode in PROFIL_LAMA && v.karyawan.aktif && v.karyawan.jenis === "INHOUSE").length;
+  if (setting !== Object.keys(PROFIL_LAMA).length) throw new GalatAksi(`Dibatalkan: karyawan inhouse KRY-01 sampai KRY-05 harus punya setting gaji yang berlaku di ${labelPeriode(PERIODE_GAJI)}.`);
   const tunjangan = await tx.tunjangan.count({ where: { kode: { in: ["TNJ-01", "TNJ-02", "TNJ-03", "TNJ-04"] }, aktif: true } });
   if (tunjangan !== 4) throw new GalatAksi("Dibatalkan: tunjangan TNJ-01 sampai TNJ-04 harus ada dan aktif.");
 

@@ -13,14 +13,15 @@ import { aksiAman, GalatAksi, segarkan, validasi, type HasilAksi } from "@/lib/s
 import { wajibPeran, type PenggunaSesi } from "@/lib/server/auth";
 import { IZIN } from "@/lib/peran";
 import { AWALAN, kodeBerikutnya, nomorDokumen } from "@/lib/server/nomor";
-import { pastikanPeriode } from "@/lib/server/periode";
-import { buatJurnal } from "@/lib/server/jurnal";
+import { pastikanPeriode, pastikanTerbuka } from "@/lib/server/periode";
+import { buatJurnal, mutasiAkunPerPeriode, tahanKunciKas } from "@/lib/server/jurnal";
+import { pesanKasKurang, saldoKasTerendah } from "@/lib/inti/modal";
 import { catatLog } from "@/lib/server/log";
 import { skemaNoDanAlasan, skemaNoDokumen, skemaPembelian } from "@/lib/skema/pembelian";
 import { AKUN } from "@/lib/inti/akun";
 import { barisPembalik, barisPembelian } from "@/lib/inti/jurnal";
 import { hitungJadwal, nDariDasar } from "@/lib/inti/penyusutan";
-import { dariDate, hariIni, keDate, periodeDari, tambahBulanTanggal } from "@/lib/inti/tanggal";
+import { dariDate, hariIni, keDate, labelPeriode, periodeDari, tambahBulanTanggal } from "@/lib/inti/tanggal";
 import { LABEL_CARA_BAYAR, LABEL_JENIS_PEMBELIAN } from "@/lib/format";
 
 /** Posting membuat banyak baris jadwal (n bulan x jumlah unit), jadi batas waktu transaksi dilonggarkan. */
@@ -147,6 +148,19 @@ async function postingDalamTransaksi(tx: Tx, no: string, pengguna: PenggunaSesi)
       rencanaAset.push({ noUrut: d.noUrut, jadwal, d });
     } else {
       debit[AKUN.PERLENGKAPAN] = (debit[AKUN.PERLENGKAPAN] ?? 0) + d.qty * d.harga;
+    }
+  }
+
+  // Pembelian tunai membayar dari kas: saldo kas akhir periode tanggal pembelian dan semua periode sesudahnya harus cukup,
+  // sama seperti penggajian dan fee event. Kas berasal dari setoran modal (Investasi Kas).
+  if (b.caraBayar === "TUNAI") {
+    await pastikanTerbuka(tx, mulai); // periode tertutup dilaporkan lebih dulu daripada kas kurang
+    await tahanKunciKas(tx);
+    const total = Object.values(debit).reduce((s, x) => s + x, 0);
+    const kas = saldoKasTerendah(await mutasiAkunPerPeriode(tx, AKUN.KAS), mulai);
+    if (kas.saldo < total) {
+      const titik = kas.periode === mulai ? `akhir ${labelPeriode(mulai)}` : `akhir ${labelPeriode(kas.periode)} (terendah sejak ${labelPeriode(mulai)})`;
+      throw new GalatAksi(`${pesanKasKurang(kas.saldo, total, `pembelian tunai ${no}`)} Saldo yang dipakai: ${titik}.`);
     }
   }
 

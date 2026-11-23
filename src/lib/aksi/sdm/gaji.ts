@@ -5,6 +5,8 @@
  * Rumus ada di src/lib/inti/penggajian.ts (hitungGaji); di sini hanya menyusun masukan, menyimpan hasilnya
  * sebagai slip DRAFT (dan rincian tunjangannya), serta menghapus slip draf.
  * Slip yang sudah diajukan atau dibayar tidak boleh dihitung ulang atau dihapus.
+ * Komponen tetap diambil dari versi setting gaji yang berlaku di periode slip (muatBahanGaji), dan id versinya disimpan
+ * di slip, jadi slip bulan lama yang dihitung ulang tetap memakai gaji lama walau promosi sesudahnya sudah disetujui.
  */
 import { db, type Tx } from "@/lib/server/db";
 import { aksiAman, GalatAksi, segarkan, validasi, type HasilAksi } from "@/lib/server/aksi";
@@ -17,6 +19,7 @@ import { skemaHitungSatu, skemaNoDokumen, skemaPeriode } from "@/lib/skema/sdm";
 import { hitungGaji } from "@/lib/inti/penggajian";
 import { labelPeriode } from "@/lib/inti/tanggal";
 import { muatBahanGaji, type BahanGaji } from "@/lib/data/sdm/gaji";
+import { tahanKunciSetting } from "@/lib/server/setting-gaji";
 
 /** Simpan (atau hitung ulang) slip draf satu karyawan. Mengembalikan false bila slipnya sudah beku (diajukan/dibayar). */
 async function simpanSlip(tx: Tx, b: BahanGaji, periode: string, penggunaId: number): Promise<boolean> {
@@ -53,6 +56,7 @@ async function simpanSlip(tx: Tx, b: BahanGaji, periode: string, penggunaId: num
     pph21: h.pph21,
     thp: h.thp,
     alasanTolak: null,
+    settingKode: b.settingKode,
     dibuatOlehId: penggunaId,
     dihitungPada: new Date(),
   };
@@ -69,7 +73,7 @@ async function simpanSlip(tx: Tx, b: BahanGaji, periode: string, penggunaId: num
   if (h.tunjLain.length) {
     await tx.slipTunjangan.createMany({ data: h.tunjLain.map((t) => ({ slipNo: no, tunjanganKode: t.kode, nama: t.nama, nominal: t.nominal })) });
   }
-  await catatLog(tx, penggunaId, lama ? "slip.hitung-ulang" : "slip.hitung", "slip", no, `bruto ${h.bruto}, PPh 21 ${h.pph21}, THP ${h.thp}`);
+  await catatLog(tx, penggunaId, lama ? "slip.hitung-ulang" : "slip.hitung", "slip", no, `bruto ${h.bruto}, PPh 21 ${h.pph21}, THP ${h.thp}, setting ${b.settingKode}`);
   return true;
 }
 
@@ -79,8 +83,9 @@ export async function hitungSlipSatu(input: unknown): Promise<HasilAksi> {
     const { periode, karyawanKode } = validasi(skemaHitungSatu, input);
     const nama = await db.$transaction(async (tx) => {
       await pastikanTerbuka(tx, periode);
+      await tahanKunciSetting(tx);
       const [b] = await muatBahanGaji(tx, periode, karyawanKode);
-      if (!b) throw new GalatAksi("Setting gaji karyawan ini belum lengkap atau sudah nonaktif.");
+      if (!b) throw new GalatAksi(`Karyawan ini belum punya setting gaji yang disetujui dan berlaku di ${labelPeriode(periode)}.`);
       if (!(await simpanSlip(tx, b, periode, pengguna.id))) throw new GalatAksi(`Slip ${b.nama} sudah diajukan atau dibayar, jadi tidak bisa dihitung ulang.`);
       return b.nama;
     });
@@ -95,6 +100,7 @@ export async function hitungSlipSemua(input: unknown): Promise<HasilAksi> {
     const { periode } = validasi(skemaPeriode, input);
     const n = await db.$transaction(async (tx) => {
       await pastikanTerbuka(tx, periode);
+      await tahanKunciSetting(tx);
       let jumlah = 0;
       for (const b of await muatBahanGaji(tx, periode)) {
         if (!b.jumlahPresensi) continue;

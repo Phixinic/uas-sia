@@ -7,7 +7,8 @@ import { wajibMasuk } from "@/lib/server/auth";
 import { boleh } from "@/lib/peran";
 import { petaAkun } from "@/lib/data/umum";
 import { dataPenyusutan, periodePenyusutan } from "@/lib/data/konversi/penyusutan";
-import { labelPeriode } from "@/lib/inti/tanggal";
+import { denganPeriode, labelBulanTahun, labelPeriode, periodeDariCari } from "@/lib/inti/tanggal";
+import LencanaPeriode from "@/komponen/ui/LencanaPeriode";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
 import KartuRingkasan from "@/komponen/ui/KartuRingkasan";
@@ -24,9 +25,9 @@ import type { StatusPersetujuan } from "@/generated/prisma/enums";
 
 const ALAMAT = "/konversi/penyusutan";
 
-export default async function HalamanPenyusutan({ cari }: { cari: { periode?: string } }) {
+export default async function HalamanPenyusutan({ cari }: { cari: { periode?: string; bulan?: string; tahun?: string } }) {
   const pengguna = await wajibMasuk();
-  const { periode, pilihan } = await periodePenyusutan(cari.periode);
+  const { periode, pilihan } = await periodePenyusutan(periodeDariCari(cari) ?? undefined);
   const [d, namaAkun] = await Promise.all([dataPenyusutan(periode), petaAkun()]);
   const bolehProses = boleh(pengguna.peran, "penyusutan.proses");
   const bolehAjukan = boleh(pengguna.peran, "jurnal-penyesuaian.ajukan");
@@ -36,8 +37,9 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
     <>
       <KepalaHalaman
         judul="Proses Penyusutan"
+        lencana={<LencanaPeriode periode={periode} />}
         keterangan="Saat pembelian diposting, sistem hanya membuat jadwal. Beban tiap bulan baru dijurnal di sini, satu jurnal penyesuaian per periode dengan rincian per aset."
-        aksi={<PemilihPeriode alamat={ALAMAT} periode={periode} pilihan={pilihan} />}
+        aksi={<PemilihPeriode periode={periode} pilihan={pilihan} />}
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -49,7 +51,7 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
       {d.periodeSebelumnyaBelum.length > 0 && (
         <Peringatan jenis="awas">
           Periode {labelPeriode(d.periodeSebelumnyaBelum[0])} belum diproses.{" "}
-          <Link className="font-medium underline" href={`${ALAMAT}?periode=${d.periodeSebelumnyaBelum[0]}`}>Buka periode itu</Link>
+          <Link className="font-medium underline" href={denganPeriode(ALAMAT, d.periodeSebelumnyaBelum[0])}>Buka periode itu</Link>
           . Proses periode paling lama dulu supaya urutan jadwal tetap benar.
         </Peringatan>
       )}
@@ -60,7 +62,7 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
       )}
 
       <Kartu rapat>
-        <KepalaKartu judul={`Pratinjau ${labelPeriode(periode)}`} keterangan={`${d.baris.length} aset, ${d.belumDiproses} belum diproses`} />
+        <KepalaKartu judul={`Pratinjau · ${labelBulanTahun(periode)}`} keterangan={`${d.baris.length} aset, ${d.belumDiproses} belum diproses`} />
         {d.baris.length === 0 ? (
           <KeadaanKosong judul={`Tidak ada aset yang disusutkan pada ${labelPeriode(periode)}`} keterangan="Jadwal dibuat saat pembelian peralatan diposting." />
         ) : (
@@ -151,7 +153,7 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
               {d.riwayat.map((j) => (
                 <tr key={j.no}>
                   <td className="kode">{j.no}</td>
-                  <td><Link className="hover:underline" href={`${ALAMAT}?periode=${j.periode}`}>{labelPeriode(j.periode)}</Link></td>
+                  <td><Link className="hover:underline" href={denganPeriode(ALAMAT, j.periode)}>{labelPeriode(j.periode)}</Link></td>
                   <td className="kolom-angka">{j.jumlahAset}</td>
                   <td className="kolom-angka"><Rupiah nilai={j.total} polos /></td>
                   <td>

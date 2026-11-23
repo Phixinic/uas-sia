@@ -1,22 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="315.98765625pt" height="369.57pt" viewBox="0 0 315.98765625 369.57" font-family="Helvetica, Arial, sans-serif">
-<rect x="0" y="0" width="315.98765625" height="369.57" fill="#FFFFFF"/>
-<rect x="2.00" y="9.00" width="308.99" height="355.57" rx="4" fill="#E3EFFA" stroke="#9a9a9a" stroke-width="0.6"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="324.6646484375pt" height="377.10999999999996pt" viewBox="0 0 324.6646484375 377.10999999999996" font-family="Helvetica, Arial, sans-serif">
+<rect x="0" y="0" width="324.6646484375" height="377.10999999999996" fill="#FFFFFF"/>
+<rect x="2.00" y="9.00" width="317.66" height="363.11" rx="4" fill="#E3EFFA" stroke="#9a9a9a" stroke-width="0.6"/>
 <text x="7.00" y="18.20" font-size="8.4" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Siklus SDM: gaji inhouse</tspan></text>
-<polyline points="223.04,159.90 223.04,142.90" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="122.03,167.44 122.03,150.44" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="217.04,28.00 195.04,28.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="13.00,125.11 13.00,108.11" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="223.04,205.14 223.04,188.14" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="217.04,100.49 195.04,100.49" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="97.03,173.44 116.03,173.44" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="97.03,131.11 116.03,131.11" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="97.03,330.00 120.00,330.00 120.00,300.51" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="300.00,142.90 300.00,152.50 307.50,152.50 307.50,10.00 190.00,10.00 190.00,22.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="13.00,326.24 13.00,309.24" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="220.00,193.23 220.00,270.00 195.04,270.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="220.00,238.47 220.00,270.00 195.04,270.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="307.50,188.14 307.50,197.50 317.50,197.50 317.50,10.00 190.00,10.00 190.00,22.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="97.03,337.50 120.00,337.50 120.00,300.51" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="13.00,333.78 13.00,316.78" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="97.03,230.85 116.03,230.85" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="90.00,125.11 90.00,115.00 105.00,115.00 105.00,67.50 102.50,67.50 102.50,65.00 116.03,65.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="217.04,137.50 207.50,137.50 207.50,230.00 195.04,230.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="217.04,80.00 207.50,80.00 207.50,92.50 310.00,92.50 310.00,207.50 195.04,207.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="217.04,182.50 207.50,182.50 207.50,230.00 195.04,230.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="97.03,312.50 112.50,312.50 112.50,315.00 210.00,315.00 210.00,222.50 202.50,222.50 202.50,172.50 217.04,172.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="217.04,80.00 207.50,80.00 207.50,92.50 317.50,92.50 317.50,190.00 315.00,190.00 315.00,202.50 317.50,202.50 317.50,252.50 212.50,252.50 212.50,235.00 215.00,235.00 215.00,195.00 197.50,195.00 197.50,155.00 190.00,155.00 190.00,167.44" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <rect x="7.00" y="22.00" width="90.03" height="86.11" rx="2" fill="#FFFFFF" stroke="#555" stroke-width="0.7"/>
 <rect x="7.35" y="22.35" width="89.33" height="13.90" rx="0" fill="#ECECEC" stroke="none" stroke-width="0.6"/>
 <polyline points="7.00,36.25 97.03,36.25" fill="none" stroke="#555" stroke-width="0.6" stroke-linejoin="round"/>
@@ -30,7 +31,7 @@
 <text x="10.20" y="90.49" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">total_pph</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">total_thp</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
 <text x="10.20" y="98.03" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="bold" font-style="normal">status</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="bold" font-style="normal">alasan_tolak</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
 <text x="10.20" y="105.57" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="bold" font-style="normal">disetujui_pada</tspan></text>
-<rect x="7.00" y="125.11" width="90.03" height="184.13" rx="2" fill="#FFFFFF" stroke="#555" stroke-width="0.7"/>
+<rect x="7.00" y="125.11" width="90.03" height="191.67" rx="2" fill="#FFFFFF" stroke="#555" stroke-width="0.7"/>
 <rect x="7.35" y="125.46" width="89.33" height="13.90" rx="0" fill="#ECECEC" stroke="none" stroke-width="0.6"/>
 <polyline points="7.00,139.36 97.03,139.36" fill="none" stroke="#555" stroke-width="0.6" stroke-linejoin="round"/>
 <text x="52.01" y="135.51" font-size="7.4" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">slip_gaji</tspan></text>
@@ -41,27 +42,28 @@
 <text x="10.20" y="178.52" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="normal">disetujui_oleh</tspan><tspan font-weight="normal" font-style="normal"> → pengguna</tspan></text>
 <text x="10.20" y="186.06" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">FK</tspan><tspan font-weight="normal" font-style="normal">  </tspan><tspan font-weight="normal" font-style="normal">id_karyawan</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
 <text x="10.20" y="193.60" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="normal">id_jabatan</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="normal">id_golongan</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="10.20" y="201.14" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="normal">id_jadwal</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="normal">no_penggajian</tspan></text>
-<text x="10.20" y="208.68" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">status_ptkp</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">hari_kerja</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="10.20" y="216.22" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">jumlah_presensi</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">hadir</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="10.20" y="223.76" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">izin</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">sakit</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">cuti</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">alpa</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="10.20" y="231.30" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">jam_kerja</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="10.20" y="238.84" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">terlambat_menit</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="10.20" y="246.38" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">gaji_pokok</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">tunj_jabatan</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="10.20" y="253.92" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">tunj_keluarga</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">tunj_lain</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="10.20" y="261.46" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">potongan_absen</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">bruto</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="10.20" y="269.00" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">bruto_setahun</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="10.20" y="276.54" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">biaya_jabatan</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="10.20" y="284.08" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">neto_setahun</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">ptkp</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">pkp</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="10.20" y="291.62" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">pph_setahun</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">pph21</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">thp</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="10.20" y="299.16" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="bold" font-style="normal">status</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="bold" font-style="normal">alasan_tolak</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="10.20" y="306.70" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="bold" font-style="normal">disetujui_pada</tspan></text>
-<rect x="7.00" y="326.24" width="90.03" height="33.33" rx="2" fill="#FFFFFF" stroke="#555" stroke-width="0.7"/>
-<rect x="7.35" y="326.59" width="89.33" height="13.90" rx="0" fill="#ECECEC" stroke="none" stroke-width="0.6"/>
-<polyline points="7.00,340.49 97.03,340.49" fill="none" stroke="#555" stroke-width="0.6" stroke-linejoin="round"/>
-<text x="52.01" y="336.64" font-size="7.4" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">slip_tunjangan</tspan></text>
-<text x="10.20" y="349.49" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">PK/FK</tspan><tspan font-weight="normal" font-style="normal">  </tspan><tspan font-weight="normal" font-style="normal">id_slip</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="normal">id_tunjangan</tspan></text>
-<text x="10.20" y="357.03" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">nama</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">nominal</tspan></text>
+<text x="10.20" y="201.14" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="normal">id_jadwal</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="10.20" y="208.68" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="normal">no_penggajian</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="normal">id_setting</tspan></text>
+<text x="10.20" y="216.22" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">status_ptkp</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">hari_kerja</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="10.20" y="223.76" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">jumlah_presensi</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">hadir</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="10.20" y="231.30" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">izin</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">sakit</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">cuti</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">alpa</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="10.20" y="238.84" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">jam_kerja</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="10.20" y="246.38" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">terlambat_menit</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="10.20" y="253.92" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">gaji_pokok</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">tunj_jabatan</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="10.20" y="261.46" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">tunj_keluarga</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">tunj_lain</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="10.20" y="269.00" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">potongan_absen</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">bruto</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="10.20" y="276.54" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">bruto_setahun</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="10.20" y="284.08" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">biaya_jabatan</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="10.20" y="291.62" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">neto_setahun</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">ptkp</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">pkp</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="10.20" y="299.16" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">pph_setahun</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">pph21</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">thp</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="10.20" y="306.70" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="bold" font-style="normal">status</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="bold" font-style="normal">alasan_tolak</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="10.20" y="314.24" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="bold" font-style="normal">disetujui_pada</tspan></text>
+<rect x="7.00" y="333.78" width="90.03" height="33.33" rx="2" fill="#FFFFFF" stroke="#555" stroke-width="0.7"/>
+<rect x="7.35" y="334.13" width="89.33" height="13.90" rx="0" fill="#ECECEC" stroke="none" stroke-width="0.6"/>
+<polyline points="7.00,348.03 97.03,348.03" fill="none" stroke="#555" stroke-width="0.6" stroke-linejoin="round"/>
+<text x="52.01" y="344.18" font-size="7.4" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">slip_tunjangan</tspan></text>
+<text x="10.20" y="357.03" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">PK/FK</tspan><tspan font-weight="normal" font-style="normal">  </tspan><tspan font-weight="normal" font-style="normal">id_slip</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="normal">id_tunjangan</tspan></text>
+<text x="10.20" y="364.57" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">nama</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">nominal</tspan></text>
 <rect x="116.03" y="22.00" width="79.01" height="48.41" rx="2" fill="#FFFFFF" stroke="#555" stroke-width="0.7"/>
 <rect x="116.38" y="22.35" width="78.31" height="13.90" rx="0" fill="#ECECEC" stroke="none" stroke-width="0.6"/>
 <polyline points="116.03,36.25 195.04,36.25" fill="none" stroke="#555" stroke-width="0.6" stroke-linejoin="round"/>
@@ -101,36 +103,36 @@
 <text x="155.54" y="277.58" font-size="7.4" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">tunjangan</tspan></text>
 <text x="119.23" y="290.43" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">PK</tspan><tspan font-weight="normal" font-style="normal">  </tspan><tspan font-weight="normal" font-style="normal">id_tunjangan</tspan></text>
 <text x="119.23" y="297.97" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">nama</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="italic">nominal</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="bold" font-style="normal">aktif</tspan></text>
-<rect x="217.04" y="22.00" width="88.94" height="63.49" rx="2" fill="#FFFFFF" stroke="#555" stroke-width="0.7"/>
-<rect x="217.39" y="22.35" width="88.24" height="13.90" rx="0" fill="#ECECEC" stroke="none" stroke-width="0.6"/>
-<polyline points="217.04,36.25 305.99,36.25" fill="none" stroke="#555" stroke-width="0.6" stroke-linejoin="round"/>
-<text x="261.52" y="32.40" font-size="7.4" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">presensi</tspan></text>
+<rect x="217.04" y="22.00" width="97.62" height="63.49" rx="2" fill="#FFFFFF" stroke="#555" stroke-width="0.7"/>
+<rect x="217.39" y="22.35" width="96.92" height="13.90" rx="0" fill="#ECECEC" stroke="none" stroke-width="0.6"/>
+<polyline points="217.04,36.25 314.66,36.25" fill="none" stroke="#555" stroke-width="0.6" stroke-linejoin="round"/>
+<text x="265.85" y="32.40" font-size="7.4" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">presensi</tspan></text>
 <text x="220.24" y="45.25" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">PK</tspan><tspan font-weight="normal" font-style="normal">  </tspan><tspan font-weight="normal" font-style="normal">id_presensi</tspan></text>
 <text x="220.24" y="52.79" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">FK</tspan><tspan font-weight="normal" font-style="normal">  </tspan><tspan font-weight="normal" font-style="normal">dibuat_oleh</tspan><tspan font-weight="normal" font-style="normal"> → pengguna</tspan></text>
 <text x="220.24" y="60.33" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">FK</tspan><tspan font-weight="normal" font-style="normal">  </tspan><tspan font-weight="normal" font-style="normal">id_karyawan</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="normal">id_jadwal</tspan></text>
 <text x="220.24" y="67.87" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">tanggal</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="normal">absensi</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
 <text x="220.24" y="75.41" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="normal">jam_masuk</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="normal">jam_keluar</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
 <text x="220.24" y="82.95" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="italic">terlambat</tspan></text>
-<rect x="217.04" y="94.49" width="88.94" height="48.41" rx="2" fill="#FFFFFF" stroke="#555" stroke-width="0.7"/>
-<rect x="217.39" y="94.84" width="88.24" height="13.90" rx="0" fill="#ECECEC" stroke="none" stroke-width="0.6"/>
-<polyline points="217.04,108.74 305.99,108.74" fill="none" stroke="#555" stroke-width="0.6" stroke-linejoin="round"/>
-<text x="261.52" y="104.89" font-size="7.4" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">setting_gaji</tspan></text>
+<rect x="217.04" y="94.49" width="97.62" height="93.65" rx="2" fill="#FFFFFF" stroke="#555" stroke-width="0.7"/>
+<rect x="217.39" y="94.84" width="96.92" height="13.90" rx="0" fill="#ECECEC" stroke="none" stroke-width="0.6"/>
+<polyline points="217.04,108.74 314.66,108.74" fill="none" stroke="#555" stroke-width="0.6" stroke-linejoin="round"/>
+<text x="265.85" y="104.89" font-size="7.4" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">setting_gaji</tspan></text>
 <text x="220.24" y="117.74" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">PK</tspan><tspan font-weight="normal" font-style="normal">  </tspan><tspan font-weight="normal" font-style="normal">id_setting</tspan></text>
-<text x="220.24" y="125.28" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">FK</tspan><tspan font-weight="normal" font-style="normal">  </tspan><tspan font-weight="normal" font-style="normal">id_karyawan</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="220.24" y="132.82" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="normal">id_jabatan</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="normal">id_golongan</tspan></text>
-<text x="220.24" y="140.36" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">aktif</tspan></text>
-<rect x="217.04" y="159.90" width="88.94" height="33.33" rx="2" fill="#FFFFFF" stroke="#555" stroke-width="0.7"/>
-<rect x="217.39" y="160.25" width="88.24" height="13.90" rx="0" fill="#ECECEC" stroke="none" stroke-width="0.6"/>
-<polyline points="217.04,174.15 305.99,174.15" fill="none" stroke="#555" stroke-width="0.6" stroke-linejoin="round"/>
-<text x="261.52" y="170.30" font-size="7.4" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">setting_tunjangan</tspan></text>
-<text x="220.24" y="183.15" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">PK/FK</tspan><tspan font-weight="normal" font-style="normal">  </tspan><tspan font-weight="normal" font-style="normal">id_setting</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
-<text x="220.24" y="190.69" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="normal">id_tunjangan</tspan></text>
-<polyline points="219.84,159.90 223.04,154.90" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="223.04,159.90 223.04,154.90" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="226.24,159.90 223.04,154.90" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<ellipse cx="223.04" cy="152.70" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
-<polyline points="225.84,145.50 220.24,145.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="225.84,147.90 220.24,147.90" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<text x="220.24" y="125.28" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">FK</tspan><tspan font-weight="normal" font-style="normal">  </tspan><tspan font-weight="normal" font-style="normal">berlaku_mulai</tspan><tspan font-weight="normal" font-style="normal"> → periode</tspan></text>
+<text x="220.24" y="132.82" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">FK</tspan><tspan font-weight="normal" font-style="normal">  </tspan><tspan font-weight="normal" font-style="normal">diajukan_oleh</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="220.24" y="140.36" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="normal">diputuskan_oleh</tspan><tspan font-weight="normal" font-style="normal"> → pengguna</tspan></text>
+<text x="220.24" y="147.90" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">FK</tspan><tspan font-weight="normal" font-style="normal">  </tspan><tspan font-weight="normal" font-style="normal">id_karyawan</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="220.24" y="155.44" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="normal">id_jabatan</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="normal">id_golongan</tspan></text>
+<text x="220.24" y="162.98" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">aktif</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="normal" font-style="normal">jenis_perubahan</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="220.24" y="170.52" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="normal">alasan</tspan><tspan font-weight="normal" font-style="normal">, </tspan><tspan font-weight="bold" font-style="normal">status</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="220.24" y="178.06" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="bold" font-style="normal">alasan_tolak</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="220.24" y="185.60" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="bold" font-style="normal">diputuskan_pada</tspan></text>
+<rect x="217.04" y="205.14" width="97.62" height="33.33" rx="2" fill="#FFFFFF" stroke="#555" stroke-width="0.7"/>
+<rect x="217.39" y="205.49" width="96.92" height="13.90" rx="0" fill="#ECECEC" stroke="none" stroke-width="0.6"/>
+<polyline points="217.04,219.39 314.66,219.39" fill="none" stroke="#555" stroke-width="0.6" stroke-linejoin="round"/>
+<text x="265.85" y="215.54" font-size="7.4" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">setting_tunjangan</tspan></text>
+<text x="220.24" y="228.39" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">PK/FK</tspan><tspan font-weight="normal" font-style="normal">  </tspan><tspan font-weight="normal" font-style="normal">id_setting</tspan><tspan font-weight="normal" font-style="normal">, </tspan></text>
+<text x="220.24" y="235.93" font-size="6.5" fill="#111" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">    </tspan><tspan font-weight="normal" font-style="normal">id_tunjangan</tspan></text>
 <polyline points="119.23,164.84 124.83,164.84" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <ellipse cx="122.03" cy="161.14" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
 <polyline points="124.83,153.04 119.23,153.04" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
@@ -147,6 +149,12 @@
 <ellipse cx="13.00" cy="117.91" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
 <polyline points="15.80,110.71 10.20,110.71" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <ellipse cx="13.00" cy="114.41" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
+<polyline points="219.84,205.14 223.04,200.14" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="223.04,205.14 223.04,200.14" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="226.24,205.14 223.04,200.14" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<ellipse cx="223.04" cy="197.94" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
+<polyline points="225.84,190.74 220.24,190.74" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="225.84,193.14 220.24,193.14" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="217.04,103.69 212.04,100.49" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="217.04,100.49 212.04,100.49" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="217.04,97.29 212.04,100.49" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
@@ -165,28 +173,30 @@
 <ellipse cx="104.23" cy="131.11" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
 <polyline points="113.43,133.91 113.43,128.31" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="111.03,133.91 111.03,128.31" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="97.03,326.80 102.03,330.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="97.03,330.00 102.03,330.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="97.03,333.20 102.03,330.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<ellipse cx="104.23" cy="330.00" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
-<polyline points="122.80,303.11 117.20,303.11" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="122.80,305.51 117.20,305.51" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="302.80,145.50 297.20,145.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<ellipse cx="300.00" cy="149.20" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
-<polyline points="187.20,19.40 192.80,19.40" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="187.20,17.00 192.80,17.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="9.80,326.24 13.00,321.24" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="13.00,326.24 13.00,321.24" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="16.20,326.24 13.00,321.24" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<ellipse cx="13.00" cy="319.04" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
-<polyline points="15.80,311.84 10.20,311.84" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="15.80,314.24 10.20,314.24" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="223.20,193.23 220.00,198.23" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="220.00,193.23 220.00,198.23" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="216.80,193.23 220.00,198.23" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<ellipse cx="220.00" cy="200.43" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
+<polyline points="223.20,238.47 220.00,243.47" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="220.00,238.47 220.00,243.47" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="216.80,238.47 220.00,243.47" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<ellipse cx="220.00" cy="245.67" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
 <polyline points="197.64,267.20 197.64,272.80" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="200.04,267.20 200.04,272.80" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="310.70,188.14 307.50,193.14" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="307.50,188.14 307.50,193.14" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="304.30,188.14 307.50,193.14" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<ellipse cx="307.50" cy="195.34" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
+<polyline points="187.20,19.40 192.80,19.40" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="187.20,17.00 192.80,17.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="97.03,334.30 102.03,337.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="97.03,337.50 102.03,337.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="97.03,340.70 102.03,337.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<ellipse cx="104.23" cy="337.50" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
+<polyline points="122.80,303.11 117.20,303.11" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="122.80,305.51 117.20,305.51" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="9.80,333.78 13.00,328.78" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="13.00,333.78 13.00,328.78" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="16.20,333.78 13.00,328.78" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<ellipse cx="13.00" cy="326.58" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
+<polyline points="15.80,319.38 10.20,319.38" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="15.80,321.78 10.20,321.78" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="97.03,227.65 102.03,230.85" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="97.03,230.85 102.03,230.85" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="97.03,234.05 102.03,230.85" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
@@ -199,16 +209,22 @@
 <ellipse cx="90.00" cy="117.91" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
 <polyline points="113.43,67.80 113.43,62.20" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="111.03,67.80 111.03,62.20" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="217.04,140.70 212.04,137.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="217.04,137.50 212.04,137.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="217.04,134.30 212.04,137.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<ellipse cx="209.84" cy="137.50" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
+<polyline points="217.04,185.70 212.04,182.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="217.04,182.50 212.04,182.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="217.04,179.30 212.04,182.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<ellipse cx="209.84" cy="182.50" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
 <polyline points="197.64,227.20 197.64,232.80" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="200.04,227.20 200.04,232.80" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="97.03,309.30 102.03,312.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="97.03,312.50 102.03,312.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="97.03,315.70 102.03,312.50" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<ellipse cx="104.23" cy="312.50" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
+<polyline points="214.44,175.30 214.44,169.70" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<ellipse cx="210.74" cy="172.50" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
 <polyline points="217.04,83.20 212.04,80.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="217.04,80.00 212.04,80.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="217.04,76.80 212.04,80.00" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 <ellipse cx="209.84" cy="80.00" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#1B5E94" stroke-width="0.7"/>
-<polyline points="197.64,204.70 197.64,210.30" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
-<polyline points="200.04,204.70 200.04,210.30" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="187.20,164.84 192.80,164.84" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
+<polyline points="187.20,162.44 192.80,162.44" fill="none" stroke="#1B5E94" stroke-width="0.7" stroke-linejoin="round"/>
 </svg>

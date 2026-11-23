@@ -4,7 +4,9 @@ import { profilUsaha } from "@/lib/data/umum";
 import { dataNeracaLajur, dataNeracaSaldo } from "@/lib/data/pelaporan/jurnal";
 import { periodeLaporanBawaan, semuaPeriode } from "@/lib/data/pelaporan/periode";
 import { tahapDari } from "@/lib/inti/buku-besar";
-import { labelPeriode } from "@/lib/inti/tanggal";
+import { bulanDari, labelBulanTahun, periodeDariCari, tahunDari } from "@/lib/inti/tanggal";
+import PilihBulanTahun from "@/komponen/ui/PilihBulanTahun";
+import LencanaPeriode from "@/komponen/ui/LencanaPeriode";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu from "@/komponen/ui/Kartu";
 import Tabel from "@/komponen/ui/Tabel";
@@ -12,12 +14,11 @@ import Rupiah from "@/komponen/ui/Rupiah";
 import Lencana from "@/komponen/ui/Lencana";
 import Peringatan from "@/komponen/ui/Peringatan";
 import KeadaanKosong from "@/komponen/ui/KeadaanKosong";
-import FilterUrl from "@/komponen/pelaporan/FilterUrl";
 import { KepalaCetak, TombolCetak } from "@/komponen/pelaporan/Cetak";
 import PilihTahap, { judulTahap } from "@/komponen/pelaporan/PilihTahap";
 import { angka, rupiah } from "@/lib/format";
 
-type Cari = { periode?: string; tahap?: string };
+type Cari = { periode?: string; bulan?: string; tahun?: string; tahap?: string };
 type DK = { debit: number; kredit: number };
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<Cari> }): Promise<Metadata> {
@@ -47,7 +48,8 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
   const tahap = tahapDari(cari.tahap);
   const judul = judulTahap("Neraca Saldo", tahap);
   const [semua, bawaan, usaha] = await Promise.all([semuaPeriode(), periodeLaporanBawaan(), profilUsaha()]);
-  const periode = cari.periode && semua.includes(cari.periode) ? cari.periode : bawaan;
+  const dipilih = periodeDariCari(cari);
+  const periode = dipilih && semua.includes(dipilih) ? dipilih : bawaan;
   const [n, lajur] = await Promise.all([tahap === "sebelum" ? dataNeracaSaldo(periode, "sebelum") : null, tahap === "setelah" ? dataNeracaLajur(periode) : null]);
   const seimbang = n ? n.seimbang : lajur!.seimbang;
 
@@ -55,6 +57,7 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
     <>
       <KepalaHalaman
         judul={judul}
+        lencana={<LencanaPeriode periode={periode} sampai />}
         keterangan={
           tahap === "sebelum"
             ? "Saldo semua akun sampai akhir periode dari jurnal umum dan pembalik yang disetujui, sebelum jurnal penyesuaian periode ini. Total debit harus sama dengan total kredit."
@@ -63,10 +66,10 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
         aksi={<TombolCetak />}
       />
       <div className="tanpa-cetak flex flex-wrap gap-3">
-        <FilterUrl nama="periode" label="Sampai periode" nilai={periode} opsi={[...semua].reverse().map((p) => ({ nilai: p, label: labelPeriode(p) }))} />
-        <PilihTahap alamat="/pelaporan/neraca-saldo" tahap={tahap} param={{ periode }} />
+        <PilihBulanTahun periode={periode} tersedia={semua} labelBulan="Sampai akhir bulan" />
+        <PilihTahap alamat="/pelaporan/neraca-saldo" tahap={tahap} param={{ bulan: String(bulanDari(periode)), tahun: String(tahunDari(periode)) }} />
       </div>
-      <KepalaCetak usaha={usaha.nama} judul={judul} keterangan={`Sampai akhir ${labelPeriode(periode)}`} />
+      <KepalaCetak usaha={usaha.nama} judul={judul} keterangan={`Saldo sampai akhir periode · ${labelBulanTahun(periode)}`} />
       {!seimbang && <Peringatan jenis="galat">Neraca saldo tidak seimbang{n ? `, selisih ${rupiah(Math.abs(n.debit - n.kredit))}` : ""}. Periksa jurnal yang bermasalah sebelum menutup periode.</Peringatan>}
 
       {n && (

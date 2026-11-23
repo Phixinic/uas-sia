@@ -382,22 +382,28 @@ test("halaman master dan pengguna untuk fee event", async () => {
   await expect(h.getByRole("link", { name: "Jabatan event baru" })).toHaveCount(0);
 });
 
+/*
+ * Memakai Desember 2026, bulan yang tidak disentuh alur.spec.ts: di sana gaji November sudah dibayar sehingga presensi
+ * November terkunci dan KRY-02 sudah punya presensi 3 November. Pengecekan tetap sama: presensi tersimpan, crew event
+ * tidak bisa dipilih dan tidak ikut Hitung Gaji, lalu slip draf tersimpan.
+ */
 test("gaji inhouse tetap jalan: presensi lalu Hitung Gaji, crew event tidak ikut", async () => {
   const p = sesi.hrd.page;
-  await p.goto("/sdm/presensi?periode=2026-11&form=baru");
+  await p.goto("/sdm/presensi?periode=2026-12&form=baru");
+  await expect(p).toHaveURL(/bulan=12&tahun=2026/);
   const f = p.locator("form").filter({ has: p.locator("#pr-karyawan") });
   await expect(f.getByLabel("Karyawan").locator("option", { hasText: "Bima Satria" })).toHaveCount(0);
   await f.getByLabel("Karyawan").selectOption("KRY-02");
-  await f.getByLabel("Tanggal").fill("2026-11-03");
+  await f.getByLabel("Tanggal").fill("2026-12-03");
   await f.getByLabel("Absensi").selectOption("HADIR");
   await f.getByLabel("Jam masuk").fill("08:00");
   await f.getByLabel("Jam keluar").fill("17:00");
   await f.getByRole("button", { name: "Simpan" }).click();
   await tungguToast(p, /Presensi tersimpan/);
-  await p.goto("/sdm/hitung-gaji?periode=2026-11");
+  await p.goto("/sdm/hitung-gaji?bulan=12&tahun=2026");
   await expect(p.getByText("Bima Satria")).toHaveCount(0);
   await p.getByRole("button", { name: /Hitung dan simpan semua/ }).click();
   await konfirmasi(p);
-  await tungguToast(p, /slip gaji November 2026 disimpan sebagai draf/);
+  await tungguToast(p, /slip gaji Desember 2026 disimpan sebagai draf/);
   expect(galatKonsol, galatKonsol.join("\n")).toEqual([]);
 });
