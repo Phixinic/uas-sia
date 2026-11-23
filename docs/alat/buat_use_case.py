@@ -12,26 +12,24 @@ Kanvas = ukuran cetak (poin) di laporan: huruf di sini = huruf tercetak.
 import math, os, random, re, sys
 import numpy as np
 sys.path.insert(0, os.path.dirname(__file__))
-from svgkit import Svg, lebar_teks
+from svgkit import Svg, lebar_teks, lebar_segmen
 
 AKAR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-W, H = 785.0, 440.0
+W, H = 785.0, 504.0
 UK = 7.6            # huruf use case (pt cetak)
 UK_AKTOR = 8.6
 RX, RY = 52.0, 12.5  # elips seragam
 KOLOM, BARIS = 5, 7
-X0, Y0, X1, Y1 = 64.0, 52.0, 721.0, 388.0   # kotak batas sistem
+X0, Y0, X1, Y1 = 64.0, 52.0, 721.0, 444.0   # kotak batas sistem
 
-# kunci: (label, kunci IZIN atau None, aktor). Aktor: A Admin, H HRD, O Owner, P semua peran.
+# kunci: (label, kunci IZIN atau None, aktor). Aktor: A Admin, H HRD, O Owner, K Kapten, P Pengguna (peran staf).
 UC = {
-    "masuk":   ("Masuk ke aplikasi\ndengan akun per peran", None, "P"),
-    "dash":    ("Lihat dashboard", None, "P"),
-    "umum":    ("Lihat jurnal umum", None, "P"),
-    "bb":      ("Lihat buku besar", None, "P"),
-    "ns":      ("Lihat neraca saldo", None, "P"),
+    "masuk":   ("Masuk ke aplikasi\ndengan akun per peran", None, "PK"),
+    "dash":    ("Lihat dashboard", None, "PK"),
+    "lap":     ("Lihat jurnal, buku besar,\nneraca saldo (dua tahap)", None, "P"),
     "kartu":   ("Lihat kartu aset", None, "P"),
     "cetak":   ("Cetak laporan", None, "P"),
-    "cetakslip": ("Cetak slip gaji", None, "P"),
+    "cetakslip": ("Cetak slip gaji\ndan slip fee", None, "P"),
     "draf":    ("Kelola draf pembelian\nperalatan, perlengkapan", "pembelian.kelola-draf", "A"),
     "cepat":   ("Tambah supplier atau\nbarang dari form", "master-konversi.tambah-cepat", "A"),
     "posting": ("Posting pembelian", "pembelian.posting", "AO"),
@@ -53,31 +51,40 @@ UC = {
     "kunci":   ("Tutup periode (mengunci\nperiode) dan buka kunci", "periode.kunci", "O"),
     "katakun": ("Kelola akun, kategori,\nprofil, status master", "master.akun-kategori+master.nonaktifkan+profil.ubah", "O"),
     "pengguna": ("Kelola pengguna", "pengguna.kelola", "O"),
+    "event":   ("Catat event, sesi,\npenugasan, kehadiran", "event.kelola", "HO"),
+    "nilai":   ("Nilai progres kehadiran\n(Sesuai atau Kurang)", "event.nilai", "KO"),
+    "kurang":  ("Isi jam diakui\ndan catatan", None, ""),
+    "lapor":   ("Kirim laporan progres\nke Owner", "event.lapor", "K"),
+    "putfee":  ("Tentukan fee akhir, setujui\natau tolak laporan", "fee-event.putuskan", "O"),
+    "slipfee": ("Buat slip fee dan\njurnal fee event", None, ""),
+    "tarif":   ("Atur tarif jabatan\nevent", "tarif-event.ubah", "O"),
 }
 # Relasi antar use case: (dari, ke, jenis, catatan). Panah dari use case yang menyertai/memperluas.
 REL = [
     ("susut", "drafjp", "include", ""),
-    ("drafjp", "sisa", "extend", "[total biaya\nlebih dari nol]"),
-    ("cepat", "draf", "extend", "[supplier atau\nbarang belum ada]"),
+    ("drafjp", "sisa", "extend", "[biaya > 0]"),
+    ("cepat", "draf", "extend", "[master belum ada]"),
     ("aset", "posting", "extend", "[pembelian\nperalatan]"),
-    ("cetak", "umum", "extend", ""),
-    ("cetak", "bb", "extend", ""),
-    ("cetak", "ns", "extend", ""),
+    ("cetak", "lap", "extend", ""),
+    ("kurang", "nilai", "extend", "[hasil Kurang]"),
+    ("slipfee", "putfee", "extend", "[laporan\ndisetujui]"),
 ]
-NAMA_AKTOR = {"A": "Admin", "H": "HRD", "O": "Owner"}
-WARNA_AKTOR = {"A": "#8B1A1A", "H": "#1F5F99", "O": "#2E6B3A", "P": "#555555"}
+NAMA_AKTOR = {"A": "Admin", "H": "HRD", "O": "Owner", "K": "Kapten"}
+WARNA_AKTOR = {"A": "#8B1A1A", "H": "#1F5F99", "O": "#2E6B3A", "K": "#5B3F8C", "P": "#555555"}
 WARNA_UC = {  # per siklus
     "masuk": "#EEEEEE", "dash": "#EEEEEE", "lap": "#EEEEEE", "kartu": "#EEEEEE",
 }
-SIKLUS = {"k": "#FDE7E4", "s": "#E3EFFA", "l": "#FFF3C4", "p": "#EEEEEE"}
-GRUP = {"masuk": "p", "dash": "p", "umum": "l", "bb": "l", "ns": "l", "kartu": "k", "cetak": "l", "cetakslip": "s",
+SIKLUS = {"k": "#FDE7E4", "s": "#E3EFFA", "e": "#ECE4F6", "l": "#FFF3C4", "p": "#EEEEEE"}
+GRUP = {"masuk": "p", "dash": "p", "lap": "l", "kartu": "k", "cetak": "l", "cetakslip": "s",
         "draf": "k", "cepat": "k", "posting": "k", "aset": "k", "balik": "k", "sisa": "k", "susut": "k", "drafjp": "l", "ajujp": "l",
         "ajulepas": "k", "setlepas": "k", "setjp": "l", "mkonv": "k", "presensi": "s", "gaji": "s", "dist": "s", "setgaji": "s", "msdm": "s",
-        "kunci": "l", "katakun": "l", "pengguna": "l"}
+        "kunci": "l", "katakun": "l", "pengguna": "l",
+        "event": "e", "nilai": "e", "kurang": "e", "lapor": "e", "putfee": "e", "slipfee": "e", "tarif": "e"}
 
 # Tata letak hasil pencarian: kunci -> (kolom, baris); aktor -> (sisi, posisi 0..1 sepanjang sisi).
-TATA_LETAK = {'masuk': (454.9, 122.5), 'dash': (158.5, 90.9), 'umum': (338.1, 119.7), 'bb': (147.1, 134.8), 'ns': (423.8, 156.9), 'kartu': (572.2, 133.0), 'cetak': (260.1, 160.2), 'cetakslip': (535.6, 88.3), 'draf': (373.7, 325.8), 'cepat': (188.8, 294.2), 'posting': (425.8, 232.8), 'aset': (337.9, 270.0), 'balik': (620.4, 206.5), 'sisa': (171.9, 332.4), 'susut': (123.5, 368.9), 'drafjp': (265.4, 367.0), 'ajujp': (127.0, 200.0), 'ajulepas': (201.1, 249.8), 'setlepas': (636.9, 171.0), 'setjp': (661.7, 97.4), 'mkonv': (283.6, 199.6), 'presensi': (382.0, 362.4), 'gaji': (494.1, 345.2), 'dist': (644.4, 368.2), 'setgaji': (484.3, 306.1), 'msdm': (628.0, 333.9), 'kunci': (493.8, 267.9), 'katakun': (463.0, 195.5), 'pengguna': (607.3, 299.4)}
-AKTOR_LETAK = {'P': ('T', 0.385), 'A': ('L', 0.59), 'H': ('B', 0.42), 'O': ('R', 0.666)}
+# Hasil --cari (SEED=29 AWAL=kisi T0=3 SIG0=25 LANGKAH=250000), lalu 'sisa' digeser 16 pt ke kiri supaya label extend-nya muat.
+TATA_LETAK = {'kartu': (520.9, 88.2), 'susut': (251.8, 125.6), 'setlepas': (292.4, 303.8), 'ajulepas': (125.4, 123.6), 'setjp': (511.4, 337.4), 'dist': (181.1, 423.1), 'sisa': (208.7, 160.8), 'kunci': (655.9, 191.7), 'lap': (279.3, 90.0), 'putfee': (656.2, 94.0), 'katakun': (500.4, 384.5), 'balik': (448.3, 163.8), 'ajujp': (146.9, 221.8), 'cepat': (124.1, 260.7), 'lapor': (636.0, 420.1), 'cetak': (137.5, 88.0), 'setgaji': (533.0, 238.7), 'presensi': (627.9, 383.0), 'tarif': (301.3, 375.2), 'gaji': (302.4, 412.4), 'pengguna': (660.6, 348.3), 'cetakslip': (395.6, 93.8), 'draf': (258.1, 226.6), 'posting': (396.9, 214.3), 'mkonv': (538.6, 204.7), 'nilai': (178.2, 387.8), 'masuk': (523.2, 123.1), 'dash': (337.0, 172.9), 'event': (519.6, 419.7), 'msdm': (127.8, 306.2), 'aset': (290.8, 262.2), 'drafjp': (393.9, 129.1), 'slipfee': (582.7, 157.5), 'kurang': (276.6, 338.2)}
+AKTOR_LETAK = {'P': ('T', 0.397), 'A': ('L', 0.328), 'H': ('B', 0.0), 'O': ('R', 0.489), 'K': ('B', 0.45)}
 
 
 def cek_izin():
@@ -85,7 +92,7 @@ def cek_izin():
     teks = open(os.path.join(AKAR, "src", "lib", "peran.ts"), encoding="utf-8").read()
     izin = {}
     for m in re.finditer(r'"([\w.\-]+)":\s*\[([^\]]*)\]', teks):
-        izin[m.group(1)] = "".join(sorted({"ADMIN": "A", "HRD": "H", "OWNER": "O"}[x.strip().strip('"')] for x in m.group(2).split(",") if x.strip()))
+        izin[m.group(1)] = "".join(sorted({"ADMIN": "A", "HRD": "H", "OWNER": "O", "KAPTEN": "K"}[x.strip().strip('"')] for x in m.group(2).split(",") if x.strip()))
     for k, (_, kunci, akt) in UC.items():
         if not kunci:
             continue
@@ -147,7 +154,9 @@ def potong(p1, p2, q1, q2):
     return (d1 * d2 < 0) and (d3 * d4 < 0)
 
 
-GEN = ("A", "H", "O")   # aktor yang mewarisi Pengguna ("P")
+GEN = ("A", "H", "O")   # aktor yang mewarisi Pengguna ("P"). Kapten tidak: ia hanya membuka dashboard dan Penilaian Crew.
+# Rentang posisi aktor di sisi bawah: HRD di kiri, Kapten di tengah, keterangan di kanan bawah.
+BATAS_AKTOR = {("H", "B"): (0.0, 0.42), ("K", "B"): (0.45, 0.6)}
 
 
 def garis_generalisasi(ak):
@@ -201,7 +210,8 @@ def biaya(tata, ak, rinci=False):
     for (d, ke, s, e), (_, _, _, cat_) in zip(rel, REL):
         ln = math.dist(s, e)
         parts["panjang"] += 0.02 * ln
-        min_ln = 38 + (22 if cat_ else 0)
+        # garis berlabel syarat harus cukup panjang untuk label satu baris di atasnya plus ruang ujung panah
+        min_ln = 38 + (lebar_segmen([("\u00abextend\u00bb ", "i"), (cat_.replace("\n", " "), "r")], 7.5) - 10 if cat_ else 0)
         if ln < min_ln:
             parts["pref"] += (min_ln - ln) / 4
     # persilangan dan garis aktor yang hampir berimpit (vektor)
@@ -229,10 +239,11 @@ def biaya(tata, ak, rinci=False):
             parts["silang"] += 8.0 * float(np.triu(M2, 1).sum())
     # elips tidak boleh bertumpuk atau keluar dari kotak sistem (vektor)
     kel = np.maximum.reduce([X0 + 6 - (cx - RX), (cx + RX) - (X1 - 6), (Y0 + 22) - (cy - RY), (cy + RY) - (Y1 - 5)]) + 1.0
-    parts["pref"] += float(np.where(kel > 0, 5 + kel / 5, 0.0).sum())
+    # elips keluar kotak sistem atau bertumpuk tidak pernah boleh terjadi, jadi penaltinya jauh di atas biaya lain
+    parts["pref"] += float(np.where(kel > 0, 40 + kel * 2, 0.0).sum())
     OX = 2 * RX + 7 - np.abs(cx[:, None] - cx[None, :]); OY = 2 * RY + 9 - np.abs(cy[:, None] - cy[None, :])
     tum = np.triu((OX > 0) & (OY > 0), 1)
-    parts["pref"] += float(np.where(tum, 5 + np.minimum(OX, OY) / 4, 0.0).sum())
+    parts["pref"] += float(np.where(tum, 40 + np.minimum(OX, OY) * 2, 0.0).sum())
     # aktor tidak boleh berdekatan satu sama lain
     keys = list(ak)
     for i in range(len(keys)):
@@ -275,18 +286,42 @@ def diagnosa(tata, ak):
 def awal(rnd):
     """Susunan awal kasar: use case milik Admin di kiri, Owner di kanan, HRD di bawah, Pengguna di atas, bersama di tengah."""
     pos = {}
-    pusat_x = {"A": X0 + 90, "O": X1 - 90, "H": (X0 + X1) / 2, "P": (X0 + X1) / 2, "AO": (X0 + X1) / 2, "HO": X1 - 150, "": (X0 + X1) / 2}
-    pusat_y = {"A": 160, "O": 200, "H": Y1 - 40, "P": Y0 + 40, "AO": 220, "HO": Y1 - 60, "": 250}
+    pusat_x = {"A": X0 + 90, "O": X1 - 90, "H": (X0 + X1) / 2, "P": (X0 + X1) / 2, "PK": (X0 + X1) / 2, "AO": (X0 + X1) / 2, "HO": X1 - 150,
+               "K": (X0 + X1) / 2 + 60, "KO": X1 - 120, "": (X0 + X1) / 2}
+    pusat_y = {"A": 160, "O": 200, "H": Y1 - 40, "P": Y0 + 40, "PK": Y0 + 60, "AO": 220, "HO": Y1 - 60, "K": Y1 - 50, "KO": Y1 - 80, "": 250}
     for k, (_, _, akt) in UC.items():
         pos[k] = (pusat_x[akt] + rnd.uniform(-60, 60), pusat_y[akt] + rnd.uniform(-60, 60))
     return pos
 
 
+def awal_kisi(rnd):
+    """Susunan awal di kisi zig-zag (5 kolom x 10 baris, baris genap bergeser setengah kolom) supaya tidak ada elips
+    bertumpuk sejak awal. Tiap use case mengambil slot kosong terdekat dari titik sasaran aktornya (lihat awal())."""
+    sasaran = awal(rnd)
+    nbar = 10
+    x_kiri, x_kanan = X0 + 6 + RX + 2, X1 - 6 - RX - 2
+    y_atas, y_bawah = Y0 + 22 + RY + 2, Y1 - 5 - RY - 2
+    dx = (x_kanan - x_kiri) / 4.5
+    slot = []
+    for b in range(nbar):
+        y = y_atas + b * (y_bawah - y_atas) / (nbar - 1)
+        geser = 0 if b % 2 == 0 else dx / 2
+        slot += [(x_kiri + geser + k * dx, y) for k in range(5)]
+    tata = {}
+    urut = sorted(UC, key=lambda k: (len(UC[k][2]) or 9, rnd.random()))   # use case dengan satu aktor lebih dulu
+    for k in urut:
+        sx, sy = sasaran[k]
+        terdekat = min(slot, key=lambda q: (q[0] - sx) ** 2 + (1.8 * (q[1] - sy)) ** 2)
+        slot.remove(terdekat)
+        tata[k] = terdekat
+    return tata
+
+
 def cari(seed=7, langkah=60000, T0=8.0, sig0=45.0, mulai=None):
     rnd = random.Random(seed)
     kunci = list(UC)
-    tata = awal(rnd)
-    ak = {"P": ("T", 0.5), "A": ("L", 0.45), "H": ("B", 0.45), "O": ("R", 0.45)}
+    tata = awal_kisi(rnd) if os.environ.get("AWAL") == "kisi" else awal(rnd)
+    ak = {"P": ("T", 0.5), "A": ("L", 0.45), "H": ("B", 0.3), "O": ("R", 0.45), "K": ("B", 0.55)}
     if mulai:
         tata, ak = dict(mulai[0]), dict(mulai[1])
         if ak["H"][0] == "B":
@@ -308,7 +343,7 @@ def cari(seed=7, langkah=60000, T0=8.0, sig0=45.0, mulai=None):
             tata2[a], tata2[b] = tata2[b], tata2[a]
         elif r < 0.985:
             a = rnd.choice(list(ak2)); sisi, tt = ak2[a]
-            bts = (0.0, 0.42) if (a == "H" and sisi == "B") else (0.0, 1.0)
+            bts = BATAS_AKTOR.get((a, sisi), (0.0, 1.0))
             ak2[a] = (sisi, min(max(tt + rnd.uniform(-0.15, 0.15), bts[0]), bts[1]))
         else:
             a = rnd.choice(list(ak2))
@@ -474,13 +509,32 @@ def gambar(tata, ak, path_svg, path_png):
         wst = max(lebar_teks(t_, 7.5, g_) for t_, g_ in baris) + 3
         hst = len(baris) * 8.6 + 1.5
         lain = [(a_, b_) for m_, (a_, b_, _, _) in enumerate(rels) if m_ != n_rel]
-        def milik_sendiri(kotak, s_=s_, e_=e_, lain=lain):
+        def milik_sendiri(kotak, s_=s_, e_=e_, lain=lain, maks=11, beda=5):
             # label harus jelas milik garisnya: dekat garis sendiri dan lebih jauh dari garis relasi lain
             d_sendiri = jarak_kotak_segmen(kotak, s_, e_)
-            return d_sendiri <= 11 and all(jarak_kotak_segmen(kotak, a_, b_) > d_sendiri + 5 for a_, b_ in lain)
+            return d_sendiri <= maks and all(jarak_kotak_segmen(kotak, a_, b_) > d_sendiri + beda for a_, b_ in lain)
         kotak = cari_tempat(wst, hst, mid, pusat, segmen, terpakai, 120, syarat=milik_sendiri)
+        if kotak is None:   # percobaan kedua: label boleh sedikit lebih jauh dari garisnya
+            kotak = cari_tempat(wst, hst, mid, pusat, segmen, terpakai, 140, syarat=lambda k_, f=milik_sendiri: f(k_, maks=14, beda=7))
+        satu_baris = False
+        if kotak is None and cat:   # percobaan ketiga: stereotip dan syarat dalam satu baris
+            seg1 = [(st + " ", "i"), (cat.replace("\n", " "), "r")]
+            w1 = lebar_segmen(seg1, 7.5) + 3
+            kotak = cari_tempat(w1, 10.1, mid, pusat, segmen, terpakai, 140, syarat=lambda k_, f=milik_sendiri: f(k_, maks=14, beda=7))
+            satu_baris = kotak is not None
+            if kotak is None:   # cadangan terakhir: di atas garis sendiri, latar putih memutus garis di bawah label
+                tanpa_sendiri = [g_ for g_ in segmen if g_ != (s_, e_)]
+                kotak = cari_tempat(w1, 10.1, mid, pusat, tanpa_sendiri, terpakai, 40,
+                                    syarat=lambda k_: jarak_kotak_segmen(k_, s_, e_) < 1.0 and jarak_kotak_segmen(k_, e_, e_) > 6
+                                    and all(jarak_kotak_segmen(k_, a_, b_) > 6 for a_, b_ in lain))
+                if kotak is not None:
+                    satu_baris = True
+                    svg.rect(kotak[0], kotak[1], kotak[2], kotak[3], "#FFFFFF")
         if kotak is None:
             print("label relasi tidak muat:", st, cat.replace("\n", " "), "(garis", s_, e_, ")")
+        elif satu_baris:
+            terpakai.append(kotak)
+            svg.teks(kotak[0] + kotak[2] / 2, kotak[1] + 8, seg1, 7.5, "#222", "middle")
         else:
             terpakai.append(kotak)
             for i_, (t_, g_) in enumerate(baris):
@@ -498,13 +552,13 @@ def gambar(tata, ak, path_svg, path_png):
         nama = NAMA_AKTOR.get(a, "Pengguna")
         if a == "P":
             svg.teks(x + 10, y - 8, [(nama, "b")], UK_AKTOR, WARNA_AKTOR[a])
-            svg.teks(x + 10 + lebar_teks(nama, UK_AKTOR, "b") + 4, y - 8, "(semua peran)", 7.5, WARNA_AKTOR[a])
+            svg.teks(x + 10 + lebar_teks(nama, UK_AKTOR, "b") + 4, y - 8, "(Admin, HRD, Owner)", 7.5, WARNA_AKTOR[a])
         elif y > Y1:
             svg.teks(x + 14, y + 6, [(nama, "b")], UK_AKTOR, WARNA_AKTOR[a])
         else:
             svg.teks(x, y + 32, [(nama, "b")], UK_AKTOR, WARNA_AKTOR[a], "middle")
     # keterangan di kanan bawah (di luar kotak sistem): simbol garis di kolom kiri, arti warna elips di kolom kanan
-    lx = W - 300; ly = Y1 + 12
+    lx = W - 300; ly = Y1 + 10
     svg.teks(lx, ly, [("Keterangan", "b")], 7.5, "#333")
     svg.garis([(lx, ly + 9), (lx + 18, ly + 9)], "#222", 0.9, dash="3 2"); panah_terbuka(svg, (lx, ly + 9), (lx + 18, ly + 9))
     svg.teks(lx + 23, ly + 12, "include atau extend", 7.5, "#333")
@@ -514,8 +568,8 @@ def gambar(tata, ak, path_svg, path_png):
     svg.teks(lx + 23, ly + 34, "garis aktor ke use case", 7.5, "#333")
     cx0 = W - 118
     svg.teks(cx0, ly, [("Warna elips", "b")], 7.5, "#333")
-    for n_, (kode, ket) in enumerate((("k", "Siklus konversi"), ("s", "Siklus SDM"), ("l", "Pelaporan, pengaturan"), ("p", "Umum (semua peran)"))):
-        yy = ly + 5.5 + n_ * 9.2
+    for n_, (kode, ket) in enumerate((("k", "Siklus konversi"), ("s", "SDM: gaji inhouse"), ("e", "SDM: fee event"), ("l", "Pelaporan, pengaturan"), ("p", "Umum"))):
+        yy = ly + 5.5 + n_ * 8.6
         svg.ellipse(cx0 + 6, yy + 1.5, 6, 3.6, SIKLUS[kode], "#444", 0.6)
         svg.teks(cx0 + 16, yy + 4, ket, 7.5, "#333")
     svg.simpan(path_svg, path_png)
@@ -531,6 +585,6 @@ if __name__ == "__main__":
         print("AKTOR_LETAK =", {k: (v[0], round(v[1], 3)) for k, v in ak.items()})
     else:
         tata, ak = TATA_LETAK, AKTOR_LETAK
-    d = os.path.join(AKAR, "docs")
+    d = os.environ.get("KELUAR_UC", os.path.join(AKAR, "docs"))   # folder keluaran lain dipakai saat mencari paralel
     gambar(tata, ak, os.path.join(d, "use-case.svg"), os.path.join(d, "use-case.png"))
     print(f"use-case: {len(UC)} use case, kanvas {W}x{H} pt")

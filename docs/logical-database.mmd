@@ -57,6 +57,17 @@ erDiagram
     int masa_manfaat_bulan
     string dasar_n
   }
+  event {
+    string id_event PK
+    string nama
+    string klien
+    datetime tanggal_mulai
+    datetime tanggal_selesai
+    string status
+    string alasan_tolak
+    int dibuat_oleh FK
+    datetime dibuat_pada
+  }
   golongan {
     string id_golongan PK
     string nama
@@ -69,6 +80,10 @@ erDiagram
     int tunj_jabatan
     int tunj_keluarga
     string akun_beban FK
+    string kelompok
+    string peran_event
+    string satuan_tarif
+    int tarif
     boolean aktif
   }
   jadwal_kerja {
@@ -111,6 +126,7 @@ erDiagram
     string status_ptkp
     string bank
     string no_rek
+    string jenis
     boolean aktif
   }
   kategori_aset {
@@ -122,6 +138,37 @@ erDiagram
     string akun_akumulasi FK
     string akun_beban FK
     boolean aktif
+  }
+  kehadiran_event {
+    int id_kehadiran PK
+    int id_sesi FK
+    string id_karyawan FK
+    string jam_masuk
+    string jam_pulang
+    string catatan_progres
+    string penilaian
+    int menit_diakui
+    string catatan_nilai
+    int dinilai_oleh FK
+    datetime dinilai_pada
+    int dibuat_oleh FK
+    datetime dibuat_pada
+  }
+  laporan_fee {
+    string no_laporan PK
+    string id_event FK
+    string status
+    string catatan_kapten
+    int total_usulan
+    int total_fee
+    int total_pph
+    int total_dibayar
+    string alasan_tolak
+    string jurnal_no FK
+    int diajukan_oleh FK
+    datetime diajukan_pada
+    int diputuskan_oleh FK
+    datetime diputuskan_pada
   }
   log_aktivitas {
     int id PK
@@ -207,10 +254,17 @@ erDiagram
     string peran
     boolean aktif
     datetime dibuat_pada
+    string id_karyawan FK
   }
   penghitung {
     string kunci PK
     int nilai
+  }
+  penugasan_event {
+    int id_penugasan PK
+    string id_event FK
+    string id_karyawan FK
+    string id_jabatan FK
   }
   peralatan {
     string id_peralatan PK
@@ -263,6 +317,14 @@ erDiagram
     datetime kedaluwarsa
     datetime dibuat_pada
   }
+  sesi_event {
+    int id_sesi PK
+    string id_event FK
+    string nama
+    datetime tanggal
+    string jam_mulai
+    string jam_selesai
+  }
   setting_gaji {
     string id_setting PK
     string id_karyawan FK
@@ -273,6 +335,27 @@ erDiagram
   setting_tunjangan {
     string id_setting PK, FK
     string id_tunjangan PK, FK
+  }
+  slip_fee {
+    string id_slip_fee PK
+    string no_laporan FK
+    string id_event FK
+    string id_karyawan FK
+    string id_jabatan FK
+    string akun_beban FK
+    string peran_event
+    string satuan_tarif
+    int tarif
+    int jumlah_sesi
+    int menit_tercatat
+    int menit_diakui
+    int jumlah_hari
+    int fee_usulan
+    int fee_akhir
+    string alasan_ubah
+    int dpp
+    int pph21
+    int dibayar
   }
   slip_gaji {
     string id_slip PK
@@ -348,6 +431,7 @@ erDiagram
   pembelian ||--|{ detail_pembelian : "no_pembelian"
   peralatan |o--o{ detail_pembelian : "id_peralatan"
   perlengkapan |o--o{ detail_pembelian : "id_perlengkapan"
+  pengguna ||--o{ event : "dibuat_oleh"
   akun ||--o{ jabatan : "akun_beban"
   jabatan ||--o| jadwal_kerja : "id_jabatan"
   aset ||--o{ jadwal_penyusutan : "id_aset"
@@ -360,6 +444,14 @@ erDiagram
   akun ||--o{ kategori_aset : "akun_aset"
   akun ||--o{ kategori_aset : "akun_akumulasi"
   akun ||--o{ kategori_aset : "akun_beban"
+  sesi_event ||--o{ kehadiran_event : "id_sesi"
+  karyawan ||--o{ kehadiran_event : "id_karyawan"
+  pengguna |o--o{ kehadiran_event : "dinilai_oleh"
+  pengguna ||--o{ kehadiran_event : "dibuat_oleh"
+  event ||--o{ laporan_fee : "id_event"
+  jurnal |o--o| laporan_fee : "jurnal_no"
+  pengguna ||--o{ laporan_fee : "diajukan_oleh"
+  pengguna |o--o{ laporan_fee : "diputuskan_oleh"
   pengguna |o--o{ log_aktivitas : "pengguna_id"
   periode ||--o| opname : "periode"
   jurnal |o--o| opname : "jurnal_no"
@@ -379,6 +471,10 @@ erDiagram
   jurnal |o--o| penggajian : "jurnal_no"
   pengguna ||--o{ penggajian : "dibuat_oleh"
   pengguna |o--o{ penggajian : "disetujui_oleh"
+  karyawan |o--o| pengguna : "id_karyawan"
+  event ||--o{ penugasan_event : "id_event"
+  karyawan ||--o{ penugasan_event : "id_karyawan"
+  jabatan ||--o{ penugasan_event : "id_jabatan"
   kategori_aset ||--o{ peralatan : "id_kategori"
   pengguna |o--o{ periode : "dikunci_oleh"
   karyawan ||--o{ presensi : "id_karyawan"
@@ -387,11 +483,17 @@ erDiagram
   periode ||--o{ riwayat_periode : "periode"
   pengguna ||--o{ riwayat_periode : "oleh"
   pengguna ||--o{ sesi : "pengguna_id"
+  event ||--o{ sesi_event : "id_event"
   karyawan ||--o| setting_gaji : "id_karyawan"
   jabatan ||--o{ setting_gaji : "id_jabatan"
   golongan ||--o{ setting_gaji : "id_golongan"
   setting_gaji ||--o{ setting_tunjangan : "id_setting"
   tunjangan ||--o{ setting_tunjangan : "id_tunjangan"
+  laporan_fee ||--o{ slip_fee : "no_laporan"
+  event ||--o{ slip_fee : "id_event"
+  karyawan ||--o{ slip_fee : "id_karyawan"
+  jabatan ||--o{ slip_fee : "id_jabatan"
+  akun ||--o{ slip_fee : "akun_beban"
   periode ||--o{ slip_gaji : "periode"
   karyawan ||--o{ slip_gaji : "id_karyawan"
   jabatan ||--o{ slip_gaji : "id_jabatan"

@@ -10,19 +10,30 @@ from svgkit import Svg, lebar_teks
 
 AKAR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 W, H = 785.0, 440.0
-WARNA = {"ringkasan": "#EEEEEE", "konversi": "#FDE7E4", "sdm": "#E3EFFA", "pelaporan": "#FFF3C4", "pengaturan": "#E6F2E4"}
-GARIS = {"ringkasan": "#555555", "konversi": "#8B1A1A", "sdm": "#1F5F99", "pelaporan": "#8A6D00", "pengaturan": "#2E6B3A"}
+WARNA = {"ringkasan": "#EEEEEE", "konversi": "#FDE7E4", "sdm": "#E3EFFA", "fee-event": "#ECE4F6", "pelaporan": "#FFF3C4", "pengaturan": "#E6F2E4"}
+GARIS = {"ringkasan": "#555555", "konversi": "#8B1A1A", "sdm": "#1F5F99", "fee-event": "#5B3F8C", "pelaporan": "#8A6D00", "pengaturan": "#2E6B3A"}
+# Bagian di dalam halaman (tab, pilihan tahap, rincian) yang tidak tercatat di menu.ts. Tab master dibaca dari master.ts.
+BAGIAN = {
+    "Presensi": ["Rekap", "Harian"],
+    "Event & Kehadiran": ["Sesi event", "Penugasan", "Kehadiran per sesi"],
+    "Laporan & Fee": ["Keputusan Owner", "Slip fee"],
+    "Penilaian Crew": ["Nilai progres crew", "Kirim laporan"],
+    "Buku Besar": ["Sebelum penyesuaian", "Setelah penyesuaian"],
+    "Neraca Saldo": ["Sebelum penyesuaian", "Setelah (neraca lajur)"],
+}
 
 
 def baca_menu():
     t = open(os.path.join(AKAR, "src", "lib", "menu.ts"), encoding="utf-8").read()
     t = t[t.index("export const MENU"):]
-    awal = [(m.start(), m.group(1), m.group(2)) for m in re.finditer(r'kunci:\s*"(\w+)",\s*judul:\s*"([^"]+)"', t)]
+    awal = [(m.start(), m.group(1), m.group(2)) for m in re.finditer(r'kunci:\s*"([\w-]+)",\s*judul:\s*"([^"]+)"', t)]
     grup = []
     for i, (pos, kunci, judul) in enumerate(awal):
         potong = awal[i + 1][0] if i + 1 < len(awal) else len(t)
         bagian = t[pos:potong]
-        tautan = [(h, l, "OWNER" in (p or "")) for h, l, p in re.findall(r'href:\s*"([^"]+)",\s*label:\s*"([^"]+)",\s*ikon:\s*"[^"]+"(?:,\s*peran:\s*\[([^\]]*)\])?\s*\}', bagian)]
+        # penanda peran hanya untuk halaman yang dibatasi ke satu peran (Pengguna untuk Owner, Penilaian Crew untuk Kapten)
+        tanda = lambda p: {"OWNER": "Owner", "KAPTEN": "Kapten"}.get(p.replace('"', "").strip()) if p and "," not in p else None
+        tautan = [(h, l, tanda(p)) for h, l, p in re.findall(r'href:\s*"([^"]+)",\s*label:\s*"([^"]+)",\s*ikon:\s*"[^"]+"(?:,\s*peran:\s*\[([^\]]*)\])?\s*\}', bagian)]
         grup.append((kunci, judul, tautan))
     return grup
 
@@ -43,9 +54,9 @@ def kotak(svg, x, y, w, h, teks, ukuran, fill, stroke, tebal=False, putus=False,
 def main():
     grup = baca_menu()
     tab = baca_tab_master()
-    assert len(grup) == 5, grup
+    assert len(grup) == 6, [g[0] for g in grup]
     svg = Svg(W, H)
-    UK, UK_H, UK_T = 9.2, 10.4, 8.6
+    UK, UK_H, UK_T, UK_HREF = 9.2, 9.8, 8.6, 7.0
     # akar
     rw = 150
     rx0 = (W - rw) / 2
@@ -58,17 +69,38 @@ def main():
     svg.teks(mx + mw / 2, 41, "/masuk", 7.5, "#666", "middle")
     # pembatas "setelah masuk"
     ax = rx0 + rw + 24
-    svg.teks(ax, 22, [("Setelah masuk, pengguna tiba di Dashboard. Keluar tersedia di bilah atas.", "i")], 8.0, "#444")
+    svg.teks(ax, 16, [("Setelah masuk, pengguna tiba di Dashboard. Keluar tersedia di bilah atas.", "i")], 8.0, "#444")
+    svg.teks(ax, 27, [("Kapten hanya melihat Dashboard kapten dan Penilaian Crew.", "i")], 8.0, "#444")
     svg.garis([(rx0 + rw / 2, 30), (rx0 + rw / 2, 54)], "#555", 0.9)
     # kolom grup
     n = len(grup)
     margin = 8.0
-    jar = 10.0
-    lebar_kol = (W - 2 * margin - (n - 1) * jar) / n
+    jar = 7.0
+    def subs_dari(label):
+        if label == "Master Konversi":
+            return tab["konversi"] + ["Profil usaha (Owner)"]
+        if label == "Master SDM":
+            return tab["sdm"]
+        return BAGIAN.get(label, [])
+    def nama_hal(label, peran):
+        return label + (f" ({peran})" if peran else "")
+    # lebar kolom mengikuti isi terpanjang, sisa ruang dibagi rata
+    perlu = []
+    for kunci, judul, tautan in grup:
+        w = lebar_teks(judul, UK_H, "b") + 12
+        for href, label, peran in tautan:
+            w = max(w, 17 + 6 + max(lebar_teks(nama_hal(label, peran), UK), lebar_teks(href, UK_HREF)))
+            for sname in subs_dari(label):
+                w = max(w, 17 + 13 + 6 + lebar_teks(sname, UK_T))
+        perlu.append(w)
+    sisa = W - 2 * margin - (n - 1) * jar - sum(perlu)
+    assert sisa >= 0, f"sitemap tidak muat, kurang {-sisa:.0f} pt"
+    lebar = [w + sisa / n for w in perlu]
+    xs = [margin + sum(lebar[:i]) + i * jar for i in range(n)]
     yb = 54.0
-    svg.garis([(margin + lebar_kol / 2, yb), (W - margin - lebar_kol / 2, yb)], "#555", 0.9)
+    svg.garis([(xs[0] + lebar[0] / 2, yb), (xs[-1] + lebar[-1] / 2, yb)], "#555", 0.9)
     for i, (kunci, judul, tautan) in enumerate(grup):
-        x0 = margin + i * (lebar_kol + jar)
+        x0 = xs[i]; lebar_kol = lebar[i]
         cx = x0 + lebar_kol / 2
         svg.garis([(cx, yb), (cx, yb + 10)], "#555", 0.9)
         hy = yb + 10
@@ -78,26 +110,20 @@ def main():
         iw = lebar_kol - 17
         y = hy + 24 + 8
         akhir = y
-        for href, label, owner in tautan:
-            nm = label + (" (Owner)" if owner else "")
+        for href, label, peran in tautan:
+            nm = nama_hal(label, peran)
             ih = 27
             svg.garis([(batang, y + ih / 2), (ix, y + ih / 2)], "#777", 0.8)
             svg.rect(ix, y, iw, ih, "#FFFFFF", GARIS[kunci], 0.9, 3)
             svg.teks(ix + iw / 2, y + 11.2, nm, UK, "#111", "middle")
-            svg.teks(ix + iw / 2, y + 21.4, href, 7.5, "#666", "middle")
+            svg.teks(ix + iw / 2, y + 21.4, href, UK_HREF, "#666", "middle")
             akhir = y + ih / 2
             y += ih
-            subs = []
-            if label == "Master Konversi":
-                subs = tab["konversi"] + ["Profil usaha (Owner)"]
-            elif label == "Master SDM":
-                subs = tab["sdm"]
-            elif label == "Presensi":
-                subs = ["Rekap", "Harian"]
+            subs = subs_dari(label)
             if subs:
-                tb = ix + 9
-                tx = ix + 17
-                tw = iw - 17
+                tb = ix + 7
+                tx = ix + 13
+                tw = iw - 13
                 ty = y + 3
                 for sname in subs:
                     th = 14
@@ -114,7 +140,7 @@ def main():
     x2 = 35 + lebar_teks("halaman (menu samping)", 8.0) + 16
     svg.rect(x2, ly - 9, 20, 11, "#F7F7F7", "#888", 0.7, 3, dash="3 2"); svg.teks(x2 + 25, ly, "tab atau bagian di dalam halaman", 8.0, "#333")
     x3 = x2 + 25 + lebar_teks("tab atau bagian di dalam halaman", 8.0) + 16
-    svg.teks(x3, ly, "Semua peran membuka semua halaman kecuali Pengguna; tombol aksi dibatasi per peran.", 8.0, "#333")
+    svg.teks(x3, ly, "Admin, HRD, dan Owner membuka semua halaman kecuali Penilaian Crew. Pengguna hanya untuk Owner. Tombol aksi dibatasi per peran.", 8.0, "#333")
     d = os.path.join(AKAR, "docs")
     svg.simpan(os.path.join(d, "sitemap.svg"), os.path.join(d, "sitemap.png"))
     print("sitemap:", sum(len(t[2]) for t in grup), "halaman di", n, "grup; kanvas", W, "x", H, "pt")
