@@ -2,6 +2,7 @@
  * Halaman Presensi (komponen server). Keadaan di URL: ?periode=2026-10&tab=rekap|harian&karyawan=KRY-01&form=baru|<id>.
  * Tombol input, ubah, dan hapus hanya untuk HRD; presensi terkunci bila slip periodenya sudah diajukan atau dibayar.
  */
+import LencanaBiaya from "@/komponen/sdm/LencanaBiaya";
 import { Plus } from "lucide-react";
 import { wajibMasuk } from "@/lib/server/auth";
 import { boleh } from "@/lib/peran";
@@ -67,6 +68,7 @@ export default async function HalamanPresensi({ cari }: { cari: CariPresensi }) 
     <>
       <KepalaHalaman
         judul="Presensi"
+        lencana={<LencanaBiaya jenis="tetap" />}
         keterangan="Catatan kehadiran harian karyawan inhouse dan rekapnya per periode. Kehadiran crew event dicatat di menu Event & Kehadiran. Jam kerja dikurangi istirahat 1 jam. Presensi terkunci setelah gaji periodenya diajukan."
         aksi={
           <>

@@ -8,6 +8,7 @@ import { LABEL_STATUS_SLIP } from "@/lib/format";
 import { LencanaStatus } from "@/komponen/ui/Lencana";
 import { TautanTombol } from "@/komponen/ui/Tombol";
 import { RincianSlip } from "./RincianSlip";
+import LencanaBiaya from "./LencanaBiaya";
 import TombolCetak from "./TombolCetak";
 import type { DataSlip } from "@/lib/data/sdm/gaji";
 
@@ -29,7 +30,7 @@ export default function SlipGaji({ daftar, namaUsaha, alamatTutup }: { daftar: D
           <header className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-200 pb-3">
             <div>
               <p className="text-xs font-semibold tracking-wider text-slate-500 uppercase">{namaUsaha}</p>
-              <h2 className="text-lg font-bold text-slate-900">Slip gaji {labelPeriode(s.periode)}</h2>
+              <h2 className="flex flex-wrap items-center gap-2 text-lg font-bold text-slate-900">Slip gaji {labelPeriode(s.periode)} <LencanaBiaya jenis="tetap" /></h2>
             </div>
             <div className="text-right text-sm">
               <div className="kode">{s.no ?? "Belum disimpan"}</div>

@@ -71,6 +71,8 @@ enum SumberJurnal {
   PELEPASAN
   PENGGAJIAN
   FEE_EVENT
+  /// Setoran modal pemilik berupa kas (tabel investasi_kas). Jurnal setoran lama bersumber SALDO_AWAL dipindah ke sini oleh migrasi.
+  INVESTASI_KAS
 }
 
 enum StatusPeriode {
@@ -206,6 +208,8 @@ model Pengguna {
   kehadiranDinilai    KehadiranEvent[] @relation("KehadiranDinilai")
   laporanDiajukan     LaporanFee[]     @relation("LaporanDiajukan")
   laporanDiputuskan   LaporanFee[]     @relation("LaporanDiputuskan")
+  investasiDibuat     InvestasiKas[]   @relation("InvestasiDibuat")
+  investasiDiputuskan InvestasiKas[]   @relation("InvestasiDiputuskan")
 
   @@map("pengguna")
 }
@@ -349,6 +353,7 @@ model Jurnal {
   pelepasan         Pelepasan?
   penggajian        Penggajian?
   laporanFee        LaporanFee?
+  investasiKas      InvestasiKas?
 
   @@index([periodeId, status])
   @@index([jenis, status])
@@ -369,6 +374,33 @@ model DetailJurnal {
   @@id([jurnalNo, noUrut])
   @@index([akunKode])
   @@map("detail_jurnal")
+}
+
+/// Investasi Kas: setoran modal pemilik berupa uang ke kas. Aplikasi hanya mencakup siklus konversi dan SDM
+/// (tanpa siklus pendapatan), jadi kas untuk pembelian tunai, gaji, dan fee berasal dari setoran ini.
+/// Dibuat DIAJUKAN (Admin atau Owner) -> Owner DISETUJUI (jurnal umum Dr Kas, Kr Modal Pemilik) / DITOLAK.
+/// CHECK di migrasi: jumlah > 0, status bukan DRAFT, DISETUJUI wajib punya jurnal, DITOLAK wajib punya alasan.
+model InvestasiKas {
+  no               String            @id @map("no_investasi")
+  tanggal          DateTime          @db.Date
+  jumlah           Int
+  /// Keterangan atau sumber dana, contoh "Setoran pemilik dari rekening pribadi".
+  keterangan       String
+  status           StatusPersetujuan @default(DIAJUKAN)
+  alasanTolak      String?           @map("alasan_tolak")
+  jurnalNo         String?           @unique @map("jurnal_no")
+  dibuatOlehId     Int               @map("dibuat_oleh")
+  dibuatPada       DateTime          @default(now()) @map("dibuat_pada")
+  diputuskanOlehId Int?              @map("diputuskan_oleh")
+  diputuskanPada   DateTime?         @map("diputuskan_pada")
+
+  jurnal         Jurnal?   @relation(fields: [jurnalNo], references: [no], onDelete: Restrict)
+  dibuatOleh     Pengguna  @relation("InvestasiDibuat", fields: [dibuatOlehId], references: [id])
+  diputuskanOleh Pengguna? @relation("InvestasiDiputuskan", fields: [diputuskanOlehId], references: [id])
+
+  @@index([status])
+  @@index([tanggal])
+  @@map("investasi_kas")
 }
 
 // ======================================================================

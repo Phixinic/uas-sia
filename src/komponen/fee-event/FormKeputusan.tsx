@@ -6,6 +6,7 @@
  * Angka akhir dihitung ulang di server (src/lib/aksi/fee-event/keputusan.ts).
  */
 import { useId, useRef, useState } from "react";
+import Link from "next/link";
 import { Check, X } from "lucide-react";
 import { setujuiFee, tolakFee } from "@/lib/aksi/fee-event/keputusan";
 import { useAksi } from "@/komponen/ui/useAksi";
@@ -90,7 +91,12 @@ export default function FormKeputusan({ no, baris, saldoKas }: { no: string; bar
         <div><dt className="text-xs text-slate-500">PPh 21 (utang)</dt><dd className="angka font-semibold">{rupiah(total.pph)}</dd></div>
         <div><dt className="text-xs text-slate-500">Dibayar dari kas</dt><dd className={`angka font-semibold ${kasKurang ? "text-rose-700" : ""}`}>{rupiah(total.dibayar)}</dd></div>
       </dl>
-      {kasKurang && <p className="text-sm text-rose-700">Saldo kas {rupiah(saldoKas)} tidak cukup. Persetujuan akan ditolak sistem.</p>}
+      {kasKurang && (
+        <p className="text-sm text-rose-700">
+          Saldo kas {rupiah(saldoKas)} tidak cukup, kurang {rupiah(total.dibayar - saldoKas)}. Persetujuan akan ditolak sistem.{" "}
+          <Link className="font-medium underline" href="/modal/investasi-kas?form=baru">Catat setoran modal di menu Investasi Kas</Link>.
+        </p>
+      )}
 
       <div className="flex flex-wrap gap-2">
         <Tombol varian="utama" ikon={<Check className="size-4" />} onClick={() => setBuka(true)} disabled={memuat}>Setujui dan bayar</Tombol>

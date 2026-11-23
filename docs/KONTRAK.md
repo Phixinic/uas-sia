@@ -11,11 +11,11 @@ prisma/schema.prisma            skema relasional (nama Indonesia, tabel snake_ca
 prisma/migrations/              migrasi (CHECK constraint tambahan ditulis manual di migrasi awal)
 prisma/seed.ts                  data contoh Oktober 2026 + 3 pengguna demo, data contoh fee event November 2026 + 2 akun kapten
 prisma/data/                    salinan JSON data contoh app lama
-src/lib/inti/                   logika murni tanpa DB/UI: tanggal, penyusutan, penggajian, fee-event, jurnal, buku-besar, akun
+src/lib/inti/                   logika murni tanpa DB/UI: tanggal, penyusutan, penggajian, fee-event, jurnal, buku-besar, akun, modal
 src/lib/server/                 khusus server: db, auth, aksi (konvensi), nomor, periode, jurnal, log, menu, logo
 src/lib/aksi/<siklus>/          server action ("use server")
 src/lib/data/<siklus>/          kueri baca untuk komponen server
-src/lib/skema/                  skema zod (boleh diimpor klien): konversi, pembelian, sdm, fee-event, pelaporan, master, pengguna
+src/lib/skema/                  skema zod (boleh diimpor klien): konversi, pembelian, sdm, fee-event, pelaporan, master, pengguna, modal
 src/lib/peran.ts                peran + tabel IZIN per aksi (boleh diimpor klien)
 src/lib/format.ts               rupiah, tanggal, label enum (boleh diimpor klien)
 src/lib/menu.ts                 peta menu sidebar
@@ -33,6 +33,7 @@ tests/                          vitest: tes inti (tanpa DB) dan tes integrasi (U
 | Rute | Halaman | Pemilik |
 |---|---|---|
 | `/` | Dashboard | Pelaporan |
+| `/modal/investasi-kas` | Investasi Kas: setoran modal pemilik berupa kas dan ringkasan "Dari mana kas dan modal" (`?form=baru`, `?periode=2026-11\|semua`). Hanya Admin dan Owner | Modal |
 | `/konversi/pembelian-peralatan` | Pembelian Peralatan (**sudah jadi, pola rujukan**) | Konversi |
 | `/konversi/pembelian-perlengkapan` | Pembelian Perlengkapan (sudah jadi, komponen sama) | Konversi |
 | `/konversi/nilai-sisa` | Nilai Sisa Perlengkapan (opname) | Konversi |
@@ -58,12 +59,15 @@ Halaman yang belum jadi memakai `HalamanBelumJadi`; ganti seluruh isi `page.tsx`
 
 ## 3. Peran dan izin per aksi
 
-Sumber kebenaran: `IZIN` di `src/lib/peran.ts`. Semua peran staf (Admin, HRD, Owner) boleh **membuka** semua halaman kecuali `/pengguna` dan `/kapten`; tombol aksi disembunyikan dengan `boleh(peran, "kunci")`, dan server action **wajib** memanggil `wajibPeran(IZIN["kunci"])`.
+Sumber kebenaran: `IZIN` di `src/lib/peran.ts`. Semua peran staf (Admin, HRD, Owner) boleh **membuka** semua halaman kecuali `/pengguna`, `/kapten`, dan `/modal/investasi-kas` (hanya Admin dan Owner, `wajibPeranHalaman(IZIN["investasi-kas.lihat"])`; menunya juga disembunyikan dari HRD dan Kapten); tombol aksi disembunyikan dengan `boleh(peran, "kunci")`, dan server action **wajib** memanggil `wajibPeran(IZIN["kunci"])`.
 
 Peran **Kapten** (crew freelance yang memimpin event) ditolak secara bawaan: `wajibMasuk()` mengalihkan Kapten ke `/tanpa-akses`, jadi semua halaman lama tertutup untuknya tanpa diubah satu per satu. Kapten hanya membuka dashboard khusus kapten (`wajibMasuk({ kapten: true })`) dan `/kapten` (`wajibPeranHalaman(["KAPTEN"])`). Menu sidebar untuk Kapten hanya berisi tautan yang menyebut `KAPTEN` secara eksplisit (`tampilUntuk` di `src/lib/menu.ts`). Akun Kapten ditautkan ke satu karyawan berjenis Event (`pengguna.id_karyawan`), dan setiap aksi kapten memeriksa kepemilikan event lewat `pastikanKaptenEvent` (kapten hanya menyentuh event tempat karyawannya ditugaskan sebagai Kapten).
 
 | Kunci izin | Peran | Aksi |
 |---|---|---|
+| `investasi-kas.lihat` | Admin, Owner | membuka halaman Investasi Kas (HRD dan Kapten ke `/tanpa-akses`) |
+| `investasi-kas.catat` | Admin, Owner | catat setoran modal kas (DIAJUKAN) |
+| `investasi-kas.putuskan` | Owner | setujui (jurnal Dr Kas, Kr Modal Pemilik) atau tolak (alasan wajib); Owner boleh menyetujui setoran yang ia catat sendiri |
 | `pembelian.kelola-draf` | Admin | buat, ubah, hapus draf pembelian |
 | `pembelian.posting` | Admin, Owner | posting draf |
 | `pembelian.balik` | Owner | balik pembelian terposting (jurnal pembalik, alasan wajib) |
@@ -93,13 +97,14 @@ Peran **Kapten** (crew freelance yang memimpin event) ditolak secara bawaan: `wa
 
 ## 4. Status dan alur
 
-Enum `StatusPersetujuan` (DRAFT, DIAJUKAN, DISETUJUI, DITOLAK) dipakai jurnal, pelepasan, opname, slip, penggajian. Pembelian memakai `StatusPembelian` = status persetujuan + DIBALIK. Label tampilan lewat `LencanaStatus`: pembelian DISETUJUI = "Diposting", slip DISETUJUI = "Dibayar".
+Enum `StatusPersetujuan` (DRAFT, DIAJUKAN, DISETUJUI, DITOLAK) dipakai jurnal, pelepasan, opname, slip, penggajian, investasi kas (tanpa DRAFT). Pembelian memakai `StatusPembelian` = status persetujuan + DIBALIK. Label tampilan lewat `LencanaStatus`: pembelian DISETUJUI = "Diposting", slip DISETUJUI = "Dibayar".
 
 | Dokumen | Alur |
 |---|---|
+| Investasi Kas | dibuat DIAJUKAN oleh Admin atau Owner (periode tanggal setoran harus terbuka) → Owner DISETUJUI (jurnal umum DISETUJUI bertanggal setoran, Dr 1-110 Kas, Kr 3-110 Modal Pemilik, sumber `INVESTASI_KAS`, periode harus terbuka) / DITOLAK (alasan wajib, tanpa jurnal) |
 | Pembelian | DRAFT → (posting Admin/Owner) DISETUJUI → (balik Owner) DIBALIK |
 | Jurnal penyesuaian (penyusutan, opname) | dibuat DRAFT → Admin ajukan DIAJUKAN → Owner DISETUJUI / DITOLAK |
-| Jurnal otomatis (pembelian, pelepasan, penggajian, pembalik, saldo awal) | dibuat langsung DISETUJUI |
+| Jurnal otomatis (pembelian, pelepasan, penggajian, fee event, investasi kas, pembalik, saldo awal) | dibuat langsung DISETUJUI |
 | Opname | ikut status jurnalnya; total beban 0 = langsung DISETUJUI tanpa jurnal |
 | Pelepasan | dibuat DIAJUKAN → Owner DISETUJUI (jurnal umum dibuat, aset DILEPAS, jadwal yang belum dijurnal dihapus) / DITOLAK |
 | Slip | DRAFT (boleh dihitung ulang/hapus) → DIAJUKAN (bersama penggajian) → DISETUJUI (dibayar); bila penggajian ditolak slip kembali DRAFT, `penggajianNo` dikosongkan, `alasanTolak` diisi |
@@ -170,6 +175,7 @@ Dibuat oleh `src/lib/server/nomor.ts`, penghitung atomik di tabel `penghitung` (
 | Penggajian | `PAY-2026-0002` (tahun dari hari terakhir periode) | `nomorDokumen(tx, AWALAN.PENGGAJIAN, hariTerakhir(periode))` |
 | Event | `EVT-2026-0001` (tahun dari tanggal mulai) | `nomorDokumen(tx, AWALAN.EVENT, tanggalMulai)` |
 | Laporan fee | `FEE-2026-0001` (tahun dari tanggal selesai event) | `nomorDokumen(tx, AWALAN.LAPORAN_FEE, tanggalSelesai)` |
+| Investasi Kas | `INV-2026-0003` (tahun dari tanggal setoran; penghitung `INV2026` melanjutkan hasil backfill dan seed) | `nomorDokumen(tx, AWALAN.INVESTASI_KAS, tanggal)` |
 | Slip fee | `SFE-EVT-2026-0001-KRY-06` (satu per orang per event) | `nomorSlipFee(eventKode, karyawanKode)` |
 | Aset | `AST-0010` | `kodeBerikutnya(tx, AWALAN.ASET, 4)` |
 | Master | `SUP-04`, `ALT-07`, `LKP-06`, `KAT-05`, `KRY-06`, `JBT-05`, `GP-05`, `TNJ-05`, `TM-05`, `SET-06` | `kodeBerikutnya(tx, AWALAN.X)` |
@@ -238,3 +244,26 @@ Revisi modul penggajian: sekarang ada dua jenis penggajian. Konsepnya mengikuti 
 - **Asumsi PPh 21 event**: crew freelance diperlakukan sebagai penerima penghasilan bukan pegawai yang tidak berkesinambungan: DPP = 50% x bruto, PPh 21 = 5% x DPP (tarif lapis pertama Pasal 17), tanpa PTKP dan tanpa akumulasi setahun. Rumus pegawai tetap yang sudah ada (`hitungPph21`, disetahunkan dengan biaya jabatan dan PTKP) tidak cocok untuk fee per event, jadi tidak dipakai. Ini simulasi untuk tugas, sama seperti PPh 21 inhouse.
 - **Privasi kapten**: halaman dan dashboard kapten tidak menampilkan tarif, fee, atau angka keuangan; kapten hanya melihat jam dan catatan progres. Pesan galat untuk event milik kapten lain sama dengan event yang tidak ada.
 - **Data contoh** (seed): `EVT-2026-0001` Gathering Tahunan PT Sinar Abadi (4 sesi, kapten Bima Satria + 4 crew, satu penilaian KURANG, laporan `FEE-2026-0001` menunggu Owner, usulan Rp2.255.000) dan `EVT-2026-0002` Wedding Expo Malang (menunggu penilaian kapten Sari Wulandari). Seed fee event tidak membuat jurnal, jadi angka data lama (neraca Oktober, nomor jurnal berikutnya) tidak berubah. Akun contoh: `kapten` (KRY-06) dan `kapten2` (KRY-07).
+
+### Investasi Kas (modal pemilik)
+
+Alasan fitur: aplikasi ini sengaja hanya mencakup siklus konversi (peralatan, perlengkapan) dan siklus SDM (gaji inhouse, fee event), tanpa siklus pendapatan dan pengeluaran. Jadi kas yang dipakai untuk pembelian tunai, gaji, dan fee tidak berasal dari penjualan, tetapi dari setoran modal pemilik. Investasi Kas mencatat setoran itu sebagai dokumen dengan alur persetujuan, supaya pertanyaan "kas dan modal diambil dari mana" terjawab di aplikasi, lengkap dengan jejak ke jurnalnya.
+
+- **Tabel** `investasi_kas`: `no_investasi`, `tanggal`, `jumlah`, `keterangan` (sumber dana), `status`, `alasan_tolak`, `jurnal_no` (unik, FK ke jurnal), `dibuat_oleh/pada`, `diputuskan_oleh/pada`. CHECK di migrasi: jumlah > 0, status bukan DRAFT, DISETUJUI wajib punya jurnal (dan sebaliknya), DITOLAK wajib beralasan. Karena CHECK ini, aksi setujui membuat jurnal dulu lalu mengklaim status lewat `updateMany` bersyarat; persetujuan ganda gagal di klaim dan seluruh transaksinya (termasuk jurnal dan nomornya) dibatalkan.
+- **Setoran barang** tetap lewat pembelian dengan cara bayar Investasi (Dr aset atau perlengkapan, Kr 3-110). Investasi Kas khusus setoran uang.
+- **Migrasi** `20261123090000_investasi_kas_enum` (nilai enum `INVESTASI_KAS`, dipisah karena PostgreSQL tidak boleh memakai nilai enum baru di transaksi yang sama) dan `20261123090100_investasi_kas` (tabel, CHECK, backfill). Backfill: jurnal `SALDO_AWAL` DISETUJUI berjenis UMUM yang berisi tepat dua baris Dr 1-110 dan Kr 3-110 bernilai sama menjadi setoran DISETUJUI (nomor urut tanggal lalu nomor jurnal per tahun, pembuat dan penyetuju disalin dari jurnalnya), penghitung `INV<tahun>` diisi, lalu `sumber_tipe` dan `sumber_id` jurnal itu dipindah ke `INVESTASI_KAS` dan nomor setorannya. Debit, kredit, nomor, tanggal, dan keterangan jurnal tidak berubah, jadi neraca dan buku besar tetap sama. Database kosong: backfill tidak menemukan apa pun.
+- **Keputusan sumber jurnal**: jurnal setoran lama diubah sumbernya ke `INVESTASI_KAS` supaya jejaknya sama dengan dokumen lain (jurnal menunjuk dokumen sumber, dokumen menunjuk jurnal) dan ringkasan cukup menggolongkan per sumber. Nilai `SALDO_AWAL` tetap ada di enum; jurnal SALDO_AWAL yang tidak berpola setoran (misalnya dari `prisma/tambah-dummy.ts` bila dijalankan lagi di database baru) tidak dipindah dan tampil di pos "lainnya" ringkasan.
+- **Seed**: dua setoran data contoh (JU-2026-0001 Rp30.000.000 dan JU-2026-0010 Rp75.000.000) menjadi INV-2026-0001 dan INV-2026-0002 dengan aturan yang sama dengan backfill, jadi nomor jurnal berikutnya tetap JU-2026-0012 dan neraca Oktober tetap Rp145.622.573.
+- **Ringkasan "Dari mana kas dan modal"** (`ringkasModal` di `src/lib/inti/modal.ts`, dites di `tests/modal.test.ts`): dihitung dari jurnal DISETUJUI per periode atau kumulatif. Modal Pemilik = setoran kas (sumber INVESTASI_KAS) + setoran barang (sumber PEMBELIAN, pembaliknya mengurangi) + lainnya. Kas masuk = Investasi Kas + hasil penjualan aset (PELEPASAN) + lainnya; kas keluar = siklus konversi (pembelian tunai dikurangi pembaliknya; pelunasan utang usaha belum ada di aplikasi) + siklus SDM (PENGGAJIAN, FEE_EVENT) + lainnya. Setiap baris jurnal Kas dan Modal masuk tepat satu pos, jadi saldo akhir ringkasan selalu sama dengan saldo buku besar; halaman membandingkannya dengan `saldoAkun` dan menampilkan lencana "sama dengan buku besar".
+- **Kas kurang**: persetujuan penggajian dan fee event menolak dengan `pesanKasKurang` (menyebut kekurangannya dan mengarahkan ke menu Investasi Kas); peringatan di halaman Distribusi Gaji dan keputusan fee memberi tautan ke form setoran. Posting pembelian tunai tidak memeriksa saldo kas (perilaku lama, tidak diubah).
+- **Dashboard dan menu**: Owner melihat "N setoran modal menunggu keputusan" di Perlu tindakan, dan lencana angka di menu Investasi Kas. Menu ditaruh di grup baru **Modal pemilik** di atas Siklus konversi, karena kas dari setoran ini menjadi masukan kedua siklus; Jurnal & laporan berisi keluaran siklus akuntansi.
+
+### Biaya tetap dan biaya variabel (siklus SDM)
+
+- **Gaji inhouse = biaya tetap.** Komponennya (jabatan, golongan atau gaji pokok, tunjangan jabatan, tunjangan keluarga, tunjangan lain) diatur sekali di Master SDM, Setting Gaji, dan tidak dibuat ulang tiap bulan. Tiap bulan HRD cukup mengisi presensi lalu Hitung Gaji; yang berubah hanya potongan absen (gaji pokok / hari kerja x alpa), lalu PPh 21 dan THP. Terlambat tidak memotong gaji.
+- **Fee crew event = biaya variabel**: tarif per jam x jam diakui (crew) atau tarif per hari x jumlah hari hadir (kapten), per event.
+- Rumus tidak diubah (`hitungGaji`, `hitungSlipSemua`, `src/lib/inti/fee-event.ts`). Yang ditambah hanya tampilan: label grup menu "Siklus SDM: gaji inhouse (biaya tetap)" dan "Siklus SDM: fee event (biaya variabel)", lencana Biaya tetap atau Biaya variabel di judul halaman Presensi, Hitung Gaji, Distribusi Gaji, Event & Kehadiran, Laporan & Fee, slip gaji, dan slip fee.
+- **Hitung Gaji**: panel penjelasan komponen tetap lawan isian bulanan, dan tabel "Kesiapan gaji" per karyawan inhouse aktif (setting gaji ada atau tidak, presensi x dari y hari, status slip, tautan ke Setting Gaji atau Presensi bila belum siap; `kesiapanGaji` di `src/lib/data/sdm/gaji.ts`).
+- **Slip gaji** (layar dan cetak) dua blok: "Komponen tetap (dari Setting Gaji)" dan "Penyesuaian bulan ini (dari presensi)" berisi rekap hadir, izin, sakit, cuti, alpa, terlambat, potongan absen beserta rumusnya, bruto, PPh 21, THP.
+- **Slip fee dan halaman keputusan** menampilkan rumus biaya variabel per orang, contoh "Rp20.000/jam x 6 jam 30 mnt diakui = Rp130.000".
+- **Biaya SDM di ringkasan Investasi Kas** (`ringkasModal().biayaSdm`): biaya tetap = bruto jurnal PENGGAJIAN, biaya variabel = bruto jurnal FEE_EVENT (semua baris selain Kas dan Utang PPh 21), per periode atau kumulatif. Biaya tetap + biaya variabel - PPh 21 dipotong = kas keluar siklus SDM (dites dan ditampilkan dengan lencana "sama dengan kas keluar SDM"). Biaya dicatat bruto, sedangkan kas keluar sudah dikurangi PPh 21 yang menjadi utang.

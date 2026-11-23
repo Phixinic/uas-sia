@@ -23,6 +23,10 @@ export const jalurPublik = (pathname: string) => JALUR_PUBLIK.some((j) => pathna
 
 /** Siapa yang boleh melakukan aksi apa. Kunci dipakai di server action (wajibPeran) dan di UI (boleh). */
 export const IZIN = {
+  // Modal pemilik (Investasi Kas). Halamannya hanya untuk Admin dan Owner; HRD dan Kapten tidak punya akses.
+  "investasi-kas.lihat": ["ADMIN", "OWNER"],
+  "investasi-kas.catat": ["ADMIN", "OWNER"],
+  "investasi-kas.putuskan": ["OWNER"],
   // Siklus konversi
   "pembelian.kelola-draf": ["ADMIN"],
   "pembelian.posting": ["ADMIN", "OWNER"],

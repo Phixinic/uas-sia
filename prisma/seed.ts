@@ -1,6 +1,8 @@
 /*
  * Seed data contoh D'Production Oktober 2026 (salinan data app lama di prisma/data/contoh-oktober-2026.json)
  * ditambah tiga pengguna demo, lalu data contoh fee event (crew freelance) November 2026 dengan dua akun kapten.
+ * Dua setoran modal data lama (JU-2026-0001 dan JU-2026-0010) dicatat sebagai Investasi Kas DISETUJUI
+ * (INV-2026-0001 dan INV-2026-0002) dengan aturan yang sama dengan backfill migrasi Investasi Kas.
  * Data fee event tidak membuat jurnal, jadi angka akuntansi data lama tidak berubah. Jalankan: npm run db:seed
  * Menolak berjalan bila database sudah berisi pengguna, kecuali SEED_PAKSA=1 (semua data dihapus dulu).
  */
@@ -9,7 +11,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { db } from "../src/lib/server/db";
 import { hashKataSandi } from "../src/lib/server/kata-sandi";
-import { keDate, periodeDari } from "../src/lib/inti/tanggal";
+import { dariDate, keDate, periodeDari } from "../src/lib/inti/tanggal";
+import { AKUN } from "../src/lib/inti/akun";
 import { muatJurnalBuku } from "../src/lib/server/jurnal";
 import { neracaSaldo } from "../src/lib/inti/buku-besar";
 import { PENGGUNA_KAPTEN, seedFeeEvent } from "./seed-fee-event";
@@ -35,7 +38,7 @@ const waktu = (s: string | null | undefined) => (s ? new Date(s) : null);
 const kosongJadiNull = (s: string | null | undefined) => (s ? s : null);
 
 const TABEL = [
-  "slip_fee", "laporan_fee", "kehadiran_event", "penugasan_event", "sesi_event", "event",
+  "investasi_kas", "slip_fee", "laporan_fee", "kehadiran_event", "penugasan_event", "sesi_event", "event",
   "log_aktivitas", "sesi", "riwayat_periode", "slip_tunjangan", "slip_gaji", "penggajian", "presensi", "setting_tunjangan", "setting_gaji",
   "jadwal_kerja", "tunjangan", "golongan", "jabatan", "karyawan", "pelepasan", "detail_opname", "opname", "jadwal_penyusutan", "aset",
   "detail_pembelian", "pembelian", "perlengkapan", "peralatan", "kategori_aset", "supplier", "detail_jurnal", "jurnal", "periode", "akun",
@@ -121,6 +124,29 @@ async function main() {
       },
     });
   }
+
+  // ---------- Investasi Kas ----------
+  // Aturan sama dengan backfill di prisma/migrations/20261123090100_investasi_kas: jurnal SALDO_AWAL DISETUJUI yang
+  // berisi tepat Dr Kas dan Kr Modal Pemilik bernilai sama menjadi setoran DISETUJUI, nomor urut tanggal lalu nomor
+  // jurnal per tahun, dan sumber jurnalnya dipindah ke INVESTASI_KAS. Angka dan nomor jurnal tidak berubah.
+  const perTahun: Record<string, number> = {};
+  const setoranLama = await db.jurnal.findMany({ where: { sumberTipe: "SALDO_AWAL", status: "DISETUJUI", jenis: "UMUM" }, include: { detail: true }, orderBy: [{ tanggal: "asc" }, { no: "asc" }] });
+  for (const j of setoranLama) {
+    const kas = j.detail.find((d) => d.akunKode === AKUN.KAS && d.debit > 0 && d.kredit === 0);
+    const modal = j.detail.find((d) => d.akunKode === AKUN.MODAL && d.debit === 0 && d.kredit === kas?.debit);
+    if (j.detail.length !== 2 || !kas || !modal) continue;
+    const tahun = dariDate(j.tanggal).slice(0, 4);
+    perTahun[tahun] = (perTahun[tahun] ?? 0) + 1;
+    const no = `INV-${tahun}-${String(perTahun[tahun]).padStart(4, "0")}`;
+    await db.investasiKas.create({
+      data: {
+        no, tanggal: j.tanggal, jumlah: kas.debit, keterangan: j.keterangan, status: "DISETUJUI", jurnalNo: j.no, dibuatOlehId: j.dibuatOlehId,
+        dibuatPada: j.dibuatPada, diputuskanOlehId: j.disetujuiOlehId ?? j.dibuatOlehId, diputuskanPada: j.disetujuiPada ?? j.dibuatPada,
+      },
+    });
+    await db.jurnal.update({ where: { no: j.no }, data: { sumberTipe: "INVESTASI_KAS", sumberId: no } });
+  }
+  for (const [tahun, nilai] of Object.entries(perTahun)) await db.penghitung.upsert({ where: { kunci: `INV${tahun}` }, create: { kunci: `INV${tahun}`, nilai }, update: { nilai } });
 
   // ---------- Pembelian ----------
   const statusBeli = (s: string) => (s === "posted" ? "DISETUJUI" : s === "dibalik" ? "DIBALIK" : "DRAFT") as "DISETUJUI" | "DIBALIK" | "DRAFT";

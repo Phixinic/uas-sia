@@ -3,12 +3,12 @@
  * `peran` kosong = semua peran staf (Admin, HRD, Owner) boleh membuka halaman itu (aksi di dalamnya tetap dibatasi IZIN).
  * Kapten hanya melihat tautan yang menyebut KAPTEN secara eksplisit.
  */
-import type { Peran } from "@/lib/peran";
+import { IZIN, type Peran } from "@/lib/peran";
 
 export type IkonMenu =
   | "dashboard" | "beli-alat" | "beli-lengkap" | "nilai-sisa" | "penyusutan" | "kartu-aset" | "pelepasan"
   | "presensi" | "hitung-gaji" | "distribusi" | "jurnal-penyesuaian" | "jurnal-umum" | "buku-besar" | "neraca-saldo"
-  | "tutup-periode" | "master-konversi" | "master-sdm" | "pengguna" | "event" | "fee-event" | "penilaian";
+  | "tutup-periode" | "master-konversi" | "master-sdm" | "pengguna" | "event" | "fee-event" | "penilaian" | "investasi-kas";
 
 export type TautanMenu = { href: string; label: string; ikon: IkonMenu; peran?: readonly Peran[] };
 export type GrupMenu = { kunci: string; judul: string; tautan: TautanMenu[] };
@@ -24,6 +24,12 @@ export const MENU: GrupMenu[] = [
     ],
   },
   {
+    // Modal pemilik ditaruh sebelum kedua siklus: kas yang dipakai siklus konversi dan SDM berasal dari setoran ini.
+    kunci: "modal",
+    judul: "Modal pemilik",
+    tautan: [{ href: "/modal/investasi-kas", label: "Investasi Kas", ikon: "investasi-kas", peran: IZIN["investasi-kas.lihat"] }],
+  },
+  {
     kunci: "konversi",
     judul: "Siklus konversi",
     tautan: [
@@ -37,7 +43,7 @@ export const MENU: GrupMenu[] = [
   },
   {
     kunci: "sdm",
-    judul: "Siklus SDM: gaji inhouse",
+    judul: "Siklus SDM: gaji inhouse (biaya tetap)",
     tautan: [
       { href: "/sdm/presensi", label: "Presensi", ikon: "presensi" },
       { href: "/sdm/hitung-gaji", label: "Hitung Gaji", ikon: "hitung-gaji" },
@@ -46,7 +52,7 @@ export const MENU: GrupMenu[] = [
   },
   {
     kunci: "fee-event",
-    judul: "Siklus SDM: fee event",
+    judul: "Siklus SDM: fee event (biaya variabel)",
     tautan: [
       { href: "/fee-event/event", label: "Event & Kehadiran", ikon: "event" },
       { href: "/fee-event/keputusan", label: "Laporan & Fee", ikon: "fee-event" },

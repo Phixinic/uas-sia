@@ -7,6 +7,7 @@ import { labelTanggal } from "@/lib/inti/tanggal";
 import { labelDurasi } from "@/lib/inti/fee-event";
 import { LABEL_PERAN_EVENT, LABEL_SATUAN_TARIF, labelWaktu, rupiah } from "@/lib/format";
 import Lencana from "@/komponen/ui/Lencana";
+import LencanaBiaya from "@/komponen/sdm/LencanaBiaya";
 import Rupiah from "@/komponen/ui/Rupiah";
 import { TautanTombol } from "@/komponen/ui/Tombol";
 import TombolCetak from "@/komponen/sdm/TombolCetak";
@@ -23,13 +24,13 @@ export default function SlipFee({ daftar, namaUsaha, alamatTutup }: { daftar: Da
         </div>
       </div>
       {daftar.map((s) => {
-        const dasar = s.satuanTarif === "HARI" ? `${s.jumlahHari} hari x ${rupiah(s.tarif)}` : `${labelDurasi(s.menitDiakui)} x ${rupiah(s.tarif)} per jam`;
+        const dasar = s.satuanTarif === "HARI" ? `${rupiah(s.tarif)} per hari x ${s.jumlahHari} hari` : `${rupiah(s.tarif)} per jam x ${labelDurasi(s.menitDiakui)} diakui`;
         return (
           <article key={s.no} className="kartu slip-cetak space-y-4" aria-label={`Slip fee ${s.karyawan}`}>
             <header className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-200 pb-3">
               <div>
                 <p className="text-xs font-semibold tracking-wider text-slate-500 uppercase">{namaUsaha}</p>
-                <h2 className="text-lg font-bold text-slate-900">Slip fee event</h2>
+                <h2 className="flex flex-wrap items-center gap-2 text-lg font-bold text-slate-900">Slip fee event <LencanaBiaya jenis="variabel" /></h2>
                 <p className="text-sm text-slate-600">{s.event}{s.klien ? ` · ${s.klien}` : ""} · {labelTanggal(s.tanggalMulai)}{s.tanggalSelesai !== s.tanggalMulai ? ` sampai ${labelTanggal(s.tanggalSelesai)}` : ""}</p>
               </div>
               <div className="text-right text-sm">
@@ -47,6 +48,10 @@ export default function SlipFee({ daftar, namaUsaha, alamatTutup }: { daftar: Da
               <Info judul={s.satuanTarif === "HARI" ? "Hari dihitung" : "Jam diakui"} nilai={s.satuanTarif === "HARI" ? `${s.jumlahHari} hari` : labelDurasi(s.menitDiakui)} />
               <Info judul="Tarif" nilai={`${rupiah(s.tarif)} ${LABEL_SATUAN_TARIF[s.satuanTarif]}`} />
             </dl>
+            <p className="rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-2 text-sm text-slate-800">
+              <span className="font-semibold">Biaya variabel:</span> fee {s.satuanTarif === "HARI" ? "kapten = tarif per hari x jumlah hari hadir" : "crew = tarif per jam x jam diakui"}.{" "}
+              <span className="angka break-words">{dasar} = {rupiah(s.feeUsulan)}</span>
+            </p>
             <div className="overflow-hidden rounded-lg border border-slate-200">
               <table className="tabel" aria-label="Rincian slip fee">
                 <thead><tr><th>Rincian</th><th className="kolom-angka">Jumlah (Rp)</th></tr></thead>

@@ -1,5 +1,6 @@
 /*
- * Rincian satu slip gaji: kehadiran, pendapatan, potongan, THP, dan perhitungan PPh 21.
+ * Rincian satu slip gaji dalam dua blok: komponen tetap dari Setting Gaji (biaya tetap) dan penyesuaian bulan ini dari
+ * presensi (potongan absen, bruto, PPh 21, THP), ditambah perhitungan PPh 21.
  * Tanpa hook dan tanpa akses database, jadi dipakai di tabel (baris yang dibuka) dan di slip cetak.
  */
 import type { DataSlip } from "@/lib/data/sdm/gaji";
@@ -7,59 +8,87 @@ import { labelPtkp, rupiah } from "@/lib/format";
 import Rupiah from "@/komponen/ui/Rupiah";
 
 export function RincianSlip({ s, bukaPph }: { s: DataSlip; bukaPph?: boolean }) {
-  const pendapatan: [string, number][] = [["Gaji pokok", s.gajiPokok], ["Tunjangan jabatan", s.tunjJabatan]];
-  if (s.tunjKeluarga) pendapatan.push(["Tunjangan istri/anak", s.tunjKeluarga]);
-  for (const t of s.tunjLain) pendapatan.push([`Tunjangan ${t.nama.toLowerCase()}`, t.nominal]);
-  const potongan: [string, number][] = [];
-  if (s.potonganAbsen) potongan.push([`Potongan absen (${s.alpa} hari alpa)`, s.potonganAbsen]);
-  potongan.push([`PPh 21 (PTKP ${labelPtkp(s.statusPtkp)})`, s.pph21]);
+  const tetap: [string, number][] = [["Gaji pokok", s.gajiPokok], ["Tunjangan jabatan", s.tunjJabatan]];
+  if (s.tunjKeluarga) tetap.push(["Tunjangan istri/anak", s.tunjKeluarga]);
+  for (const t of s.tunjLain) tetap.push([`Tunjangan ${t.nama.toLowerCase()}`, t.nominal]);
+  const jumlahTetap = tetap.reduce((x, [, n]) => x + n, 0);
+  const rumusPotongan = s.alpa ? `${rupiah(s.gajiPokok)} / ${s.hariKerja} hari kerja x ${s.alpa} hari alpa` : "tidak ada alpa";
 
   return (
     <div className="space-y-4">
       <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
         <Info judul="Rekening" nilai={`${s.bank} ${s.noRek}`} />
-        <Info judul="Kehadiran" nilai={`${s.hadir} dari ${s.hariKerja} hari`} />
-        <Info judul="Izin / sakit / cuti / alpa" nilai={`${s.izin} / ${s.sakit} / ${s.cuti} / ${s.alpa}`} />
-        <Info judul="Jam kerja, terlambat" nilai={`${s.jamKerja.toFixed(2)} jam, ${s.terlambatMenit} mnt`} />
+        <Info judul="Jabatan, golongan" nilai={`${s.jabatan}, ${s.golongan}`} />
+        <Info judul="Status PTKP" nilai={labelPtkp(s.statusPtkp)} />
+        <Info judul="Hari kerja periode" nilai={`${s.hariKerja} hari`} />
       </dl>
 
-      <div className="overflow-hidden rounded-lg border border-slate-200">
-        <table className="tabel" aria-label="Rincian slip gaji">
-          <thead>
-            <tr>
-              <th>Pendapatan</th>
-              <th className="kolom-angka">Jumlah (Rp)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pendapatan.map(([nama, nilai]) => (
-              <tr key={nama}>
-                <td>{nama}</td>
-                <td className="kolom-angka"><Rupiah nilai={nilai} polos /></td>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <section className="overflow-hidden rounded-lg border border-slate-200" aria-label="Komponen tetap">
+          <h3 className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-[13px] font-semibold text-slate-800">
+            Komponen tetap <span className="font-normal text-slate-500">(dari Setting Gaji)</span>
+          </h3>
+          <table className="tabel" aria-label="Komponen tetap (dari Setting Gaji)">
+            <tbody>
+              {tetap.map(([nama, nilai]) => (
+                <tr key={nama}>
+                  <td>{nama}</td>
+                  <td className="kolom-angka"><Rupiah nilai={nilai} polos /></td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>Jumlah komponen tetap</td>
+                <td className="kolom-angka"><Rupiah nilai={jumlahTetap} polos /></td>
               </tr>
-            ))}
-          </tbody>
-          <thead>
-            <tr>
-              <th>Potongan</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {potongan.map(([nama, nilai]) => (
-              <tr key={nama}>
-                <td>{nama}</td>
-                <td className="kolom-angka">−<Rupiah nilai={nilai} polos /></td>
+            </tfoot>
+          </table>
+        </section>
+
+        <section className="overflow-hidden rounded-lg border border-slate-200" aria-label="Penyesuaian bulan ini">
+          <h3 className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-[13px] font-semibold text-slate-800">
+            Penyesuaian bulan ini <span className="font-normal text-slate-500">(dari presensi)</span>
+          </h3>
+          <dl className="grid grid-cols-3 gap-2 border-b border-slate-100 px-3 py-2.5 text-xs sm:grid-cols-6">
+            <Info judul="Hadir" nilai={`${s.hadir}`} />
+            <Info judul="Izin" nilai={`${s.izin}`} />
+            <Info judul="Sakit" nilai={`${s.sakit}`} />
+            <Info judul="Cuti" nilai={`${s.cuti}`} />
+            <Info judul="Alpa" nilai={`${s.alpa}`} />
+            <Info judul="Terlambat" nilai={`${s.terlambatMenit} mnt`} />
+          </dl>
+          <table className="tabel" aria-label="Penyesuaian bulan ini (dari presensi)">
+            <tbody>
+              <tr>
+                <td>Jumlah komponen tetap</td>
+                <td className="kolom-angka"><Rupiah nilai={jumlahTetap} polos /></td>
               </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td>Total THP (ditransfer)</td>
-              <td className="kolom-angka"><Rupiah nilai={s.thp} polos /></td>
-            </tr>
-          </tfoot>
-        </table>
+              <tr>
+                <td>
+                  Potongan absen
+                  <div className="text-[11px] text-slate-500">{rumusPotongan}</div>
+                </td>
+                <td className="kolom-angka">{s.potonganAbsen ? <>−<Rupiah nilai={s.potonganAbsen} polos /></> : "0"}</td>
+              </tr>
+              <tr className="font-semibold">
+                <td>Bruto</td>
+                <td className="kolom-angka"><Rupiah nilai={s.bruto} polos /></td>
+              </tr>
+              <tr>
+                <td>PPh 21 (PTKP {labelPtkp(s.statusPtkp)})</td>
+                <td className="kolom-angka">−<Rupiah nilai={s.pph21} polos /></td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>Total THP (ditransfer)</td>
+                <td className="kolom-angka"><Rupiah nilai={s.thp} polos /></td>
+              </tr>
+            </tfoot>
+          </table>
+          <p className="px-3 py-2 text-[11px] text-slate-500">Jam kerja tercatat {s.jamKerja.toFixed(2)} jam. Terlambat tidak memotong gaji.</p>
+        </section>
       </div>
 
       <details open={bukaPph} className="rounded-lg border border-slate-200 bg-slate-50/60 px-4 py-2.5 text-sm">

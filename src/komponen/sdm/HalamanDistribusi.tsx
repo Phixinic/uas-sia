@@ -2,6 +2,8 @@
  * Halaman Distribusi Gaji (komponen server). Keadaan di URL: ?periode=2026-10.
  * HRD mengajukan semua slip draf satu periode; Owner menyetujui (jurnal dan pembayaran) atau menolak dengan alasan.
  */
+import LencanaBiaya from "@/komponen/sdm/LencanaBiaya";
+import Link from "next/link";
 import { wajibMasuk } from "@/lib/server/auth";
 import { boleh } from "@/lib/peran";
 import { petaAkun } from "@/lib/data/umum";
@@ -42,6 +44,7 @@ export default async function HalamanDistribusi({ cari }: { cari: CariDistribusi
     <>
       <KepalaHalaman
         judul="Distribusi Gaji"
+        lencana={<LencanaBiaya jenis="tetap" />}
         keterangan="Slip draf satu periode diajukan HRD sekaligus. Setelah Owner menyetujui, sistem membuat satu jurnal umum (biaya gaji, utang PPh 21, dan kas) dan semua slip menjadi Dibayar."
         aksi={<PilihPeriode terpilih={periode} opsi={opsiPeriode} />}
       />
@@ -53,7 +56,12 @@ export default async function HalamanDistribusi({ cari }: { cari: CariDistribusi
         <KartuRingkasan judul="Saldo kas saat ini" nilai={d.saldoKas} nada={kasKurang ? "merah" : "netral"} keterangan={kasKurang ? "Kurang dari THP yang diajukan" : "Dari jurnal yang disetujui"} />
       </div>
 
-      {kasKurang && bolehPutuskan && <Peringatan jenis="awas">Saldo kas {rupiah(d.saldoKas)} lebih kecil dari THP yang diajukan ({rupiah(thpMenunggu)}). Persetujuan akan ditolak sistem sampai kas cukup.</Peringatan>}
+      {kasKurang && bolehPutuskan && (
+        <Peringatan jenis="awas">
+          Saldo kas {rupiah(d.saldoKas)} lebih kecil dari THP yang diajukan ({rupiah(thpMenunggu)}), kurang {rupiah(thpMenunggu - d.saldoKas)}. Persetujuan akan ditolak sistem sampai kas cukup.{" "}
+          <Link className="font-medium underline" href="/modal/investasi-kas?form=baru">Catat setoran modal di menu Investasi Kas</Link>.
+        </Peringatan>
+      )}
 
       <Kartu>
         <div className="flex flex-wrap items-start justify-between gap-3">

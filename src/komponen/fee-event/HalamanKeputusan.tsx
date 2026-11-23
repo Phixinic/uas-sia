@@ -2,6 +2,7 @@
  * Halaman Laporan & Fee (komponen server). Owner memutuskan laporan kapten; staf lain melihat.
  * Keadaan di URL: ?lihat=FEE-2026-0001 [&slip=semua|<kode karyawan>] untuk pratinjau dan cetak slip fee.
  */
+import LencanaBiaya from "@/komponen/sdm/LencanaBiaya";
 import Link from "next/link";
 import { ArrowLeft, Printer, TriangleAlert } from "lucide-react";
 import { wajibMasuk } from "@/lib/server/auth";
@@ -35,12 +36,12 @@ import { DaftarHP, KartuHP, RincianHP, TabelLebar } from "./Ringkas";
 const ALAMAT = "/fee-event/keputusan";
 export type CariKeputusan = { lihat?: string; slip?: string };
 
-/** "6 jam 30 menit diakui dari 7 jam" atau "2 hari", untuk ringkasan dasar fee. */
+/** Rumus biaya variabel per orang: "Rp20.000/jam x 6 jam 30 mnt = Rp130.000" atau "Rp200.000/hari x 2 hari = Rp400.000". */
 function dasarFee(o: OrangBahan): string {
   const u = o.usulan;
-  if (o.satuanTarif === "HARI") return `${u.jumlahHari} hari x ${rupiah(o.tarif)} (${u.jumlahSesi} sesi)`;
+  if (o.satuanTarif === "HARI") return `${rupiah(o.tarif)}/hari x ${u.jumlahHari} hari = ${rupiah(u.fee)} (${u.jumlahSesi} sesi)`;
   const selisih = u.menitTercatat - u.menitDiakui;
-  return `${labelDurasi(u.menitDiakui)} x ${rupiah(o.tarif)}/jam${selisih ? `, dipotong ${labelDurasi(selisih)}` : ""}${u.menitLembur ? `, termasuk lembur ${labelDurasi(u.menitLembur)}` : ""}`;
+  return `${rupiah(o.tarif)}/jam x ${labelDurasi(u.menitDiakui)} diakui = ${rupiah(u.fee)}${selisih ? `, dipotong ${labelDurasi(selisih)}` : ""}${u.menitLembur ? `, termasuk lembur ${labelDurasi(u.menitLembur)}` : ""}`;
 }
 
 export default async function HalamanKeputusan({ cari }: { cari: CariKeputusan }) {
@@ -53,7 +54,7 @@ export default async function HalamanKeputusan({ cari }: { cari: CariKeputusan }
   const dibayar = daftar.filter((l) => l.status === "DISETUJUI");
   return (
     <>
-      <KepalaHalaman judul="Laporan & Fee" keterangan="Laporan progres yang dikirim kapten. Owner melihat penilaian kapten, menentukan fee akhir per orang, lalu menyetujui (jurnal dan pembayaran) atau menolak." />
+      <KepalaHalaman judul="Laporan & Fee" lencana={<LencanaBiaya jenis="variabel" />} keterangan="Laporan progres yang dikirim kapten. Owner melihat penilaian kapten, menentukan fee akhir per orang, lalu menyetujui (jurnal dan pembayaran) atau menolak." />
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <KartuRingkasan judul="Menunggu Owner" nilai={String(menunggu.length)} bukanUang nada={menunggu.length ? "kuning" : "netral"} keterangan={menunggu.length ? `Usulan ${rupiah(menunggu.reduce((s, l) => s + l.totalUsulan, 0))}` : "Tidak ada laporan"} />
         <KartuRingkasan judul="Fee dibayar" nilai={dibayar.reduce((s, l) => s + (l.totalDibayar ?? 0), 0)} nada="hijau" keterangan={`${dibayar.length} event`} />
@@ -128,7 +129,7 @@ async function DetailLaporan({ no, slip, bolehPutuskan }: { no: string; slip?: s
     const [daftar, profil] = await Promise.all([slipFeeLaporan(l.no, slip === "semua" ? undefined : slip), profilUsaha()]);
     return (
       <>
-        <KepalaHalaman judul="Slip fee event" keterangan={`${l.event} · ${l.no}`} />
+        <KepalaHalaman judul="Slip fee event" lencana={<LencanaBiaya jenis="variabel" />} keterangan={`${l.event} · ${l.no}`} />
         {daftar.length ? <SlipFee daftar={daftar} namaUsaha={profil.nama} alamatTutup={dasar} /> : <Peringatan jenis="galat">Slip tidak ditemukan.</Peringatan>}
       </>
     );
@@ -198,8 +199,8 @@ async function Menunggu({ l, bolehPutuskan }: { l: RingkasLaporan; bolehPutuskan
       <PenilaianKapten b={b} bolehNilai={bolehPutuskan} />
 
       <Kartu>
-        <h2 className="judul-kartu">Fee per orang</h2>
-        <p className="mt-0.5 mb-4 text-xs text-slate-500">Usulan dihitung dari jam yang diakui (crew, per jam) dan jumlah hari hadir (kapten, per hari). PPh 21 bukan pegawai: 50% x bruto x 5%.</p>
+        <h2 className="judul-kartu flex flex-wrap items-center gap-2">Fee per orang <LencanaBiaya jenis="variabel" /></h2>
+        <p className="mt-0.5 mb-4 text-xs text-slate-500">Biaya variabel: fee crew = tarif per jam x jam diakui, fee kapten = tarif per hari x jumlah hari hadir. Besarnya ikut jumlah event dan jam kerja, bukan gaji bulanan. PPh 21 bukan pegawai: 50% x bruto x 5%.</p>
         {bolehPutuskan ? (
           // Kunci berubah bila usulan berubah (misalnya sesudah Owner menilai kehadiran kapten), supaya isian kembali ke usulan baru.
           <FormKeputusan key={baris.map((x) => x.usulan).join("-")} no={l.no} baris={baris} saldoKas={kas} />
@@ -290,7 +291,7 @@ async function Disetujui({ l }: { l: RingkasLaporan }) {
   return (
     <>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <KartuRingkasan judul="Total fee (beban)" nilai={l.totalFee ?? 0} keterangan={`Usulan ${rupiah(l.totalUsulan)}`} />
+        <KartuRingkasan judul="Total fee (biaya variabel)" nilai={l.totalFee ?? 0} keterangan={`Usulan ${rupiah(l.totalUsulan)}`} />
         <KartuRingkasan judul="PPh 21 (utang)" nilai={l.totalPph ?? 0} keterangan="50% x bruto x 5%" />
         <KartuRingkasan judul="Dibayar" nilai={l.totalDibayar ?? 0} nada="hijau" keterangan={`${daftar.length} slip`} />
         <KartuRingkasan judul="Jurnal" nilai={l.jurnalNo ?? "-"} bukanUang keterangan={`Tanggal ${labelTanggal(l.tanggalSelesai)}`} />

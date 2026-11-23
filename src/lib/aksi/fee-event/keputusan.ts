@@ -14,6 +14,7 @@ import { wajibPeran } from "@/lib/server/auth";
 import { IZIN } from "@/lib/peran";
 import { nomorSlipFee } from "@/lib/server/nomor";
 import { buatJurnal, saldoAkun } from "@/lib/server/jurnal";
+import { pesanKasKurang } from "@/lib/inti/modal";
 import { catatLog } from "@/lib/server/log";
 import { AKUN } from "@/lib/inti/akun";
 import { barisFeeEvent } from "@/lib/inti/jurnal";
@@ -54,7 +55,7 @@ export async function setujuiFee(input: unknown): Promise<HasilAksi<{ jurnalNo: 
       const totalDibayar = slip.reduce((s, x) => s + x.pajak.dibayar, 0);
       if (totalFee <= 0) throw new GalatAksi("Total fee akhir Rp0. Tolak laporan bila memang tidak ada yang dibayar.");
       const kas = await saldoAkun(tx, AKUN.KAS);
-      if (kas < totalDibayar) throw new GalatAksi(`Saldo kas ${rupiah(kas)} tidak cukup untuk membayar fee ${rupiah(totalDibayar)}.`);
+      if (kas < totalDibayar) throw new GalatAksi(pesanKasKurang(kas, totalDibayar, "fee"));
 
       const jurnalNo = await buatJurnal(tx, {
         tanggal: e.tanggalSelesai,

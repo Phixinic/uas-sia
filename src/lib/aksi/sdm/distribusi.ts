@@ -14,12 +14,12 @@ import { IZIN } from "@/lib/peran";
 import { AWALAN, nomorDokumen } from "@/lib/server/nomor";
 import { pastikanTerbuka } from "@/lib/server/periode";
 import { buatJurnal, saldoAkun } from "@/lib/server/jurnal";
+import { pesanKasKurang } from "@/lib/inti/modal";
 import { catatLog } from "@/lib/server/log";
 import { skemaNoDanAlasan, skemaNoDokumen, skemaPeriode } from "@/lib/skema/sdm";
 import { AKUN } from "@/lib/inti/akun";
 import { barisGaji } from "@/lib/inti/jurnal";
 import { hariTerakhir, labelPeriode } from "@/lib/inti/tanggal";
-import { rupiah } from "@/lib/format";
 
 export async function ajukanPenggajian(input: unknown): Promise<HasilAksi<{ no: string }>> {
   return aksiAman(async () => {
@@ -69,7 +69,7 @@ export async function setujuiPenggajian(input: unknown): Promise<HasilAksi> {
       if (!slip.length) throw new GalatAksi("Slip pengajuan ini tidak ditemukan.");
       const thp = slip.reduce((s, x) => s + x.thp, 0);
       const kas = await saldoAkun(tx, AKUN.KAS);
-      if (kas < thp) throw new GalatAksi(`Saldo kas ${rupiah(kas)} tidak cukup untuk membayar gaji ${rupiah(thp)}.`);
+      if (kas < thp) throw new GalatAksi(pesanKasKurang(kas, thp, "gaji"));
 
       const jurnal = await buatJurnal(tx, {
         tanggal: hariTerakhir(g.periodeId),

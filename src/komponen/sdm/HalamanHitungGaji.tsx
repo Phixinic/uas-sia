@@ -3,12 +3,14 @@
  * Gaji dihitung dari Setting Gaji dan rekap presensi (rumus di src/lib/inti/penggajian.ts), disimpan sebagai slip DRAFT,
  * lalu diajukan lewat Distribusi Gaji.
  */
+import LencanaBiaya from "@/komponen/sdm/LencanaBiaya";
 import { wajibMasuk } from "@/lib/server/auth";
 import { boleh } from "@/lib/peran";
 import { periodeTerkunciSemua, profilUsaha } from "@/lib/data/umum";
 import { kunciPenutup, labelPeriode } from "@/lib/inti/tanggal";
 import { opsiPeriodeSdm, periodeDipilih } from "@/lib/data/sdm/umum";
-import { ambilSlip, barisHitungGaji, daftarSlipPeriode } from "@/lib/data/sdm/gaji";
+import { ambilSlip, barisHitungGaji, daftarSlipPeriode, kesiapanGaji } from "@/lib/data/sdm/gaji";
+import { KesiapanGaji, PanelBiayaTetap } from "./KesiapanGaji";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
 import KartuRingkasan from "@/komponen/ui/KartuRingkasan";
@@ -41,6 +43,7 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
     profilUsaha(),
   ]);
 
+  const kesiapan = await kesiapanGaji(periode, baris);
   const alamatPeriode = `${ALAMAT}?periode=${periode}`;
   const slipDibuka = cari.slip === "semua" ? tersimpan : cari.slip ? [await ambilSlip(cari.slip)].filter((s) => s !== null) : [];
   // Tertutup bila periode ini atau periode sesudahnya sudah dikunci (kunci berurutan).
@@ -59,7 +62,8 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
       <div className={`space-y-5 ${cari.slip && slipDibuka.length ? "tanpa-cetak" : ""}`}>
         <KepalaHalaman
           judul="Hitung Gaji"
-          keterangan="Gaji bulanan karyawan inhouse, dihitung dari Setting Gaji dan rekap presensi. Crew event dibayar lewat menu Fee event. Potongan absen = gaji pokok dibagi hari kerja, dikali jumlah alpa. Hasilnya disimpan sebagai slip draf, lalu diajukan lewat Distribusi Gaji."
+          lencana={<LencanaBiaya jenis="tetap" />}
+          keterangan="Gaji bulanan karyawan inhouse (biaya tetap), dihitung dari Setting Gaji dan rekap presensi. Crew event dibayar lewat menu Fee event (biaya variabel). Hasilnya disimpan sebagai slip draf, lalu diajukan lewat Distribusi Gaji."
           aksi={
             <>
               <PilihPeriode terpilih={periode} opsi={opsiPeriode} />
@@ -86,6 +90,9 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
           <KartuRingkasan judul="PPh 21" nilai={jumlah((b) => b.tampil.pph21)} nada="kuning" keterangan="Menjadi utang PPh 21" />
           <KartuRingkasan judul="Take home pay" nilai={jumlah((b) => b.tampil.thp)} nada="hijau" keterangan="Kas keluar saat dibayar" />
         </div>
+
+        <PanelBiayaTetap />
+        <KesiapanGaji daftar={kesiapan} periode={periode} />
 
         <Kartu rapat>
           <KepalaKartu judul={`Proses hitung gaji ${labelPeriode(periode)}`} keterangan="Tekan Rincian untuk melihat komponen gaji dan PPh 21 tiap karyawan" />

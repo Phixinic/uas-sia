@@ -223,3 +223,45 @@ export async function barisHitungGaji(periode: string): Promise<BarisGaji[]> {
     };
   });
 }
+
+/** Kesiapan hitung gaji satu karyawan inhouse untuk satu periode. */
+export type KesiapanGaji = {
+  karyawanKode: string;
+  nama: string;
+  jabatan: string | null;
+  /** Setting gaji aktif (komponen tetap) ada. */
+  adaSetting: boolean;
+  hariKerja: number | null;
+  /** Jumlah hari presensi yang sudah diisi di periode ini. */
+  presensi: number;
+  slipNo: string | null;
+  slipStatus: StatusPersetujuan | null;
+  perluHitungUlang: boolean;
+};
+
+/**
+ * Semua karyawan inhouse aktif beserta kesiapan gajinya: setting gaji ada atau tidak, presensi sudah diisi berapa hari,
+ * slip sudah dihitung atau belum. `baris` = hasil barisHitungGaji periode yang sama (karyawan yang punya setting gaji).
+ */
+export async function kesiapanGaji(periode: string, baris: BarisGaji[]): Promise<KesiapanGaji[]> {
+  const tanpaSetting = await db.karyawan.findMany({
+    where: { aktif: true, jenis: "INHOUSE", kode: { notIn: baris.map((b) => b.karyawanKode) } },
+    orderBy: { kode: "asc" },
+    select: { kode: true, nama: true, _count: { select: { presensi: { where: { tanggal: { gte: keDate(`${periode}-01`), lte: keDate(hariTerakhir(periode)) } } } } } },
+  });
+  const hasil: KesiapanGaji[] = baris.map((b) => ({
+    karyawanKode: b.karyawanKode,
+    nama: b.nama,
+    jabatan: b.jabatan,
+    adaSetting: true,
+    hariKerja: b.tampil.hariKerja,
+    presensi: b.jumlahPresensi,
+    slipNo: b.slipNo,
+    slipStatus: b.slipStatus,
+    perluHitungUlang: b.perluHitungUlang,
+  }));
+  for (const k of tanpaSetting) {
+    hasil.push({ karyawanKode: k.kode, nama: k.nama, jabatan: null, adaSetting: false, hariKerja: null, presensi: k._count.presensi, slipNo: null, slipStatus: null, perluHitungUlang: false });
+  }
+  return hasil.sort((a, b) => a.karyawanKode.localeCompare(b.karyawanKode));
+}

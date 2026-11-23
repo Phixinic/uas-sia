@@ -3,7 +3,7 @@
  * (INSERT ... ON CONFLICT DO UPDATE), jadi aman dipakai beberapa pengguna sekaligus.
  *
  * Format (sama dengan app lama):
- *   dokumen bertahun : AWALAN-YYYY-NNNN   (JU, JP, JB, BP, BL, PLP, PAY, EVT, FEE), penghitung per tahun
+ *   dokumen bertahun : AWALAN-YYYY-NNNN   (JU, JP, JB, BP, BL, PLP, PAY, EVT, FEE, INV), penghitung per tahun
  *   aset             : AST-NNNN
  *   master           : AWALAN-NN          (SUP, ALT, LKP, KAT, KRY, JBT, GP, TNJ, TM, SET)
  *   turunan          : OPN-YYYY-MM, SLP-YYYY-MM-<kode karyawan>, SFE-<kode event>-<kode karyawan> (tidak memakai penghitung)
@@ -20,6 +20,7 @@ export const AWALAN = {
   PENGGAJIAN: "PAY",
   EVENT: "EVT",
   LAPORAN_FEE: "FEE",
+  INVESTASI_KAS: "INV",
   ASET: "AST",
   SUPPLIER: "SUP",
   PERALATAN: "ALT",

@@ -2,6 +2,7 @@
  * Halaman Event & Kehadiran (komponen server) untuk staf. HRD dan Owner mencatat; Admin hanya melihat.
  * Keadaan di URL: ?form=baru (event baru) | ?lihat=EVT-2026-0001 [&form=ubah | &sesi=baru|<id> | &tugas=baru|<id> | &hadir=baru|<id>&sesiId=<id>].
  */
+import LencanaBiaya from "@/komponen/sdm/LencanaBiaya";
 import Link from "next/link";
 import { ArrowLeft, CalendarPlus, Pencil, Plus, UserPlus } from "lucide-react";
 import { wajibMasuk } from "@/lib/server/auth";
@@ -43,6 +44,7 @@ export default async function HalamanEvent({ cari }: { cari: CariEvent }) {
     <>
       <KepalaHalaman
         judul="Event & Kehadiran"
+        lencana={<LencanaBiaya jenis="variabel" />}
         keterangan="Crew freelance dibayar per event. HRD mencatat event, sesi, penugasan, dan kehadiran; kapten menilai progres crew lalu mengirim laporan ke Owner; Owner menentukan fee."
         aksi={bolehKelola && !form ? <TautanTombol href={`${ALAMAT}?form=baru`} varian="utama" ikon={<CalendarPlus className="size-4" />}>Event baru</TautanTombol> : null}
       />
