@@ -28,9 +28,10 @@ SKALAR = {"String", "Int", "Boolean", "DateTime", "Float", "Decimal", "BigInt", 
 # Pengelompokan per siklus (nama tabel database).
 KELOMPOK = [
     ("konv", "Siklus konversi", "#FDE7E4", ["supplier", "kategori_aset", "peralatan", "perlengkapan", "pembelian", "detail_pembelian",
-                                           "aset", "jadwal_penyusutan", "opname", "detail_opname", "pelepasan"]),
-    ("sdm", "Siklus SDM: gaji inhouse", "#E3EFFA", ["karyawan", "jabatan", "golongan", "tunjangan", "versi_nominal", "jadwal_kerja", "setting_gaji", "setting_tunjangan",
-                                      "presensi", "slip_gaji", "slip_tunjangan", "penggajian"]),
+                                           "aset", "jadwal_penyusutan", "opname", "detail_opname", "revisi_opname",
+                                           "detail_revisi_opname", "pelepasan"]),
+    ("sdm", "Siklus SDM: gaji inhouse", "#E3EFFA", ["karyawan", "jabatan", "golongan", "tunjangan", "versi_nominal", "setting_gaji", "setting_tunjangan",
+                                      "presensi", "slip_gaji", "slip_tunjangan", "penyesuaian_gaji", "penggajian"]),
     ("fee", "Siklus SDM: fee event", "#ECE4F6", ["event", "sesi_event", "penugasan_event", "kehadiran_event", "laporan_fee", "slip_fee"]),
     ("lap", "Pelaporan", "#FFF3C4", ["akun", "periode", "riwayat_periode", "jurnal", "detail_jurnal", "investasi_kas"]),
     ("sis", "Pengguna dan sistem", "#E6F2E4", ["pengguna", "sesi", "log_aktivitas", "profil_usaha", "penghitung"]),
@@ -58,10 +59,12 @@ SATU_BANYAK = {
     ("detail_jurnal", "jurnal"): "validasiBaris: minimal dua baris detail (src/lib/inti/jurnal.ts)",
     # nilai-sisa: ditolak bila tidak ada perlengkapan, dan setiap perlengkapan wajib dihitung lalu disimpan sebagai detail
     ("detail_opname", "opname"): "nilai-sisa: semua perlengkapan wajib dihitung, kosong ditolak (src/lib/aksi/konversi/nilai-sisa.ts)",
+    # ajukanRevisiDalam: revisi menyalin semua baris detail_opname (minimal satu) dengan nilai baru (src/lib/server/nilai-sisa.ts)
+    ("detail_revisi_opname", "revisi_opname"): "revisi nilai sisa: satu baris per perlengkapan opname (src/lib/server/nilai-sisa.ts)",
 }
 # Sengaja TIDAK 1..N: penggajian -> slip_gaji. Pengajuan memang butuh minimal satu slip draf, tetapi penggajian yang
 # ditolak melepas slipnya (slip kembali DRAFT dan no_penggajian dikosongkan, tolakPenggajian di
-# src/lib/aksi/sdm/distribusi.ts), jadi penggajian DITOLAK tidak punya slip lagi: sisi slip_gaji tetap 0..N.
+# tolakPenggajianDalam di src/lib/server/gaji-bulanan.ts), jadi penggajian DITOLAK tidak punya slip lagi: sisi slip_gaji tetap 0..N.
 
 # Stempel waktu audit yang tidak digambar (disebut di keterangan gambar).
 KOLOM_WAKTU = {"dibuat_pada", "diubah_pada", "diajukan_pada", "dihitung_pada", "dibalik_pada", "dinilai_pada"}
@@ -251,13 +254,13 @@ Y0 = 22.0
 # Garis yang berbelok lebih tinggi memakai lajur luar dan keluar dari aset lebih bawah, supaya keduanya bersarang.
 TEPI_KIRI_KONVERSI = {("aset", "kategori_aset"): ("luar", "atas"), ("aset", "peralatan"): ("dalam", "bawah")}
 KOLOM_KONVERSI = [["supplier", "kategori_aset", "peralatan", "perlengkapan", "detail_opname"],
-                  ["pembelian", "detail_pembelian", "aset"],
-                  ["jadwal_penyusutan", "pelepasan", "opname"]]
+                  ["pembelian", "detail_pembelian", "aset", "detail_revisi_opname"],
+                  ["jadwal_penyusutan", "pelepasan", "opname", "revisi_opname"]]
 # versi_nominal di bawah slip_tunjangan: dua garis slip_gaji -> versi_nominal dan slip_tunjangan -> versi_nominal turun lurus
 # di kolom kiri, garis ke golongan, tunjangan, dan jabatan menyeberang satu gutter tanpa memotong simbol lain.
 KOLOM_SDM = [["penggajian", "slip_gaji", "slip_tunjangan", "versi_nominal"],
-             ["karyawan", "jabatan", "jadwal_kerja", "golongan", "tunjangan"],
-             ["presensi", "setting_gaji", "setting_tunjangan"]]
+             ["karyawan", "jabatan", "golongan", "tunjangan"],
+             ["presensi", "penyesuaian_gaji", "setting_gaji", "setting_tunjangan"]]
 KOLOM_LAPORAN = [["periode", "riwayat_periode", "jurnal", "detail_jurnal", "akun", "investasi_kas"]]
 SISTEM = ["pengguna", "sesi", "log_aktivitas", "profil_usaha", "penghitung"]
 FEE = ["event", "sesi_event", "penugasan_event", "kehadiran_event", "laporan_fee", "slip_fee"]
@@ -268,13 +271,13 @@ KONFIG = {
         "lebar_kanvas": 785.0,
         "kolom": KOLOM_KONVERSI + KOLOM_LAPORAN + KOLOM_SDM,
         "lebar": [80, 96, 90, 91, 90, 84, 89],
-        "gutter": [22, 24, 38, 26, 19, 22],
+        "gutter": [22, 24, 36, 32, 19, 22],
         "lajur_kiri": 5.0, "tepi_kiri": TEPI_KIRI_KONVERSI,
         "pita": [
             {"x": "periode", "di_bawah": ["investasi_kas", "slip_tunjangan", "versi_nominal", "setting_tunjangan"], "jarak": 22,
              "kolom": [["penugasan_event", "kehadiran_event"], ["event", "sesi_event"], ["laporan_fee"], ["slip_fee"]],
              "lebar": [96, 90, 98, 98], "gutter": [14, 16, 14]},
-            {"x": 7.0, "di_bawah": ["aset", "detail_opname"], "jarak": 22,
+            {"x": 7.0, "di_bawah": ["detail_revisi_opname", "detail_opname", "revisi_opname"], "jarak": 22,
              "kolom": [["pengguna"], ["sesi"], ["log_aktivitas"]], "lebar": [92, 92, 92], "gutter": [10, 10]},
             {"x": 7.0, "di_bawah": ["pengguna", "sesi", "log_aktivitas"], "jarak": 9,
              "kolom": [["profil_usaha"], ["penghitung"]], "lebar": [70, 60], "gutter": [10]},
@@ -285,7 +288,7 @@ KONFIG = {
         "tanpa_garis": {("penugasan_event", "karyawan"), ("penugasan_event", "jabatan"), ("kehadiran_event", "karyawan"),
                         ("slip_fee", "karyawan"), ("slip_fee", "jabatan"), ("slip_fee", "event"), ("pengguna", "karyawan"),
                         ("slip_fee", "versi_nominal")},
-        "legenda": {"x": 7.0, "di_bawah": ["profil_usaha", "penghitung", "kehadiran_event", "slip_fee", "sesi_event"], "jarak": 10, "lebar": 771},
+        "legenda": {"x": 7.0, "di_bawah": ["profil_usaha", "penghitung", "kehadiran_event", "slip_fee", "sesi_event"], "jarak": 10, "lebar": 809},
     },
     "logical-database-konversi": {
         "judul": "siklus konversi",
@@ -553,7 +556,10 @@ def gambar(model, t2i, path_svg, path_png):
         for b in isi[t]:
             svg.teks(x + PAD, yy, b, UK)
             yy += LH
-    # simbol kardinalitas dan label
+    # simbol kardinalitas dan label; label_dipakai mencegah dua label garis sejajar saling menimpa
+    label_dipakai = []
+    # tepi kotak label boleh bersinggungan sampai 1,5 pt (latar putih label sedikit lebih lebar dari hurufnya)
+    tabrak_label = lambda k: any(not (k[0] + k[2] - 1.5 < q[0] or k[0] + 1.5 > q[0] + q[2] or k[1] + k[3] - 1.5 < q[1] or k[1] + 1.5 > q[1] + q[3]) for q in label_dipakai)
     for a, b, r, pts, sa, sb in hasil:
         anak = "nol_satu" if r["unik"] else "satu_banyak" if (a, b) in SATU_BANYAK else "nol_banyak"
         simbol(svg, pts[0], arah_sisi(sa), anak, wr(a))
@@ -562,20 +568,28 @@ def gambar(model, t2i, path_svg, path_png):
             label = ", ".join(t2i[a]["nm2db"][k] for k in r["kol"])
             lw = lebar_teks(label, UK, "i")
             cocok = None
-            for p0, p1 in sorted(zip(pts, pts[1:]), key=lambda s_: -(abs(s_[0][0] - s_[1][0]) + abs(s_[0][1] - s_[1][1]))):
-                mx, my = (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2
+            # tengah segmen dulu, lalu digeser sepanjang segmen supaya label garis sejajar bisa berselang-seling
+            calon = [(p0, p1, f) for p0, p1 in sorted(zip(pts, pts[1:]), key=lambda s_: -(abs(s_[0][0] - s_[1][0]) + abs(s_[0][1] - s_[1][1])))
+                     for f in (0.5, 0.35, 0.65, 0.2, 0.8)]
+            for p0, p1, f in calon:
+                mx, my = p0[0] + (p1[0] - p0[0]) * f, p0[1] + (p1[1] - p0[1]) * f
                 panjang = abs(p0[0] - p1[0]) + abs(p0[1] - p1[1])
-                if abs(p0[0] - p1[0]) < 0.01 and panjang >= lw + 4:      # tegak: teks diputar
-                    kotak = (mx - UK - 1.5, my - lw / 2, UK + 1.5, lw)
-                    mode = "v"
+                if panjang * min(f, 1 - f) * 2 < lebar_teks(label, UK, "i") + 4:
+                    continue
+                if abs(p0[0] - p1[0]) < 0.01 and panjang >= lw + 4:      # tegak: teks diputar, di kiri garis lalu di kanan
+                    pilihan = [((mx - UK - 1.5, my - lw / 2, UK + 1.5, lw), "v"), ((mx, my - lw / 2, UK + 1.5, lw), "vk")]
                 elif abs(p0[1] - p1[1]) < 0.01 and panjang >= lw + 4:     # datar
-                    kotak = (mx - lw / 2, my - UK - 1.5, lw, UK + 1.5)
-                    mode = "h"
+                    pilihan = [((mx - lw / 2, my - UK - 1.5, lw, UK + 1.5), "h")]
                 else:
                     continue
-                if any(not (kotak[0] + kotak[2] < q[0] or kotak[0] > q[0] + q[2] or kotak[1] + kotak[3] < q[1] or kotak[1] > q[1] + q[3]) for q in pos.values()):
-                    continue
-                cocok = (mode, mx, my); break
+                for kotak, mode in pilihan:
+                    if any(not (kotak[0] + kotak[2] < q[0] or kotak[0] > q[0] + q[2] or kotak[1] + kotak[3] < q[1] or kotak[1] > q[1] + q[3]) for q in pos.values()):
+                        continue
+                    if tabrak_label(kotak):
+                        continue
+                    cocok = (mode, mx, my); break
+                if cocok:
+                    break
             if cocok is None:
                 # cari tempat kosong terdekat di sekitar titik tengah segmen terpanjang
                 p0, p1 = max(zip(pts, pts[1:]), key=lambda s_: abs(s_[0][0] - s_[1][0]) + abs(s_[0][1] - s_[1][1]))
@@ -587,13 +601,24 @@ def gambar(model, t2i, path_svg, path_png):
                         continue
                     if any(not (kotak[0] + kotak[2] + 1 < q[0] or kotak[0] - 1 > q[0] + q[2] or kotak[1] + kotak[3] < q[1] or kotak[1] > q[1] + q[3]) for q in pos.values()):
                         continue
-                    if any(_potong((kotak[0] - 2.5, kotak[1] - 2.5, kotak[2] + 5, kotak[3] + 5), s0, s1) for _, _, _, pp, _, _ in hasil for s0, s1 in zip(pp, pp[1:])):
+                    if any(_potong((kotak[0] - 1.2, kotak[1] - 1.2, kotak[2] + 2.4, kotak[3] + 2.4), s0, s1) for _, _, _, pp, _, _ in hasil if pp is not pts for s0, s1 in zip(pp, pp[1:])):
+                        continue
+                    if any(_potong((kotak[0] - 0.8, kotak[1] - 0.8, kotak[2] + 1.6, kotak[3] + 1.6), s0, s1) for s0, s1 in zip(pts, pts[1:])):
                         continue
                     if any(not (kotak[0] + kotak[2] < gx or kotak[0] > gx + gw or kotak[1] + kotak[3] < gy or kotak[1] > gy + 12) for (gx, gy, gw, gh) in grp.values()):
                         continue
+                    if tabrak_label(kotak):
+                        continue
+                    # label harus menempel pada garisnya sendiri (paling jauh 4 pt), supaya tidak terbaca milik garis lain.
+                    # Kecuali relasi ke diri sendiri (jurnal.pembalik_dari): lingkarannya pendek, labelnya cukup dekat kotak tabelnya.
+                    if a != b and not any(_potong((kotak[0] - 4, kotak[1] - 4, kotak[2] + 8, kotak[3] + 8), s0, s1) for s0, s1 in zip(pts, pts[1:])):
+                        continue
                     cocok = ("h0" if mode_ == "h" else "v0", cx + dx, cy + dy); break
+                if cocok:
+                    print("label di luar garis:", label)
             if cocok is None:
                 print("label tidak muat:", label); continue
+            label_dipakai.append(kotak)
             if cocok[0] == "h0":
                 svg.teks(cocok[1], cocok[2], [(label, "i")], UK, wr(a), "middle")
                 continue
@@ -604,6 +629,9 @@ def gambar(model, t2i, path_svg, path_png):
             if mode == "v":
                 svg.rect(mx - UK - 0.6, my - lw / 2 - 1, UK + 1.2, lw + 2, "#FFFFFF")
                 svg.teks(mx - 1.2, my + lw / 2, [(label, "i")], UK, wr(a), "start", putar=-90)
+            elif mode == "vk":
+                svg.rect(mx - 0.6, my - lw / 2 - 1, UK + 1.2, lw + 2, "#FFFFFF")
+                svg.teks(mx + UK - 0.3, my + lw / 2, [(label, "i")], UK, wr(a), "start", putar=-90)
             else:
                 svg.rect(mx - lw / 2 - 1, my - UK - 0.6, lw + 2, UK + 1.2, "#FFFFFF")
                 svg.teks(mx, my - 1.2, [(label, "i")], UK, wr(a), "middle")

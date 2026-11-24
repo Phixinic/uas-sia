@@ -14,13 +14,16 @@ WARNA = {"ringkasan": "#EEEEEE", "modal": "#E6F2E4", "konversi": "#FDE7E4", "sdm
 GARIS = {"ringkasan": "#555555", "modal": "#2E6B3A", "konversi": "#8B1A1A", "sdm": "#1F5F99", "fee-event": "#5B3F8C", "pelaporan": "#8A6D00", "pengaturan": "#2E6B3A"}
 # Bagian di dalam halaman (tab, pilihan tahap, rincian) yang tidak tercatat di menu.ts. Tab master dibaca dari master.ts.
 BAGIAN = {
-    # Status jurnal dan keputusan Owner (Ajukan, Setujui, Tolak) juga tersedia di halaman sumbernya.
-    "Nilai Sisa Perlengkapan": ["Status dan keputusan"],
-    "Proses Penyusutan": ["Status dan keputusan"],
+    # Keputusan Owner (setujui, tolak, kembalikan) juga tersedia di halaman sumbernya.
+    "Investasi Kas": ["Keputusan Owner", "Dari mana kas dan modal"],
+    "Nilai Sisa Perlengkapan": ["Status dan keputusan", "Revisi dan riwayat versi"],
+    # Penyusutan otomatis: jurnal langsung disetujui, tanpa ajukan atau tolak.
+    "Proses Penyusutan": ["Pratinjau beban per aset", "Riwayat proses"],
     "Setting Gaji": ["Pengajuan (HRD, Owner)", "Keputusan Owner", "Riwayat per karyawan"],
     "Presensi": ["Rekap", "Harian"],
-    "Hitung Gaji": ["Ringkasan per tahun", "Slip"],
-    "Event & Kehadiran": ["Sesi event", "Penugasan", "Kehadiran per sesi"],
+    # Hitung Gaji dan Distribusi digabung menjadi Gaji Bulanan.
+    "Gaji Bulanan": ["Potongan dan bonus", "Ajukan dan keputusan", "Slip gaji", "Ringkasan per tahun"],
+    "Event & Kehadiran": ["Sesi event", "Penugasan crew", "Kehadiran per sesi"],
     "Laporan & Fee": ["Keputusan Owner", "Slip fee"],
     "Penilaian Crew": ["Nilai progres crew", "Kirim laporan"],
     "Buku Besar": ["Sebelum penyesuaian", "Setelah penyesuaian"],

@@ -1,231 +1,250 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="785.0pt" height="504.0pt" viewBox="0 0 785.0 504.0" font-family="Helvetica, Arial, sans-serif">
-<rect x="0" y="0" width="785.0" height="504.0" fill="#FFFFFF"/>
-<rect x="64.00" y="52.00" width="657.00" height="392.00" rx="5" fill="#FFFFFF" stroke="#8B1A1A" stroke-width="1.0"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="880.0pt" height="504.0pt" viewBox="0 0 880.0 504.0" font-family="Helvetica, Arial, sans-serif">
+<rect x="0" y="0" width="880.0" height="504.0" fill="#FFFFFF"/>
+<rect x="64.00" y="52.00" width="752.00" height="392.00" rx="5" fill="#FFFFFF" stroke="#8B1A1A" stroke-width="1.0"/>
 <text x="72.00" y="64.00" font-size="8.6" fill="#8B1A1A" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="italic">Sistem Informasi Akuntansi D’Production</tspan></text>
-<polyline points="335.13,31.00 488.90,78.35" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="50.00,178.62 216.70,134.82" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="735.00,230.46 335.21,296.71" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="50.00,178.62 109.13,135.47" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="735.00,230.46 534.75,326.23" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="114.00,468.00 163.52,434.86" fill="none" stroke="#1F5F99" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="50.00,178.62 161.58,166.09" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="735.00,230.46 678.80,202.92" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="335.13,31.00 290.83,77.81" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="735.00,230.46 663.35,106.38" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="735.00,230.46 518.28,372.76" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="735.00,230.46 485.68,172.49" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="50.00,178.62 122.21,210.80" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="50.00,178.62 113.07,248.48" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="364.65,468.00 594.09,427.50" fill="none" stroke="#5B3F8C" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="335.13,31.00 170.79,78.40" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="735.00,230.46 584.27,236.61" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="114.00,468.00 585.06,390.09" fill="none" stroke="#1F5F99" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="735.00,230.46 331.69,365.06" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="114.00,468.00 269.56,422.09" fill="none" stroke="#1F5F99" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="735.00,230.46 668.40,335.94" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="335.13,31.00 383.87,81.62" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="50.00,178.62 220.57,217.95" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="50.00,178.62 349.09,209.38" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="735.00,230.46 447.90,216.74" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="50.00,178.62 487.84,201.99" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="735.00,230.46 584.25,210.69" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="364.65,468.00 203.57,398.71" fill="none" stroke="#5B3F8C" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="735.00,230.46 211.89,378.28" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="335.13,31.00 500.29,111.88" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="364.65,468.00 517.49,135.52" fill="none" stroke="#5B3F8C" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="335.13,31.00 336.84,160.40" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="364.65,468.00 338.17,185.40" fill="none" stroke="#5B3F8C" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="114.00,468.00 473.00,425.25" fill="none" stroke="#1F5F99" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="735.00,230.46 533.32,407.64" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="114.00,468.00 126.73,318.70" fill="none" stroke="#1F5F99" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="735.00,230.46 173.96,300.44" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="14.00,19.00 317.13,19.00" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
-<polygon points="326.13,19.00 317.13,23.80 317.13,14.20" fill="#FFFFFF" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="40.00,161.62 40.00,19.00" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="103.00,477.00 14.00,477.00 14.00,19.00" fill="none" stroke="#1F5F99" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="745.00,213.46 745.00,19.00 353.13,19.00" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polygon points="344.13,19.00 353.13,14.20 353.13,23.80" fill="#FFFFFF" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="303.53,126.87 342.17,127.83" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
-<polyline points="342.17,127.83 335.25,130.71" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="342.17,127.83 335.40,124.60" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="351.54,136.35 251.06,153.55" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
-<polyline points="251.06,153.55 257.29,149.38" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="251.06,153.55 258.32,155.41" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="159.81,251.61 222.39,235.69" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
-<polyline points="222.39,235.69 216.51,240.34" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="222.39,235.69 215.00,234.41" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="315.24,251.17 372.46,225.33" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
-<polyline points="372.46,225.33 367.48,230.94" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="372.46,225.33 364.96,225.36" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="189.41,88.73 227.39,89.27" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
-<polyline points="227.39,89.27 220.50,92.23" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="227.39,89.27 220.58,86.11" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="254.22,349.48 200.58,376.52" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
-<polyline points="200.58,376.52 205.32,370.70" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="200.58,376.52 208.08,376.17" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="596.64,145.46 642.26,106.04" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
-<polyline points="642.26,106.04 639.08,112.83" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="642.26,106.04 635.08,108.21" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<text x="314.85" y="115.30" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«include»</tspan></text>
-<rect x="261.92" y="140.90" width="70.76" height="10.10" rx="0" fill="#FFFFFF" stroke="none" stroke-width="0.6"/>
-<text x="297.30" y="148.90" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend» </tspan><tspan font-weight="normal" font-style="normal">[biaya &gt; 0]</tspan></text>
-<rect x="113.03" y="236.60" width="100.14" height="10.10" rx="0" fill="#FFFFFF" stroke="none" stroke-width="0.6"/>
-<text x="163.10" y="244.60" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend» </tspan><tspan font-weight="normal" font-style="normal">[master belum ada]</tspan></text>
-<text x="367.85" y="247.60" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend»</tspan></text>
-<text x="367.85" y="256.20" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">[pembelian</tspan></text>
-<text x="367.85" y="264.80" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">peralatan]</tspan></text>
-<text x="208.40" y="82.95" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend»</tspan></text>
-<text x="199.40" y="352.65" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend»</tspan></text>
-<text x="199.40" y="361.25" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">[hasil Kurang]</tspan></text>
-<text x="647.45" y="126.10" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend»</tspan></text>
-<text x="647.45" y="134.70" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">[laporan</tspan></text>
-<text x="647.45" y="143.30" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">disetujui]</tspan></text>
-<ellipse cx="523.20" cy="123.10" rx="52.00" ry="12.50" fill="#EEEEEE" stroke="#444" stroke-width="0.8"/>
-<text x="523.20" y="121.43" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Masuk ke aplikasi</tspan></text>
-<text x="523.20" y="129.94" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">dengan akun per peran</tspan></text>
-<ellipse cx="337.00" cy="172.90" rx="52.00" ry="12.50" fill="#EEEEEE" stroke="#444" stroke-width="0.8"/>
-<text x="337.00" y="175.48" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Lihat dashboard</tspan></text>
-<ellipse cx="279.30" cy="90.00" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
-<text x="279.30" y="88.33" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Lihat jurnal, buku besar,</tspan></text>
-<text x="279.30" y="96.84" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">neraca saldo (dua tahap)</tspan></text>
-<ellipse cx="520.90" cy="88.20" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
-<text x="520.90" y="90.78" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Lihat kartu aset</tspan></text>
-<ellipse cx="137.50" cy="88.00" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
-<text x="137.50" y="90.58" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Cetak laporan</tspan></text>
-<ellipse cx="395.60" cy="93.80" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
-<text x="395.60" y="92.13" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Cetak slip gaji</tspan></text>
-<text x="395.60" y="100.64" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">dan slip fee</tspan></text>
-<ellipse cx="258.10" cy="226.60" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
-<text x="258.10" y="224.93" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kelola draf pembelian</tspan></text>
-<text x="258.10" y="233.44" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">peralatan, perlengkapan</tspan></text>
-<ellipse cx="124.10" cy="260.70" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
-<text x="124.10" y="259.03" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Tambah supplier atau</tspan></text>
-<text x="124.10" y="267.54" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">barang dari form</tspan></text>
-<ellipse cx="396.90" cy="214.30" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
-<text x="396.90" y="216.88" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Posting pembelian</tspan></text>
-<ellipse cx="290.80" cy="262.20" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
-<text x="290.80" y="260.53" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Buat kartu aset dan</tspan></text>
-<text x="290.80" y="269.04" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">jadwal penyusutan</tspan></text>
-<ellipse cx="448.30" cy="163.80" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
-<text x="448.30" y="162.13" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Balik pembelian</tspan></text>
-<text x="448.30" y="170.64" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">(jurnal pembalik)</tspan></text>
-<ellipse cx="208.70" cy="160.80" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
-<text x="208.70" y="159.13" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Input nilai sisa</tspan></text>
-<text x="208.70" y="167.64" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">perlengkapan</tspan></text>
-<ellipse cx="251.80" cy="125.60" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
-<text x="251.80" y="123.93" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Proses penyusutan</tspan></text>
-<text x="251.80" y="132.44" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">bulanan</tspan></text>
-<ellipse cx="393.90" cy="129.10" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
-<text x="393.90" y="127.43" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Buat draf jurnal</tspan></text>
-<text x="393.90" y="135.94" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">penyesuaian</tspan></text>
-<ellipse cx="146.90" cy="221.80" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
-<text x="146.90" y="220.13" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Ajukan jurnal</tspan></text>
-<text x="146.90" y="228.64" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">penyesuaian</tspan></text>
-<ellipse cx="125.40" cy="123.60" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
-<text x="125.40" y="121.93" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Ajukan pelepasan</tspan></text>
-<text x="125.40" y="130.44" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">peralatan</tspan></text>
-<ellipse cx="292.40" cy="303.80" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
-<text x="292.40" y="302.13" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Setujui atau tolak</tspan></text>
-<text x="292.40" y="310.64" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">pelepasan peralatan</tspan></text>
-<ellipse cx="511.40" cy="337.40" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
-<text x="511.40" y="335.73" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Setujui atau tolak</tspan></text>
-<text x="511.40" y="344.24" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">jurnal penyesuaian</tspan></text>
-<ellipse cx="538.60" cy="204.70" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
-<text x="538.60" y="203.03" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kelola master supplier,</tspan></text>
-<text x="538.60" y="211.54" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">peralatan, perlengkapan</tspan></text>
-<ellipse cx="627.90" cy="383.00" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
-<text x="627.90" y="385.58" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Input presensi harian</tspan></text>
-<ellipse cx="302.40" cy="412.40" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
-<text x="302.40" y="410.73" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Hitung gaji dan PPh 21</tspan></text>
-<text x="302.40" y="419.24" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">(slip draf)</tspan></text>
-<ellipse cx="181.10" cy="423.10" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
-<text x="181.10" y="421.43" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Ajukan distribusi</tspan></text>
-<text x="181.10" y="429.94" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">gaji</tspan></text>
-<ellipse cx="533.00" cy="238.70" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
-<text x="533.00" y="237.03" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Setujui/tolak penggajian,</tspan></text>
-<text x="533.00" y="245.54" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">setting gaji, nominal</tspan></text>
-<ellipse cx="127.80" cy="306.20" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
-<text x="127.80" y="304.53" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kelola master SDM,</tspan></text>
-<text x="127.80" y="313.04" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">ajukan setting, nominal</tspan></text>
-<ellipse cx="655.90" cy="191.70" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
-<text x="655.90" y="190.03" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Tutup periode (mengunci</tspan></text>
-<text x="655.90" y="198.54" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">periode) dan buka kunci</tspan></text>
-<ellipse cx="500.40" cy="384.50" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
-<text x="500.40" y="382.83" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kelola akun, kategori,</tspan></text>
-<text x="500.40" y="391.34" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">profil, status master</tspan></text>
-<ellipse cx="660.60" cy="348.30" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
-<text x="660.60" y="350.88" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kelola pengguna</tspan></text>
-<ellipse cx="519.60" cy="419.70" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
-<text x="519.60" y="418.03" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Catat event, sesi,</tspan></text>
-<text x="519.60" y="426.54" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">penugasan, kehadiran</tspan></text>
-<ellipse cx="178.20" cy="387.80" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
-<text x="178.20" y="386.13" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Nilai progres kehadiran</tspan></text>
-<text x="178.20" y="394.64" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">(Sesuai atau Kurang)</tspan></text>
-<ellipse cx="276.60" cy="338.20" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
-<text x="276.60" y="336.53" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Isi jam diakui</tspan></text>
-<text x="276.60" y="345.04" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">dan catatan</tspan></text>
-<ellipse cx="636.00" cy="420.10" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
-<text x="636.00" y="418.43" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kirim laporan progres</tspan></text>
-<text x="636.00" y="426.94" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">ke Owner</tspan></text>
-<ellipse cx="656.20" cy="94.00" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
-<text x="656.20" y="92.33" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Tentukan fee akhir, setujui</tspan></text>
-<text x="656.20" y="100.84" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">atau tolak laporan</tspan></text>
-<ellipse cx="582.70" cy="157.50" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
-<text x="582.70" y="155.83" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Buat slip fee dan</tspan></text>
-<text x="582.70" y="164.34" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">jurnal fee event</tspan></text>
-<ellipse cx="301.30" cy="375.20" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
-<text x="301.30" y="373.53" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Atur tarif jabatan</tspan></text>
-<text x="301.30" y="382.04" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">event</tspan></text>
-<ellipse cx="335.13" cy="8.00" rx="5.20" ry="5.20" fill="#FFFFFF" stroke="#555555" stroke-width="1.1"/>
-<polyline points="335.13,13.20 335.13,30.00" fill="none" stroke="#555555" stroke-width="1.1" stroke-linejoin="round"/>
-<polyline points="326.13,19.00 344.13,19.00" fill="none" stroke="#555555" stroke-width="1.1" stroke-linejoin="round"/>
-<polyline points="335.13,30.00 328.13,42.00" fill="none" stroke="#555555" stroke-width="1.1" stroke-linejoin="round"/>
-<polyline points="335.13,30.00 342.13,42.00" fill="none" stroke="#555555" stroke-width="1.1" stroke-linejoin="round"/>
-<text x="345.13" y="14.00" font-size="8.6" fill="#555555" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Pengguna</tspan></text>
-<text x="390.70" y="14.00" font-size="7.5" fill="#555555" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">(Admin, HRD, Owner)</tspan></text>
-<ellipse cx="40.00" cy="167.62" rx="5.20" ry="5.20" fill="#FFFFFF" stroke="#8B1A1A" stroke-width="1.1"/>
-<polyline points="40.00,172.82 40.00,189.62" fill="none" stroke="#8B1A1A" stroke-width="1.1" stroke-linejoin="round"/>
-<polyline points="31.00,178.62 49.00,178.62" fill="none" stroke="#8B1A1A" stroke-width="1.1" stroke-linejoin="round"/>
-<polyline points="40.00,189.62 33.00,201.62" fill="none" stroke="#8B1A1A" stroke-width="1.1" stroke-linejoin="round"/>
-<polyline points="40.00,189.62 47.00,201.62" fill="none" stroke="#8B1A1A" stroke-width="1.1" stroke-linejoin="round"/>
-<text x="40.00" y="213.62" font-size="8.6" fill="#8B1A1A" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Admin</tspan></text>
-<ellipse cx="114.00" cy="466.00" rx="5.20" ry="5.20" fill="#FFFFFF" stroke="#1F5F99" stroke-width="1.1"/>
-<polyline points="114.00,471.20 114.00,488.00" fill="none" stroke="#1F5F99" stroke-width="1.1" stroke-linejoin="round"/>
-<polyline points="105.00,477.00 123.00,477.00" fill="none" stroke="#1F5F99" stroke-width="1.1" stroke-linejoin="round"/>
-<polyline points="114.00,488.00 107.00,500.00" fill="none" stroke="#1F5F99" stroke-width="1.1" stroke-linejoin="round"/>
-<polyline points="114.00,488.00 121.00,500.00" fill="none" stroke="#1F5F99" stroke-width="1.1" stroke-linejoin="round"/>
-<text x="128.00" y="486.00" font-size="8.6" fill="#1F5F99" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">HRD</tspan></text>
-<ellipse cx="745.00" cy="219.46" rx="5.20" ry="5.20" fill="#FFFFFF" stroke="#2E6B3A" stroke-width="1.1"/>
-<polyline points="745.00,224.66 745.00,241.46" fill="none" stroke="#2E6B3A" stroke-width="1.1" stroke-linejoin="round"/>
-<polyline points="736.00,230.46 754.00,230.46" fill="none" stroke="#2E6B3A" stroke-width="1.1" stroke-linejoin="round"/>
-<polyline points="745.00,241.46 738.00,253.46" fill="none" stroke="#2E6B3A" stroke-width="1.1" stroke-linejoin="round"/>
-<polyline points="745.00,241.46 752.00,253.46" fill="none" stroke="#2E6B3A" stroke-width="1.1" stroke-linejoin="round"/>
-<text x="745.00" y="265.46" font-size="8.6" fill="#2E6B3A" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Owner</tspan></text>
-<ellipse cx="364.65" cy="466.00" rx="5.20" ry="5.20" fill="#FFFFFF" stroke="#5B3F8C" stroke-width="1.1"/>
-<polyline points="364.65,471.20 364.65,488.00" fill="none" stroke="#5B3F8C" stroke-width="1.1" stroke-linejoin="round"/>
-<polyline points="355.65,477.00 373.65,477.00" fill="none" stroke="#5B3F8C" stroke-width="1.1" stroke-linejoin="round"/>
-<polyline points="364.65,488.00 357.65,500.00" fill="none" stroke="#5B3F8C" stroke-width="1.1" stroke-linejoin="round"/>
-<polyline points="364.65,488.00 371.65,500.00" fill="none" stroke="#5B3F8C" stroke-width="1.1" stroke-linejoin="round"/>
-<text x="378.65" y="486.00" font-size="8.6" fill="#5B3F8C" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Kapten</tspan></text>
-<text x="485.00" y="454.00" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Keterangan</tspan></text>
-<polyline points="485.00,463.00 503.00,463.00" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
-<polyline points="503.00,463.00 496.15,466.06" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="503.00,463.00 496.15,459.94" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
-<text x="508.00" y="466.00" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">include atau extend</tspan></text>
-<polyline points="485.00,474.00 495.00,474.00" fill="none" stroke="#555" stroke-width="0.9" stroke-linejoin="round"/>
-<polygon points="505.00,474.00 497.00,478.20 497.00,469.80" fill="#FFFFFF" stroke="#555" stroke-width="0.9" stroke-linejoin="round"/>
-<text x="510.00" y="477.00" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Admin, HRD, Owner mewarisi Pengguna</tspan></text>
-<polyline points="485.00,485.00 503.00,485.00" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
-<text x="508.00" y="488.00" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">garis aktor ke use case</tspan></text>
-<text x="667.00" y="454.00" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Warna elips</tspan></text>
-<ellipse cx="673.00" cy="461.00" rx="6.00" ry="3.60" fill="#FDE7E4" stroke="#444" stroke-width="0.6"/>
-<text x="683.00" y="463.50" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Siklus konversi</tspan></text>
-<ellipse cx="673.00" cy="469.60" rx="6.00" ry="3.60" fill="#E3EFFA" stroke="#444" stroke-width="0.6"/>
-<text x="683.00" y="472.10" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">SDM: gaji inhouse</tspan></text>
-<ellipse cx="673.00" cy="478.20" rx="6.00" ry="3.60" fill="#ECE4F6" stroke="#444" stroke-width="0.6"/>
-<text x="683.00" y="480.70" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">SDM: fee event</tspan></text>
-<ellipse cx="673.00" cy="486.80" rx="6.00" ry="3.60" fill="#FFF3C4" stroke="#444" stroke-width="0.6"/>
-<text x="683.00" y="489.30" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Pelaporan, pengaturan</tspan></text>
-<ellipse cx="673.00" cy="495.40" rx="6.00" ry="3.60" fill="#EEEEEE" stroke="#444" stroke-width="0.6"/>
-<text x="683.00" y="497.90" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Umum</tspan></text>
+<polyline points="50.00,217.26 152.72,170.74" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 728.98,134.37" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 609.90,173.74" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="50.00,217.26 146.72,135.82" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="407.40,468.00 441.05,430.81" fill="none" stroke="#5B3F8C" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="337.64,468.00 396.34,345.62" fill="none" stroke="#1F5F99" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="50.00,217.26 273.96,154.77" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 762.86,100.41" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 660.37,210.90" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 484.16,209.18" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="337.64,468.00 302.81,434.23" fill="none" stroke="#1F5F99" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 712.09,168.18" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 704.27,238.95" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="50.00,217.26 134.36,379.80" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="50.00,217.26 117.17,100.68" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="446.52,31.00 491.39,76.04" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 579.73,138.49" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="50.00,217.26 243.28,302.82" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="50.00,217.26 244.13,188.03" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="446.52,31.00 448.14,156.30" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="446.52,31.00 611.90,77.96" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="337.64,468.00 424.10,390.08" fill="none" stroke="#1F5F99" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 693.76,283.17" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="446.52,31.00 349.47,76.38" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 678.48,318.61" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="446.52,31.00 312.64,228.96" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="407.40,468.00 309.95,253.73" fill="none" stroke="#5B3F8C" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="337.64,468.00 714.00,398.79" fill="none" stroke="#1F5F99" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 761.35,378.78" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="50.00,217.26 492.14,289.76" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 575.09,288.81" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="50.00,217.26 359.98,290.35" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 441.92,292.76" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="407.40,468.00 610.19,401.39" fill="none" stroke="#5B3F8C" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 655.67,379.31" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="50.00,217.26 141.83,295.17" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 203.81,302.28" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="337.64,468.00 622.49,431.22" fill="none" stroke="#1F5F99" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="830.00,237.86 678.86,413.06" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="446.52,31.00 315.19,364.96" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="407.40,468.00 323.27,389.50" fill="none" stroke="#5B3F8C" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="14.00,19.00 428.52,19.00" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
+<polygon points="437.52,19.00 428.52,23.80 428.52,14.20" fill="#FFFFFF" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="40.00,200.26 40.00,19.00" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="326.64,477.00 14.00,477.00 14.00,19.00" fill="none" stroke="#1F5F99" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="840.00,220.86 840.00,19.00 464.52,19.00" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polygon points="455.52,19.00 464.52,14.20 464.52,23.80" fill="#FFFFFF" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="258.00,191.58 216.00,205.72" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
+<polyline points="216.00,205.72 221.52,200.64" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="216.00,205.72 223.47,206.44" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="196.10,228.15 257.80,301.55" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
+<polyline points="257.80,301.55 251.05,298.27" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="257.80,301.55 255.73,294.34" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="156.14,98.18 276.06,135.42" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
+<polyline points="276.06,135.42 268.62,136.31" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="276.06,135.42 270.43,130.47" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="231.59,347.82 364.21,308.78" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
+<polyline points="364.21,308.78 358.50,313.65" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="364.21,308.78 356.78,307.78" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="593.51,87.76 555.49,87.94" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
+<polyline points="555.49,87.94 562.32,84.85" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="555.49,87.94 562.35,90.97" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="537.10,342.05 617.40,380.15" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
+<polyline points="617.40,380.15 609.90,379.98" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="617.40,380.15 612.52,374.45" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="535.95,240.20 570.15,176.50" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
+<polyline points="570.15,176.50 569.60,183.98" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="570.15,176.50 564.21,181.08" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="447.63,250.24 559.17,175.86" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
+<polyline points="559.17,175.86 555.17,182.20" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="559.17,175.86 551.77,177.11" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<text x="257.00" y="207.60" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«include»</tspan></text>
+<rect x="195.57" y="269.80" width="70.76" height="10.10" rx="0" fill="#FFFFFF" stroke="none" stroke-width="0.6"/>
+<text x="230.95" y="277.80" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend» </tspan><tspan font-weight="normal" font-style="normal">[biaya &gt; 0]</tspan></text>
+<text x="228.10" y="97.45" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend»</tspan></text>
+<text x="228.10" y="106.05" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">[master belum ada]</tspan></text>
+<text x="201.90" y="336.25" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend» </tspan><tspan font-weight="normal" font-style="normal">[pembelian peralatan]</tspan></text>
+<text x="574.50" y="81.80" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend»</tspan></text>
+<text x="561.25" y="374.75" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend»</tspan></text>
+<text x="561.25" y="383.35" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">[hasil Kurang]</tspan></text>
+<rect x="512.61" y="222.30" width="88.89" height="10.10" rx="0" fill="#FFFFFF" stroke="none" stroke-width="0.6"/>
+<text x="557.05" y="230.30" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend» </tspan><tspan font-weight="normal" font-style="normal">[crew freelance]</tspan></text>
+<text x="427.40" y="228.40" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend»</tspan></text>
+<text x="427.40" y="237.00" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">[karyawan</tspan></text>
+<text x="427.40" y="245.60" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">inhouse]</tspan></text>
+<ellipse cx="310.30" cy="377.40" rx="52.00" ry="12.50" fill="#EEEEEE" stroke="#444" stroke-width="0.8"/>
+<text x="310.30" y="375.73" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Masuk ke aplikasi</tspan></text>
+<text x="310.30" y="384.24" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">dengan akun per peran</tspan></text>
+<ellipse cx="304.30" cy="241.30" rx="52.00" ry="12.50" fill="#EEEEEE" stroke="#444" stroke-width="0.8"/>
+<text x="304.30" y="243.88" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Lihat dashboard</tspan></text>
+<ellipse cx="503.50" cy="88.20" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
+<text x="503.50" y="86.53" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Lihat jurnal, buku besar,</tspan></text>
+<text x="503.50" y="95.04" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">neraca saldo (dua tahap)</tspan></text>
+<ellipse cx="325.70" cy="87.50" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
+<text x="325.70" y="90.08" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Lihat kartu aset</tspan></text>
+<ellipse cx="645.50" cy="87.50" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
+<text x="645.50" y="90.08" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Cetak laporan</tspan></text>
+<ellipse cx="448.30" cy="168.80" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
+<text x="448.30" y="167.13" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Cetak slip gaji</tspan></text>
+<text x="448.30" y="175.64" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">dan slip fee</tspan></text>
+<ellipse cx="307.90" cy="145.30" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
+<text x="307.90" y="143.63" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kelola draf pembelian</tspan></text>
+<text x="307.90" y="152.14" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">peralatan, perlengkapan</tspan></text>
+<ellipse cx="124.30" cy="88.30" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
+<text x="124.30" y="86.63" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Tambah supplier atau</tspan></text>
+<text x="124.30" y="95.14" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">barang dari form</tspan></text>
+<ellipse cx="397.10" cy="299.10" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
+<text x="397.10" y="301.68" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Posting pembelian</tspan></text>
+<ellipse cx="198.70" cy="357.50" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
+<text x="198.70" y="355.83" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Buat kartu aset dan</tspan></text>
+<text x="198.70" y="364.34" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">jadwal penyusutan</tspan></text>
+<ellipse cx="692.50" cy="156.60" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
+<text x="692.50" y="154.93" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Balik pembelian</tspan></text>
+<text x="692.50" y="163.44" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">(jurnal pembalik)</tspan></text>
+<ellipse cx="268.10" cy="313.80" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
+<text x="268.10" y="312.13" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Input nilai sisa</tspan></text>
+<text x="268.10" y="320.64" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">perlengkapan</tspan></text>
+<ellipse cx="288.20" cy="181.40" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
+<text x="288.20" y="179.73" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Proses penyusutan</tspan></text>
+<text x="288.20" y="188.24" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">bulanan (otomatis)</tspan></text>
+<ellipse cx="185.80" cy="215.90" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
+<text x="185.80" y="214.23" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Buat jurnal</tspan></text>
+<text x="185.80" y="222.74" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">penyesuaian</tspan></text>
+<ellipse cx="140.80" cy="392.20" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
+<text x="140.80" y="390.53" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Ajukan jurnal</tspan></text>
+<text x="140.80" y="399.04" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">nilai sisa</tspan></text>
+<ellipse cx="177.10" cy="159.70" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
+<text x="177.10" y="158.03" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Ajukan revisi nilai sisa</tspan></text>
+<text x="177.10" y="166.54" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">yang sudah disetujui</tspan></text>
+<ellipse cx="161.00" cy="123.80" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
+<text x="161.00" y="122.13" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Ajukan pelepasan</tspan></text>
+<text x="161.00" y="130.64" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">peralatan</tspan></text>
+<ellipse cx="663.30" cy="293.30" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
+<text x="663.30" y="291.63" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Setujui atau tolak</tspan></text>
+<text x="663.30" y="300.14" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">pelepasan peralatan</tspan></text>
+<ellipse cx="617.00" cy="204.00" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
+<text x="617.00" y="202.33" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Setujui atau kembalikan</tspan></text>
+<text x="617.00" y="210.84" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">nilai sisa dan revisinya</tspan></text>
+<ellipse cx="156.00" cy="307.20" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
+<text x="156.00" y="305.53" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Catat setoran</tspan></text>
+<text x="156.00" y="314.04" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">modal kas</tspan></text>
+<ellipse cx="435.00" cy="205.10" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
+<text x="435.00" y="203.43" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Setujui atau tolak</tspan></text>
+<text x="435.00" y="211.94" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">setoran modal</tspan></text>
+<ellipse cx="535.10" cy="296.80" rx="52.00" ry="12.50" fill="#FDE7E4" stroke="#444" stroke-width="0.8"/>
+<text x="535.10" y="295.13" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kelola master supplier,</tspan></text>
+<text x="535.10" y="303.64" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">peralatan, perlengkapan</tspan></text>
+<ellipse cx="290.30" cy="422.10" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
+<text x="290.30" y="424.68" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Input presensi harian</tspan></text>
+<ellipse cx="437.50" cy="378.00" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
+<text x="437.50" y="376.33" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Catat potongan dan</tspan></text>
+<text x="437.50" y="384.84" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">bonus manual</tspan></text>
+<ellipse cx="402.30" cy="333.20" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
+<text x="402.30" y="331.53" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Ajukan Gaji Bulanan</tspan></text>
+<text x="402.30" y="340.04" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">(hitung slip, PPh 21)</tspan></text>
+<ellipse cx="756.80" cy="88.00" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
+<text x="756.80" y="86.33" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Setujui/tolak Gaji Bulanan,</tspan></text>
+<text x="756.80" y="94.84" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">setting gaji, nominal</tspan></text>
+<ellipse cx="755.30" cy="391.20" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
+<text x="755.30" y="389.53" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kelola master SDM,</tspan></text>
+<text x="755.30" y="398.04" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">ajukan setting, nominal</tspan></text>
+<ellipse cx="717.10" cy="122.20" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
+<text x="717.10" y="120.53" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Tutup periode (mengunci</tspan></text>
+<text x="717.10" y="129.04" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">periode) dan buka kunci</tspan></text>
+<ellipse cx="552.80" cy="127.80" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
+<text x="552.80" y="126.13" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kelola akun, kategori,</tspan></text>
+<text x="552.80" y="134.64" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">profil, status master</tspan></text>
+<ellipse cx="652.30" cy="239.40" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
+<text x="652.30" y="241.98" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kelola pengguna</tspan></text>
+<ellipse cx="668.30" cy="425.30" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
+<text x="668.30" y="423.63" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Catat event, sesi, penugasan</tspan></text>
+<text x="668.30" y="432.14" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">crew, kehadiran</tspan></text>
+<ellipse cx="640.90" cy="391.30" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
+<text x="640.90" y="389.63" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Nilai progres kehadiran</tspan></text>
+<text x="640.90" y="398.14" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">(Sesuai atau Kurang)</tspan></text>
+<ellipse cx="513.60" cy="330.90" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
+<text x="513.60" y="329.23" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Isi jam diakui</tspan></text>
+<text x="513.60" y="337.74" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">dan catatan</tspan></text>
+<ellipse cx="452.10" cy="418.60" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
+<text x="452.10" y="416.93" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kirim laporan progres</tspan></text>
+<text x="452.10" y="425.44" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">ke Owner</tspan></text>
+<ellipse cx="576.80" cy="164.10" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
+<text x="576.80" y="162.43" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Tentukan fee akhir, setujui</tspan></text>
+<text x="576.80" y="170.94" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">atau tolak laporan</tspan></text>
+<ellipse cx="529.30" cy="252.60" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
+<text x="529.30" y="250.93" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Buat slip fee dan</tspan></text>
+<text x="529.30" y="259.44" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">jurnal fee event</tspan></text>
+<ellipse cx="430.00" cy="262.00" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
+<text x="430.00" y="260.33" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Teruskan upah event</tspan></text>
+<text x="430.00" y="268.84" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">ke Gaji Bulanan</tspan></text>
+<ellipse cx="657.10" cy="330.00" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
+<text x="657.10" y="328.33" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Atur tarif jabatan</tspan></text>
+<text x="657.10" y="336.84" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">event</tspan></text>
+<ellipse cx="446.52" cy="8.00" rx="5.20" ry="5.20" fill="#FFFFFF" stroke="#555555" stroke-width="1.1"/>
+<polyline points="446.52,13.20 446.52,30.00" fill="none" stroke="#555555" stroke-width="1.1" stroke-linejoin="round"/>
+<polyline points="437.52,19.00 455.52,19.00" fill="none" stroke="#555555" stroke-width="1.1" stroke-linejoin="round"/>
+<polyline points="446.52,30.00 439.52,42.00" fill="none" stroke="#555555" stroke-width="1.1" stroke-linejoin="round"/>
+<polyline points="446.52,30.00 453.52,42.00" fill="none" stroke="#555555" stroke-width="1.1" stroke-linejoin="round"/>
+<text x="456.52" y="14.00" font-size="8.6" fill="#555555" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Pengguna</tspan></text>
+<text x="502.09" y="14.00" font-size="7.5" fill="#555555" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">(Admin, HRD, Owner)</tspan></text>
+<ellipse cx="40.00" cy="206.26" rx="5.20" ry="5.20" fill="#FFFFFF" stroke="#8B1A1A" stroke-width="1.1"/>
+<polyline points="40.00,211.46 40.00,228.26" fill="none" stroke="#8B1A1A" stroke-width="1.1" stroke-linejoin="round"/>
+<polyline points="31.00,217.26 49.00,217.26" fill="none" stroke="#8B1A1A" stroke-width="1.1" stroke-linejoin="round"/>
+<polyline points="40.00,228.26 33.00,240.26" fill="none" stroke="#8B1A1A" stroke-width="1.1" stroke-linejoin="round"/>
+<polyline points="40.00,228.26 47.00,240.26" fill="none" stroke="#8B1A1A" stroke-width="1.1" stroke-linejoin="round"/>
+<text x="40.00" y="252.26" font-size="8.6" fill="#8B1A1A" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Admin</tspan></text>
+<ellipse cx="337.64" cy="466.00" rx="5.20" ry="5.20" fill="#FFFFFF" stroke="#1F5F99" stroke-width="1.1"/>
+<polyline points="337.64,471.20 337.64,488.00" fill="none" stroke="#1F5F99" stroke-width="1.1" stroke-linejoin="round"/>
+<polyline points="328.64,477.00 346.64,477.00" fill="none" stroke="#1F5F99" stroke-width="1.1" stroke-linejoin="round"/>
+<polyline points="337.64,488.00 330.64,500.00" fill="none" stroke="#1F5F99" stroke-width="1.1" stroke-linejoin="round"/>
+<polyline points="337.64,488.00 344.64,500.00" fill="none" stroke="#1F5F99" stroke-width="1.1" stroke-linejoin="round"/>
+<text x="351.64" y="486.00" font-size="8.6" fill="#1F5F99" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">HRD</tspan></text>
+<ellipse cx="840.00" cy="226.86" rx="5.20" ry="5.20" fill="#FFFFFF" stroke="#2E6B3A" stroke-width="1.1"/>
+<polyline points="840.00,232.06 840.00,248.86" fill="none" stroke="#2E6B3A" stroke-width="1.1" stroke-linejoin="round"/>
+<polyline points="831.00,237.86 849.00,237.86" fill="none" stroke="#2E6B3A" stroke-width="1.1" stroke-linejoin="round"/>
+<polyline points="840.00,248.86 833.00,260.86" fill="none" stroke="#2E6B3A" stroke-width="1.1" stroke-linejoin="round"/>
+<polyline points="840.00,248.86 847.00,260.86" fill="none" stroke="#2E6B3A" stroke-width="1.1" stroke-linejoin="round"/>
+<text x="840.00" y="272.86" font-size="8.6" fill="#2E6B3A" text-anchor="middle" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Owner</tspan></text>
+<ellipse cx="407.40" cy="466.00" rx="5.20" ry="5.20" fill="#FFFFFF" stroke="#5B3F8C" stroke-width="1.1"/>
+<polyline points="407.40,471.20 407.40,488.00" fill="none" stroke="#5B3F8C" stroke-width="1.1" stroke-linejoin="round"/>
+<polyline points="398.40,477.00 416.40,477.00" fill="none" stroke="#5B3F8C" stroke-width="1.1" stroke-linejoin="round"/>
+<polyline points="407.40,488.00 400.40,500.00" fill="none" stroke="#5B3F8C" stroke-width="1.1" stroke-linejoin="round"/>
+<polyline points="407.40,488.00 414.40,500.00" fill="none" stroke="#5B3F8C" stroke-width="1.1" stroke-linejoin="round"/>
+<text x="421.40" y="486.00" font-size="8.6" fill="#5B3F8C" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Kapten</tspan></text>
+<text x="580.00" y="454.00" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Keterangan</tspan></text>
+<polyline points="580.00,463.00 598.00,463.00" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round" stroke-dasharray="3 2"/>
+<polyline points="598.00,463.00 591.15,466.06" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="598.00,463.00 591.15,459.94" fill="none" stroke="#222" stroke-width="0.9" stroke-linejoin="round"/>
+<text x="603.00" y="466.00" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">include atau extend</tspan></text>
+<polyline points="580.00,474.00 590.00,474.00" fill="none" stroke="#555" stroke-width="0.9" stroke-linejoin="round"/>
+<polygon points="600.00,474.00 592.00,478.20 592.00,469.80" fill="#FFFFFF" stroke="#555" stroke-width="0.9" stroke-linejoin="round"/>
+<text x="605.00" y="477.00" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Admin, HRD, Owner mewarisi Pengguna</tspan></text>
+<polyline points="580.00,485.00 598.00,485.00" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
+<text x="603.00" y="488.00" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">garis aktor ke use case</tspan></text>
+<text x="754.00" y="454.00" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="bold" font-style="normal">Warna elips</tspan></text>
+<ellipse cx="760.00" cy="461.00" rx="6.00" ry="3.60" fill="#FDE7E4" stroke="#444" stroke-width="0.6"/>
+<text x="770.00" y="463.50" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Siklus konversi</tspan></text>
+<ellipse cx="760.00" cy="469.60" rx="6.00" ry="3.60" fill="#E3EFFA" stroke="#444" stroke-width="0.6"/>
+<text x="770.00" y="472.10" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">SDM: gaji inhouse</tspan></text>
+<ellipse cx="760.00" cy="478.20" rx="6.00" ry="3.60" fill="#ECE4F6" stroke="#444" stroke-width="0.6"/>
+<text x="770.00" y="480.70" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">SDM: fee event</tspan></text>
+<ellipse cx="760.00" cy="486.80" rx="6.00" ry="3.60" fill="#FFF3C4" stroke="#444" stroke-width="0.6"/>
+<text x="770.00" y="489.30" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Pelaporan, modal, pengaturan</tspan></text>
+<ellipse cx="760.00" cy="495.40" rx="6.00" ry="3.60" fill="#EEEEEE" stroke="#444" stroke-width="0.6"/>
+<text x="770.00" y="497.90" font-size="7.5" fill="#333" text-anchor="start" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Umum</tspan></text>
 </svg>

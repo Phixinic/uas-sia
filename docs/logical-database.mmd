@@ -57,6 +57,13 @@ erDiagram
     int masa_manfaat_bulan
     string dasar_n
   }
+  detail_revisi_opname {
+    string no_revisi PK, FK
+    string id_perlengkapan PK, FK
+    int saldo_buku
+    int nilai_sisa_lama
+    int nilai_sisa
+  }
   event {
     string id_event PK
     string nama
@@ -93,11 +100,6 @@ erDiagram
     string kelompok
     string peran_event
     string satuan_tarif
-    boolean aktif
-  }
-  jadwal_kerja {
-    string id_jadwal PK
-    string id_jabatan FK
     string jam_masuk
     string jam_keluar
     int hari_kerja
@@ -275,6 +277,16 @@ erDiagram
     string id_karyawan FK
     string id_jabatan FK
   }
+  penyesuaian_gaji {
+    int id_penyesuaian PK
+    string periode FK
+    string id_karyawan FK
+    string jenis
+    int nominal
+    string keterangan
+    int dibuat_oleh FK
+    datetime dibuat_pada
+  }
   peralatan {
     string id_peralatan PK
     string nama
@@ -300,7 +312,7 @@ erDiagram
     int id_presensi PK
     string id_karyawan FK
     datetime tanggal
-    string id_jadwal FK
+    string id_jabatan FK
     string absensi
     string jam_masuk
     string jam_keluar
@@ -312,6 +324,23 @@ erDiagram
     int id PK
     string nama
     string keterangan
+  }
+  revisi_opname {
+    string no_revisi PK
+    string id_opname FK
+    int ke
+    int total_beban_lama
+    int total_beban
+    string alasan
+    string status
+    string alasan_tolak
+    string jurnal_lama
+    string jurnal_pembalik FK
+    string jurnal_baru FK
+    int diajukan_oleh FK
+    datetime diajukan_pada
+    int diputuskan_oleh FK
+    datetime diputuskan_pada
   }
   riwayat_periode {
     int id PK
@@ -377,6 +406,7 @@ erDiagram
     int dpp
     int pph21
     int dibayar
+    string periode_gaji FK
   }
   slip_gaji {
     string id_slip PK
@@ -384,7 +414,6 @@ erDiagram
     string id_karyawan FK
     string id_jabatan FK
     string id_golongan FK
-    string id_jadwal FK
     string akun_beban FK
     string status_ptkp
     int hari_kerja
@@ -401,6 +430,10 @@ erDiagram
     int tunj_keluarga
     int tunj_lain
     int potongan_absen
+    int gaji_tetap
+    int upah_event
+    int bonus
+    int potongan_lain
     int bruto
     int bruto_setahun
     int biaya_jabatan
@@ -473,12 +506,13 @@ erDiagram
   pembelian ||--|{ detail_pembelian : "no_pembelian"
   peralatan |o--o{ detail_pembelian : "id_peralatan"
   perlengkapan |o--o{ detail_pembelian : "id_perlengkapan"
+  revisi_opname ||--|{ detail_revisi_opname : "no_revisi"
+  perlengkapan ||--o{ detail_revisi_opname : "id_perlengkapan"
   pengguna ||--o{ event : "dibuat_oleh"
   jurnal |o--o| investasi_kas : "jurnal_no"
   pengguna ||--o{ investasi_kas : "dibuat_oleh"
   pengguna |o--o{ investasi_kas : "diputuskan_oleh"
   akun ||--o{ jabatan : "akun_beban"
-  jabatan ||--o| jadwal_kerja : "id_jabatan"
   aset ||--o{ jadwal_penyusutan : "id_aset"
   periode ||--o{ jadwal_penyusutan : "periode"
   jurnal |o--o{ jadwal_penyusutan : "jurnal_no"
@@ -520,11 +554,19 @@ erDiagram
   event ||--o{ penugasan_event : "id_event"
   karyawan ||--o{ penugasan_event : "id_karyawan"
   jabatan ||--o{ penugasan_event : "id_jabatan"
+  periode ||--o{ penyesuaian_gaji : "periode"
+  karyawan ||--o{ penyesuaian_gaji : "id_karyawan"
+  pengguna ||--o{ penyesuaian_gaji : "dibuat_oleh"
   kategori_aset ||--o{ peralatan : "id_kategori"
   pengguna |o--o{ periode : "dikunci_oleh"
   karyawan ||--o{ presensi : "id_karyawan"
-  jadwal_kerja ||--o{ presensi : "id_jadwal"
+  jabatan ||--o{ presensi : "id_jabatan"
   pengguna ||--o{ presensi : "dibuat_oleh"
+  opname ||--o{ revisi_opname : "id_opname"
+  jurnal |o--o| revisi_opname : "jurnal_pembalik"
+  jurnal |o--o| revisi_opname : "jurnal_baru"
+  pengguna ||--o{ revisi_opname : "diajukan_oleh"
+  pengguna |o--o{ revisi_opname : "diputuskan_oleh"
   periode ||--o{ riwayat_periode : "periode"
   pengguna ||--o{ riwayat_periode : "oleh"
   pengguna ||--o{ sesi : "pengguna_id"
@@ -543,11 +585,11 @@ erDiagram
   jabatan ||--o{ slip_fee : "id_jabatan"
   akun ||--o{ slip_fee : "akun_beban"
   versi_nominal |o--o{ slip_fee : "id_versi_tarif"
+  periode |o--o{ slip_fee : "periode_gaji"
   periode ||--o{ slip_gaji : "periode"
   karyawan ||--o{ slip_gaji : "id_karyawan"
   jabatan ||--o{ slip_gaji : "id_jabatan"
   golongan ||--o{ slip_gaji : "id_golongan"
-  jadwal_kerja |o--o{ slip_gaji : "id_jadwal"
   akun ||--o{ slip_gaji : "akun_beban"
   penggajian |o--o{ slip_gaji : "no_penggajian"
   setting_gaji |o--o{ slip_gaji : "id_setting"

@@ -104,7 +104,7 @@
 <ellipse cx="110.92" cy="179.39" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#6B5B00" stroke-width="0.7"/>
 <polyline points="107.22,191.59 107.22,197.19" fill="none" stroke="#6B5B00" stroke-width="0.7" stroke-linejoin="round"/>
 <ellipse cx="110.92" cy="194.39" rx="1.80" ry="1.80" fill="#FFFFFF" stroke="#6B5B00" stroke-width="0.7"/>
-<text x="128.12" y="172.39" font-size="6.5" fill="#6B5B00" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">pembalik_dari</tspan></text>
+<text x="130.37" y="198.62" font-size="6.5" fill="#6B5B00" text-anchor="start" xml:space="preserve" transform="rotate(-90 130.37 198.62)"><tspan font-weight="normal" font-style="italic">pembalik_dari</tspan></text>
 <polyline points="16.20,288.80 13.00,293.80" fill="none" stroke="#6B5B00" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="13.00,288.80 13.00,293.80" fill="none" stroke="#6B5B00" stroke-width="0.7" stroke-linejoin="round"/>
 <polyline points="9.80,288.80 13.00,293.80" fill="none" stroke="#6B5B00" stroke-width="0.7" stroke-linejoin="round"/>

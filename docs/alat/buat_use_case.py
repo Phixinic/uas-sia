@@ -15,12 +15,12 @@ sys.path.insert(0, os.path.dirname(__file__))
 from svgkit import Svg, lebar_teks, lebar_segmen
 
 AKAR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-W, H = 785.0, 504.0
+W, H = 880.0, 504.0   # 38 use case: kanvas dilebarkan, tinggi tetap supaya ukuran huruf tercetak sama
 UK = 7.6            # huruf use case (pt cetak)
 UK_AKTOR = 8.6
 RX, RY = 52.0, 12.5  # elips seragam
 KOLOM, BARIS = 5, 7
-X0, Y0, X1, Y1 = 64.0, 52.0, 721.0, 444.0   # kotak batas sistem
+X0, Y0, X1, Y1 = 64.0, 52.0, 816.0, 444.0   # kotak batas sistem
 
 # kunci: (label, kunci IZIN atau None, aktor). Aktor: A Admin, H HRD, O Owner, K Kapten, P Pengguna (peran staf).
 UC = {
@@ -36,27 +36,31 @@ UC = {
     "aset":    ("Buat kartu aset dan\njadwal penyusutan", None, ""),
     "balik":   ("Balik pembelian\n(jurnal pembalik)", "pembelian.balik", "O"),
     "sisa":    ("Input nilai sisa\nperlengkapan", "nilai-sisa.input", "A"),
-    "susut":   ("Proses penyusutan\nbulanan", "penyusutan.proses", "A"),
-    "drafjp":  ("Buat draf jurnal\npenyesuaian", None, ""),
-    "ajujp":   ("Ajukan jurnal\npenyesuaian", "jurnal-penyesuaian.ajukan", "A"),
+    "susut":   ("Proses penyusutan\nbulanan (otomatis)", "penyusutan.proses", "A"),
+    "drafjp":  ("Buat jurnal\npenyesuaian", None, ""),
+    "ajujp":   ("Ajukan jurnal\nnilai sisa", "jurnal-penyesuaian.ajukan", "A"),
+    "revisi":  ("Ajukan revisi nilai sisa\nyang sudah disetujui", "nilai-sisa.input", "A"),
     "ajulepas": ("Ajukan pelepasan\nperalatan", "pelepasan.ajukan", "A"),
     "setlepas": ("Setujui atau tolak\npelepasan peralatan", "pelepasan.putuskan", "O"),
-    "setjp":   ("Setujui atau tolak\njurnal penyesuaian", "jurnal-penyesuaian.putuskan", "O"),
+    "setjp":   ("Setujui atau kembalikan\nnilai sisa dan revisinya", "jurnal-penyesuaian.putuskan", "O"),
+    "invkas":  ("Catat setoran\nmodal kas", "investasi-kas.catat", "AO"),
+    "setinv":  ("Setujui atau tolak\nsetoran modal", "investasi-kas.putuskan", "O"),
     "mkonv":   ("Kelola master supplier,\nperalatan, perlengkapan", "master-konversi.ubah", "AO"),
     "presensi": ("Input presensi harian", "presensi.kelola", "H"),
-    "gaji":    ("Hitung gaji dan PPh 21\n(slip draf)", "gaji.hitung", "H"),
-    "dist":    ("Ajukan distribusi\ngaji", "penggajian.ajukan", "H"),
-    "setgaji": ("Setujui/tolak penggajian,\nsetting gaji, nominal", "penggajian.putuskan+setting-gaji.putuskan+nominal.putuskan", "O"),
+    "gaji":    ("Catat potongan dan\nbonus manual", "gaji.hitung", "H"),
+    "dist":    ("Ajukan Gaji Bulanan\n(hitung slip, PPh 21)", "penggajian.ajukan", "H"),
+    "setgaji": ("Setujui/tolak Gaji Bulanan,\nsetting gaji, nominal", "penggajian.putuskan+setting-gaji.putuskan+nominal.putuskan", "O"),
     "msdm":    ("Kelola master SDM,\najukan setting, nominal", "master-sdm.ubah+setting-gaji.ajukan+nominal.ajukan", "HO"),
     "kunci":   ("Tutup periode (mengunci\nperiode) dan buka kunci", "periode.kunci", "O"),
     "katakun": ("Kelola akun, kategori,\nprofil, status master", "master.akun-kategori+master.nonaktifkan+profil.ubah", "O"),
     "pengguna": ("Kelola pengguna", "pengguna.kelola", "O"),
-    "event":   ("Catat event, sesi,\npenugasan, kehadiran", "event.kelola", "HO"),
+    "event":   ("Catat event, sesi, penugasan\ncrew, kehadiran", "event.kelola", "HO"),
     "nilai":   ("Nilai progres kehadiran\n(Sesuai atau Kurang)", "event.nilai", "KO"),
     "kurang":  ("Isi jam diakui\ndan catatan", None, ""),
     "lapor":   ("Kirim laporan progres\nke Owner", "event.lapor", "K"),
     "putfee":  ("Tentukan fee akhir, setujui\natau tolak laporan", "fee-event.putuskan", "O"),
     "slipfee": ("Buat slip fee dan\njurnal fee event", None, ""),
+    "upah":    ("Teruskan upah event\nke Gaji Bulanan", None, ""),
     "tarif":   ("Atur tarif jabatan\nevent", "tarif-event.ubah", "O"),
 }
 # Relasi antar use case: (dari, ke, jenis, catatan). Panah dari use case yang menyertai/memperluas.
@@ -67,7 +71,8 @@ REL = [
     ("aset", "posting", "extend", "[pembelian\nperalatan]"),
     ("cetak", "lap", "extend", ""),
     ("kurang", "nilai", "extend", "[hasil Kurang]"),
-    ("slipfee", "putfee", "extend", "[laporan\ndisetujui]"),
+    ("slipfee", "putfee", "extend", "[crew\nfreelance]"),
+    ("upah", "putfee", "extend", "[karyawan\ninhouse]"),
 ]
 NAMA_AKTOR = {"A": "Admin", "H": "HRD", "O": "Owner", "K": "Kapten"}
 WARNA_AKTOR = {"A": "#8B1A1A", "H": "#1F5F99", "O": "#2E6B3A", "K": "#5B3F8C", "P": "#555555"}
@@ -77,14 +82,14 @@ WARNA_UC = {  # per siklus
 SIKLUS = {"k": "#FDE7E4", "s": "#E3EFFA", "e": "#ECE4F6", "l": "#FFF3C4", "p": "#EEEEEE"}
 GRUP = {"masuk": "p", "dash": "p", "lap": "l", "kartu": "k", "cetak": "l", "cetakslip": "s",
         "draf": "k", "cepat": "k", "posting": "k", "aset": "k", "balik": "k", "sisa": "k", "susut": "k", "drafjp": "l", "ajujp": "l",
-        "ajulepas": "k", "setlepas": "k", "setjp": "l", "mkonv": "k", "presensi": "s", "gaji": "s", "dist": "s", "setgaji": "s", "msdm": "s",
+        "ajulepas": "k", "setlepas": "k", "setjp": "l", "revisi": "k", "invkas": "l", "setinv": "l", "upah": "e", "mkonv": "k", "presensi": "s", "gaji": "s", "dist": "s", "setgaji": "s", "msdm": "s",
         "kunci": "l", "katakun": "l", "pengguna": "l",
         "event": "e", "nilai": "e", "kurang": "e", "lapor": "e", "putfee": "e", "slipfee": "e", "tarif": "e"}
 
 # Tata letak hasil pencarian: kunci -> (kolom, baris); aktor -> (sisi, posisi 0..1 sepanjang sisi).
-# Hasil --cari (SEED=29 AWAL=kisi T0=3 SIG0=25 LANGKAH=250000), lalu 'sisa' digeser 16 pt ke kiri supaya label extend-nya muat.
-TATA_LETAK = {'kartu': (520.9, 88.2), 'susut': (251.8, 125.6), 'setlepas': (292.4, 303.8), 'ajulepas': (125.4, 123.6), 'setjp': (511.4, 337.4), 'dist': (181.1, 423.1), 'sisa': (208.7, 160.8), 'kunci': (655.9, 191.7), 'lap': (279.3, 90.0), 'putfee': (656.2, 94.0), 'katakun': (500.4, 384.5), 'balik': (448.3, 163.8), 'ajujp': (146.9, 221.8), 'cepat': (124.1, 260.7), 'lapor': (636.0, 420.1), 'cetak': (137.5, 88.0), 'setgaji': (533.0, 238.7), 'presensi': (627.9, 383.0), 'tarif': (301.3, 375.2), 'gaji': (302.4, 412.4), 'pengguna': (660.6, 348.3), 'cetakslip': (395.6, 93.8), 'draf': (258.1, 226.6), 'posting': (396.9, 214.3), 'mkonv': (538.6, 204.7), 'nilai': (178.2, 387.8), 'masuk': (523.2, 123.1), 'dash': (337.0, 172.9), 'event': (519.6, 419.7), 'msdm': (127.8, 306.2), 'aset': (290.8, 262.2), 'drafjp': (393.9, 129.1), 'slipfee': (582.7, 157.5), 'kurang': (276.6, 338.2)}
-AKTOR_LETAK = {'P': ('T', 0.397), 'A': ('L', 0.328), 'H': ('B', 0.0), 'O': ('R', 0.489), 'K': ('B', 0.45)}
+# Hasil --cari (SEED=43 AWAL=kisi T0=3 SIG0=25 LANGKAH=200000) untuk 38 use case di kanvas 880 pt, lalu 'upah' digeser ke (430, 262) supaya label extend-nya muat.
+TATA_LETAK = {'revisi': (177.1, 159.7), 'kunci': (717.1, 122.2), 'putfee': (576.8, 164.1), 'ajulepas': (161.0, 123.8), 'lapor': (452.1, 418.6), 'dist': (402.3, 333.2), 'draf': (307.9, 145.3), 'setgaji': (756.8, 88.0), 'setjp': (617.0, 204.0), 'setinv': (435.0, 205.1), 'presensi': (290.3, 422.1), 'balik': (692.5, 156.6), 'pengguna': (652.3, 239.4), 'ajujp': (140.8, 392.2), 'cepat': (124.3, 88.3), 'lap': (503.5, 88.2), 'katakun': (552.8, 127.8), 'sisa': (268.1, 313.8), 'susut': (288.2, 181.4), 'cetakslip': (448.3, 168.8), 'cetak': (645.5, 87.5), 'gaji': (437.5, 378.0), 'setlepas': (663.3, 293.3), 'kartu': (325.7, 87.5), 'tarif': (657.1, 330.0), 'dash': (304.3, 241.3), 'msdm': (755.3, 391.2), 'mkonv': (535.1, 296.8), 'posting': (397.1, 299.1), 'nilai': (640.9, 391.3), 'invkas': (156.0, 307.2), 'event': (668.3, 425.3), 'masuk': (310.3, 377.4), 'slipfee': (529.3, 252.6), 'upah': (430.0, 262.0), 'drafjp': (185.8, 215.9), 'aset': (198.7, 357.5), 'kurang': (513.6, 330.9)}
+AKTOR_LETAK = {'P': ('T', 0.51), 'A': ('L', 0.448), 'H': ('B', 0.343), 'O': ('R', 0.512), 'K': ('B', 0.45)}
 
 
 def cek_izin():
@@ -156,7 +161,7 @@ def potong(p1, p2, q1, q2):
 
 GEN = ("A", "H", "O")   # aktor yang mewarisi Pengguna ("P"). Kapten tidak: ia hanya membuka dashboard dan Penilaian Crew.
 # Rentang posisi aktor di sisi bawah: HRD di kiri, Kapten di tengah, keterangan di kanan bawah.
-BATAS_AKTOR = {("H", "B"): (0.0, 0.42), ("K", "B"): (0.45, 0.6)}
+BATAS_AKTOR = {("H", "B"): (0.0, 0.42), ("K", "B"): (0.45, 0.55)}
 
 
 def garis_generalisasi(ak):
@@ -319,7 +324,8 @@ def awal_kisi(rnd):
 
 def cari(seed=7, langkah=60000, T0=8.0, sig0=45.0, mulai=None):
     rnd = random.Random(seed)
-    kunci = list(UC)
+    # GERAK=k1,k2,...: hanya use case ini yang dipindah (sisanya tetap di posisi awal), dipakai saat menambah use case baru
+    kunci = os.environ["GERAK"].split(",") if os.environ.get("GERAK") else list(UC)
     tata = awal_kisi(rnd) if os.environ.get("AWAL") == "kisi" else awal(rnd)
     ak = {"P": ("T", 0.5), "A": ("L", 0.45), "H": ("B", 0.3), "O": ("R", 0.45), "K": ("B", 0.55)}
     if mulai:
@@ -566,9 +572,9 @@ def gambar(tata, ak, path_svg, path_png):
     svg.teks(lx + 25, ly + 23, "Admin, HRD, Owner mewarisi Pengguna", 7.5, "#333")
     svg.garis([(lx, ly + 31), (lx + 18, ly + 31)], "#8B1A1A", 0.9)
     svg.teks(lx + 23, ly + 34, "garis aktor ke use case", 7.5, "#333")
-    cx0 = W - 118
+    cx0 = W - 126
     svg.teks(cx0, ly, [("Warna elips", "b")], 7.5, "#333")
-    for n_, (kode, ket) in enumerate((("k", "Siklus konversi"), ("s", "SDM: gaji inhouse"), ("e", "SDM: fee event"), ("l", "Pelaporan, pengaturan"), ("p", "Umum"))):
+    for n_, (kode, ket) in enumerate((("k", "Siklus konversi"), ("s", "SDM: gaji inhouse"), ("e", "SDM: fee event"), ("l", "Pelaporan, modal, pengaturan"), ("p", "Umum"))):
         yy = ly + 5.5 + n_ * 8.6
         svg.ellipse(cx0 + 6, yy + 1.5, 6, 3.6, SIKLUS[kode], "#444", 0.6)
         svg.teks(cx0 + 16, yy + 4, ket, 7.5, "#333")
