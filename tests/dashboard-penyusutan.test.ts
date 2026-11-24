@@ -89,7 +89,7 @@ describe.runIf(aktif)("dashboard: penyusutan dan periode", async () => {
     // Pengajuan penggajian Oktober yang menunggu: tautannya mendarat di Oktober, bukan di periode yang sedang dilihat.
     await db.penggajian.updateMany({ where: { periodeId: "2026-10" }, data: { status: "DIAJUKAN" } });
     const d = await dataDashboard("2026-11");
-    expect(d.tindakan.find((t) => t.judul.includes("pengajuan penggajian"))?.href).toBe("/sdm/distribusi?bulan=10&tahun=2026");
+    expect(d.tindakan.find((t) => t.judul.includes("pengajuan penggajian"))?.href).toBe("/sdm/gaji-bulanan?bulan=10&tahun=2026");
     const berperiode = d.tindakan.filter((x) => (x.href.startsWith("/sdm/") && !x.href.startsWith("/sdm/setting-gaji")) || x.href.startsWith("/konversi/penyusutan"));
     for (const t of berperiode) expect(t.href).toMatch(/\?bulan=\d{1,2}&tahun=\d{4}$/);
   });
