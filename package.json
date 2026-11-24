@@ -17,7 +17,9 @@
     "db:generate": "prisma generate",
     "db:migrasi": "prisma migrate deploy",
     "db:migrasi-dev": "prisma migrate dev",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:seed": "tsx prisma/seed-setahun.ts",
+    "db:seed-uji": "tsx prisma/seed.ts",
+    "db:bangun-ulang": "tsx prisma/bangun-ulang-setahun.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

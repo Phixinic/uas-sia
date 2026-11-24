@@ -13,7 +13,12 @@ export const metadata: Metadata = { title: "Masuk" };
  * dan uji E2E. Di server sungguhan sandinya sudah diganti, jadi petunjuk itu menyesatkan dan bisa membuat akun
  * terkunci 10 menit sesudah 5 kali gagal.
  */
-const tampilkanAkunDemo = () => process.env.TAMPILKAN_AKUN_DEMO === "1";
+/** TAMPILKAN_AKUN_DEMO=1: akun data uji (prisma/seed.ts, E2E); =setahun: akun data contoh setahun (prisma/seed-setahun.ts). */
+const PETUNJUK_DEMO: Record<string, string> = {
+  "1": "admin / admin123, hrd / hrd12345, owner / owner123",
+  setahun: "admin / adminsia, hrd / hrdsia, owner / ownersia, kapten / kaptensia",
+};
+const petunjukAkunDemo = () => PETUNJUK_DEMO[process.env.TAMPILKAN_AKUN_DEMO ?? ""] ?? null;
 
 export default async function HalamanMasuk({ searchParams }: { searchParams: Promise<{ kembali?: string }> }) {
   if (await penggunaSaatIni()) redirect("/");
@@ -32,7 +37,7 @@ export default async function HalamanMasuk({ searchParams }: { searchParams: Pro
           </div>
           <FormMasuk kembali={kembali ?? "/"} />
         </div>
-        {tampilkanAkunDemo() && <p className="text-center text-[12px] text-merek-lembut/80">Akun demo: admin / admin123, hrd / hrd12345, owner / owner123</p>}
+        {petunjukAkunDemo() && <p className="text-center text-[12px] text-merek-lembut/80">Akun demo: {petunjukAkunDemo()}</p>}
       </div>
     </div>
   );

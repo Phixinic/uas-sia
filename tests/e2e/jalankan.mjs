@@ -2,7 +2,7 @@
  * Pembungkus `npm run uji:e2e`: menyiapkan database khusus uji lalu menjalankan Playwright.
  *  1. Database uji = `sia_dpro_e2e` di server yang sama dengan DATABASE_URL (atau E2E_DATABASE_URL bila diisi).
  *     Nama database harus berakhiran `_e2e` supaya data pengembangan tidak ikut terhapus.
- *  2. Database dibuat bila belum ada, dimigrasi, lalu diisi ulang dengan data contoh (SEED_PAKSA=1).
+ *  2. Database dibuat bila belum ada, dimigrasi, lalu diisi ulang dengan data uji prisma/seed.ts (SEED_PAKSA=1).
  *  3. Playwright menyalakan `next start` (butuh `npm run build` lebih dulu) dan menjalankan semua skenario.
  */
 import "dotenv/config";
@@ -40,5 +40,6 @@ const jalan = (perintah, args) => {
   if (h.status !== 0) process.exit(h.status ?? 1);
 };
 jalan("npx", ["prisma", "migrate", "deploy"]);
-jalan("npm", ["run", "db:seed"]);
+// Data uji tetap (Oktober 2026, prisma/seed.ts), bukan data contoh setahun: skenario E2E bergantung pada angkanya.
+jalan("npm", ["run", "db:seed-uji"]);
 jalan("npx", ["playwright", "test", ...process.argv.slice(2)]);
