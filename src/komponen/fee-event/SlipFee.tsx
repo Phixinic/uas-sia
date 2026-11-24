@@ -1,9 +1,10 @@
 /*
  * Slip fee event siap lihat dan cetak (gaya cetak sama dengan slip gaji: .slip-cetak, .tanpa-cetak).
- * Status slip selalu "Dibayar" karena slip baru dibuat saat Owner menyetujui laporan.
+ * Status slip "Dibayar" karena slip baru dibuat saat Owner menyetujui laporan. Baris karyawan inhouse bukan pembayaran:
+ * upahnya ikut Gaji Bulanan bulan `periodeGaji` (PPh 21 pegawai di slip gaji), jadi tampil "Lewat gaji <bulan>".
  */
 import { X } from "lucide-react";
-import { labelTanggal } from "@/lib/inti/tanggal";
+import { labelPeriode, labelTanggal } from "@/lib/inti/tanggal";
 import { labelDurasi } from "@/lib/inti/fee-event";
 import { LABEL_PERAN_EVENT, LABEL_SATUAN_TARIF, labelWaktu, rupiah } from "@/lib/format";
 import Lencana from "@/komponen/ui/Lencana";
@@ -35,7 +36,7 @@ export default function SlipFee({ daftar, namaUsaha, alamatTutup }: { daftar: Da
               </div>
               <div className="text-right text-sm">
                 <div className="kode">{s.no}</div>
-                <Lencana warna="hijau">Dibayar</Lencana>
+                {s.periodeGaji ? <Lencana warna="biru">Lewat gaji {labelPeriode(s.periodeGaji)}</Lencana> : <Lencana warna="hijau">Dibayar</Lencana>}
               </div>
             </header>
             <div className="text-sm">
@@ -60,12 +61,16 @@ export default function SlipFee({ daftar, namaUsaha, alamatTutup }: { daftar: Da
                   <tr><td>Usulan sistem ({dasar})</td><td className="kolom-angka"><Rupiah nilai={s.feeUsulan} polos /></td></tr>
                   {s.alasanUbah && <tr><td>Disesuaikan Owner: {s.alasanUbah}</td><td className="kolom-angka"><Rupiah nilai={s.feeAkhir - s.feeUsulan} polos /></td></tr>}
                   <tr className="font-semibold"><td>Fee bruto</td><td className="kolom-angka"><Rupiah nilai={s.feeAkhir} polos /></td></tr>
-                  <tr><td>PPh 21 bukan pegawai (50% x {rupiah(s.feeAkhir)} = DPP {rupiah(s.dpp)}, x 5%)</td><td className="kolom-angka"><Rupiah nilai={-s.pph21} polos /></td></tr>
+                  {s.periodeGaji ? (
+                    <tr><td colSpan={2} className="text-slate-600">Karyawan inhouse: upah event ini dibayar lewat Gaji Bulanan {labelPeriode(s.periodeGaji)}. PPh 21 dihitung bersama gaji (PPh 21 pegawai), bukan PPh bukan pegawai.</td></tr>
+                  ) : (
+                    <tr><td>PPh 21 bukan pegawai (50% x {rupiah(s.feeAkhir)} = DPP {rupiah(s.dpp)}, x 5%)</td><td className="kolom-angka"><Rupiah nilai={-s.pph21} polos /></td></tr>
+                  )}
                 </tbody>
-                <tfoot><tr><td>Dibayar</td><td className="kolom-angka"><Rupiah nilai={s.dibayar} polos /></td></tr></tfoot>
+                <tfoot><tr><td>{s.periodeGaji ? `Masuk Gaji Bulanan ${labelPeriode(s.periodeGaji)}` : "Dibayar"}</td><td className="kolom-angka"><Rupiah nilai={s.dibayar} polos /></td></tr></tfoot>
               </table>
             </div>
-            <p className="text-xs text-slate-500">Laporan {s.laporanNo}{s.jurnalNo ? `, jurnal ${s.jurnalNo}` : ""}, dibayar {labelWaktu(s.dibayarPada)}.</p>
+            <p className="text-xs text-slate-500">Laporan {s.laporanNo}{s.jurnalNo && !s.periodeGaji ? `, jurnal ${s.jurnalNo}` : ""}, {s.periodeGaji ? "diputuskan" : "dibayar"} {labelWaktu(s.dibayarPada)}.</p>
           </article>
         );
       })}

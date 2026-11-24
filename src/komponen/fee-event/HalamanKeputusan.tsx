@@ -164,8 +164,10 @@ async function Menunggu({ l, bolehPutuskan }: { l: RingkasLaporan; bolehPutuskan
   const [b, kas, namaAkun] = await Promise.all([muatBahanEvent(db, l.eventKode), saldoAkun(db, AKUN.KAS), petaAkun()]);
   if (!b) return <Peringatan jenis="galat">Event laporan ini tidak ditemukan.</Peringatan>;
   const kurang = b.orang.flatMap((o) => o.kehadiran.filter((k) => k.penilaian === "KURANG").map((k) => ({ o, k, s: b.sesi.find((x) => x.id === k.sesiId)! })));
-  const pajak = b.orang.map((o) => pph21BukanPegawai(o.usulan.fee));
-  const barisJurnal = barisFeeEvent(b.orang.map((o, i) => ({ akunBeban: o.akunBebanKode, bruto: pajak[i].bruto, pph21: pajak[i].pph21, dibayar: pajak[i].dibayar })));
+  // Jurnal fee hanya untuk crew freelance; upah event karyawan inhouse dijurnal lewat Gaji Bulanan.
+  const freelance = b.orang.filter((o) => o.jenisKaryawan === "EVENT" && o.usulan.fee > 0);
+  const pajak = freelance.map((o) => pph21BukanPegawai(o.usulan.fee));
+  const barisJurnal = freelance.length ? barisFeeEvent(freelance.map((o, i) => ({ akunBeban: o.akunBebanKode, bruto: pajak[i].bruto, pph21: pajak[i].pph21, dibayar: pajak[i].dibayar }))) : [];
   const baris: BarisKeputusan[] = b.orang.map((o) => ({
     karyawanKode: o.karyawanKode,
     nama: o.nama,
@@ -174,6 +176,7 @@ async function Menunggu({ l, bolehPutuskan }: { l: RingkasLaporan; bolehPutuskan
     dasar: dasarFee(o),
     jumlahKurang: o.usulan.jumlahKurang,
     usulan: o.usulan.fee,
+    inhouse: o.jenisKaryawan === "INHOUSE",
   }));
 
   return (
@@ -310,7 +313,7 @@ async function Disetujui({ l }: { l: RingkasLaporan }) {
                 isi={[
                   ["Dasar", `${s.satuanTarif === "HARI" ? `${s.jumlahHari} hari` : labelDurasi(s.menitDiakui)} x ${rupiah(s.tarif)}`],
                   ["Usulan / akhir", <span key="f" className={s.alasanUbah ? "text-amber-700" : ""}>{rupiah(s.feeUsulan)} / {rupiah(s.feeAkhir)}</span>],
-                  ["PPh 21", rupiah(s.pph21)],
+                  ["PPh 21", s.periodeGaji ? `lewat gaji ${labelPeriode(s.periodeGaji)}` : rupiah(s.pph21)],
                 ]}
               />
               {s.alasanUbah && <div className="text-[12px] text-amber-700">Diubah: {s.alasanUbah}</div>}
@@ -339,8 +342,14 @@ async function Disetujui({ l }: { l: RingkasLaporan }) {
                   <Rupiah nilai={s.feeAkhir} polos className={s.alasanUbah ? "font-semibold text-amber-700" : ""} />
                   {s.alasanUbah && <div className="max-w-48 text-left text-[11px] text-amber-700">Diubah: {s.alasanUbah}</div>}
                 </td>
-                <td className="kolom-angka"><Rupiah nilai={s.pph21} polos /></td>
-                <td className="kolom-angka font-semibold"><Rupiah nilai={s.dibayar} polos /></td>
+                {s.periodeGaji ? (
+                  <td colSpan={2} className="text-right text-xs text-blue-800">Inhouse: lewat Gaji Bulanan {labelPeriode(s.periodeGaji)}</td>
+                ) : (
+                  <>
+                    <td className="kolom-angka"><Rupiah nilai={s.pph21} polos /></td>
+                    <td className="kolom-angka font-semibold"><Rupiah nilai={s.dibayar} polos /></td>
+                  </>
+                )}
                 <td className="text-right"><TautanTombol href={`${dasar}&slip=${s.karyawanKode}`} kecil varian="hantu">Slip</TautanTombol></td>
               </tr>
             ))}

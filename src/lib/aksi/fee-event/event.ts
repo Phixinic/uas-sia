@@ -138,9 +138,11 @@ export async function simpanPenugasan(input: unknown): Promise<HasilAksi> {
         tx.jabatan.findUnique({ where: { kode: d.jabatanKode }, select: { nama: true, aktif: true, kelompok: true, peranEvent: true } }),
       ]);
       if (!karyawan) throw new GalatAksi("Crew tidak ditemukan.", { karyawanKode: "Crew tidak ditemukan." });
-      if (karyawan.jenis !== "EVENT") throw new GalatAksi(`${karyawan.nama} adalah karyawan inhouse. Penugasan event hanya untuk karyawan berjenis Event.`, { karyawanKode: "Bukan karyawan event." });
       if (!karyawan.aktif && lama?.karyawanKode !== d.karyawanKode) throw new GalatAksi(`${karyawan.nama} sudah nonaktif.`, { karyawanKode: "Crew nonaktif." });
       if (!jabatan || jabatan.kelompok !== "EVENT" || !jabatan.peranEvent) throw new GalatAksi("Pilih jabatan event (Kapten atau Crew).", { jabatanKode: "Bukan jabatan event." });
+      // Karyawan inhouse boleh ikut event seperti crew (upahnya dibayar lewat Gaji Bulanan). Kapten tetap crew freelance
+      // yang punya akun kapten, karena kaptenlah yang menilai kehadiran crew.
+      if (karyawan.jenis === "INHOUSE" && jabatan.peranEvent !== "CREW") throw new GalatAksi(`${karyawan.nama} karyawan inhouse, jadi hanya bisa ditugaskan sebagai crew. Kapten event adalah crew freelance yang punya akun kapten.`, { jabatanKode: "Karyawan inhouse hanya sebagai crew." });
       if (!jabatan.aktif && lama?.jabatanKode !== d.jabatanKode) throw new GalatAksi(`Jabatan ${jabatan.nama} sudah nonaktif.`, { jabatanKode: "Jabatan nonaktif." });
 
       const bentrok = await tx.penugasanEvent.findUnique({ where: { eventKode_karyawanKode: { eventKode: d.eventKode, karyawanKode: d.karyawanKode } }, select: { id: true } });

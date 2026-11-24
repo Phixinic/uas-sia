@@ -27,6 +27,8 @@ export type BarisKeputusan = {
   dasar: string;
   jumlahKurang: number;
   usulan: number;
+  /** Karyawan inhouse: upah event dibayar lewat Gaji Bulanan (PPh 21 pegawai), bukan slip fee. */
+  inhouse: boolean;
 };
 
 export default function FormKeputusan({ no, baris, saldoKas }: { no: string; baris: BarisKeputusan[]; saldoKas: number }) {
@@ -39,8 +41,10 @@ export default function FormKeputusan({ no, baris, saldoKas }: { no: string; bar
   useFokusGalat(akar, galat);
   const ubah = (i: number, p: Partial<(typeof fee)[number]>) => setFee((f) => f.map((x, j) => (j === i ? { ...x, ...p } : x)));
 
-  const pajak = fee.map((f) => pph21BukanPegawai(Number(f.feeAkhir || 0)));
+  const pajak = fee.map((f, i) => (baris[i].inhouse ? { bruto: Number(f.feeAkhir || 0), dpp: 0, pph21: 0, dibayar: 0 } : pph21BukanPegawai(Number(f.feeAkhir || 0))));
   const total = { fee: pajak.reduce((s, p) => s + p.bruto, 0), pph: pajak.reduce((s, p) => s + p.pph21, 0), dibayar: pajak.reduce((s, p) => s + p.dibayar, 0) };
+  const lewatGaji = fee.reduce((s, f, i) => s + (baris[i].inhouse ? Number(f.feeAkhir || 0) : 0), 0);
+  const jumlahInhouse = baris.filter((b) => b.inhouse).length;
   const totalUsulan = baris.reduce((s, b) => s + b.usulan, 0);
   const diubah = fee.filter((f, i) => Number(f.feeAkhir || 0) !== baris[i].usulan).length;
   const kasKurang = total.dibayar > saldoKas;
@@ -65,12 +69,13 @@ export default function FormKeputusan({ no, baris, saldoKas }: { no: string; bar
                   {b.nama}
                   <Lencana warna={b.peran === "Kapten" ? "teal" : "abu"}>{b.peran}</Lencana>
                   {b.jumlahKurang > 0 && <Lencana warna="merah">{b.jumlahKurang} kurang</Lencana>}
+                  {b.inhouse && <Lencana warna="biru">Inhouse</Lencana>}
                 </div>
                 <div className="text-xs text-slate-500">{b.karyawanKode} · {b.jabatan}</div>
                 <div className="mt-1 text-[13px] text-slate-600">{b.dasar}</div>
                 <div className="mt-1 text-[13px]">Usulan sistem: <span className="angka font-semibold">{rupiah(b.usulan)}</span></div>
               </div>
-              <Bidang label={`Fee akhir ${b.nama}`} htmlFor={`${awalan}-fee-${i}`} galat={gFee} petunjuk={`PPh 21 ${rupiah(pajak[i].pph21)}, dibayar ${rupiah(pajak[i].dibayar)}`}>
+              <Bidang label={`Fee akhir ${b.nama}`} htmlFor={`${awalan}-fee-${i}`} galat={gFee} petunjuk={b.inhouse ? "Dibayar lewat Gaji Bulanan bulan keputusan ini (PPh 21 dihitung di gaji)." : `PPh 21 ${rupiah(pajak[i].pph21)}, dibayar ${rupiah(pajak[i].dibayar)}`}>
                 <IsianRupiah id={`${awalan}-fee-${i}`} nilai={fee[i].feeAkhir} galat={!!gFee} saatUbah={(v) => ubah(i, { feeAkhir: v })} />
               </Bidang>
               {berubah ? (
@@ -87,7 +92,7 @@ export default function FormKeputusan({ no, baris, saldoKas }: { no: string; bar
 
       <dl className="grid grid-cols-2 gap-3 text-sm lg:grid-cols-4">
         <div><dt className="text-xs text-slate-500">Total usulan</dt><dd className="angka font-semibold">{rupiah(totalUsulan)}</dd></div>
-        <div><dt className="text-xs text-slate-500">Total fee akhir (beban)</dt><dd className="angka font-semibold">{rupiah(total.fee)}</dd></div>
+        <div><dt className="text-xs text-slate-500">Total fee akhir</dt><dd className="angka font-semibold">{rupiah(total.fee)}</dd>{lewatGaji > 0 && <dd className="text-xs text-slate-500">{rupiah(lewatGaji)} lewat Gaji Bulanan</dd>}</div>
         <div><dt className="text-xs text-slate-500">PPh 21 (utang)</dt><dd className="angka font-semibold">{rupiah(total.pph)}</dd></div>
         <div><dt className="text-xs text-slate-500">Dibayar dari kas</dt><dd className={`angka font-semibold ${kasKurang ? "text-rose-700" : ""}`}>{rupiah(total.dibayar)}</dd></div>
       </dl>
@@ -113,7 +118,7 @@ export default function FormKeputusan({ no, baris, saldoKas }: { no: string; bar
       <DialogKonfirmasi
         terbuka={buka}
         judul={`Setujui ${no}?`}
-        pesan={`Jurnal umum dibuat: beban fee ${rupiah(total.fee)}, utang PPh 21 ${rupiah(total.pph)}, kas berkurang ${rupiah(total.dibayar)}. ${diubah ? `${diubah} fee berbeda dari usulan. ` : ""}Slip fee dibuat untuk ${baris.length} orang.`}
+        pesan={`${total.fee - lewatGaji > 0 ? `Jurnal umum dibuat untuk crew freelance: beban fee ${rupiah(total.fee - lewatGaji)}, utang PPh 21 ${rupiah(total.pph)}, kas berkurang ${rupiah(total.dibayar)}. ` : ""}${jumlahInhouse ? `Upah event ${jumlahInhouse} karyawan inhouse (${rupiah(lewatGaji)}) dibayar lewat Gaji Bulanan, tanpa jurnal fee. ` : ""}${diubah ? `${diubah} fee berbeda dari usulan. ` : ""}Slip fee dibuat untuk ${baris.length - jumlahInhouse} crew freelance.`}
         labelKonfirmasi="Setujui dan bayar"
         memuat={memuat}
         saatTutup={() => setBuka(false)}

@@ -81,10 +81,10 @@ Peran **Kapten** (crew freelance yang memimpin event) ditolak secara bawaan: `wa
 | `gaji.hitung` | HRD | hitung dan simpan slip, hapus slip draf |
 | `penggajian.ajukan` | HRD | ajukan semua slip draf satu periode |
 | `penggajian.putuskan` | Owner | setujui (jurnal + bayar) atau tolak |
-| `event.kelola` | HRD, Owner | event, sesi, penugasan crew, kehadiran per sesi (hanya selama event berstatus Penilaian) |
+| `event.kelola` | HRD, Owner | event, sesi, penugasan crew (crew freelance, atau karyawan inhouse sebagai crew), kehadiran per sesi (hanya selama event berstatus Penilaian) |
 | `event.nilai` | Kapten, Owner | Kapten menilai kehadiran crew di event miliknya (bukan dirinya, bukan kapten lain); Owner menilai kehadiran kapten |
 | `event.lapor` | Kapten | kirim laporan progres ke Owner (semua kehadiran crew sudah dinilai) |
-| `fee-event.putuskan` | Owner | tentukan fee akhir per orang, setujui (jurnal + slip fee) atau tolak (kembali ke kapten) |
+| `fee-event.putuskan` | Owner | tentukan fee akhir per orang, setujui (crew freelance: jurnal + slip fee; karyawan inhouse: ditandai lewat Gaji Bulanan) atau tolak (kembali ke kapten) |
 | `tarif-event.ubah` | Owner | master Jabatan event: peran (Kapten/Crew), satuan tarif (hari/jam), akun biaya; mengajukan perubahan tarif (versi nominal) |
 | `jurnal-penyesuaian.ajukan` | Admin | ajukan jurnal penyesuaian draf |
 | `jurnal-penyesuaian.putuskan` | Owner | setujui, atau kembalikan jurnal nilai sisa untuk revisi (alasan wajib); setujui atau kembalikan revisi nilai sisa; pembuat atau pengaju tidak boleh menyetujui miliknya sendiri |
@@ -296,6 +296,16 @@ Revisi modul penggajian: sekarang ada dua jenis penggajian. Konsepnya mengikuti 
 - **Asumsi PPh 21 event**: crew freelance diperlakukan sebagai penerima penghasilan bukan pegawai yang tidak berkesinambungan: DPP = 50% x bruto, PPh 21 = 5% x DPP (tarif lapis pertama Pasal 17), tanpa PTKP dan tanpa akumulasi setahun. Rumus pegawai tetap yang sudah ada (`hitungPph21`, disetahunkan dengan biaya jabatan dan PTKP) tidak cocok untuk fee per event, jadi tidak dipakai. Ini simulasi untuk tugas, sama seperti PPh 21 inhouse.
 - **Privasi kapten**: halaman dan dashboard kapten tidak menampilkan tarif, fee, atau angka keuangan; kapten hanya melihat jam dan catatan progres. Pesan galat untuk event milik kapten lain sama dengan event yang tidak ada.
 - **Data contoh** (seed): `EVT-2026-0001` Gathering Tahunan PT Sinar Abadi (4 sesi, kapten Bima Satria + 4 crew, satu penilaian KURANG, laporan `FEE-2026-0001` menunggu Owner, usulan Rp2.255.000) dan `EVT-2026-0002` Wedding Expo Malang (menunggu penilaian kapten Sari Wulandari). Seed fee event tidak membuat jurnal, jadi angka data lama (neraca Oktober, nomor jurnal berikutnya) tidak berubah. Akun contoh: `kapten` (KRY-06) dan `kapten2` (KRY-07).
+
+### Upah event karyawan inhouse (masukan dosen, 25 Nov 2026)
+
+Contoh dosen: karyawan marketing bergaji pokok ikut pameran, lalu menerima gaji dan upah event dalam satu slip.
+
+- **Penugasan**: karyawan INHOUSE boleh ditugaskan di event dengan jabatan event berperan **Crew** (penugasan, kehadiran, penilaian kapten sama dengan crew freelance). Peran Kapten tetap untuk crew freelance karena kapten menilai crew lewat akun kaptennya. Tarif mengikuti jabatan event yang dipilih (versi tarif bulan tanggal selesai event, sama seperti crew). Form penugasan memisahkan pilihan "Crew freelance (slip fee)" dan "Karyawan inhouse (lewat Gaji Bulanan, hanya sebagai crew)".
+- **Keputusan Owner** (`setujuiFeeDalam`, `src/lib/server/keputusan-fee.ts`): baris crew freelance diproses seperti sebelumnya (PPh 21 bukan pegawai, cek kas, jurnal fee, slip fee "Dibayar"). Baris karyawan inhouse tidak dibayar lewat slip fee dan tidak masuk jurnal fee: barisnya tetap tersimpan di `slip_fee` (rumus dan alasan ubah sama) dengan `periode_gaji` terisi, `dpp` = 0, `pph21` = 0, `dibayar` = fee akhir (CHECK `slip_fee_lewat_gaji`). Slip dan tabel menampilkan "Lewat gaji <bulan>". `laporan_fee.total_fee` = semua orang; `total_pph` dan `total_dibayar` = crew freelance saja. Laporan yang hanya berisi karyawan inhouse tidak punya jurnal fee.
+- **Bulan gaji X** = bulan **tanggal keputusan Owner** (`periodeGajiUpah`). Bila gaji karyawan itu di bulan X sudah diajukan atau dibayar, atau periode X tertutup, dipakai bulan berikutnya yang masih terbuka. Alasannya: upah event dibayar lewat gaji yang belum dibayar; memakai bulan event bisa jatuh ke gaji yang sudah dibayar bila Owner memutuskan terlambat. Akibatnya beban upah event diakui di bulan gaji X (bersama jurnal gaji), bukan di bulan event.
+- **Di Gaji Bulanan bulan X**: upah event tampil per event (kode dan nama event), ikut bruto dan PPh 21 pegawai, dan dijurnal ke akun baru **6-240 Biaya Upah Event Karyawan** (biaya variabel). Akun 6-230 tidak dipakai karena namanya "Biaya Fee Crew Event (Freelance)" dan memisahkan pembayaran ke crew bukan pegawai (PPh 21 bukan pegawai) dari upah pegawai tetap memudahkan rekonsiliasi PPh. Lihat "Gaji Bulanan".
+- **Migrasi** `20261125120000_upah_event_inhouse`: kolom `slip_fee.periode_gaji` (FK ke periode), CHECK, indeks, dan akun 6-240, 6-250, 7-120 (hanya di database yang sudah punya bagan akun).
 
 ### Investasi Kas (modal pemilik)
 

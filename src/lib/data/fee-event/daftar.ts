@@ -51,16 +51,16 @@ export async function daftarEvent(): Promise<RingkasEvent[]> {
   });
 }
 
-export type OpsiCrew = { kode: string; nama: string; aktif: boolean };
+export type OpsiCrew = { kode: string; nama: string; aktif: boolean; jenis: "INHOUSE" | "EVENT" };
 export type OpsiJabatanEvent = { kode: string; nama: string; peranEvent: PeranEvent; satuanTarif: SatuanTarif; tarif: number; aktif: boolean };
 
 /**
- * Karyawan berjenis EVENT dan jabatan berkelompok EVENT untuk form penugasan. Tarif = versi yang berlaku di bulan tarif
+ * Karyawan (crew freelance dan karyawan inhouse) dan jabatan berkelompok EVENT untuk form penugasan. Tarif = versi yang berlaku di bulan tarif
  * event (bulan tanggal selesai); 0 bila jabatan belum punya tarif disetujui di bulan itu.
  */
 export async function opsiPenugasan(periodeTarif: string): Promise<{ crew: OpsiCrew[]; jabatan: OpsiJabatanEvent[] }> {
   const [crew, jabatan, peta] = await Promise.all([
-    db.karyawan.findMany({ where: { jenis: "EVENT" }, orderBy: { kode: "asc" }, select: { kode: true, nama: true, aktif: true } }),
+    db.karyawan.findMany({ orderBy: [{ jenis: "desc" }, { kode: "asc" }], select: { kode: true, nama: true, aktif: true, jenis: true } }),
     db.jabatan.findMany({ where: { kelompok: "EVENT" }, orderBy: { kode: "asc" } }),
     muatPetaNominal(db),
   ]);
@@ -162,6 +162,8 @@ export type DataSlipFee = {
   pph21: number;
   dibayar: number;
   dibayarPada: string | null;
+  /** Karyawan inhouse: bulan Gaji Bulanan yang membayar upah event ini. null = crew freelance (dibayar lewat slip fee). */
+  periodeGaji: string | null;
 };
 
 /** Slip fee satu laporan yang disetujui (opsional satu orang saja). */
@@ -200,5 +202,6 @@ export async function slipFeeLaporan(laporanNo: string, karyawanKode?: string): 
     pph21: s.pph21,
     dibayar: s.dibayar,
     dibayarPada: s.laporan.diputuskanPada?.toISOString() ?? null,
+    periodeGaji: s.periodeGajiId,
   }));
 }

@@ -155,7 +155,7 @@ export function FormPenugasan({ awal, alamatKembali, crew, jabatan, punyaKehadir
   return (
     <BingkaiForm
       judul={f.id ? "Ubah penugasan" : "Tugaskan crew"}
-      keterangan={f.id ? "Ganti jabatan untuk mengganti kapten. Bila peran berubah (kapten jadi crew atau sebaliknya), penilaian kehadiran orang ini dihapus." : "Hanya karyawan berjenis Event yang bisa ditugaskan. Satu event boleh punya lebih dari satu kapten."}
+      keterangan={f.id ? "Ganti jabatan untuk mengganti kapten. Bila peran berubah (kapten jadi crew atau sebaliknya), penilaian kehadiran orang ini dihapus." : "Crew freelance (jenis Event) dibayar lewat slip fee. Karyawan inhouse boleh ikut sebagai crew; upah eventnya dibayar lewat Gaji Bulanan. Satu event boleh punya lebih dari satu kapten."}
       akar={akar}
       memuat={memuat}
       alamatKembali={alamatKembali}
@@ -165,7 +165,16 @@ export function FormPenugasan({ awal, alamatKembali, crew, jabatan, punyaKehadir
         <Bidang label="Crew" htmlFor="tg-crew" wajib galat={galat.karyawanKode} petunjuk={punyaKehadiran ? "Orang ini sudah punya kehadiran, jadi tidak bisa diganti." : undefined}>
           <Pilihan id="tg-crew" value={f.karyawanKode} disabled={punyaKehadiran} galat={!!galat.karyawanKode} onChange={(e) => ubah({ karyawanKode: e.target.value })}>
             <option value="">Pilih crew</option>
-            {pilihCrew.map((c) => <option key={c.kode} value={c.kode}>{c.kode} · {c.nama}</option>)}
+            {pilihCrew.filter((c) => c.jenis === "EVENT").length > 0 && (
+              <optgroup label="Crew freelance (slip fee)">
+                {pilihCrew.filter((c) => c.jenis === "EVENT").map((c) => <option key={c.kode} value={c.kode}>{c.kode} · {c.nama}</option>)}
+              </optgroup>
+            )}
+            {pilihCrew.filter((c) => c.jenis === "INHOUSE").length > 0 && (
+              <optgroup label="Karyawan inhouse (lewat Gaji Bulanan, hanya sebagai crew)">
+                {pilihCrew.filter((c) => c.jenis === "INHOUSE").map((c) => <option key={c.kode} value={c.kode}>{c.kode} · {c.nama} (inhouse)</option>)}
+              </optgroup>
+            )}
           </Pilihan>
         </Bidang>
         <Bidang label="Jabatan event" htmlFor="tg-jabatan" wajib galat={galat.jabatanKode}>

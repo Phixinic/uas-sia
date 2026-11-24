@@ -37,6 +37,7 @@ describe.runIf(aktif)("fee event lewat server action", async () => {
   const { muatBahanEvent } = await import("@/lib/data/fee-event/bahan");
   const { saldoAkun, muatJurnalBuku } = await import("@/lib/server/jurnal");
   const { neracaSaldo } = await import("@/lib/inti/buku-besar");
+  const { periodeIni } = await import("@/lib/inti/tanggal");
   const masukSebagai = async (u: string) => {
     const p = await db.pengguna.findUniqueOrThrow({ where: { namaPengguna: u } });
     sesi.pengguna = { id: p.id, namaPengguna: p.namaPengguna, nama: p.nama, peran: p.peran };
@@ -197,7 +198,7 @@ describe.runIf(aktif)("fee event lewat server action", async () => {
     await db.periode.update({ where: { id: "2026-11" }, data: { status: "TERBUKA" } });
   });
 
-  it("HRD mencatat event baru: penugasan hanya karyawan event, sesi di dalam tanggal event, kehadiran hanya orang yang ditugaskan", async () => {
+  it("HRD mencatat event baru: inhouse hanya sebagai crew, sesi di dalam tanggal event, kehadiran hanya orang yang ditugaskan", async () => {
     await masukSebagai("hrd");
     const e = await ev.simpanEvent({ nama: "Uji Event", klien: "", tanggalMulai: "2026-11-25", tanggalSelesai: "2026-11-25" });
     expect(e.ok).toBe(true);
@@ -205,7 +206,10 @@ describe.runIf(aktif)("fee event lewat server action", async () => {
     expect(kode).toBe("EVT-2026-0003");
     expect((await ev.simpanSesi({ eventKode: kode, nama: "Hari H", tanggal: "2026-11-26", jamMulai: "08:00", jamSelesai: "16:00" })).ok).toBe(false);
     expect((await ev.simpanSesi({ eventKode: kode, nama: "Hari H", tanggal: "2026-11-25", jamMulai: "08:00", jamSelesai: "16:00" })).ok).toBe(true);
-    expect((await ev.simpanPenugasan({ eventKode: kode, karyawanKode: "KRY-01", jabatanKode: "JBT-06" })).ok).toBe(false); // inhouse
+    const kaptenInhouse = await ev.simpanPenugasan({ eventKode: kode, karyawanKode: "KRY-01", jabatanKode: "JBT-05" });
+    expect(kaptenInhouse.ok).toBe(false); // inhouse tidak boleh jadi kapten
+    if (!kaptenInhouse.ok) expect(kaptenInhouse.galat).toMatch(/hanya bisa ditugaskan sebagai crew/);
+    expect((await ev.simpanPenugasan({ eventKode: kode, karyawanKode: "KRY-01", jabatanKode: "JBT-06" })).ok).toBe(true); // inhouse sebagai crew
     expect((await ev.simpanPenugasan({ eventKode: kode, karyawanKode: "KRY-08", jabatanKode: "JBT-02" })).ok).toBe(false); // jabatan inhouse
     expect((await ev.simpanPenugasan({ eventKode: kode, karyawanKode: "KRY-08", jabatanKode: "JBT-06" })).ok).toBe(true);
     const s = await db.sesiEvent.findFirstOrThrow({ where: { eventKode: kode } });
@@ -216,6 +220,40 @@ describe.runIf(aktif)("fee event lewat server action", async () => {
     expect((await nilai.kirimLaporan({ eventKode: kode })).ok).toBe(false);
     await masukSebagai("admin");
     expect((await ev.simpanEvent({ nama: "Admin", tanggalMulai: "2026-11-25", tanggalSelesai: "2026-11-25" })).ok).toBe(false);
+  });
+
+  it("upah event karyawan inhouse: tidak masuk slip fee berbayar dan jurnal fee, ditandai lewat gaji bulan keputusan", async () => {
+    const kode = "EVT-2026-0003";
+    await masukSebagai("hrd");
+    expect((await ev.simpanPenugasan({ eventKode: kode, karyawanKode: "KRY-06", jabatanKode: "JBT-05" })).ok).toBe(true);
+    const s = await db.sesiEvent.findFirstOrThrow({ where: { eventKode: kode } });
+    expect((await ev.simpanKehadiran({ sesiId: s.id, karyawanKode: "KRY-01", jamMasuk: "08:00", jamPulang: "14:00" })).ok).toBe(true);
+    expect((await ev.simpanKehadiran({ sesiId: s.id, karyawanKode: "KRY-06", jamMasuk: "08:00", jamPulang: "16:00" })).ok).toBe(true);
+    await masukSebagai("kapten");
+    for (const k of ["KRY-01", "KRY-08"]) {
+      const kh = await db.kehadiranEvent.findFirstOrThrow({ where: { sesiId: s.id, karyawanKode: k } });
+      expect((await nilai.nilaiKehadiran({ id: kh.id, penilaian: "SESUAI" })).ok).toBe(true);
+    }
+    const kirim = await nilai.kirimLaporan({ eventKode: kode });
+    expect(kirim.ok).toBe(true);
+    const no = kirim.ok ? kirim.data!.no : "";
+
+    await masukSebagai("owner");
+    const b = (await muatBahanEvent(db, kode))!;
+    expect(b.orang.find((o) => o.karyawanKode === "KRY-01")?.jenisKaryawan).toBe("INHOUSE");
+    const h = await putus.setujuiFee({ no, fee: b.orang.map((o) => ({ karyawanKode: o.karyawanKode, feeAkhir: o.usulan.fee })) });
+    expect(h.ok).toBe(true);
+    const slip = await db.slipFee.findMany({ where: { laporanNo: no }, orderBy: { karyawanKode: "asc" } });
+    const inhouse = slip.find((x) => x.karyawanKode === "KRY-01")!;
+    // Crew 6 jam x Rp20.000 = Rp120.000, tanpa PPh bukan pegawai, dibayar lewat gaji bulan keputusan (bulan berjalan).
+    expect([inhouse.feeAkhir, inhouse.pph21, inhouse.dpp, inhouse.dibayar, inhouse.periodeGajiId]).toEqual([120_000, 0, 0, 120_000, periodeIni()]);
+    const freelance = slip.filter((x) => x.karyawanKode !== "KRY-01");
+    expect(freelance.every((x) => x.periodeGajiId === null && x.pph21 > 0)).toBe(true);
+    const lap = await db.laporanFee.findUniqueOrThrow({ where: { no }, include: { jurnal: { include: { detail: true } } } });
+    const brutoFreelance = freelance.reduce((t, x) => t + x.feeAkhir, 0);
+    expect(lap.jurnal?.detail.find((d) => d.akunKode === "6-230")?.debit).toBe(brutoFreelance);
+    expect(lap.totalDibayar).toBe(freelance.reduce((t, x) => t + x.dibayar, 0));
+    expect(lap.totalFee).toBe(brutoFreelance + 120_000);
   });
 });
 

@@ -1,6 +1,7 @@
 /*
  * Data contoh fee event, dipakai seed.ts (database kosong) dan tambah-contoh-fee-event.ts (database yang sudah berisi).
  */
+import { AKUN_GAJI_BULANAN } from "../src/lib/inti/akun";
 import type { StatusPtkp } from "../src/generated/prisma/enums";
 import { hashKataSandi } from "../src/lib/server/kata-sandi";
 import type { DbAtauTx } from "../src/lib/server/db";
@@ -25,6 +26,8 @@ export const PENGGUNA_KAPTEN: { namaPengguna: string; nama: string; karyawanKode
 export async function seedFeeEvent(db: DbAtauTx, idPeran: Record<string, number>, sandiKapten: Record<string, string> = {}) {
   const hrd = idPeran.hrd;
   await db.akun.upsert({ where: { kode: "6-230" }, create: { kode: "6-230", nama: "Biaya Fee Crew Event (Freelance)", tipe: "BEBAN", saldoNormal: "D" }, update: {} });
+  // Akun Gaji Bulanan (sama dengan migrasi 20261125120000_upah_event_inhouse).
+  for (const a of AKUN_GAJI_BULANAN) await db.akun.upsert({ where: { kode: a.kode }, create: a, update: {} });
   await db.jabatan.createMany({
     data: [
       { kode: "JBT-05", nama: "Kapten Event", akunBebanKode: "6-230", kelompok: "EVENT", peranEvent: "KAPTEN", satuanTarif: "HARI" },

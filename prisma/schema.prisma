@@ -332,6 +332,7 @@ model Periode {
   settingGaji  SettingGaji[]
   /// Versi nominal master yang mulai berlaku di periode ini.
   versiNominal VersiNominal[]
+  upahEvent    SlipFee[]
 
   @@index([tahun, bulan])
   @@map("periode")
@@ -1184,15 +1185,20 @@ model SlipFee {
   dpp            Int
   pph21          Int
   dibayar        Int
+  /// Karyawan inhouse: upah event dibayar lewat Gaji Bulanan periode ini (tanpa PPh bukan pegawai dan tanpa jurnal fee).
+  /// Kosong = crew freelance yang dibayar lewat slip fee dan jurnal fee event.
+  periodeGajiId  String?     @map("periode_gaji")
 
-  laporan    LaporanFee    @relation(fields: [laporanNo], references: [no])
-  event      Event         @relation(fields: [eventKode], references: [kode])
-  karyawan   Karyawan      @relation(fields: [karyawanKode], references: [kode])
-  jabatan    Jabatan       @relation(fields: [jabatanKode], references: [kode])
-  akunBeban  Akun          @relation(fields: [akunBebanKode], references: [kode])
-  versiTarif VersiNominal? @relation(fields: [versiTarifKode], references: [kode])
+  laporan     LaporanFee    @relation(fields: [laporanNo], references: [no])
+  event       Event         @relation(fields: [eventKode], references: [kode])
+  karyawan    Karyawan      @relation(fields: [karyawanKode], references: [kode])
+  jabatan     Jabatan       @relation(fields: [jabatanKode], references: [kode])
+  akunBeban   Akun          @relation(fields: [akunBebanKode], references: [kode])
+  versiTarif  VersiNominal? @relation(fields: [versiTarifKode], references: [kode])
+  periodeGaji Periode?      @relation(fields: [periodeGajiId], references: [id])
 
   @@unique([eventKode, karyawanKode])
   @@index([laporanNo])
+  @@index([periodeGajiId, karyawanKode])
   @@map("slip_fee")
 }

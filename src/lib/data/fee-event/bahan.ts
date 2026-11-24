@@ -37,6 +37,8 @@ export type OrangBahan = {
   nama: string;
   bank: string;
   noRek: string;
+  /** INHOUSE = upah event dibayar lewat Gaji Bulanan; EVENT = crew freelance lewat slip fee. */
+  jenisKaryawan: "INHOUSE" | "EVENT";
   jabatanKode: string;
   jabatan: string;
   peranEvent: KodePeranEvent;
@@ -112,6 +114,7 @@ export async function muatBahanEvent(klien: DbAtauTx, kode: string): Promise<Bah
         nama: p.karyawan.nama,
         bank: p.karyawan.bank,
         noRek: p.karyawan.noRek,
+        jenisKaryawan: p.karyawan.jenis,
         jabatanKode: p.jabatanKode,
         jabatan: p.jabatan.nama,
         peranEvent: p.jabatan.peranEvent as KodePeranEvent,
