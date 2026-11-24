@@ -30,7 +30,7 @@ const ARTI: Record<JurnalPersetujuan["status"], (s: Sumber) => string> = {
   DITOLAK: (s) =>
     s === "penyusutan"
       ? "Ditolak (riwayat dari sebelum penyusutan diproses otomatis). Jadwalnya dibuka lagi saat itu dan diproses ulang."
-      : "Ditolak. Form nilai sisa periode ini dibuka lagi supaya Admin bisa menginput ulang.",
+      : "Dikembalikan Owner untuk revisi. Form nilai sisa terbuka lagi berisi nilai yang diajukan; Admin mengubahnya lalu mengajukan ulang.",
 };
 
 /** Siapa yang ditunggu, untuk peran yang tidak punya tombol pada status ini. */
@@ -47,7 +47,7 @@ export function JejakJurnal({ j, sumber }: { j: JurnalPersetujuan; sumber?: Sumb
   }
   const baris: ReactNode[] = [`Dibuat ${j.dibuatOleh}, ${labelWaktu(j.dibuatPada)}`];
   if (j.diajukanPada) baris.push(`Diajukan ${j.diajukanOleh ? `${j.diajukanOleh}, ` : ""}${labelWaktu(j.diajukanPada)}`);
-  if (j.diputuskanPada) baris.push(`${j.status === "DITOLAK" ? "Ditolak" : "Disetujui"} ${j.diputuskanOleh ?? ""}, ${labelWaktu(j.diputuskanPada)}`);
+  if (j.diputuskanPada) baris.push(`${j.status === "DITOLAK" ? (sumber === "opname" ? "Dikembalikan" : "Ditolak") : "Disetujui"} ${j.diputuskanOleh ?? ""}, ${labelWaktu(j.diputuskanPada)}`);
   return (
     <ul className="space-y-0.5 text-xs text-slate-500">
       {baris.map((b, i) => <li key={i} className="whitespace-nowrap">{b}</li>)}
@@ -60,7 +60,7 @@ function Tombol({ j, penggunaId, peran, sumber }: { j: JurnalPersetujuan; penggu
   const tunggu = menunggu(j, peran);
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
-      <AksiJurnal no={j.no} status={j.status} dibuatOlehId={j.dibuatOlehId} penggunaId={penggunaId} peran={peran} />
+      <AksiJurnal no={j.no} status={j.status} dibuatOlehId={j.dibuatOlehId} penggunaId={penggunaId} peran={peran} sumber={sumber === "opname" ? "OPNAME" : "PENYUSUTAN"} />
       {tunggu && <span className="text-xs text-slate-500">{tunggu}</span>}
     </div>
   );
@@ -73,7 +73,7 @@ export function PanelStatusJurnal({ j, sumber, penggunaId, peran, judul }: { j: 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
           <h2 className="judul-kartu flex flex-wrap items-center gap-2">
-            {judul} <span className="kode">{j.no}</span> <LencanaStatus jenis="persetujuan" status={j.status} />
+            {judul} <span className="kode">{j.no}</span> <LencanaStatus jenis={sumber === "opname" ? "revisi" : "persetujuan"} status={j.status} />
           </h2>
           <p className="text-[13px] text-slate-700">{ARTI[j.status](sumber)} Total {rupiah(j.total)}.</p>
           <JejakJurnal j={j} sumber={sumber} />
@@ -82,7 +82,7 @@ export function PanelStatusJurnal({ j, sumber, penggunaId, peran, judul }: { j: 
       </div>
       {j.status === "DITOLAK" && j.alasanTolak && (
         <div className="mt-3">
-          <Peringatan jenis="galat"><b>Alasan ditolak:</b> {j.alasanTolak}</Peringatan>
+          <Peringatan jenis="galat"><b>{sumber === "opname" ? "Alasan dikembalikan:" : "Alasan ditolak:"}</b> {j.alasanTolak}</Peringatan>
         </div>
       )}
     </Kartu>
@@ -132,11 +132,12 @@ export function TabelRiwayatJurnal({ riwayat, sumber, alamat, penggunaId, peran,
                 <td>
                   <div className="kode">{j.no}</div>
                   <Link className="text-xs whitespace-nowrap hover:underline" href={denganPeriode(alamat, j.periode)}>{labelPeriode(j.periode)}</Link>
+                  {j.pembalikDariNo && <div className="text-[11px] text-slate-500">Pembalik {j.pembalikDariNo}</div>}
                 </td>
                 {kolomTambahan && <td className="kolom-angka">{kolomTambahan.isi(j)}</td>}
                 <td className="kolom-angka"><Rupiah nilai={j.total} polos /></td>
                 <td>
-                  <LencanaStatus jenis="persetujuan" status={j.status} />
+                  <LencanaStatus jenis={sumber === "opname" ? "revisi" : "persetujuan"} status={j.status} />
                   {j.alasanTolak && j.status === "DITOLAK" && <div className="mt-0.5 max-w-56 text-[11px] text-rose-600">Alasan: {j.alasanTolak}</div>}
                 </td>
                 <td><JejakJurnal j={j} sumber={sumber} /></td>

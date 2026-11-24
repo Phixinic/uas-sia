@@ -54,11 +54,12 @@ export async function tolakJurnalPenyesuaian(input: unknown): Promise<HasilAksi>
     const pengguna = await wajibPeran(IZIN["jurnal-penyesuaian.putuskan"]);
     const { no, alasan } = validasi(skemaTolakJurnal, input);
     await pastikanPenyesuaian(no);
-    await db.$transaction(async (tx) => {
+    const sumber = await db.$transaction(async (tx) => {
       await kunciJurnal(tx, no);
       await tolakJurnal(tx, no, pengguna.id, alasan);
+      return (await tx.jurnal.findUnique({ where: { no }, select: { sumberTipe: true } }))?.sumberTipe;
     });
     segarkan();
-    return { pesan: `${no} ditolak. Dokumen sumbernya dibuka lagi supaya Admin bisa memproses ulang.` };
+    return { pesan: sumber === "OPNAME" ? `${no} dikembalikan ke Admin untuk revisi.` : `${no} ditolak. Dokumen sumbernya dibuka lagi supaya Admin bisa memproses ulang.` };
   });
 }

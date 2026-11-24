@@ -99,7 +99,9 @@ describe.runIf(aktif)("persetujuan jurnal penyusutan dan nilai sisa di halamanny
     expect(d.jurnalIni?.no).toBe(j1.no);
     expect(d.jurnalIni?.status).toBe("DITOLAK");
     expect(d.jurnalIni?.alasanTolak).toBe("Hitung ulang gudang");
-    expect(d.opname?.status).toBe("DITOLAK");
+    // Dikembalikan untuk revisi: opname kembali draf berisi nilai yang diajukan, alasannya ikut.
+    expect(d.opname?.status).toBe("DRAFT");
+    expect(d.opname?.alasanTolak).toBe("Hitung ulang gudang");
 
     await masukSebagai("admin");
     expect((await opname.simpanNilaiSisa({ periode: P, nilai })).ok).toBe(true);
@@ -113,7 +115,7 @@ describe.runIf(aktif)("persetujuan jurnal penyusutan dan nilai sisa di halamanny
 describe("jurnalPeriode: jurnal yang mewakili satu periode", async () => {
   const { jurnalPeriode } = await import("@/lib/data/konversi/persetujuan");
   const j = (no: string, status: "DRAFT" | "DIAJUKAN" | "DISETUJUI" | "DITOLAK", periode = "2026-11") =>
-    ({ no, periode, status, total: 1, alasanTolak: null, dibuatOlehId: 1, dibuatOleh: "A", dibuatPada: "", diajukanOleh: null, diajukanPada: null, diputuskanOleh: null, diputuskanOlehId: null, diputuskanPada: null });
+    ({ no, periode, status, total: 1, alasanTolak: null, dibuatOlehId: 1, dibuatOleh: "A", dibuatPada: "", diajukanOleh: null, diajukanPada: null, diputuskanOleh: null, diputuskanOlehId: null, diputuskanPada: null, pembalikDariNo: null });
   it("penolakan terbaru tidak tertutup persetujuan lama (kasus produksi: JP-0003 disetujui, JP-0006 ditolak)", () => {
     expect(jurnalPeriode([j("JP-2026-0006", "DITOLAK"), j("JP-2026-0003", "DISETUJUI")], "2026-11")?.no).toBe("JP-2026-0006");
   });

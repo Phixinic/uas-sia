@@ -97,18 +97,28 @@ describe.runIf(aktif)("siklus konversi lewat server action", async () => {
       expect(o.jurnal?.status).toBe("DRAFT");
       expect(o.jurnal?.tanggal.toISOString().slice(0, 10)).toBe("2026-11-30");
       expect(o.jurnal?.detail.map((d) => [d.akunKode, d.debit, d.kredit])).toEqual([["6-120", total, 0], ["1-140", 0, total]]);
-      expect((await opname.simpanNilaiSisa({ periode: "2026-11", nilai: semua(saldo, () => 0) })).ok).toBe(false);
+      // Masih draf: Admin boleh mengubah; jurnal draf yang sama diganti isinya (nomor tetap).
+      const ubah = semua(saldo, (x) => Math.floor(x / 4));
+      expect((await opname.simpanNilaiSisa({ periode: "2026-11", nilai: ubah })).ok).toBe(true);
+      const o2 = await db.opname.findUniqueOrThrow({ where: { no: "OPN-2026-11" }, include: { jurnal: { include: { detail: true } } } });
+      const total2 = saldo.reduce((s, x) => s + x.saldoBuku - Math.floor(x.saldoBuku / 4), 0);
+      expect([o2.status, o2.totalBeban, o2.jurnalNo]).toEqual(["DRAFT", total2, o.jurnalNo]);
+      expect(o2.jurnal?.detail.map((d) => [d.akunKode, d.debit, d.kredit])).toEqual([["6-120", total2, 0], ["1-140", 0, total2]]);
+      expect((await opname.simpanNilaiSisa({ periode: "2026-11", nilai: semua(saldo, (x) => Math.floor(x / 2)) })).ok).toBe(true);
       expect((await neraca()).seimbang).toBe(true);
     });
 
-    it("ajukan lalu ditolak Owner: input ulang memakai baris OPN yang sama", async () => {
+    it("ajukan lalu dikembalikan Owner untuk revisi: opname kembali draf, input ulang memakai baris OPN yang sama", async () => {
       await masukSebagai("admin");
       const j = (await db.opname.findUniqueOrThrow({ where: { no: "OPN-2026-11" } })).jurnalNo!;
       expect((await susut.ajukanJurnalKonversi({ no: j })).ok).toBe(true);
       await masukSebagai("hrd");
       expect((await susut.ajukanJurnalKonversi({ no: j })).ok).toBe(false);
+      await masukSebagai("admin");
+      expect((await opname.simpanNilaiSisa({ periode: "2026-11", nilai: semua(await saldoBukuLkp(db, "2026-11"), () => 0) })).ok).toBe(false); // sedang diajukan
       await putuskan(j, false, "Hitung ulang gaffer tape");
-      expect((await db.opname.findUniqueOrThrow({ where: { no: "OPN-2026-11" } })).status).toBe("DITOLAK");
+      const kembali = await db.opname.findUniqueOrThrow({ where: { no: "OPN-2026-11" }, include: { detail: true } });
+      expect([kembali.status, kembali.jurnalNo, kembali.alasanTolak, kembali.detail.length]).toEqual(["DRAFT", null, "Hitung ulang gaffer tape", 5]);
 
       await masukSebagai("admin");
       const saldo = await saldoBukuLkp(db, "2026-11");

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Send, X } from "lucide-react";
+import { Check, Send, Undo2, X } from "lucide-react";
 import { ajukanJurnalPenyesuaian, setujuiJurnalPenyesuaian, tolakJurnalPenyesuaian } from "@/lib/aksi/pelaporan/jurnal";
 import TombolAksi from "@/komponen/ui/TombolAksi";
 import { boleh, type Peran } from "@/lib/peran";
@@ -33,9 +33,15 @@ export default function AksiJurnal({ no, status, dibuatOlehId, penggunaId, peran
         <TombolAksi aksi={() => setujuiJurnalPenyesuaian({ no })} varian="utama" ikon={<Check className="size-4" />} konfirmasi={{ judul: `Setujui ${no}?`, pesan: "Jurnal langsung masuk buku besar dan neraca saldo." }}>
           Setujui
         </TombolAksi>
-        <TombolAksi aksi={(alasan) => tolakJurnalPenyesuaian({ no, alasan })} varian="bahaya" ikon={<X className="size-4" />} konfirmasi={{ judul: `Tolak ${no}`, pesan: "Dokumen sumbernya dibuka lagi supaya Admin bisa memproses ulang.", perluAlasan: true, labelAlasan: "Alasan penolakan", labelKonfirmasi: "Tolak jurnal" }}>
-          Tolak
-        </TombolAksi>
+        {sumber === "OPNAME" ? (
+          <TombolAksi aksi={(alasan) => tolakJurnalPenyesuaian({ no, alasan })} varian="bahaya" ikon={<Undo2 className="size-4" />} konfirmasi={{ judul: `Kembalikan ${no} untuk revisi`, pesan: "Admin melihat alasanmu, mengubah nilai sisanya, lalu mengajukan ulang. Jurnal ini tetap tercatat di riwayat.", perluAlasan: true, labelAlasan: "Alasan dikembalikan", labelKonfirmasi: "Kembalikan untuk revisi" }}>
+            Kembalikan untuk revisi
+          </TombolAksi>
+        ) : (
+          <TombolAksi aksi={(alasan) => tolakJurnalPenyesuaian({ no, alasan })} varian="bahaya" ikon={<X className="size-4" />} konfirmasi={{ judul: `Tolak ${no}`, pesan: "Dokumen sumbernya dibuka lagi supaya Admin bisa memproses ulang.", perluAlasan: true, labelAlasan: "Alasan penolakan", labelKonfirmasi: "Tolak jurnal" }}>
+            Tolak
+          </TombolAksi>
+        )}
       </>
     );
   }

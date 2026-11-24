@@ -260,7 +260,9 @@ async function isiNilaiSisa(p: Page, pecahan: number) {
   }
   await foto(p, "admin", "nilai-sisa-terisi");
   await p.getByRole("button", { name: "Simpan nilai sisa" }).click();
-  await expect(p.getByText("Nilai sisa November 2026 sudah diinput")).toBeVisible();
+  // Tersimpan sebagai draf: form tetap bisa diubah dan panel jurnal menawarkan Ajukan ke Owner.
+  await expect(p.getByText("Ubah nilai sisa (draf)")).toBeVisible();
+  await expect(p.getByRole("region", { name: "Jurnal biaya perlengkapan November 2026" })).toContainText("Draf");
 }
 
 test("3a. Admin input nilai sisa November", async () => {
@@ -320,21 +322,28 @@ test("3c. Admin mengajukan jurnal nilai sisa ke Owner dari menu Jurnal Penyesuai
   await expect(p.getByRole("button", { name: "Ajukan ke Owner" })).toHaveCount(0);
 });
 
-test("3d. Owner menolak jurnal nilai sisa (alasan wajib) di menu Jurnal Penyesuaian", async () => {
+test("3d. Owner mengembalikan jurnal nilai sisa untuk revisi (alasan wajib) di menu Jurnal Penyesuaian", async () => {
   const p = sesi.owner.page;
   await bukaHalaman(p, "/pelaporan/jurnal-penyesuaian?status=DIAJUKAN");
   const opname = kartu(p, "Biaya perlengkapan November 2026");
-  await opname.getByRole("button", { name: "Tolak" }).click();
+  await expect(opname.getByRole("button", { name: "Tolak" })).toHaveCount(0);
+  await opname.getByRole("button", { name: "Kembalikan untuk revisi" }).click();
   // Alasan kosong tidak bisa dikirim.
   await expect(p.getByRole("dialog").locator('button[type="submit"]')).toBeDisabled();
   await konfirmasi(p, "Hasil hitung fisik terlalu rendah, hitung ulang");
   await bukaHalaman(p, "/pelaporan/jurnal-penyesuaian?status=DITOLAK");
   await expect(p.getByText("Hasil hitung fisik terlalu rendah")).toBeVisible();
-  // Alasan yang sama terbaca di halaman Nilai Sisa beserta status Ditolak.
+  // Alasan yang sama terbaca di halaman Nilai Sisa beserta status Dikembalikan.
   await bukaHalaman(p, "/konversi/nilai-sisa?periode=2026-11");
   const panel = p.getByRole("region", { name: "Jurnal biaya perlengkapan November 2026" });
-  await expect(panel).toContainText("Ditolak");
+  await expect(panel).toContainText("Dikembalikan");
   await expect(panel).toContainText("Hasil hitung fisik terlalu rendah");
+  // Admin melihat form yang sudah terisi nilai yang diajukan, beserta alasannya.
+  const pa = sesi.admin.page;
+  await bukaHalaman(pa, "/konversi/nilai-sisa?periode=2026-11");
+  await expect(pa.getByText("Dikembalikan Owner untuk revisi:").first()).toBeVisible();
+  const isian = pa.locator("table[aria-label='Hitung fisik perlengkapan'] tbody tr").first().locator("input");
+  await expect(isian).not.toHaveValue("");
 });
 
 test("3e. Admin input ulang nilai sisa, lalu Owner menyetujui jurnalnya", async () => {
@@ -350,6 +359,39 @@ test("3e. Admin input ulang nilai sisa, lalu Owner menyetujui jurnalnya", async 
   await bukaHalaman(po, "/pelaporan/jurnal-penyesuaian?status=DISETUJUI");
   await expect(po.getByText("Biaya perlengkapan November 2026").first()).toBeVisible();
   await expect(po.getByText("Penyusutan peralatan November 2026").first()).toBeVisible();
+});
+
+test("3f. Revisi sesudah disetujui: Admin mengajukan, Owner mengembalikan, Admin mengajukan ulang, Owner menyetujui", async () => {
+  const pa = sesi.admin.page;
+  const po = sesi.owner.page;
+  const ajukanRevisi = async (pecahan: number, alasan: string) => {
+    await bukaHalaman(pa, "/konversi/nilai-sisa?bulan=11&tahun=2026");
+    await pa.getByRole("link", { name: "Ajukan revisi" }).click();
+    await expect(pa.getByText("Revisi nilai sisa · November 2026")).toBeVisible();
+    const rows = pa.locator("table[aria-label='Hitung fisik perlengkapan'] tbody tr");
+    const saldo = angkaDari(await rows.first().locator("td").nth(2).innerText());
+    await rows.first().locator("input").fill(String(Math.floor(saldo * pecahan)));
+    await expect(pa.getByRole("button", { name: "Ajukan revisi ke Owner" })).toBeDisabled();
+    await pa.locator("#alasan").fill(alasan);
+    await pa.getByRole("button", { name: "Ajukan revisi ke Owner" }).click();
+    await expect(pa.getByRole("region", { name: /^Revisi OPN-2026-11-R/ })).toContainText("Menunggu Owner");
+  };
+  await ajukanRevisi(0.55, "Satu dus lakban terlewat");
+  await bukaHalaman(po, "/konversi/nilai-sisa?bulan=11&tahun=2026");
+  const kartuR1 = po.getByRole("region", { name: "Revisi OPN-2026-11-R1" });
+  await kartuR1.getByRole("button", { name: "Kembalikan untuk revisi" }).click();
+  await konfirmasi(po, "Sertakan foto hitung ulang");
+  await expect(po.getByRole("region", { name: "Riwayat versi nilai sisa" })).toContainText("Sertakan foto hitung ulang");
+
+  await ajukanRevisi(0.6, "Hitung ulang dengan foto");
+  await bukaHalaman(po, "/konversi/nilai-sisa?bulan=11&tahun=2026");
+  await po.getByRole("region", { name: "Revisi OPN-2026-11-R2" }).getByRole("button", { name: "Setujui revisi" }).click();
+  await konfirmasi(po);
+  const riwayat = po.getByRole("region", { name: "Riwayat versi nilai sisa" });
+  await expect(riwayat.getByRole("row", { name: /OPN-2026-11-R2/ })).toContainText("Disetujui");
+  await expect(riwayat.getByRole("row", { name: /OPN-2026-11-R2/ })).toContainText("Pembalik");
+  await expect(riwayat.getByRole("row", { name: /OPN-2026-11-R1/ })).toContainText("Dikembalikan");
+  await foto(po, "owner", "nilai-sisa-revisi");
 });
 
 /* ------------------------------------------------------------------ 4. Pelepasan */

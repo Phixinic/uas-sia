@@ -37,7 +37,7 @@ tests/                          vitest: tes inti (tanpa DB) dan tes integrasi (U
 | `/modal/investasi-kas` | Investasi Kas: setoran modal pemilik berupa kas dan ringkasan "Dari mana kas dan modal" (`?form=baru`, `?bulan=11&tahun=2026` atau `?tahun=semua`). Hanya Admin dan Owner | Modal |
 | `/konversi/pembelian-peralatan` | Pembelian Peralatan (**sudah jadi, pola rujukan**) | Konversi |
 | `/konversi/pembelian-perlengkapan` | Pembelian Perlengkapan (sudah jadi, komponen sama) | Konversi |
-| `/konversi/nilai-sisa` | Nilai Sisa Perlengkapan (opname) | Konversi |
+| `/konversi/nilai-sisa` | Nilai Sisa Perlengkapan (opname): form hitung fisik (draf bisa diubah, termasuk yang dikembalikan Owner), panel jurnal, `?revisi=baru` form revisi sesudah disetujui, kartu revisi menunggu Owner, Riwayat versi | Konversi |
 | `/konversi/penyusutan` | Proses Penyusutan: pilih bulan, pratinjau beban per aset, tombol "Proses penyusutan" (jurnal langsung disetujui), panel status jurnal periode ini, riwayat proses. Tanpa tombol ajukan, setujui, atau tolak | Konversi |
 | `/konversi/kartu-aset` | Kartu Aset (`?aset=AST-0001` membuka rinciannya) | Konversi |
 | `/konversi/pelepasan` | Pelepasan Peralatan | Konversi |
@@ -73,7 +73,7 @@ Peran **Kapten** (crew freelance yang memimpin event) ditolak secara bawaan: `wa
 | `pembelian.kelola-draf` | Admin | buat, ubah, hapus draf pembelian |
 | `pembelian.posting` | Admin, Owner | posting draf |
 | `pembelian.balik` | Owner | balik pembelian terposting (jurnal pembalik, alasan wajib) |
-| `nilai-sisa.input` | Admin | input nilai sisa perlengkapan |
+| `nilai-sisa.input` | Admin | input dan ubah draf nilai sisa perlengkapan, ajukan revisi sesudah disetujui |
 | `penyusutan.proses` | Admin | proses penyusutan satu periode: jurnal penyesuaian langsung DISETUJUI (tanpa keputusan Owner) |
 | `pelepasan.ajukan` | Admin | ajukan pelepasan |
 | `pelepasan.putuskan` | Owner | setujui atau tolak pelepasan (alasan wajib saat tolak) |
@@ -87,7 +87,7 @@ Peran **Kapten** (crew freelance yang memimpin event) ditolak secara bawaan: `wa
 | `fee-event.putuskan` | Owner | tentukan fee akhir per orang, setujui (jurnal + slip fee) atau tolak (kembali ke kapten) |
 | `tarif-event.ubah` | Owner | master Jabatan event: peran (Kapten/Crew), satuan tarif (hari/jam), akun biaya; mengajukan perubahan tarif (versi nominal) |
 | `jurnal-penyesuaian.ajukan` | Admin | ajukan jurnal penyesuaian draf |
-| `jurnal-penyesuaian.putuskan` | Owner | setujui atau tolak; pembuat tidak boleh menyetujui jurnalnya sendiri |
+| `jurnal-penyesuaian.putuskan` | Owner | setujui, atau kembalikan jurnal nilai sisa untuk revisi (alasan wajib); setujui atau kembalikan revisi nilai sisa; pembuat atau pengaju tidak boleh menyetujui miliknya sendiri |
 | `periode.kunci` | Owner | tutup periode (mengunci periode, tanpa jurnal penutup) dan buka kunci periode (alasan wajib saat buka); berurutan: kunci dari periode paling lama, buka dari periode terkunci paling akhir |
 | `master-konversi.ubah` | Admin, Owner | tambah/ubah supplier, peralatan, perlengkapan |
 | `master-konversi.tambah-cepat` | Admin | tambah supplier/barang langsung dari form pembelian (extend) |
@@ -110,9 +110,10 @@ Enum `StatusPersetujuan` (DRAFT, DIAJUKAN, DISETUJUI, DITOLAK) dipakai jurnal, p
 | Investasi Kas | dibuat DIAJUKAN oleh Admin atau Owner (periode tanggal setoran harus terbuka) → Owner DISETUJUI (jurnal umum DISETUJUI bertanggal setoran, Dr 1-110 Kas, Kr 3-110 Modal Pemilik, sumber `INVESTASI_KAS`, periode harus terbuka) / DITOLAK (alasan wajib, tanpa jurnal) |
 | Pembelian | DRAFT → (posting Admin/Owner) DISETUJUI → (balik Owner) DIBALIK |
 | Jurnal penyusutan | dibuat langsung DISETUJUI saat Admin memproses (tidak bisa diajukan atau ditolak; `PESAN_PENYUSUTAN_OTOMATIS`) |
-| Jurnal penyesuaian nilai sisa (opname) | dibuat DRAFT → Admin ajukan DIAJUKAN → Owner DISETUJUI / DITOLAK |
+| Jurnal penyesuaian nilai sisa (opname) | dibuat DRAFT (Admin boleh mengubah isinya) → Admin ajukan DIAJUKAN → Owner DISETUJUI / dikembalikan untuk revisi (jurnal DITOLAK dengan alasan, tampil "Dikembalikan"; opname kembali DRAFT) |
+| Revisi nilai sisa (`revisi_opname`) | dibuat DIAJUKAN oleh Admin (opname DISETUJUI, periode terbuka, belum ada nilai sisa bulan sesudahnya, alasan wajib) → Owner DISETUJUI (jurnal lama dibalik, jurnal baru dibuat) / DITOLAK = dikembalikan dengan alasan (Admin mengajukan revisi baru) |
 | Jurnal otomatis (pembelian, pelepasan, penggajian, fee event, investasi kas, pembalik, saldo awal) | dibuat langsung DISETUJUI |
-| Opname | ikut status jurnalnya; total beban 0 = langsung DISETUJUI tanpa jurnal |
+| Opname | ikut status jurnalnya; total beban 0 = langsung DISETUJUI tanpa jurnal; dikembalikan Owner = DRAFT tanpa jurnal dengan `alasan_tolak`; DITOLAK hanya data lama (masih bisa diinput ulang) |
 | Pelepasan | dibuat DIAJUKAN → Owner DISETUJUI (jurnal umum dibuat, aset DILEPAS, jadwal yang belum dijurnal dihapus) / DITOLAK |
 | Setting gaji | dibuat DIAJUKAN oleh HRD atau Owner (bulan berlaku harus periode terbuka) → Owner DISETUJUI (tanpa jurnal, berlaku mulai bulan itu) / DITOLAK (alasan wajib). Baris tidak pernah ditimpa |
 | Versi nominal | dibuat DIAJUKAN oleh HRD atau Owner (tarif event hanya Owner; bulan berlaku harus periode terbuka) → Owner DISETUJUI (tanpa jurnal, berlaku mulai bulan itu) / DITOLAK (alasan wajib). Baris tidak pernah ditimpa |
@@ -253,6 +254,21 @@ Kata dosen: "alat tidak bisa ditolak". Beban penyusutan dihitung dari jadwal ase
 - **Tanpa tolak**: tombol Ajukan, Setujui, dan Tolak untuk jurnal penyusutan dihapus dari halaman Penyusutan dan Jurnal Penyesuaian (`AksiJurnal` tidak menampilkan apa pun untuk sumber `PENYUSUTAN`). `ajukanJurnal` dan `tolakJurnal` menolak jurnal penyusutan dengan `PESAN_PENYUSUTAN_OTOMATIS`. Jurnal penyusutan lama yang berstatus DITOLAK tetap terbaca sebagai riwayat.
 - **Migrasi** `20261125090000_penyusutan_otomatis`: jurnal penyusutan lama yang masih DRAFT atau DIAJUKAN disetujui (penyetuju = pembuatnya), karena jalannya di aplikasi sudah tidak ada. Debit, kredit, nomor, dan tanggal tidak berubah.
 - **Peringatan**: dashboard, Buku Besar, dan Neraca Saldo menampilkan `PeringatanPenyusutan` bila ada bulan sampai periode laporan yang jadwal penyusutannya belum diproses (`bulanPenyusutanBelum`), dengan tautan ke bulan paling lama. Kartu dashboard bernama "Beban penyusutan" (dari jurnal penyusutan yang sudah diproses).
+
+### Revisi nilai sisa perlengkapan (masukan dosen, 25 Nov 2026)
+
+Kata dosen: "perlengkapan bisa direvisi". Logika di `src/lib/server/nilai-sisa.ts` (dipakai server action dan seed).
+
+- **Sebelum disetujui**: Admin menyimpan hasil hitung fisik (`simpanNilaiSisaDalam`): opname DRAFT dan jurnal penyesuaian DRAFT. Selama masih draf Admin boleh mengubah nilainya; jurnal draf yang sama diganti isinya (nomor tetap), atau ditandai DITOLAK "Diganti input ulang tanpa biaya perlengkapan" bila biayanya menjadi 0 (tidak dihapus supaya penghitung nomor tetap cocok). Admin lalu mengajukan. Owner menyetujui atau menekan **Kembalikan untuk revisi** (alasan wajib) di halaman Nilai Sisa atau Jurnal Penyesuaian. Kembalikan memakai `tolakJurnal`: jurnal yang diajukan menjadi DITOLAK dengan alasan (label "Dikembalikan", log `jurnal.kembalikan`), opname kembali DRAFT tanpa jurnal dengan `alasan_tolak`, form terbuka berisi nilai yang diajukan. Admin mengubah, menyimpan (jurnal draf baru), lalu mengajukan ulang. Alasan tetap terlihat di riwayat jurnal. Tolak final untuk nilai sisa tidak ada lagi.
+- **Sesudah disetujui**: selama periodenya terbuka, tidak ada revisi yang menunggu, dan belum ada nilai sisa bulan sesudahnya (`tahanRevisi`), Admin menekan "Ajukan revisi", mengubah nilai sisa (saldo buku tetap) dan menulis alasan. Pengajuan disimpan di `revisi_opname` (`OPN-2026-11-R1`, `ke` berurutan per opname) dan `detail_revisi_opname` (saldo buku, nilai sisa lama, nilai sisa usulan). Nilai yang berlaku belum berubah. Owner:
+  - **Setujui revisi** (`setujuiRevisiDalam`): jurnal opname yang berlaku dibalik oleh jurnal penyesuaian baru bertanggal akhir periode dengan baris debit dan kredit ditukar (`pembalik_dari` = jurnal lama, keterangan "Pembalik JP-...: revisi nilai sisa ..."), lalu jurnal penyesuaian baru dengan biaya revisi dibuat (kosong bila biayanya 0). Keduanya DISETUJUI, pembuat = Admin pengaju, penyetuju = Owner. Opname (`total_beban`, `jurnal_no`, `detail_opname.nilai_sisa`) diganti nilai revisi, jadi saldo buku bulan berikutnya ikut. Jurnal lama tetap DISETUJUI (sudah dibalik).
+  - **Kembalikan untuk revisi** (`kembalikanRevisiDalam`): revisi menjadi DITOLAK dengan alasan; Admin mengajukan revisi baru (baris baru, form terisi nilai revisi yang dikembalikan).
+- **Keputusan teknis (menyimpang dari brief)**: brief menyebut "jurnal PEMBALIK". Pembaliknya memakai jenis PENYESUAIAN (nomor JP) dengan `pembalik_dari` terisi, bukan jenis PEMBALIK (JB). Alasannya: jenis PEMBALIK di aplikasi ini adalah koreksi transaksi yang masuk tahap "sebelum penyesuaian" (`saringTahap`) dan tampil di Jurnal Umum. Bila pembalik biaya perlengkapan masuk tahap itu, neraca saldo sebelum penyesuaian November akan menampilkan Perlengkapan bertambah tanpa jurnal penyesuaian aslinya. Dengan jenis PENYESUAIAN, pembalik dan jurnal barunya tetap di kolom Penyesuaian neraca lajur dan di halaman Jurnal Penyesuaian, sedangkan tautan `pembalik_dari` tetap menandai bahwa itu jurnal pembalik (tampil "Pembalik JP-..." di riwayat).
+- **Pengaman**: semua langkah memegang kunci advisory 7410002 (sama dengan input nilai sisa) dan cek `pastikanTerbuka`. Setuju ditolak bila jurnal opname sudah berubah sejak revisi diajukan, bila sudah ada nilai sisa bulan sesudahnya, atau bila biaya baru membuat saldo akun Perlengkapan minus. Pengaju tidak boleh menyetujui revisinya sendiri. CHECK di migrasi: status bukan DRAFT, alasan tidak kosong, DITOLAK wajib beralasan, keputusan wajib bertanggal, nilai sisa 0 sampai saldo buku; indeks unik parsial: paling banyak satu revisi DIAJUKAN per opname.
+- **Tutup Periode**: butir "Nilai sisa perlengkapan sudah diinput" tidak lulus bila opname masih draf atau dikembalikan ("masih draf atau dikembalikan untuk revisi") atau ada revisi menunggu ("revisi menunggu Owner").
+- **Dashboard**: Owner melihat "N revisi nilai sisa menunggu keputusan"; Admin melihat "Nilai sisa ... dikembalikan untuk revisi". Kartu Menunggu persetujuan ikut menghitung revisi.
+- **Tampilan**: label status nilai sisa memakai `LencanaStatus jenis="revisi"` (Draf, Menunggu Owner, Disetujui, Dikembalikan). Kartu "Revisi ... menunggu" membandingkan nilai sisa berlaku dan usulan per perlengkapan. "Riwayat versi nilai sisa" mendaftar input awal dan setiap revisi beserta alasan, keputusan, jurnal pembalik, dan jurnal baru.
+- **Migrasi** `20261125100000_revisi_nilai_sisa`: dua tabel baru beserta CHECK. Data lama tidak berubah.
 
 ### Fee event (crew freelance per event)
 

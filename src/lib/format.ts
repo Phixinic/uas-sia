@@ -29,6 +29,8 @@ export const labelWaktu = (d: Date | string | null | undefined) =>
 
 export const LABEL_STATUS_PERSETUJUAN: Record<StatusPersetujuan, string> = { DRAFT: "Draf", DIAJUKAN: "Diajukan", DISETUJUI: "Disetujui", DITOLAK: "Ditolak" };
 export const LABEL_STATUS_PEMBELIAN: Record<StatusPembelian, string> = { DRAFT: "Draf", DIAJUKAN: "Diajukan", DISETUJUI: "Diposting", DITOLAK: "Ditolak", DIBALIK: "Dibalik" };
+/** Jurnal dan revisi nilai sisa: DITOLAK berarti dikembalikan ke Admin untuk direvisi, bukan tolak final. */
+export const LABEL_STATUS_REVISI: Record<StatusPersetujuan, string> = { DRAFT: "Draf", DIAJUKAN: "Menunggu Owner", DISETUJUI: "Disetujui", DITOLAK: "Dikembalikan" };
 export const LABEL_STATUS_SLIP: Record<StatusPersetujuan, string> = { DRAFT: "Draf", DIAJUKAN: "Diajukan", DISETUJUI: "Dibayar", DITOLAK: "Ditolak" };
 export const LABEL_STATUS_ASET: Record<StatusAset, string> = { AKTIF: "Aktif", DILEPAS: "Dilepas", BATAL: "Batal" };
 export const LABEL_STATUS_PERIODE: Record<StatusPeriode, string> = { TERBUKA: "Terbuka", TERKUNCI: "Terkunci" };

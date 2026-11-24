@@ -118,7 +118,8 @@ export async function setujuiJurnal(tx: Tx, no: string, penggunaId: number) {
  * DIAJUKAN -> DITOLAK dengan alasan. Dokumen sumber dibuka lagi supaya Admin bisa memproses ulang:
  * - penyusutan: tidak bisa ditolak (langsung disetujui saat diproses). Jurnal penyusutan lama yang dulu ditolak tetap
  *   tersimpan sebagai riwayat; jadwalnya sudah dikosongkan saat itu;
- * - opname: status DITOLAK dan alasannya disalin, form nilai sisa periode itu terbuka lagi.
+ * - opname: dikembalikan untuk revisi. Opname kembali DRAFT (alasan disalin), form nilai sisa terbuka lagi dengan nilai
+ *   yang diajukan, dan Admin mengubah lalu mengajukan ulang.
  */
 export async function tolakJurnal(tx: Tx, no: string, penggunaId: number, alasan: string) {
   const al = alasan.trim();
@@ -131,9 +132,11 @@ export async function tolakJurnal(tx: Tx, no: string, penggunaId: number, alasan
   const sekarang = new Date();
   await tx.jurnal.update({ where: { no }, data: { status: "DITOLAK", alasanTolak: al, disetujuiOlehId: penggunaId, disetujuiPada: sekarang } });
   if (j.sumberTipe === "OPNAME") {
-    await tx.opname.updateMany({ where: { jurnalNo: no }, data: { status: "DITOLAK", alasanTolak: al, disetujuiOlehId: penggunaId, disetujuiPada: sekarang } });
+    // Dikembalikan untuk revisi (bukan tolak final): opname kembali DRAFT tanpa jurnal, nilai yang diajukan tetap terisi
+    // supaya Admin tinggal mengubah, dan jurnal ini tetap tercatat DITOLAK beserta alasannya sebagai riwayat.
+    await tx.opname.updateMany({ where: { jurnalNo: no }, data: { status: "DRAFT", jurnalNo: null, alasanTolak: al, disetujuiOlehId: null, disetujuiPada: null } });
   }
-  await catatLog(tx, penggunaId, "jurnal.tolak", "jurnal", no, al);
+  await catatLog(tx, penggunaId, j.sumberTipe === "OPNAME" ? "jurnal.kembalikan" : "jurnal.tolak", "jurnal", no, al);
 }
 
 /**

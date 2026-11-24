@@ -213,6 +213,8 @@ model Pengguna {
   pelepasanDisetujui  Pelepasan[]      @relation("PelepasanDisetujui")
   opnameDibuat        Opname[]         @relation("OpnameDibuat")
   opnameDisetujui     Opname[]         @relation("OpnameDisetujui")
+  revisiDiajukan      RevisiOpname[]   @relation("RevisiDiajukan")
+  revisiDiputuskan    RevisiOpname[]   @relation("RevisiDiputuskan")
   slipDibuat          SlipGaji[]       @relation("SlipDibuat")
   slipDisetujui       SlipGaji[]       @relation("SlipDisetujui")
   penggajianDibuat    Penggajian[]     @relation("PenggajianDibuat")
@@ -384,6 +386,8 @@ model Jurnal {
   penggajian        Penggajian?
   laporanFee        LaporanFee?
   investasiKas      InvestasiKas?
+  revisiPembalik    RevisiOpname?      @relation("RevisiJurnalPembalik")
+  revisiBaru        RevisiOpname?      @relation("RevisiJurnalBaru")
 
   @@index([periodeId, status])
   @@index([jenis, status])
@@ -492,6 +496,7 @@ model Perlengkapan {
 
   detail       DetailPembelian[]
   detailOpname DetailOpname[]
+  detailRevisi DetailRevisiOpname[]
 
   @@map("perlengkapan")
 }
@@ -641,6 +646,7 @@ model Opname {
   dibuatOleh    Pengguna       @relation("OpnameDibuat", fields: [dibuatOlehId], references: [id])
   disetujuiOleh Pengguna?      @relation("OpnameDisetujui", fields: [disetujuiOlehId], references: [id])
   detail        DetailOpname[]
+  revisi        RevisiOpname[]
 
   @@map("opname")
 }
@@ -656,6 +662,53 @@ model DetailOpname {
 
   @@id([opnameNo, perlengkapanKode])
   @@map("detail_opname")
+}
+
+/// Revisi nilai sisa sesudah opname disetujui (selama periode belum ditutup). Satu baris = satu pengajuan revisi.
+/// Dikembalikan Owner = DITOLAK dengan alasan; Admin mengajukan revisi baru (baris baru), jadi alasannya tetap di riwayat.
+/// Disetujui: jurnal opname yang berlaku dibalik (jurnal_pembalik) dan jurnal baru dibuat (jurnal_baru, kosong bila biaya 0).
+model RevisiOpname {
+  no               String            @id @map("no_revisi")
+  opnameNo         String            @map("id_opname")
+  ke               Int
+  totalBebanLama   Int               @map("total_beban_lama")
+  totalBeban       Int               @map("total_beban")
+  alasan           String
+  status           StatusPersetujuan @default(DIAJUKAN)
+  alasanTolak      String?           @map("alasan_tolak")
+  jurnalLamaNo     String?           @map("jurnal_lama")
+  jurnalPembalikNo String?           @unique @map("jurnal_pembalik")
+  jurnalBaruNo     String?           @unique @map("jurnal_baru")
+  diajukanOlehId   Int               @map("diajukan_oleh")
+  diajukanPada     DateTime          @default(now()) @map("diajukan_pada")
+  diputuskanOlehId Int?              @map("diputuskan_oleh")
+  diputuskanPada   DateTime?         @map("diputuskan_pada")
+
+  opname         Opname               @relation(fields: [opnameNo], references: [no])
+  jurnalPembalik Jurnal?              @relation("RevisiJurnalPembalik", fields: [jurnalPembalikNo], references: [no])
+  jurnalBaru     Jurnal?              @relation("RevisiJurnalBaru", fields: [jurnalBaruNo], references: [no])
+  diajukanOleh   Pengguna             @relation("RevisiDiajukan", fields: [diajukanOlehId], references: [id])
+  diputuskanOleh Pengguna?            @relation("RevisiDiputuskan", fields: [diputuskanOlehId], references: [id])
+  detail         DetailRevisiOpname[]
+
+  @@unique([opnameNo, ke])
+  @@index([status])
+  @@map("revisi_opname")
+}
+
+/// Nilai sisa usulan per perlengkapan dalam satu revisi (saldo buku sama dengan opname yang direvisi).
+model DetailRevisiOpname {
+  revisiNo         String @map("no_revisi")
+  perlengkapanKode String @map("id_perlengkapan")
+  saldoBuku        Int    @map("saldo_buku")
+  nilaiSisaLama    Int    @map("nilai_sisa_lama")
+  nilaiSisa        Int    @map("nilai_sisa")
+
+  revisi       RevisiOpname @relation(fields: [revisiNo], references: [no], onDelete: Cascade)
+  perlengkapan Perlengkapan @relation(fields: [perlengkapanKode], references: [kode])
+
+  @@id([revisiNo, perlengkapanKode])
+  @@map("detail_revisi_opname")
 }
 
 model Pelepasan {

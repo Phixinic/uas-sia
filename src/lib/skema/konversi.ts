@@ -52,3 +52,14 @@ export const skemaBarangCepat = z.object({
   satuan: z.string({ error: "Isi satuan." }).trim().min(1, "Isi satuan.").max(20, "Satuan maksimal 20 karakter."),
   kategoriKode: z.string({ error: "Pilih kategori aset." }).trim().default(""),
 });
+
+/** Revisi nilai sisa yang sudah disetujui: nilai baru semua perlengkapan opname itu, alasan wajib. */
+export const skemaRevisiNilaiSisa = skemaNilaiSisa.extend({
+  alasan: z.string({ error: "Tulis alasan revisi." }).trim().min(1, "Tulis alasan revisi.").max(500, "Alasan maksimal 500 karakter."),
+});
+
+export const skemaNoRevisi = z.object({ no: z.string({ error: "Nomor revisi kosong." }).trim().min(1, "Nomor revisi kosong.") });
+
+export const skemaKembalikanRevisi = skemaNoRevisi.extend({
+  alasan: z.string({ error: "Tulis alasan." }).trim().min(1, "Tulis alasan.").max(500, "Alasan maksimal 500 karakter."),
+});

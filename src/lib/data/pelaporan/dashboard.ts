@@ -52,7 +52,7 @@ export async function dataDashboard(periode: string) {
     if (t === "ASET" || t === "KONTRA_ASET") totalAset += net;
   }
 
-  const [drafBeli, drafJurnal, susutBelum, slipDraf, garansi, slipDrafPertama, penggajianPertama, eventTanpaKapten, eventDitolak] = await Promise.all([
+  const [drafBeli, drafJurnal, susutBelum, slipDraf, garansi, slipDrafPertama, penggajianPertama, eventTanpaKapten, eventDitolak, revisiTunggu, opnameKembali] = await Promise.all([
     db.pembelian.findMany({ where: { status: "DRAFT" }, select: { jenis: true } }),
     db.jurnal.count({ where: { status: "DRAFT", jenis: "PENYESUAIAN" } }),
     db.jadwalPenyusutan.findMany({ where: { aset: { status: "AKTIF" }, periodeId: { lt: sekarang }, jurnalNo: null }, distinct: ["periodeId"], select: { periodeId: true }, orderBy: { periodeId: "asc" } }),
@@ -63,13 +63,17 @@ export async function dataDashboard(periode: string) {
     db.penggajian.findFirst({ where: { status: "DIAJUKAN" }, orderBy: { periodeId: "asc" }, select: { periodeId: true } }),
     db.event.findMany({ where: { status: "PENILAIAN", penugasan: { none: { jabatan: { peranEvent: "KAPTEN" } } } }, select: { kode: true, nama: true }, orderBy: { tanggalMulai: "asc" } }),
     db.event.findMany({ where: { status: "PENILAIAN", alasanTolak: { not: null } }, select: { kode: true, nama: true }, orderBy: { tanggalMulai: "asc" } }),
+    db.revisiOpname.findMany({ where: { status: "DIAJUKAN" }, orderBy: { diajukanPada: "asc" }, select: { no: true, opname: { select: { periodeId: true } } } }),
+    db.opname.findMany({ where: { status: "DRAFT", jurnalNo: null, alasanTolak: { not: null } }, orderBy: { periodeId: "asc" }, select: { periodeId: true } }),
   ]);
 
   const tindakan: Tindakan[] = [];
   if (drafBeli.length) tindakan.push({ judul: `${drafBeli.length} pembelian masih draf`, uraian: "Posting supaya masuk jurnal umum dan kartu aset.", href: drafBeli[0].jenis === "PERALATAN" ? "/konversi/pembelian-peralatan" : "/konversi/pembelian-perlengkapan", peran: ["ADMIN", "OWNER"] });
   if (susutBelum.length) tindakan.push({ judul: `Penyusutan ${labelPeriode(susutBelum[0].periodeId)} belum diproses`, uraian: susutBelum.length > 1 ? `Ada ${susutBelum.length} periode yang belum diproses.` : "Admin memproses; jurnalnya langsung masuk buku besar.", href: denganPeriode("/konversi/penyusutan", susutBelum[0].periodeId), peran: ["ADMIN"] });
+  for (const o of opnameKembali) tindakan.push({ judul: `Nilai sisa ${labelPeriode(o.periodeId)} dikembalikan untuk revisi`, uraian: "Ubah nilai sisanya sesuai alasan Owner, simpan, lalu ajukan ulang.", href: denganPeriode("/konversi/nilai-sisa", o.periodeId), peran: ["ADMIN"] });
+  if (revisiTunggu.length) tindakan.push({ judul: `${revisiTunggu.length} revisi nilai sisa menunggu keputusan`, uraian: `${revisiTunggu.map((r) => `${r.no} (${labelPeriode(r.opname.periodeId)})`).join(", ")}. Owner menyetujui atau mengembalikan untuk revisi.`, href: denganPeriode("/konversi/nilai-sisa", revisiTunggu[0].opname.periodeId), peran: ["OWNER"] });
   if (drafJurnal) tindakan.push({ judul: `${drafJurnal} jurnal penyesuaian masih draf`, uraian: "Admin perlu mengajukannya ke Owner.", href: "/pelaporan/jurnal-penyesuaian?status=DRAFT", peran: ["ADMIN"] });
-  if (jurnalTunggu) tindakan.push({ judul: `${jurnalTunggu} jurnal penyesuaian menunggu persetujuan`, uraian: "Owner menyetujui atau menolak dengan alasan.", href: "/pelaporan/jurnal-penyesuaian?status=DIAJUKAN", peran: ["OWNER"] });
+  if (jurnalTunggu) tindakan.push({ judul: `${jurnalTunggu} jurnal penyesuaian menunggu persetujuan`, uraian: "Owner menyetujui, atau mengembalikan nilai sisa untuk revisi dengan alasan.", href: "/pelaporan/jurnal-penyesuaian?status=DIAJUKAN", peran: ["OWNER"] });
   if (setoranTunggu._count) {
     tindakan.push({
       judul: `${setoranTunggu._count} setoran modal menunggu keputusan`,
@@ -124,7 +128,8 @@ export async function dataDashboard(periode: string) {
       setoran: setoranTunggu._count,
       setting: settingTunggu.length,
       nominal: nominalTunggu.length,
-      total: jurnalTunggu + pelepasanTunggu + penggajianTunggu + feeTunggu.length + setoranTunggu._count + settingTunggu.length + nominalTunggu.length,
+      revisi: revisiTunggu.length,
+      total: revisiTunggu.length + jurnalTunggu + pelepasanTunggu + penggajianTunggu + feeTunggu.length + setoranTunggu._count + settingTunggu.length + nominalTunggu.length,
     },
     statusPeriode: statusP ? ("TERKUNCI" as const) : ("TERBUKA" as const),
     tindakan,

@@ -22,7 +22,7 @@ const TAB: { nilai: StatusPersetujuan | "semua"; label: string }[] = [
   { nilai: "DRAFT", label: "Draf" },
   { nilai: "DIAJUKAN", label: "Diajukan" },
   { nilai: "DISETUJUI", label: "Disetujui" },
-  { nilai: "DITOLAK", label: "Ditolak" },
+  { nilai: "DITOLAK", label: "Ditolak atau dikembalikan" },
   { nilai: "semua", label: "Semua" },
 ];
 
@@ -71,7 +71,8 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
                   <div className="flex flex-wrap items-center gap-2.5">
                     <b className="kode text-sm!">{j.no}</b>
                     <span className="text-xs text-slate-500">{labelTanggal(j.tanggal)}</span>
-                    <LencanaStatus jenis="persetujuan" status={j.status} />
+                    <LencanaStatus jenis={j.sumberTipe === "OPNAME" ? "revisi" : "persetujuan"} status={j.status} />
+                    {j.pembalikDariNo && <span className="text-xs text-slate-500">pembalik {j.pembalikDariNo}</span>}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <AksiJurnal no={j.no} status={j.status} dibuatOlehId={j.dibuatOlehId} penggunaId={pengguna.id} peran={pengguna.peran} sumber={j.sumberTipe} />
@@ -94,8 +95,8 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
                 )}
                 {j.status === "DITOLAK" && j.alasanTolak && (
                   <Peringatan jenis="galat">
-                    <b>Alasan ditolak:</b> {j.alasanTolak}.{" "}
-                    {j.sumberTipe === "PENYUSUTAN" ? "Riwayat dari sebelum penyusutan diproses otomatis; jadwalnya sudah diproses ulang." : "Sumbernya sudah dibuka lagi, jadi Admin bisa memproses ulang."}
+                    <b>{j.sumberTipe === "OPNAME" ? "Alasan dikembalikan:" : "Alasan ditolak:"}</b> {j.alasanTolak}.{" "}
+                    {j.sumberTipe === "PENYUSUTAN" ? "Riwayat dari sebelum penyusutan diproses otomatis; jadwalnya sudah diproses ulang." : "Admin mengubah nilai sisanya di menu Nilai Sisa lalu mengajukan ulang."}
                   </Peringatan>
                 )}
                 {j.sumberTipe === "PENYUSUTAN" && j.status === "DISETUJUI" && <p className="text-xs text-slate-500">Penyusutan dihitung dari jadwal aset, jadi langsung disetujui saat diproses Admin.</p>}

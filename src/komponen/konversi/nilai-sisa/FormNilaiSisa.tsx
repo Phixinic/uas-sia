@@ -3,16 +3,19 @@
 /*
  * Form hitung fisik perlengkapan. Biaya dan jurnal draf dihitung langsung di browser memakai fungsi
  * yang sama dengan server (src/lib/inti), jadi pratinjau pasti sama dengan hasil simpan.
+ * `awal` mengisi nilai sebelumnya (draf, dikembalikan Owner, atau revisi). Mode `revisi` dipakai sesudah nilai sisa
+ * disetujui: alasan wajib dan tombolnya mengajukan revisi ke Owner.
  */
 import { useMemo, useRef, useState } from "react";
-import { Save } from "lucide-react";
-import { simpanNilaiSisa } from "@/lib/aksi/konversi/nilai-sisa";
+import { useRouter } from "next/navigation";
+import { Save, Send } from "lucide-react";
+import { ajukanRevisiNilaiSisa, simpanNilaiSisa } from "@/lib/aksi/konversi/nilai-sisa";
 import { useAksi } from "@/komponen/ui/useAksi";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
 import Tabel from "@/komponen/ui/Tabel";
 import Rupiah from "@/komponen/ui/Rupiah";
-import Tombol from "@/komponen/ui/Tombol";
-import { IsianRupiah } from "@/komponen/ui/Isian";
+import Tombol, { TautanTombol } from "@/komponen/ui/Tombol";
+import { AreaTeks, Bidang, IsianRupiah } from "@/komponen/ui/Isian";
 import Peringatan from "@/komponen/ui/Peringatan";
 import TabelJurnal from "@/komponen/ui/TabelJurnal";
 import { barisOpname } from "@/lib/inti/jurnal";
@@ -22,9 +25,26 @@ import { useFokusGalat } from "@/komponen/ui/useFokusGalat";
 
 type Baris = { kode: string; nama: string; satuan: string; saldoBuku: number };
 
-export default function FormNilaiSisa({ periode, baris, bolehInput, namaAkun, tertahan }: { periode: string; baris: Baris[]; bolehInput: boolean; namaAkun: Record<string, string>; tertahan?: boolean }) {
+export default function FormNilaiSisa({ periode, baris, bolehInput, namaAkun, tertahan, awal, revisi, judul, keterangan, batalHref }: {
+  periode: string;
+  baris: Baris[];
+  bolehInput: boolean;
+  namaAkun: Record<string, string>;
+  tertahan?: boolean;
+  /** Nilai sisa yang sudah ada per kode perlengkapan, untuk diubah. */
+  awal?: Record<string, number>;
+  /** Mode revisi sesudah disetujui: alasan wajib, tombol mengajukan revisi. */
+  revisi?: boolean;
+  judul?: string;
+  keterangan?: string;
+  /** Tautan "Batal" (mode revisi). */
+  batalHref?: string;
+}) {
   const { jalankan, memuat } = useAksi();
-  const [nilai, setNilai] = useState<Record<string, string>>({});
+  const router = useRouter();
+  const nilaiAwal = () => Object.fromEntries(Object.entries(awal ?? {}).filter(([k]) => baris.some((b) => b.kode === k)).map(([k, v]) => [k, String(v)]));
+  const [nilai, setNilai] = useState<Record<string, string>>(nilaiAwal);
+  const [alasan, setAlasan] = useState("");
   const [galat, setGalat] = useState<Record<string, string>>({});
   const akar = useRef<HTMLDivElement>(null);
   useFokusGalat(akar, galat);
@@ -46,17 +66,18 @@ export default function FormNilaiSisa({ periode, baris, bolehInput, namaAkun, te
     return { kosong, salah, total };
   }, [nilai, baris]);
 
-  const siap = bolehInput && hitung.kosong.length === 0 && Object.keys(hitung.salah).length === 0;
+  const siap = bolehInput && hitung.kosong.length === 0 && Object.keys(hitung.salah).length === 0 && (!revisi || alasan.trim().length > 0);
+  const kirimNilai = baris.map((b) => ({ perlengkapanKode: b.kode, nilaiSisa: nilai[b.kode] ?? "" }));
   const simpan = () =>
-    jalankan(() => simpanNilaiSisa({ periode, nilai: baris.map((b) => ({ perlengkapanKode: b.kode, nilaiSisa: nilai[b.kode] ?? "" })) })).then((h) => {
+    jalankan(() => (revisi ? ajukanRevisiNilaiSisa({ periode, nilai: kirimNilai, alasan }) : simpanNilaiSisa({ periode, nilai: kirimNilai }))).then((h) => {
       setGalat(h.ok ? {} : h.galatIsian ?? {});
-      if (h.ok) setNilai({});
+      if (h.ok && revisi && batalHref) router.push(batalHref);
     });
 
   return (
     <div ref={akar}>
       <Kartu rapat>
-        <KepalaKartu judul={`Hitung fisik · ${labelBulanTahun(periode)}`} keterangan="Input nilai sisa perlengkapan dari hitung fisik akhir bulan." />
+        <KepalaKartu judul={judul ?? `Hitung fisik · ${labelBulanTahun(periode)}`} keterangan={keterangan ?? "Input nilai sisa perlengkapan dari hitung fisik akhir bulan."} />
         <Tabel label="Hitung fisik perlengkapan">
           <thead>
             <tr>
@@ -107,14 +128,28 @@ export default function FormNilaiSisa({ periode, baris, bolehInput, namaAkun, te
               <Peringatan jenis="awas">Belum dihitung: {hitung.kosong.join(", ")}. Semua perlengkapan wajib diisi sebelum disimpan.</Peringatan>
             )}
             <details className="rounded-lg border border-slate-200 p-3" open={siap}>
-              <summary className="cursor-pointer text-sm font-semibold text-slate-800">Jurnal penyesuaian (draf)</summary>
+              <summary className="cursor-pointer text-sm font-semibold text-slate-800">{revisi ? "Jurnal penyesuaian baru bila revisi disetujui" : "Jurnal penyesuaian (draf)"}</summary>
               <div className="mt-3">
                 {hitung.total > 0 ? <TabelJurnal baris={barisOpname(hitung.total)} namaAkun={namaAkun} /> : <p className="teks-redup">{siap ? "Biaya perlengkapan 0, jadi tidak ada jurnal yang dibuat." : "Isi nilai sisa untuk melihat jurnalnya."}</p>}
               </div>
             </details>
-            <Tombol varian="utama" ikon={<Save className="size-4" />} onClick={simpan} memuat={memuat} disabled={!siap}>
-              Simpan nilai sisa
-            </Tombol>
+            {revisi && (
+              <Bidang label="Alasan revisi" htmlFor="alasan" wajib galat={galat.alasan}>
+                <AreaTeks id="alasan" rows={2} value={alasan} onChange={(e) => setAlasan(e.target.value)} galat={!!galat.alasan} placeholder="Contoh: hitung ulang gudang, ada dus kabel yang belum terhitung" />
+              </Bidang>
+            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {revisi ? (
+                <Tombol varian="utama" ikon={<Send className="size-4" />} onClick={simpan} memuat={memuat} disabled={!siap}>
+                  Ajukan revisi ke Owner
+                </Tombol>
+              ) : (
+                <Tombol varian="utama" ikon={<Save className="size-4" />} onClick={simpan} memuat={memuat} disabled={!siap}>
+                  Simpan nilai sisa
+                </Tombol>
+              )}
+              {batalHref && <TautanTombol href={batalHref}>Batal</TautanTombol>}
+            </div>
           </div>
         )}
       </Kartu>

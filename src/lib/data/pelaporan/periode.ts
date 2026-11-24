@@ -45,7 +45,7 @@ export async function cekPeriode(P: string, buku?: JurnalBuku[], klien: DbAtauTx
     klien.pelepasan.count({ where: { status: "DIAJUKAN", tanggal: { gte: awal, lte: akhir } } }),
     // Rumus yang sama dengan form nilai sisa: perlengkapan yang masih bersaldo buku di periode P.
     saldoBukuLkp(klien, P),
-    klien.opname.findUnique({ where: { periodeId: P }, select: { status: true } }),
+    klien.opname.findUnique({ where: { periodeId: P }, select: { status: true, _count: { select: { revisi: { where: { status: "DIAJUKAN" } } } } } }),
     klien.penggajian.count({ where: { periodeId: P, status: "DIAJUKAN" } }),
     klien.akun.findMany({ select: { kode: true } }),
     buku ? Promise.resolve(buku) : muatJurnalBuku(klien, P),
@@ -54,11 +54,19 @@ export async function cekPeriode(P: string, buku?: JurnalBuku[], klien: DbAtauTx
   // Nilai sisa hanya wajib bila ada perlengkapan yang perlu dihitung. Bulan bersaldo nol tidak bisa diinput
   // ("Tidak ada perlengkapan untuk dihitung"), jadi tidak boleh menahan kunci periode itu dan periode sesudahnya.
   const perluOpname = saldoLkp.length > 0;
+  // Draf (termasuk yang dikembalikan Owner untuk revisi) dan revisi yang menunggu Owner belum final.
   const opnameAda = !!opname && opname.status !== "DITOLAK";
+  const opnameFinal = opname?.status === "DISETUJUI" && opname._count.revisi === 0;
   return [
     { label: "Semua pembelian periode ini sudah diposting", lulus: drafBeli === 0, catatan: drafBeli ? `${drafBeli} draf` : "" },
     { label: "Penyusutan sudah diproses sampai periode ini", lulus: susutBelum === 0, catatan: susutBelum ? `${susutBelum} baris jadwal belum dijurnal` : "" },
-    { label: "Nilai sisa perlengkapan sudah diinput", lulus: !perluOpname || opnameAda, catatan: opnameAda ? "" : perluOpname ? "belum ada opname" : "tidak ada saldo perlengkapan" },
+    {
+      label: "Nilai sisa perlengkapan sudah diinput",
+      lulus: opnameAda ? opnameFinal || opname?.status === "DIAJUKAN" : !perluOpname,
+      catatan: opnameAda
+        ? opname?.status === "DRAFT" ? "masih draf atau dikembalikan untuk revisi" : opname && opname._count.revisi > 0 ? "revisi menunggu Owner" : ""
+        : perluOpname ? "belum ada opname" : "tidak ada saldo perlengkapan",
+    },
     { label: "Jurnal penyesuaian sudah diputuskan", lulus: jurnalTunda === 0, catatan: jurnalTunda ? `${jurnalTunda} menunggu` : "" },
     { label: "Pengajuan pelepasan sudah diputuskan", lulus: pelepasanTunda === 0, catatan: pelepasanTunda ? `${pelepasanTunda} menunggu` : "" },
     { label: "Pengajuan penggajian sudah diputuskan", lulus: penggajianTunda === 0, catatan: penggajianTunda ? `${penggajianTunda} menunggu` : "" },

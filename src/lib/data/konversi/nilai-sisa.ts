@@ -3,6 +3,7 @@
  * saldo yang divalidasi sama dengan yang ditampilkan.
  */
 import { db, type DbAtauTx } from "@/lib/server/db";
+import { tahanRevisi as tahanRevisiOpname } from "@/lib/server/nilai-sisa";
 import { dariDate, daftarPeriode, periodeBatasProses, periodeDari, periodeIni, tambahBulan } from "@/lib/inti/tanggal";
 import { jurnalPeriode, riwayatJurnalSumber } from "./persetujuan";
 import { bulanNilaiSisaTerlewat, saldoBukuPerlengkapan, tahanUrutanNilaiSisa, type BebanOpname, type PembelianLkp } from "./hitung";
@@ -66,7 +67,7 @@ export async function periodeNilaiSisa(dipilih?: string) {
 }
 
 export async function dataNilaiSisa(periode: string) {
-  const [bahan, opname, riwayat, riwayatJurnal] = await Promise.all([
+  const [bahan, opname, riwayat, riwayatJurnal, tahanRevisi] = await Promise.all([
     bahanNilaiSisa(db, periode),
     db.opname.findUnique({
       where: { periodeId: periode },
@@ -74,10 +75,19 @@ export async function dataNilaiSisa(periode: string) {
         detail: { orderBy: { perlengkapanKode: "asc" }, include: { perlengkapan: { select: { nama: true, satuan: true } } } },
         jurnal: { select: { no: true, status: true, alasanTolak: true, detail: { orderBy: { noUrut: "asc" }, select: { akunKode: true, debit: true, kredit: true } } } },
         dibuatOleh: { select: { nama: true } },
+        revisi: {
+          orderBy: { ke: "desc" },
+          include: {
+            diajukanOleh: { select: { nama: true } },
+            diputuskanOleh: { select: { nama: true } },
+            detail: { orderBy: { perlengkapanKode: "asc" }, include: { perlengkapan: { select: { nama: true } } } },
+          },
+        },
       },
     }),
     db.opname.findMany({ orderBy: { periodeId: "desc" }, include: { jurnal: { select: { no: true, status: true } } } }),
     riwayatJurnalSumber("OPNAME"),
+    db.$transaction((tx) => tahanRevisiOpname(tx, periode)),
   ]);
   return {
     baris: bahan.saldo,
@@ -91,11 +101,31 @@ export async function dataNilaiSisa(periode: string) {
       dibuatOleh: opname.dibuatOleh.nama,
       jurnal: opname.jurnal && { no: opname.jurnal.no, status: opname.jurnal.status, baris: opname.jurnal.detail.map((d) => ({ akun: d.akunKode, debit: d.debit, kredit: d.kredit })) },
       detail: opname.detail.map((d) => ({ kode: d.perlengkapanKode, nama: d.perlengkapan.nama, satuan: d.perlengkapan.satuan, saldoBuku: d.saldoBuku, nilaiSisa: d.nilaiSisa, beban: d.saldoBuku - d.nilaiSisa })),
+      /** Revisi sesudah disetujui, terbaru dulu. DITOLAK = dikembalikan Owner. */
+      revisi: opname.revisi.map((r) => ({
+        no: r.no,
+        ke: r.ke,
+        status: r.status,
+        alasan: r.alasan,
+        alasanTolak: r.alasanTolak,
+        totalBebanLama: r.totalBebanLama,
+        totalBeban: r.totalBeban,
+        jurnalLamaNo: r.jurnalLamaNo,
+        jurnalPembalikNo: r.jurnalPembalikNo,
+        jurnalBaruNo: r.jurnalBaruNo,
+        diajukanOleh: r.diajukanOleh.nama,
+        diajukanPada: r.diajukanPada.toISOString(),
+        diputuskanOleh: r.diputuskanOleh?.nama ?? null,
+        diputuskanPada: r.diputuskanPada?.toISOString() ?? null,
+        detail: r.detail.map((x) => ({ kode: x.perlengkapanKode, nama: x.perlengkapan.nama, saldoBuku: x.saldoBuku, nilaiSisaLama: x.nilaiSisaLama, nilaiSisa: x.nilaiSisa })),
+      })),
     },
     riwayat: riwayat.map((o) => ({ no: o.no, periode: o.periodeId, totalBeban: o.totalBeban, status: o.status, jurnalNo: o.jurnal?.no ?? null, statusJurnal: o.jurnal?.status ?? null })),
     /** Semua jurnal biaya perlengkapan (termasuk yang ditolak) beserta status persetujuannya. */
     riwayatJurnal,
     /** Jurnal yang mewakili periode ini (berjalan, atau penolakan terakhir). */
     jurnalIni: jurnalPeriode(riwayatJurnal, periode),
+    /** Alasan revisi belum bisa diajukan (null = boleh). Periode tertutup diperiksa halaman. */
+    tahanRevisi,
   };
 }
