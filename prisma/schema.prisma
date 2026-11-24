@@ -92,6 +92,12 @@ enum JenisNominal {
   JABATAN_EVENT
 }
 
+/// Penyesuaian manual Gaji Bulanan: potongan (misalnya denda merusak alat) atau bonus.
+enum JenisPenyesuaianGaji {
+  POTONGAN
+  BONUS
+}
+
 enum StatusPeriode {
   TERBUKA
   TERKUNCI
@@ -204,35 +210,36 @@ model Pengguna {
   sesi     Sesi[]
   log      LogAktivitas[]
 
-  jurnalDibuat        Jurnal[]         @relation("JurnalDibuat")
-  jurnalDisetujui     Jurnal[]         @relation("JurnalDisetujui")
-  pembelianDibuat     Pembelian[]      @relation("PembelianDibuat")
-  pembelianDisetujui  Pembelian[]      @relation("PembelianDisetujui")
-  pembelianDibalik    Pembelian[]      @relation("PembelianDibalik")
-  pelepasanDibuat     Pelepasan[]      @relation("PelepasanDibuat")
-  pelepasanDisetujui  Pelepasan[]      @relation("PelepasanDisetujui")
-  opnameDibuat        Opname[]         @relation("OpnameDibuat")
-  opnameDisetujui     Opname[]         @relation("OpnameDisetujui")
-  revisiDiajukan      RevisiOpname[]   @relation("RevisiDiajukan")
-  revisiDiputuskan    RevisiOpname[]   @relation("RevisiDiputuskan")
-  slipDibuat          SlipGaji[]       @relation("SlipDibuat")
-  slipDisetujui       SlipGaji[]       @relation("SlipDisetujui")
-  penggajianDibuat    Penggajian[]     @relation("PenggajianDibuat")
-  penggajianDisetujui Penggajian[]     @relation("PenggajianDisetujui")
+  jurnalDibuat        Jurnal[]          @relation("JurnalDibuat")
+  jurnalDisetujui     Jurnal[]          @relation("JurnalDisetujui")
+  pembelianDibuat     Pembelian[]       @relation("PembelianDibuat")
+  pembelianDisetujui  Pembelian[]       @relation("PembelianDisetujui")
+  pembelianDibalik    Pembelian[]       @relation("PembelianDibalik")
+  pelepasanDibuat     Pelepasan[]       @relation("PelepasanDibuat")
+  pelepasanDisetujui  Pelepasan[]       @relation("PelepasanDisetujui")
+  opnameDibuat        Opname[]          @relation("OpnameDibuat")
+  opnameDisetujui     Opname[]          @relation("OpnameDisetujui")
+  revisiDiajukan      RevisiOpname[]    @relation("RevisiDiajukan")
+  revisiDiputuskan    RevisiOpname[]    @relation("RevisiDiputuskan")
+  penyesuaianDibuat   PenyesuaianGaji[] @relation("PenyesuaianDibuat")
+  slipDibuat          SlipGaji[]        @relation("SlipDibuat")
+  slipDisetujui       SlipGaji[]        @relation("SlipDisetujui")
+  penggajianDibuat    Penggajian[]      @relation("PenggajianDibuat")
+  penggajianDisetujui Penggajian[]      @relation("PenggajianDisetujui")
   presensiDibuat      Presensi[]
   periodeDikunci      Periode[]
   riwayatPeriode      RiwayatPeriode[]
-  eventDibuat         Event[]          @relation("EventDibuat")
-  kehadiranDibuat     KehadiranEvent[] @relation("KehadiranDibuat")
-  kehadiranDinilai    KehadiranEvent[] @relation("KehadiranDinilai")
-  laporanDiajukan     LaporanFee[]     @relation("LaporanDiajukan")
-  laporanDiputuskan   LaporanFee[]     @relation("LaporanDiputuskan")
-  investasiDibuat     InvestasiKas[]   @relation("InvestasiDibuat")
-  investasiDiputuskan InvestasiKas[]   @relation("InvestasiDiputuskan")
-  settingDiajukan     SettingGaji[]    @relation("SettingDiajukan")
-  settingDiputuskan   SettingGaji[]    @relation("SettingDiputuskan")
-  nominalDiajukan     VersiNominal[]   @relation("NominalDiajukan")
-  nominalDiputuskan   VersiNominal[]   @relation("NominalDiputuskan")
+  eventDibuat         Event[]           @relation("EventDibuat")
+  kehadiranDibuat     KehadiranEvent[]  @relation("KehadiranDibuat")
+  kehadiranDinilai    KehadiranEvent[]  @relation("KehadiranDinilai")
+  laporanDiajukan     LaporanFee[]      @relation("LaporanDiajukan")
+  laporanDiputuskan   LaporanFee[]      @relation("LaporanDiputuskan")
+  investasiDibuat     InvestasiKas[]    @relation("InvestasiDibuat")
+  investasiDiputuskan InvestasiKas[]    @relation("InvestasiDiputuskan")
+  settingDiajukan     SettingGaji[]     @relation("SettingDiajukan")
+  settingDiputuskan   SettingGaji[]     @relation("SettingDiputuskan")
+  nominalDiajukan     VersiNominal[]    @relation("NominalDiajukan")
+  nominalDiputuskan   VersiNominal[]    @relation("NominalDiputuskan")
 
   @@map("pengguna")
 }
@@ -333,6 +340,7 @@ model Periode {
   /// Versi nominal master yang mulai berlaku di periode ini.
   versiNominal VersiNominal[]
   upahEvent    SlipFee[]
+  penyesuaian  PenyesuaianGaji[]
 
   @@index([tahun, bulan])
   @@map("periode")
@@ -762,6 +770,7 @@ model Karyawan {
   penugasan   PenugasanEvent[]
   kehadiran   KehadiranEvent[]
   slipFee     SlipFee[]
+  penyesuaian PenyesuaianGaji[]
 
   @@map("karyawan")
 }
@@ -964,6 +973,14 @@ model SlipGaji {
   /// Jumlah tunjangan lain; rinciannya di SlipTunjangan.
   tunjLain           Int               @map("tunj_lain")
   potonganAbsen      Int               @map("potongan_absen")
+  /// Gaji tetap = gaji pokok + tunjangan - potongan absen. bruto = gaji_tetap + upah_event + bonus.
+  gajiTetap          Int               @default(0) @map("gaji_tetap")
+  /// Upah event bulan ini (slip_fee dengan periode_gaji = periode slip untuk karyawan ini).
+  upahEvent          Int               @default(0) @map("upah_event")
+  /// Bonus manual (penyesuaian_gaji jenis BONUS).
+  bonus              Int               @default(0)
+  /// Potongan manual (penyesuaian_gaji jenis POTONGAN). thp = bruto - pph21 - potongan_lain.
+  potonganLain       Int               @default(0) @map("potongan_lain")
   bruto              Int
   brutoSetahun       Int               @map("bruto_setahun")
   biayaJabatan       Int               @map("biaya_jabatan")
@@ -1020,6 +1037,26 @@ model SlipTunjangan {
 
   @@id([slipNo, tunjanganKode])
   @@map("slip_tunjangan")
+}
+
+/// Potongan dan bonus manual satu karyawan di Gaji Bulanan satu periode (boleh lebih dari satu baris, keterangan wajib).
+/// Diisi HRD sebelum paket gaji bulan itu diajukan; terkunci begitu slip karyawan itu diajukan atau dibayar.
+model PenyesuaianGaji {
+  id           Int                  @id @default(autoincrement()) @map("id_penyesuaian")
+  periodeId    String               @map("periode")
+  karyawanKode String               @map("id_karyawan")
+  jenis        JenisPenyesuaianGaji
+  nominal      Int
+  keterangan   String
+  dibuatOlehId Int                  @map("dibuat_oleh")
+  dibuatPada   DateTime             @default(now()) @map("dibuat_pada")
+
+  periode    Periode  @relation(fields: [periodeId], references: [id])
+  karyawan   Karyawan @relation(fields: [karyawanKode], references: [kode])
+  dibuatOleh Pengguna @relation("PenyesuaianDibuat", fields: [dibuatOlehId], references: [id])
+
+  @@index([periodeId, karyawanKode])
+  @@map("penyesuaian_gaji")
 }
 
 /// Pengajuan distribusi gaji satu periode (1:1..N slip gaji).

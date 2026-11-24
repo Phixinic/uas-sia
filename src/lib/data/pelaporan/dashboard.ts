@@ -99,8 +99,8 @@ export async function dataDashboard(periode: string) {
     });
   }
   if (pelepasanTunggu) tindakan.push({ judul: `${pelepasanTunggu} pengajuan pelepasan peralatan`, uraian: "Menunggu keputusan Owner.", href: "/konversi/pelepasan", peran: ["OWNER"] });
-  if (slipDraf) tindakan.push({ judul: `${slipDraf} slip gaji masih draf`, uraian: "HRD mengajukan distribusinya ke Owner.", href: denganPeriode("/sdm/distribusi", slipDrafPertama?.periodeId ?? periode), peran: ["HRD"] });
-  if (penggajianTunggu) tindakan.push({ judul: `${penggajianTunggu} pengajuan penggajian menunggu persetujuan`, uraian: "Owner menyetujui supaya gaji dijurnal dan dibayar.", href: denganPeriode("/sdm/distribusi", penggajianPertama?.periodeId ?? periode), peran: ["OWNER"] });
+  if (slipDraf) tindakan.push({ judul: `${slipDraf} slip gaji dikembalikan Owner`, uraian: "HRD memperbaiki di Gaji Bulanan lalu mengajukan ulang.", href: denganPeriode("/sdm/gaji-bulanan", slipDrafPertama?.periodeId ?? periode), peran: ["HRD"] });
+  if (penggajianTunggu) tindakan.push({ judul: `${penggajianTunggu} pengajuan penggajian menunggu persetujuan`, uraian: "Owner menyetujui supaya gaji dijurnal dan dibayar.", href: denganPeriode("/sdm/gaji-bulanan", penggajianPertama?.periodeId ?? periode), peran: ["OWNER"] });
   if (feeTunggu.length) {
     tindakan.push({
       judul: `${feeTunggu.length} laporan kapten menunggu keputusan fee`,

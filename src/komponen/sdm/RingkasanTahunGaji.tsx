@@ -1,6 +1,6 @@
 /*
- * Ringkasan penggajian per tahun (komponen server) untuk Hitung Gaji dan Distribusi Gaji: tiap bulan statusnya belum ada
- * presensi, siap dihitung, sudah dihitung, diajukan, atau dibayar, beserta total THP. Bulan yang dipilih ditandai.
+ * Ringkasan penggajian per tahun (komponen server) di Gaji Bulanan: tiap bulan statusnya belum ada presensi, belum
+ * diajukan, dikembalikan Owner, menunggu Owner, atau dibayar, beserta total THP. Bulan yang dipilih ditandai.
  */
 import Link from "next/link";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
@@ -11,11 +11,11 @@ import { denganPeriode, namaBulan, tahunDari } from "@/lib/inti/tanggal";
 import { ringkasanTahunGaji, type RingkasBulanGaji } from "@/lib/data/sdm/gaji";
 import { alamatPresensi, TandaStatus } from "./StatusGaji";
 
-const STATUS: Record<RingkasBulanGaji["status"], ["abu" | "kuning" | "biru" | "hijau", string]> = {
+const STATUS: Record<RingkasBulanGaji["status"], ["abu" | "kuning" | "biru" | "hijau" | "merah", string]> = {
   KOSONG: ["kuning", "Belum ada presensi"],
-  PRESENSI: ["abu", "Siap dihitung"],
-  DRAF: ["kuning", "Sudah dihitung"],
-  DIAJUKAN: ["biru", "Diajukan"],
+  PRESENSI: ["abu", "Belum diajukan"],
+  DRAF: ["merah", "Dikembalikan Owner"],
+  DIAJUKAN: ["biru", "Menunggu Owner"],
   DIBAYAR: ["hijau", "Dibayar"],
 };
 
@@ -26,7 +26,7 @@ function StatusBulan({ r }: { r: RingkasBulanGaji }) {
 }
 
 function rincian(r: RingkasBulanGaji) {
-  const bagian = [r.dibayar && `${r.dibayar} slip dibayar`, r.diajukan && `${r.diajukan} slip diajukan`, r.draf && `${r.draf} slip sudah dihitung`].filter(Boolean);
+  const bagian = [r.dibayar && `${r.dibayar} slip dibayar`, r.diajukan && `${r.diajukan} slip diajukan`, r.draf && `${r.draf} slip dikembalikan`].filter(Boolean);
   return bagian.length ? bagian.join(", ") : r.presensi ? `${r.presensi} catatan presensi` : "-";
 }
 

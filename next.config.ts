@@ -17,6 +17,13 @@ const nextConfig: NextConfig = {
   output: "standalone",
   // next dev tidak membuat AGENTS.md dan CLAUDE.md otomatis di folder proyek.
   agentRules: false,
+  // Hitung Gaji dan Distribusi digabung menjadi Gaji Bulanan. permanent: false = 307; query string ikut terbawa.
+  async redirects() {
+    return [
+      { source: "/sdm/hitung-gaji", destination: "/sdm/gaji-bulanan", permanent: false },
+      { source: "/sdm/distribusi", destination: "/sdm/gaji-bulanan", permanent: false },
+    ];
+  },
   async headers() {
     return [{ source: "/:path*", headers: headerKeamanan }];
   },

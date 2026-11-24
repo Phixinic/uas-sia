@@ -31,7 +31,7 @@ describe.runIf(aktif)("kunci periode berurutan", async () => {
   const opname = await import("@/lib/aksi/konversi/nilai-sisa");
   const susut = await import("@/lib/aksi/konversi/penyusutan");
   const lepas = await import("@/lib/aksi/konversi/pelepasan");
-  const gaji = await import("@/lib/aksi/sdm/gaji");
+  const gajiBulanan = await import("@/lib/aksi/sdm/gaji-bulanan");
   const { buatJurnal, saldoAkun, setujuiJurnal, tolakJurnal } = await import("@/lib/server/jurnal");
   const { dataTutupPeriode } = await import("@/lib/data/pelaporan/periode");
 
@@ -112,7 +112,7 @@ describe.runIf(aktif)("kunci periode berurutan", async () => {
     expect(galat(await susut.prosesPenyusutan({ periode: "2026-10" }))).toMatch(tertutup);
     expect(galat(await lepas.ajukanPelepasan({ asetKode: "AST-0005", tanggal: "2026-10-31", alasan: "DIBUANG" }))).toMatch(tertutup);
     await masukSebagai("hrd");
-    expect(galat(await gaji.hitungSlipSemua({ periode: "2026-10" }))).toMatch(tertutup);
+    expect(galat(await gajiBulanan.ajukanGajiBulanan({ periode: "2026-10" }))).toMatch(tertutup);
     const owner = await db.pengguna.findUniqueOrThrow({ where: { namaPengguna: "owner" } });
     await expect(db.$transaction((tx) => setujuiJurnal(tx, no, owner.id))).rejects.toThrow(tertutup);
     await expect(db.$transaction((tx) => tolakJurnal(tx, no, owner.id, "uji"))).rejects.toThrow(tertutup);

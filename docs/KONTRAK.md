@@ -43,8 +43,7 @@ tests/                          vitest: tes inti (tanpa DB) dan tes integrasi (U
 | `/konversi/pelepasan` | Pelepasan Peralatan | Konversi |
 | `/sdm/setting-gaji` | Setting Gaji: versi berlaku per karyawan, pengajuan menunggu Owner, riwayat (`?form=baru&karyawan=KRY-01`, `?riwayat=KRY-01`). Tab Setting gaji di Master SDM dialihkan ke sini | SDM |
 | `/sdm/presensi` | Presensi (rekap dan harian) | SDM |
-| `/sdm/hitung-gaji` | Hitung Gaji (slip, PPh 21; status per karyawan: Belum ada presensi, Estimasi (belum dihitung), Sudah dihitung, Diajukan, Dibayar; angka sebelum dihitung berlabel estimasi) | SDM |
-| `/sdm/distribusi` | Distribusi Gaji (pengajuan penggajian) | SDM |
+| `/sdm/gaji-bulanan` | Gaji Bulanan (Hitung Gaji dan Distribusi digabung): satu baris per karyawan inhouse (setting berlaku, presensi, gaji tetap, upah event, potongan, bonus, PPh 21, THP berlabel estimasi sebelum diajukan), `&ubah=KRY-01` editor potongan dan bonus dengan pratinjau langsung, panel status paket (ajukan HRD, setujui atau tolak Owner), `&slip=KRY-01\|semua` slip cetak, ringkasan tahun. `/sdm/hitung-gaji` dan `/sdm/distribusi` dialihkan 307 ke sini dengan query yang sama (`redirects` di `next.config.ts`) | SDM |
 | `/fee-event/event` | Event & Kehadiran crew freelance (`?lihat=EVT-2026-0001`, `&sesi=`, `&tugas=`, `&hadir=`) | SDM (fee event) |
 | `/fee-event/keputusan` | Laporan & Fee: keputusan Owner, slip fee (`?lihat=FEE-2026-0001&slip=semua`) | SDM (fee event) |
 | `/kapten` | Penilaian Crew (hanya peran Kapten, `?lihat=EVT-2026-0001`) | SDM (fee event) |
@@ -78,8 +77,8 @@ Peran **Kapten** (crew freelance yang memimpin event) ditolak secara bawaan: `wa
 | `pelepasan.ajukan` | Admin | ajukan pelepasan |
 | `pelepasan.putuskan` | Owner | setujui atau tolak pelepasan (alasan wajib saat tolak) |
 | `presensi.kelola` | HRD | input, ubah, hapus presensi |
-| `gaji.hitung` | HRD | hitung dan simpan slip, hapus slip draf |
-| `penggajian.ajukan` | HRD | ajukan semua slip draf satu periode |
+| `gaji.hitung` | HRD | tambah dan hapus potongan atau bonus manual di Gaji Bulanan |
+| `penggajian.ajukan` | HRD | ajukan paket Gaji Bulanan satu periode (slip dihitung ulang saat diajukan) |
 | `penggajian.putuskan` | Owner | setujui (jurnal + bayar) atau tolak |
 | `event.kelola` | HRD, Owner | event, sesi, penugasan crew (crew freelance, atau karyawan inhouse sebagai crew), kehadiran per sesi (hanya selama event berstatus Penilaian) |
 | `event.nilai` | Kapten, Owner | Kapten menilai kehadiran crew di event miliknya (bukan dirinya, bukan kapten lain); Owner menilai kehadiran kapten |
@@ -117,8 +116,9 @@ Enum `StatusPersetujuan` (DRAFT, DIAJUKAN, DISETUJUI, DITOLAK) dipakai jurnal, p
 | Pelepasan | dibuat DIAJUKAN → Owner DISETUJUI (jurnal umum dibuat, aset DILEPAS, jadwal yang belum dijurnal dihapus) / DITOLAK |
 | Setting gaji | dibuat DIAJUKAN oleh HRD atau Owner (bulan berlaku harus periode terbuka) → Owner DISETUJUI (tanpa jurnal, berlaku mulai bulan itu) / DITOLAK (alasan wajib). Baris tidak pernah ditimpa |
 | Versi nominal | dibuat DIAJUKAN oleh HRD atau Owner (tarif event hanya Owner; bulan berlaku harus periode terbuka) → Owner DISETUJUI (tanpa jurnal, berlaku mulai bulan itu) / DITOLAK (alasan wajib). Baris tidak pernah ditimpa |
-| Slip | DRAFT (boleh dihitung ulang/hapus) → DIAJUKAN (bersama penggajian) → DISETUJUI (dibayar); bila penggajian ditolak slip kembali DRAFT, `penggajianNo` dikosongkan, `alasanTolak` diisi |
-| Penggajian | dibuat DIAJUKAN → Owner DISETUJUI (cek saldo kas ≥ total THP, jurnal umum dibuat, slip DISETUJUI) / DITOLAK |
+| Slip | dibuat atau dihitung ulang saat HRD mengajukan Gaji Bulanan → DIAJUKAN (bersama penggajian) → DISETUJUI (dibayar); bila penggajian ditolak slip kembali DRAFT ("Dikembalikan Owner"), `penggajianNo` dikosongkan, `alasanTolak` diisi |
+| Penggajian | dibuat DIAJUKAN oleh HRD (paket satu bulan) → Owner DISETUJUI (cek saldo kas ≥ total THP, jurnal umum dibuat, slip DISETUJUI) / DITOLAK (alasan wajib) |
+| Potongan dan bonus (`penyesuaian_gaji`) | ditambah atau dihapus HRD selama slip karyawan bulan itu belum diajukan atau dibayar dan periode terbuka |
 | Event (fee event) | `StatusEvent`: PENILAIAN (HRD mencatat, kapten menilai) → kapten kirim laporan → DIAJUKAN (data terkunci) → Owner setujui → SELESAI; Owner tolak → kembali PENILAIAN dengan `alasan_tolak` |
 | Laporan fee | dibuat DIAJUKAN saat kapten mengirim → Owner DISETUJUI (cek saldo kas ≥ total dibayar, periode tanggal selesai event terbuka, jurnal umum DISETUJUI, slip fee per orang) / DITOLAK (tetap tersimpan sebagai jejak; kiriman ulang = nomor baru) |
 | Slip fee | dibuat saat laporan disetujui, selalu tampil "Dibayar" |
@@ -306,6 +306,19 @@ Contoh dosen: karyawan marketing bergaji pokok ikut pameran, lalu menerima gaji 
 - **Bulan gaji X** = bulan **tanggal keputusan Owner** (`periodeGajiUpah`). Bila gaji karyawan itu di bulan X sudah diajukan atau dibayar, atau periode X tertutup, dipakai bulan berikutnya yang masih terbuka. Alasannya: upah event dibayar lewat gaji yang belum dibayar; memakai bulan event bisa jatuh ke gaji yang sudah dibayar bila Owner memutuskan terlambat. Akibatnya beban upah event diakui di bulan gaji X (bersama jurnal gaji), bukan di bulan event.
 - **Di Gaji Bulanan bulan X**: upah event tampil per event (kode dan nama event), ikut bruto dan PPh 21 pegawai, dan dijurnal ke akun baru **6-240 Biaya Upah Event Karyawan** (biaya variabel). Akun 6-230 tidak dipakai karena namanya "Biaya Fee Crew Event (Freelance)" dan memisahkan pembayaran ke crew bukan pegawai (PPh 21 bukan pegawai) dari upah pegawai tetap memudahkan rekonsiliasi PPh. Lihat "Gaji Bulanan".
 - **Migrasi** `20261125120000_upah_event_inhouse`: kolom `slip_fee.periode_gaji` (FK ke periode), CHECK, indeks, dan akun 6-240, 6-250, 7-120 (hanya di database yang sudah punya bagan akun).
+
+### Gaji Bulanan (masukan dosen, 25 Nov 2026)
+
+Gambaran dosen: Master Karyawan, lalu Setting Gaji, lalu slip gaji sebagai output. Komponen tetap dipilih lewat dropdown (form Setting Gaji hanya memakai pilihan karyawan, jabatan, golongan, dan daftar tunjangan dari master; nominal ikut versi nominal yang disetujui), yang diketik manual hanya potongan dan bonus. Hitung Gaji dan Distribusi dinilai bertele-tele, jadi digabung.
+
+- **Menu Siklus SDM gaji inhouse**: Setting Gaji, Presensi, Gaji Bulanan. Master SDM tetap di Pengaturan.
+- **Alur** (`src/lib/server/gaji-bulanan.ts`, dipakai server action `src/lib/aksi/sdm/gaji-bulanan.ts` dan seed): HRD menambah potongan atau bonus per karyawan (`simpanPenyesuaianDalam`, nominal dan keterangan wajib, boleh beberapa baris) dan melihat pratinjau langsung (editor menghitung `hitungGaji` di browser). HRD lalu mengajukan satu paket bulan itu (`ajukanGajiBulananDalam`): karyawan yang punya setting berlaku, presensi bulan itu, dan belum diajukan atau dibayar ikut paket; slipnya dihitung ulang dari bahan terbaru (setting, versi nominal, presensi, upah event, potongan, bonus), lalu slip dan penggajian DIAJUKAN. Karyawan tanpa presensi tidak ikut dan disebut di dialog konfirmasi dan peringatan halaman (dengan tautan ke Presensi). Komponen tanpa nominal berlaku atau THP minus menahan pengajuan. Owner menyetujui (`setujuiPenggajianDalam`, cek kas, jurnal, slip Dibayar) atau menolak dengan alasan (slip kembali DRAFT, HRD memperbaiki lalu mengajukan ulang). Tombol Hitung Gaji, Hitung ulang, dan Hapus slip dihapus karena pengajuan selalu menghitung ulang; aturan "slip draf usang" lama tidak lagi menahan pengajuan.
+- **Rumus** (`hitungGaji`, `src/lib/inti/penggajian.ts`): gaji tetap = gaji pokok + tunjangan jabatan + tunjangan istri/anak + tunjangan lain - potongan absen; bruto = gaji tetap + upah event + bonus; THP = bruto - PPh 21 - potongan manual. Potongan manual (denda) tidak mengurangi penghasilan kena pajak.
+- **PPh 21 dihitung ulang dengan bonus dan upah event** (`hitungPph21TidakTeratur`): penghasilan teratur (gaji tetap) disetahunkan seperti biasa; PPh atas penghasilan tidak teratur (upah event + bonus) = PPh setahun (gaji tetap x 12 + tidak teratur) dikurangi PPh setahun gaji tetap saja. PPh 21 bulan ini = PPh gaji tetap per bulan + selisih itu. Ini cara lama sebelum TER, dipilih supaya bonus tidak ikut disetahunkan dua belas kali. Simulasi untuk tugas, sama seperti PPh 21 yang lain.
+- **Jurnal gaji** (`barisGaji`): Dr akun beban jabatan (6-210 atau 6-220) sebesar gaji tetap, Dr **6-240 Biaya Upah Event Karyawan** (upah event), Dr **6-250 Biaya Bonus Karyawan** (bonus); Kr 2-120 Utang PPh 21, Kr **7-120 Pendapatan Lain-lain (Denda Karyawan)** (potongan manual), Kr 1-110 Kas (THP). Bonus dipisah dari Biaya Gaji supaya biaya tetap (gaji dari Setting Gaji) dan biaya tidak tetap (bonus) terbaca terpisah di laporan. Denda dicatat sebagai pendapatan lain-lain karena uangnya tetap di perusahaan (gaji yang ditransfer berkurang), bukan pengurang biaya gaji.
+- **Struktur**: tabel baru `penyesuaian_gaji` (periode, karyawan, jenis POTONGAN atau BONUS, nominal, keterangan, pembuat; CHECK nominal > 0 dan keterangan tidak kosong). Kolom baru `slip_gaji.gaji_tetap`, `upah_event`, `bonus`, `potongan_lain` (CHECK `slip_gaji_komponen`: bruto = gaji tetap + upah event + bonus, THP = bruto - PPh 21 - potongan lain). Baris potongan, bonus, dan upah event dibaca per karyawan dan periode (terkunci begitu slip diajukan), jadi slip tidak menyalin barisnya. Migrasi `20261125130000_gaji_bulanan` mengisi `gaji_tetap` = `bruto` untuk slip lama.
+- **Tampilan**: status ditulis untuk orang awam dengan titik berwarna dan teks (`StatusGaji`: Belum ada presensi sebagai tautan ke Presensi, Belum diajukan, Dikembalikan Owner, Menunggu Owner, Dibayar), bukan lencana berbentuk tombol. THP yang belum diajukan diberi tulisan kecil "estimasi". Slip (`RincianSlip`) berisi blok Gaji tetap, Upah event (per event, kode dan nama), Potongan dan bonus (bila ada), Yang diterima, dan perhitungan PPh 21.
+- **Dihapus**: halaman dan komponen Hitung Gaji dan Distribusi (`HalamanHitungGaji`, `HalamanDistribusi`, `TabelGaji`, `KesiapanGaji`, `AksiGaji`), server action `src/lib/aksi/sdm/gaji.ts` dan `distribusi.ts`, data `src/lib/data/sdm/distribusi.ts`.
 
 ### Investasi Kas (modal pemilik)
 

@@ -36,6 +36,10 @@ export async function simpanSlip(tx: Tx, b: BahanGaji, periode: string, pengguna
     tunjKeluarga: h.tunjKeluarga,
     tunjLain: h.totalTunjLain,
     potonganAbsen: h.potonganAbsen,
+    gajiTetap: h.gajiTetap,
+    upahEvent: h.totalUpahEvent,
+    bonus: h.totalBonus,
+    potonganLain: h.totalPotongan,
     bruto: h.bruto,
     brutoSetahun: h.brutoSetahun,
     biayaJabatan: h.biayaJabatan,
@@ -67,7 +71,7 @@ export async function simpanSlip(tx: Tx, b: BahanGaji, periode: string, pengguna
     await tx.slipTunjangan.createMany({ data: h.tunjLain.map((t) => ({ slipNo: no, tunjanganKode: t.kode, nama: t.nama, nominal: t.nominal, versiKode: versiTunj.get(t.kode) ?? null })) });
   }
   const versi = [b.versiGajiPokok?.kode, b.versiJabatan?.kode, ...b.versiTunjangan.map((t) => t.versi?.kode)].filter(Boolean).join(", ");
-  await catatLog(tx, penggunaId, lama ? "slip.hitung-ulang" : "slip.hitung", "slip", no, `bruto ${h.bruto}, PPh 21 ${h.pph21}, THP ${h.thp}, setting ${b.settingKode}, nominal ${versi}`);
+  await catatLog(tx, penggunaId, lama ? "slip.hitung-ulang" : "slip.hitung", "slip", no, `bruto ${h.bruto} (gaji tetap ${h.gajiTetap}, upah event ${h.totalUpahEvent}, bonus ${h.totalBonus}), potongan ${h.totalPotongan}, PPh 21 ${h.pph21}, THP ${h.thp}, setting ${b.settingKode}, nominal ${versi}`);
   return true;
 }
 

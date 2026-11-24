@@ -34,14 +34,13 @@ const TAUTAN: Record<Exclude<Peran, "KAPTEN">, Tautan[]> = {
   ],
   HRD: [
     { href: "/sdm/presensi", label: "Presensi", ikon: <CalendarClock className="size-4" />, berperiode: true },
-    { href: "/sdm/hitung-gaji", label: "Hitung gaji", ikon: <Coins className="size-4" />, berperiode: true },
-    { href: "/sdm/distribusi", label: "Distribusi gaji", ikon: <ReceiptText className="size-4" />, berperiode: true },
+    { href: "/sdm/gaji-bulanan", label: "Gaji bulanan", ikon: <Coins className="size-4" />, berperiode: true },
     { href: "/fee-event/event", label: "Event & kehadiran crew", ikon: <CalendarRange className="size-4" /> },
     { href: "/master/sdm", label: "Master SDM", ikon: <Users className="size-4" /> },
   ],
   OWNER: [
     { href: "/pelaporan/jurnal-penyesuaian?status=DIAJUKAN", label: "Setujui jurnal", ikon: <BadgeCheck className="size-4" /> },
-    { href: "/sdm/distribusi", label: "Setujui penggajian", ikon: <ReceiptText className="size-4" />, berperiode: true },
+    { href: "/sdm/gaji-bulanan", label: "Setujui gaji bulanan", ikon: <ReceiptText className="size-4" />, berperiode: true },
     { href: "/fee-event/keputusan", label: "Putuskan fee event", ikon: <HandCoins className="size-4" /> },
     { href: "/pelaporan/tutup-periode", label: "Tutup periode", ikon: <Lock className="size-4" /> },
     { href: "/pengguna", label: "Kelola pengguna", ikon: <UserCog className="size-4" /> },

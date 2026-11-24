@@ -278,7 +278,7 @@ async function main() {
         no: s.id, periodeId: s.periode, karyawanKode: s.karyawan_id, jabatanKode: s.jabatan_id, golonganKode: s.golongan_id,
         akunBebanKode: s.akun_beban, statusPtkp: ptkp(s.status_ptkp), hariKerja: s.hari_kerja, jumlahPresensi: s.presensi, hadir: s.hadir, izin: s.izin,
         sakit: s.sakit, cuti: s.cuti, alpa: s.alpa, jamKerja: s.jam_kerja, terlambatMenit: s.terlambat_menit, gajiPokok: s.gaji_pokok,
-        tunjJabatan: s.tunj_jabatan, tunjKeluarga: s.tunj_keluarga, tunjLain: (s.tunj_lain ?? []).reduce((x: number, t: any) => x + t.nominal, 0),
+        tunjJabatan: s.tunj_jabatan, tunjKeluarga: s.tunj_keluarga, tunjLain: (s.tunj_lain ?? []).reduce((x: number, t: any) => x + t.nominal, 0), gajiTetap: s.bruto,
         potonganAbsen: s.potongan_absen, bruto: s.bruto, brutoSetahun: s.pajak.setahun, biayaJabatan: s.pajak.biaya, netoSetahun: s.pajak.neto,
         ptkp: s.pajak.ptkp, pkp: s.pajak.pkp, pphSetahun: s.pajak.pph_setahun, pph21: s.pph21, thp: s.thp, status: st, penggajianNo: s.ref ?? null,
         settingKode: daftar("setgaji").find((x) => x.karyawan_id === s.karyawan_id)?.id ?? null,

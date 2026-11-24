@@ -30,8 +30,24 @@ describe.runIf(aktif)("riwayat setting gaji dan cek kas pembelian tunai", async 
   const sg = await import("@/lib/aksi/master/setting-gaji");
   const master = await import("@/lib/aksi/master/master");
   const presensi = await import("@/lib/aksi/sdm/presensi");
-  const gaji = await import("@/lib/aksi/sdm/gaji");
-  const distribusi = await import("@/lib/aksi/sdm/distribusi");
+  const gajiBulanan = await import("@/lib/aksi/sdm/gaji-bulanan");
+  const { simpanSlip } = await import("@/lib/server/gaji");
+  /** Slip draf satu karyawan (dulu tombol Hitung Gaji); pengajuan Gaji Bulanan menghitung ulang slip sendiri. */
+  const gaji = {
+    hitungSlipSatu: async ({ periode, karyawanKode }: { periode: string; karyawanKode: string }) => {
+      const hrd = await db.pengguna.findUniqueOrThrow({ where: { namaPengguna: "hrd" } });
+      try {
+        await db.$transaction(async (tx) => {
+          const [b] = await (await import("@/lib/data/sdm/gaji")).muatBahanGaji(tx, periode, karyawanKode);
+          if (!b || !(await simpanSlip(tx, b, periode, hrd.id))) throw new Error("slip tidak bisa dihitung");
+        });
+        return { ok: true as const };
+      } catch (e) {
+        return { ok: false as const, galat: (e as Error).message };
+      }
+    },
+  };
+  const distribusi = { ajukanPenggajian: gajiBulanan.ajukanGajiBulanan, setujuiPenggajian: gajiBulanan.setujuiPenggajian, tolakPenggajian: gajiBulanan.tolakPenggajian };
   const beli = await import("@/lib/aksi/konversi/pembelian");
   const { muatBahanGaji, barisHitungGaji, kesiapanGaji, ringkasanTahunGaji } = await import("@/lib/data/sdm/gaji");
   const { dataSettingGaji } = await import("@/lib/data/master/setting-gaji");
@@ -153,7 +169,7 @@ describe.runIf(aktif)("riwayat setting gaji dan cek kas pembelian tunai", async 
     expect(log[1].penggunaId).toBe((await db.pengguna.findUniqueOrThrow({ where: { namaPengguna: "owner" } })).id);
   });
 
-  it("slip draf di bulan berlaku ditandai perlu dihitung ulang; distribusi menolak sampai dihitung ulang", async () => {
+  it("slip draf di bulan berlaku ditandai perlu dihitung ulang; pengajuan Gaji Bulanan memakai setting yang berlaku", async () => {
     await masukSebagai("hrd");
     expect((await hadir("KRY-02", "2026-11-02")).ok).toBe(true);
     expect((await gaji.hitungSlipSatu({ periode: "2026-11", karyawanKode: "KRY-02" })).ok).toBe(true);
@@ -171,7 +187,6 @@ describe.runIf(aktif)("riwayat setting gaji dan cek kas pembelian tunai", async 
     expect((await slip("2026-11", "KRY-02")).settingKode).toBe("SET-02");
 
     await masukSebagai("hrd");
-    expect(galat(await distribusi.ajukanPenggajian({ periode: "2026-11" }))).toMatch(/Setting gaji atau nominal komponen SLP-2026-11-KRY-02 sudah berubah sejak slipnya dihitung/);
     expect((await gaji.hitungSlipSatu({ periode: "2026-11", karyawanKode: "KRY-02" })).ok).toBe(true);
     const baru = await slip("2026-11", "KRY-02");
     expect(baru.settingKode).toBe(kode);

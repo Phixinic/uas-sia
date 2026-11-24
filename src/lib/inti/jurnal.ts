@@ -78,14 +78,27 @@ export function barisPelepasan(a: {
 }
 
 /** Penggajian: debit biaya gaji per akun beban (bruto), kredit utang PPh 21 dan kas (THP). */
-export function barisGaji(slip: { akunBeban: string; bruto: number; pph21: number; thp: number }[]): BarisJurnal[] {
+/**
+ * Jurnal gaji: debit gaji tetap per akun beban jabatan, upah event karyawan (6-240), dan bonus (6-250); kredit Utang PPh 21,
+ * pendapatan denda (7-120, potongan manual), dan Kas (THP). Komponen opsional bernilai 0 dibuang oleh validasiBaris.
+ */
+export function barisGaji(slip: { akunBeban: string; bruto: number; pph21: number; thp: number; upahEvent?: number; bonus?: number; potongan?: number }[]): BarisJurnal[] {
   const grup: Record<string, number> = {};
-  for (const s of slip) grup[s.akunBeban || AKUN.BIAYA_GAJI_ADMINISTRASI] = (grup[s.akunBeban || AKUN.BIAYA_GAJI_ADMINISTRASI] ?? 0) + s.bruto;
+  const tambah = (akun: string, n: number) => (grup[akun] = (grup[akun] ?? 0) + n);
+  for (const s of slip) {
+    const upah = s.upahEvent ?? 0;
+    const bonus = s.bonus ?? 0;
+    tambah(s.akunBeban || AKUN.BIAYA_GAJI_ADMINISTRASI, s.bruto - upah - bonus);
+    if (upah) tambah(AKUN.BIAYA_UPAH_EVENT, upah);
+    if (bonus) tambah(AKUN.BIAYA_BONUS, bonus);
+  }
+  const potongan = slip.reduce((s, x) => s + (x.potongan ?? 0), 0);
   return Object.keys(grup)
     .sort()
     .map((akun) => ({ akun, debit: grup[akun], kredit: 0 }))
     .concat([
       { akun: AKUN.UTANG_PPH21, debit: 0, kredit: slip.reduce((s, x) => s + x.pph21, 0) },
+      ...(potongan ? [{ akun: AKUN.PENDAPATAN_DENDA, debit: 0, kredit: potongan }] : []),
       { akun: AKUN.KAS, debit: 0, kredit: slip.reduce((s, x) => s + x.thp, 0) },
     ]);
 }

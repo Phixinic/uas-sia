@@ -26,8 +26,7 @@ const seed = () => execSync("npx tsx prisma/seed.ts", { env: { ...process.env, S
 describe.runIf(aktif)("siklus SDM lewat server action", async () => {
   const { db } = await import("@/lib/server/db");
   const presensi = await import("@/lib/aksi/sdm/presensi");
-  const gaji = await import("@/lib/aksi/sdm/gaji");
-  const distribusi = await import("@/lib/aksi/sdm/distribusi");
+  const gajiBulanan = await import("@/lib/aksi/sdm/gaji-bulanan");
   const { muatBahanGaji } = await import("@/lib/data/sdm/gaji");
   const { hitungGaji } = await import("@/lib/inti/penggajian");
   const { saldoAkun, muatJurnalBuku } = await import("@/lib/server/jurnal");
@@ -81,77 +80,104 @@ describe.runIf(aktif)("siklus SDM lewat server action", async () => {
     if (!dobel.ok) expect(dobel.galatIsian?.tanggal).toBeTruthy();
   });
 
-  it("presensi Oktober terkunci karena slipnya sudah dibayar; Admin tidak boleh hitung gaji", async () => {
+  it("presensi Oktober terkunci karena slipnya sudah dibayar; Admin tidak boleh mengajukan gaji atau mengisi bonus", async () => {
     const ok = await presensi.simpanPresensi({ karyawanKode: "KRY-01", tanggal: "2026-10-31", absensi: "ALPA" });
     expect(ok.ok).toBe(false);
     const lama = await db.presensi.findFirstOrThrow({ where: { karyawanKode: "KRY-01", tanggal: new Date("2026-10-05T00:00:00Z") } });
     expect((await presensi.hapusPresensi({ id: lama.id })).ok).toBe(false);
     await masukSebagai("admin");
-    expect((await gaji.hitungSlipSemua({ periode: "2026-11" })).ok).toBe(false);
+    expect((await gajiBulanan.ajukanGajiBulanan({ periode: "2026-11" })).ok).toBe(false);
+    expect((await gajiBulanan.simpanPenyesuaianGaji({ periode: "2026-11", karyawanKode: "KRY-03", jenis: "BONUS", nominal: 1, keterangan: "x" })).ok).toBe(false);
     await masukSebagai("hrd");
   });
 
-  it("hitung semua: hanya karyawan berpresensi; hitung ulang tidak menduplikasi; periode Oktober tidak bisa ditimpa", async () => {
+  it("potongan dan bonus manual: keterangan dan nominal wajib, beberapa baris boleh, Oktober yang sudah dibayar terkunci", async () => {
     await masukSebagai("hrd");
     for (const k of ["KRY-02", "KRY-03", "KRY-04", "KRY-05"]) {
       const h = await presensi.simpanPresensi({ karyawanKode: k, tanggal: "2026-11-03", absensi: k === "KRY-02" ? "ALPA" : "HADIR", jamMasuk: "07:00", jamKeluar: "16:00" });
       expect(h.ok).toBe(true);
     }
-    const h = await gaji.hitungSlipSemua({ periode: "2026-11" });
-    expect(h.ok).toBe(true);
-    expect(await db.slipGaji.count({ where: { periodeId: "2026-11" } })).toBe(5);
-    expect((await gaji.hitungSlipSemua({ periode: "2026-11" })).ok).toBe(true);
-    expect(await db.slipGaji.count({ where: { periodeId: "2026-11" } })).toBe(5);
-    const alpa = await db.slipGaji.findUniqueOrThrow({ where: { no: "SLP-2026-11-KRY-02" } });
-    expect(alpa.alpa).toBe(1);
-    expect(alpa.potonganAbsen).toBeGreaterThan(0);
-    expect(alpa.thp).toBe(alpa.bruto - alpa.pph21);
-    const okt = await gaji.hitungSlipSatu({ periode: "2026-10", karyawanKode: "KRY-01" });
-    expect(okt.ok).toBe(false);
+    const isi = (jenis: "POTONGAN" | "BONUS", nominal: number, keterangan: string, karyawanKode = "KRY-03", periode = "2026-11") => gajiBulanan.simpanPenyesuaianGaji({ periode, karyawanKode, jenis, nominal, keterangan });
+    expect((await isi("POTONGAN", 150_000, "")).ok).toBe(false);
+    expect((await isi("BONUS", 0, "Bonus event")).ok).toBe(false);
+    expect((await isi("BONUS", 500_000, "Bonus Oktober", "KRY-03", "2026-10")).ok).toBe(false);
+    expect((await isi("BONUS", 80_000, "Karyawan event", "KRY-08")).ok).toBe(false);
+    expect((await isi("POTONGAN", 150_000, "Denda merusak kabel XLR")).ok).toBe(true);
+    expect((await isi("BONUS", 1_000_000, "Bonus target penjualan")).ok).toBe(true);
+    expect((await isi("BONUS", 250_000, "Bonus lembur pameran")).ok).toBe(true);
+    expect(await db.penyesuaianGaji.count({ where: { periodeId: "2026-11", karyawanKode: "KRY-03" } })).toBe(3);
   });
 
-  it("hapus slip draf lalu hitung ulang satu karyawan", async () => {
-    expect((await gaji.hapusSlip({ no: "SLP-2026-11-KRY-05" })).ok).toBe(true);
-    expect(await db.slipGaji.count({ where: { periodeId: "2026-11" } })).toBe(4);
-    expect((await gaji.hitungSlipSatu({ periode: "2026-11", karyawanKode: "KRY-05" })).ok).toBe(true);
-    expect(await db.slipGaji.count({ where: { periodeId: "2026-11" } })).toBe(5);
+  const upahKry01 = 150_000;
+  it("upah event karyawan inhouse yang dibayar lewat gaji November ikut bahan gaji per event", async () => {
+    // Baris upah event seperti hasil keputusan Owner (lihat tes fee event): KRY-01 ikut EVT-2026-0001 sebagai crew.
+    await db.slipFee.create({
+      data: {
+        no: "SFE-EVT-2026-0001-KRY-01", laporanNo: "FEE-2026-0001", eventKode: "EVT-2026-0001", karyawanKode: "KRY-01", jabatanKode: "JBT-06", akunBebanKode: "6-230",
+        peranEvent: "CREW", satuanTarif: "JAM", tarif: 20_000, jumlahSesi: 1, menitTercatat: 450, menitDiakui: 450, jumlahHari: 1, feeUsulan: upahKry01, feeAkhir: upahKry01,
+        dpp: 0, pph21: 0, dibayar: upahKry01, periodeGajiId: "2026-11",
+      },
+    });
+    const [b] = await muatBahanGaji(db, "2026-11", "KRY-01");
+    expect(b.upahEvent.map((u) => [u.eventKode, u.fee])).toEqual([["EVT-2026-0001", upahKry01]]);
+    const h = hitungGaji(b.input);
+    expect(h.totalUpahEvent).toBe(upahKry01);
+    expect(h.bruto).toBe(h.gajiTetap + upahKry01);
   });
 
   let noPay = "";
-  it("hanya HRD mengajukan; pengajuan mengunci slip dan presensi", async () => {
+  it("HRD mengajukan satu paket: slip dihitung dari bahan terbaru, PPh 21 dihitung ulang dengan bonus dan upah event, presensi dan bonus terkunci", async () => {
     await masukSebagai("owner");
-    expect((await distribusi.ajukanPenggajian({ periode: "2026-11" })).ok).toBe(false);
+    expect((await gajiBulanan.ajukanGajiBulanan({ periode: "2026-11" })).ok).toBe(false);
     await masukSebagai("hrd");
-    const h = await distribusi.ajukanPenggajian({ periode: "2026-11" });
+    const h = await gajiBulanan.ajukanGajiBulanan({ periode: "2026-11" });
     expect(h.ok).toBe(true);
     noPay = h.ok ? (h.data?.no ?? "") : "";
     expect(noPay).toMatch(/^PAY-2026-\d{4}$/);
     const slip = await db.slipGaji.findMany({ where: { periodeId: "2026-11" } });
+    expect(slip).toHaveLength(5);
     expect(slip.every((s) => s.status === "DIAJUKAN" && s.penggajianNo === noPay)).toBe(true);
+    const s3 = slip.find((s) => s.karyawanKode === "KRY-03")!;
+    expect([s3.bonus, s3.potonganLain, s3.upahEvent]).toEqual([1_250_000, 150_000, 0]);
+    expect(s3.bruto).toBe(s3.gajiTetap + 1_250_000);
+    const { hitungPph21TidakTeratur } = await import("@/lib/inti/penggajian");
+    const ptkp = s3.statusPtkp as Parameters<typeof hitungPph21TidakTeratur>[2];
+    expect(s3.pph21).toBe(hitungPph21TidakTeratur(s3.gajiTetap, 1_250_000, ptkp).pph21);
+    expect(s3.pph21).toBeGreaterThan(hitungPph21TidakTeratur(s3.gajiTetap, 0, ptkp).pph21);
+    expect(s3.thp).toBe(s3.bruto - s3.pph21 - 150_000);
+    const s1 = slip.find((s) => s.karyawanKode === "KRY-01")!;
+    expect([s1.upahEvent, s1.bruto - s1.gajiTetap]).toEqual([upahKry01, upahKry01]);
+    const alpa = slip.find((s) => s.karyawanKode === "KRY-02")!;
+    expect(alpa.potonganAbsen).toBeGreaterThan(0);
     expect((await presensi.simpanPresensi({ karyawanKode: "KRY-01", tanggal: "2026-11-04", absensi: "CUTI" })).ok).toBe(false);
-    expect((await gaji.hapusSlip({ no: "SLP-2026-11-KRY-01" })).ok).toBe(false);
-    expect((await distribusi.ajukanPenggajian({ periode: "2026-11" })).ok).toBe(false);
+    expect((await gajiBulanan.simpanPenyesuaianGaji({ periode: "2026-11", karyawanKode: "KRY-03", jenis: "BONUS", nominal: 1, keterangan: "telat" })).ok).toBe(false);
+    expect((await gajiBulanan.ajukanGajiBulanan({ periode: "2026-11" })).ok).toBe(false);
   });
 
-  it("HRD tidak boleh memutuskan; Owner menolak wajib dengan alasan, slip kembali draf", async () => {
-    expect((await distribusi.setujuiPenggajian({ no: noPay })).ok).toBe(false);
+  it("HRD tidak boleh memutuskan; Owner menolak wajib dengan alasan, slip kembali draf dan bonus bisa diubah lagi", async () => {
+    expect((await gajiBulanan.setujuiPenggajian({ no: noPay })).ok).toBe(false);
     await masukSebagai("owner");
-    expect((await distribusi.tolakPenggajian({ no: noPay, alasan: "" })).ok).toBe(false);
-    expect((await distribusi.tolakPenggajian({ no: noPay, alasan: "Cek ulang presensi" })).ok).toBe(true);
+    expect((await gajiBulanan.tolakPenggajian({ no: noPay, alasan: "" })).ok).toBe(false);
+    expect((await gajiBulanan.tolakPenggajian({ no: noPay, alasan: "Bonus lembur belum disetujui" })).ok).toBe(true);
     const slip = await db.slipGaji.findMany({ where: { periodeId: "2026-11" } });
-    expect(slip.every((s) => s.status === "DRAFT" && s.penggajianNo === null && s.alasanTolak === "Cek ulang presensi")).toBe(true);
-    expect((await distribusi.tolakPenggajian({ no: noPay, alasan: "lagi" })).ok).toBe(false);
+    expect(slip.every((s) => s.status === "DRAFT" && s.penggajianNo === null && s.alasanTolak === "Bonus lembur belum disetujui")).toBe(true);
+    expect((await gajiBulanan.tolakPenggajian({ no: noPay, alasan: "lagi" })).ok).toBe(false);
+    await masukSebagai("hrd");
+    const lembur = await db.penyesuaianGaji.findFirstOrThrow({ where: { keterangan: "Bonus lembur pameran" } });
+    expect((await gajiBulanan.hapusPenyesuaianGaji({ id: lembur.id })).ok).toBe(true);
   });
 
-  it("ajukan ulang lalu Owner menyetujui: jurnal seimbang, kas berkurang sebesar THP, slip Dibayar", async () => {
+  it("ajukan ulang lalu Owner menyetujui: jurnal memuat gaji tetap, upah event 6-240, bonus 6-250, denda 7-120; kas berkurang sebesar THP", async () => {
     await masukSebagai("hrd");
-    const aj = await distribusi.ajukanPenggajian({ periode: "2026-11" });
+    const aj = await gajiBulanan.ajukanGajiBulanan({ periode: "2026-11" });
     expect(aj.ok).toBe(true);
     const no = aj.ok ? (aj.data?.no ?? "") : "";
+    const s3 = await db.slipGaji.findUniqueOrThrow({ where: { no: "SLP-2026-11-KRY-03" } });
+    expect([s3.bonus, s3.potonganLain]).toEqual([1_000_000, 150_000]);
     const kasSebelum = await saldoAkun(db, "1-110");
     const pph0 = await saldoAkun(db, "2-120");
     await masukSebagai("owner");
-    const h = await distribusi.setujuiPenggajian({ no });
+    const h = await gajiBulanan.setujuiPenggajian({ no });
     expect(h.ok).toBe(true);
     const g = await db.penggajian.findUniqueOrThrow({ where: { no }, include: { slip: true } });
     expect(g.status).toBe("DISETUJUI");
@@ -160,11 +186,18 @@ describe.runIf(aktif)("siklus SDM lewat server action", async () => {
     expect(await saldoAkun(db, "1-110")).toBe(kasSebelum - g.totalThp);
     expect(await saldoAkun(db, "2-120")).toBe(pph0 + g.totalPph);
     const j = await db.jurnal.findUniqueOrThrow({ where: { no: g.jurnalNo! }, include: { detail: true } });
-    expect(j.status).toBe("DISETUJUI");
+    const akun = (k: string) => j.detail.filter((d) => d.akunKode === k).reduce((t, d) => t + d.debit - d.kredit, 0);
+    expect(akun("6-240")).toBe(upahKry01);
+    expect(akun("6-250")).toBe(1_000_000);
+    expect(akun("7-120")).toBe(-150_000);
+    expect(akun("1-110")).toBe(-g.totalThp);
+    expect(akun("2-120")).toBe(-g.totalPph);
+    const tetap = g.slip.reduce((t, s) => t + s.gajiTetap, 0);
+    expect(akun("6-210") + akun("6-220")).toBe(tetap);
     expect(j.detail.reduce((s, d) => s + d.debit, 0)).toBe(g.totalBruto);
     expect(j.detail.reduce((s, d) => s + d.kredit, 0)).toBe(g.totalBruto);
     const neraca = neracaSaldo(await muatJurnalBuku(db), (await db.akun.findMany()).map((a) => a.kode), null);
     expect(neraca.seimbang).toBe(true);
-    expect((await distribusi.setujuiPenggajian({ no })).ok).toBe(false);
+    expect((await gajiBulanan.setujuiPenggajian({ no })).ok).toBe(false);
   });
 });

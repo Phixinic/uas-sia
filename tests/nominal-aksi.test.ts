@@ -33,12 +33,27 @@ describe.runIf(aktif)("riwayat nominal master: alur, pengaman, dan pemakaian di 
   const master = await import("@/lib/aksi/master/master");
   const sg = await import("@/lib/aksi/master/setting-gaji");
   const presensi = await import("@/lib/aksi/sdm/presensi");
-  const gaji = await import("@/lib/aksi/sdm/gaji");
-  const distribusi = await import("@/lib/aksi/sdm/distribusi");
+  const gajiBulanan = await import("@/lib/aksi/sdm/gaji-bulanan");
+  const { simpanSlip } = await import("@/lib/server/gaji");
+  /** Slip draf satu karyawan (dulu tombol Hitung Gaji); pengajuan Gaji Bulanan menghitung ulang slip sendiri. */
+  const gaji = {
+    hitungSlipSatu: async ({ periode, karyawanKode }: { periode: string; karyawanKode: string }) => {
+      const hrd = await db.pengguna.findUniqueOrThrow({ where: { namaPengguna: "hrd" } });
+      try {
+        await db.$transaction(async (tx) => {
+          const [b] = await (await import("@/lib/data/sdm/gaji")).muatBahanGaji(tx, periode, karyawanKode);
+          if (!b || !(await simpanSlip(tx, b, periode, hrd.id))) throw new Error("slip tidak bisa dihitung");
+        });
+        return { ok: true as const };
+      } catch (e) {
+        return { ok: false as const, galat: (e as Error).message };
+      }
+    },
+  };
+  const distribusi = { ajukanPenggajian: gajiBulanan.ajukanGajiBulanan, setujuiPenggajian: gajiBulanan.setujuiPenggajian, tolakPenggajian: gajiBulanan.tolakPenggajian };
   const ev = await import("@/lib/aksi/fee-event/event");
   const putus = await import("@/lib/aksi/fee-event/keputusan");
   const { barisHitungGaji, ambilSlip } = await import("@/lib/data/sdm/gaji");
-  const { dataDistribusi } = await import("@/lib/data/sdm/distribusi");
   const { muatBahanEvent } = await import("@/lib/data/fee-event/bahan");
   const { slipFeeLaporan } = await import("@/lib/data/fee-event/daftar");
   const { dataStrukturGaji } = await import("@/lib/data/master/struktur-gaji");
@@ -136,7 +151,7 @@ describe.runIf(aktif)("riwayat nominal master: alur, pengaman, dan pemakaian di 
     expect(st.riwayat.golongan["GP-01"].map((x) => x.kode)).toEqual(["NOM-0001", v.kode]);
   });
 
-  it("slip draf yang memakai versi usang ditandai perlu dihitung ulang dan ditahan di Distribusi", async () => {
+  it("slip draf yang memakai versi usang ditandai perlu dihitung ulang; pengajuan Gaji Bulanan menghitung ulang dengan versi berlaku", async () => {
     await masukSebagai("hrd");
     const a = await ajukan({ jenis: "TUNJANGAN", itemKode: "TNJ-02", nominal: 450_000, bulan: 11, tahun: 2026, alasan: "Kenaikan uang makan November" });
     expect(a.ok, galat(a)).toBe(true);
@@ -150,15 +165,12 @@ describe.runIf(aktif)("riwayat nominal master: alur, pengaman, dan pemakaian di 
     const b = (await barisHitungGaji("2026-11")).find((x) => x.karyawanKode === "KRY-05")!;
     expect([b.nominalBerubah, b.perluHitungUlang, b.settingBerubah]).toEqual([true, true, false]);
     expect(b.tampil.tunjLain.find((t) => t.nama === "Makan")?.nominal).toBe(450_000);
-    expect((await dataDistribusi("2026-11")).usang).toEqual(["SLP-2026-11-KRY-05"]);
     // Satu pengajuan lain untuk November menunggu, dipakai tes berikutnya.
     await masukSebagai("hrd");
     expect((await ajukan({ jenis: "TUNJANGAN", itemKode: "TNJ-01", nominal: 350_000, bulan: 11, tahun: 2026 })).ok).toBe(true);
-    expect(galat(await distribusi.ajukanPenggajian({ periode: "2026-11" }))).toMatch(/nominal komponen SLP-2026-11-KRY-05 sudah berubah/);
     expect((await gaji.hitungSlipSatu({ periode: "2026-11", karyawanKode: "KRY-05" })).ok).toBe(true);
     const baru = await slip("2026-11", "KRY-05");
     expect(baru.tunjangan.find((t) => t.tunjanganKode === "TNJ-02")).toMatchObject({ nominal: 450_000, versiKode: kode(a) });
-    expect((await dataDistribusi("2026-11")).usang).toEqual([]);
     const aj = await distribusi.ajukanPenggajian({ periode: "2026-11" });
     expect(aj.ok, galat(aj)).toBe(true);
   });

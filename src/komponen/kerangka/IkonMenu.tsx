@@ -1,6 +1,6 @@
 import {
   BookOpen, Boxes, Calculator, CalendarCheck, CalendarRange, ClipboardCheck, ClipboardList, Database, FileMinus, FileSpreadsheet, HandCoins, IdCard,
-  LayoutDashboard, Library, Lock, BadgeDollarSign, PackageMinus, Scale, Send, ShoppingCart, TrendingDown, UserCog, Users, Wallet,
+  LayoutDashboard, Library, Lock, BadgeDollarSign, PackageMinus, Scale, ShoppingCart, TrendingDown, UserCog, Users, Wallet,
 } from "lucide-react";
 import type { IkonMenu as Kunci } from "@/lib/menu";
 
@@ -14,8 +14,7 @@ const PETA = {
   pelepasan: PackageMinus,
   "setting-gaji": BadgeDollarSign,
   presensi: CalendarCheck,
-  "hitung-gaji": Calculator,
-  distribusi: Send,
+  "gaji-bulanan": Calculator,
   "jurnal-penyesuaian": FileMinus,
   "jurnal-umum": BookOpen,
   "buku-besar": Library,

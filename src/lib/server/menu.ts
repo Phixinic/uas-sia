@@ -15,7 +15,7 @@ export async function hitunganMenu(peran: Peran, penggunaId: number): Promise<Re
       db.settingGaji.count({ where: { status: "DIAJUKAN" } }),
       db.versiNominal.count({ where: { status: "DIAJUKAN" } }),
     ]);
-    return { "/pelaporan/jurnal-penyesuaian": jp, "/konversi/pelepasan": lepas, "/sdm/distribusi": gaji, "/fee-event/keputusan": fee, "/modal/investasi-kas": setoran, "/sdm/setting-gaji": setting, "/master/sdm": nominal };
+    return { "/pelaporan/jurnal-penyesuaian": jp, "/konversi/pelepasan": lepas, "/sdm/gaji-bulanan": gaji, "/fee-event/keputusan": fee, "/modal/investasi-kas": setoran, "/sdm/setting-gaji": setting, "/master/sdm": nominal };
   }
   if (peran === "KAPTEN") {
     // Event yang dipegang kapten ini dan masih dalam tahap penilaian.
@@ -34,5 +34,5 @@ export async function hitunganMenu(peran: Peran, penggunaId: number): Promise<Re
     db.slipGaji.count({ where: { status: "DRAFT" } }),
     db.event.count({ where: { status: "PENILAIAN", penugasan: { none: { jabatan: { peranEvent: "KAPTEN" } } } } }),
   ]);
-  return { "/sdm/distribusi": slipDraf, "/fee-event/event": tanpaKapten };
+  return { "/sdm/gaji-bulanan": slipDraf, "/fee-event/event": tanpaKapten };
 }

@@ -7,7 +7,7 @@ import { IZIN, type Peran } from "@/lib/peran";
 
 export type IkonMenu =
   | "dashboard" | "beli-alat" | "beli-lengkap" | "nilai-sisa" | "penyusutan" | "kartu-aset" | "pelepasan"
-  | "setting-gaji" | "presensi" | "hitung-gaji" | "distribusi" | "jurnal-penyesuaian" | "jurnal-umum" | "buku-besar" | "neraca-saldo"
+  | "setting-gaji" | "presensi" | "gaji-bulanan" | "jurnal-penyesuaian" | "jurnal-umum" | "buku-besar" | "neraca-saldo"
   | "tutup-periode" | "master-konversi" | "master-sdm" | "pengguna" | "event" | "fee-event" | "penilaian" | "investasi-kas";
 
 export type TautanMenu = { href: string; label: string; ikon: IkonMenu; peran?: readonly Peran[] };
@@ -45,11 +45,11 @@ export const MENU: GrupMenu[] = [
     kunci: "sdm",
     judul: "Siklus SDM: gaji inhouse (biaya tetap)",
     tautan: [
-      // Komponen tetap gaji (riwayat versi, persetujuan Owner) diatur dulu, lalu presensi dan hitung gaji tiap bulan.
+      // Komponen tetap gaji (riwayat versi, persetujuan Owner) diatur dulu, lalu presensi dan Gaji Bulanan tiap bulan
+      // (Hitung Gaji dan Distribusi digabung: potongan, bonus, upah event, ajukan, setujui, slip).
       { href: "/sdm/setting-gaji", label: "Setting Gaji", ikon: "setting-gaji" },
       { href: "/sdm/presensi", label: "Presensi", ikon: "presensi" },
-      { href: "/sdm/hitung-gaji", label: "Hitung Gaji", ikon: "hitung-gaji" },
-      { href: "/sdm/distribusi", label: "Distribusi Gaji", ikon: "distribusi" },
+      { href: "/sdm/gaji-bulanan", label: "Gaji Bulanan", ikon: "gaji-bulanan" },
     ],
   },
   {

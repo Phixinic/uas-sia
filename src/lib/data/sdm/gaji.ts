@@ -11,6 +11,7 @@ import { hitungGaji, type HasilGaji, type InputGaji, type KodePtkp } from "@/lib
 import { LABEL_JENIS_PERUBAHAN, pilihVersiBerlaku } from "@/lib/inti/setting-gaji";
 import { labelSumberVersi, sidikVersiSlip, type PetaNominal } from "@/lib/inti/nominal";
 import { muatPetaNominal } from "@/lib/server/nominal";
+import { labelDurasi } from "@/lib/inti/fee-event";
 import type { StatusPersetujuan } from "@/generated/prisma/enums";
 
 /** Versi nominal yang dipakai satu komponen slip. null = nominal sebelum riwayat (slip lama) atau belum berlaku. */
@@ -46,6 +47,14 @@ export type DataSlip = {
   sumberGajiPokok: string;
   sumberJabatan: string;
   potonganAbsen: number;
+  gajiTetap: number;
+  /** Upah event per event (karyawan inhouse yang ikut event), dibayar lewat gaji bulan ini. */
+  upahEvent: BarisUpahEvent[];
+  totalUpahEvent: number;
+  bonus: BarisPenyesuaian[];
+  totalBonus: number;
+  potongan: BarisPenyesuaian[];
+  totalPotongan: number;
   bruto: number;
   brutoSetahun: number;
   biayaJabatan: number;
@@ -56,6 +65,9 @@ export type DataSlip = {
   pph21: number;
   thp: number;
 };
+
+export type BarisUpahEvent = { slipFeeNo: string; eventKode: string; event: string; jabatan: string; dasar: string; fee: number };
+export type BarisPenyesuaian = { id: number; keterangan: string; nominal: number };
 
 export type BahanGaji = {
   karyawanKode: string;
@@ -72,6 +84,9 @@ export type BahanGaji = {
   versiGajiPokok: RefVersi;
   versiJabatan: RefVersi;
   versiTunjangan: { kode: string; nama: string; versi: RefVersi }[];
+  upahEvent: BarisUpahEvent[];
+  bonus: BarisPenyesuaian[];
+  potongan: BarisPenyesuaian[];
   /** Komponen yang belum punya nominal disetujui dan berlaku di periode ini (slip tidak bisa dihitung). */
   kurang: string[];
 };
@@ -124,10 +139,15 @@ export async function muatBahanGaji(klien: DbAtauTx, periode: string, karyawanKo
     (s) => s.karyawan.aktif && s.karyawan.jenis === "INHOUSE" && s.jabatan.kelompok === "INHOUSE",
   );
   const peta = petaSiap ?? (await muatPetaNominal(klien));
-  const presensi = await klien.presensi.findMany({
-    where: { karyawanKode: { in: setting.map((s) => s.karyawanKode) }, tanggal: { gte: keDate(`${periode}-01`), lte: keDate(hariTerakhir(periode)) } },
-    select: { karyawanKode: true, absensi: true, jamMasuk: true, jamKeluar: true, terlambat: true },
-  });
+  const kode = setting.map((s) => s.karyawanKode);
+  const [presensi, upah, penyesuaian] = await Promise.all([
+    klien.presensi.findMany({
+      where: { karyawanKode: { in: kode }, tanggal: { gte: keDate(`${periode}-01`), lte: keDate(hariTerakhir(periode)) } },
+      select: { karyawanKode: true, absensi: true, jamMasuk: true, jamKeluar: true, terlambat: true },
+    }),
+    muatUpahEvent(klien, periode, kode),
+    muatPenyesuaian(klien, periode, kode),
+  ]);
   return setting.map((s) => {
     const milik = presensi.filter((p) => p.karyawanKode === s.karyawanKode);
     const hariKerja = s.jabatan.hariKerja;
@@ -156,13 +176,48 @@ export async function muatBahanGaji(klien: DbAtauTx, periode: string, karyawanKo
         jadwal: hariKerja ? { kode: s.jabatan.kode, hariKerja } : null,
         tunjangan: tunj.map(({ t, v }) => ({ kode: t.tunjangan.kode, nama: t.tunjangan.nama, nominal: v?.nominal ?? 0 })),
         presensi: milik,
+        upahEvent: (upah.get(s.karyawanKode) ?? []).map((u) => ({ kode: u.eventKode, nama: u.event, fee: u.fee })),
+        bonus: (penyesuaian.get(s.karyawanKode)?.bonus ?? []).map((x) => ({ keterangan: x.keterangan, nominal: x.nominal })),
+        potongan: (penyesuaian.get(s.karyawanKode)?.potongan ?? []).map((x) => ({ keterangan: x.keterangan, nominal: x.nominal })),
       },
+      upahEvent: upah.get(s.karyawanKode) ?? [],
+      bonus: penyesuaian.get(s.karyawanKode)?.bonus ?? [],
+      potongan: penyesuaian.get(s.karyawanKode)?.potongan ?? [],
       versiGajiPokok: ref(vGapok),
       versiJabatan: ref(vJabatan),
       versiTunjangan: tunj.map(({ t, v }) => ({ kode: t.tunjanganKode, nama: t.tunjangan.nama, versi: ref(v) })),
       kurang,
     };
   });
+}
+
+/** Upah event karyawan inhouse yang dibayar lewat gaji periode ini, per karyawan, urut event. */
+export async function muatUpahEvent(klien: DbAtauTx, periode: string, karyawan?: string[]): Promise<Map<string, BarisUpahEvent[]>> {
+  const d = await klien.slipFee.findMany({
+    where: { periodeGajiId: periode, ...(karyawan ? { karyawanKode: { in: karyawan } } : {}) },
+    orderBy: [{ eventKode: "asc" }],
+    select: { no: true, karyawanKode: true, eventKode: true, feeAkhir: true, satuanTarif: true, tarif: true, menitDiakui: true, jumlahHari: true, event: { select: { nama: true } }, jabatan: { select: { nama: true } } },
+  });
+  const hasil = new Map<string, BarisUpahEvent[]>();
+  for (const x of d) {
+    const dasar = x.satuanTarif === "HARI" ? `${x.jumlahHari} hari x Rp${x.tarif.toLocaleString("id-ID")}` : `${labelDurasi(x.menitDiakui)} x Rp${x.tarif.toLocaleString("id-ID")}/jam`;
+    const l = hasil.get(x.karyawanKode) ?? [];
+    l.push({ slipFeeNo: x.no, eventKode: x.eventKode, event: x.event.nama, jabatan: x.jabatan.nama, dasar, fee: x.feeAkhir });
+    hasil.set(x.karyawanKode, l);
+  }
+  return hasil;
+}
+
+/** Potongan dan bonus manual per karyawan di periode ini, urut waktu dibuat. */
+export async function muatPenyesuaian(klien: DbAtauTx, periode: string, karyawan?: string[]): Promise<Map<string, { bonus: BarisPenyesuaian[]; potongan: BarisPenyesuaian[] }>> {
+  const d = await klien.penyesuaianGaji.findMany({ where: { periodeId: periode, ...(karyawan ? { karyawanKode: { in: karyawan } } : {}) }, orderBy: [{ dibuatPada: "asc" }, { id: "asc" }] });
+  const hasil = new Map<string, { bonus: BarisPenyesuaian[]; potongan: BarisPenyesuaian[] }>();
+  for (const x of d) {
+    const m = hasil.get(x.karyawanKode) ?? { bonus: [], potongan: [] };
+    (x.jenis === "BONUS" ? m.bonus : m.potongan).push({ id: x.id, keterangan: x.keterangan, nominal: x.nominal });
+    hasil.set(x.karyawanKode, m);
+  }
+  return hasil;
 }
 
 export function dataSlipDariHasil(b: BahanGaji, h: HasilGaji, periode: string): DataSlip {
@@ -194,6 +249,13 @@ export function dataSlipDariHasil(b: BahanGaji, h: HasilGaji, periode: string): 
     sumberGajiPokok: labelSumberVersi("GOLONGAN", b.golongan, b.versiGajiPokok),
     sumberJabatan: labelSumberVersi("JABATAN", b.jabatan, b.versiJabatan),
     potonganAbsen: h.potonganAbsen,
+    gajiTetap: h.gajiTetap,
+    upahEvent: b.upahEvent,
+    totalUpahEvent: h.totalUpahEvent,
+    bonus: b.bonus,
+    totalBonus: h.totalBonus,
+    potongan: b.potongan,
+    totalPotongan: h.totalPotongan,
     bruto: h.bruto,
     brutoSetahun: h.brutoSetahun,
     biayaJabatan: h.biayaJabatan,
@@ -218,17 +280,24 @@ const sertaiSlip = {
 
 export async function ambilSlip(no: string): Promise<DataSlip | null> {
   const s = await db.slipGaji.findUnique({ where: { no }, include: sertaiSlip });
-  return s ? dataSlipDariDb(s) : null;
+  if (!s) return null;
+  const [upah, peny] = await Promise.all([muatUpahEvent(db, s.periodeId, [s.karyawanKode]), muatPenyesuaian(db, s.periodeId, [s.karyawanKode])]);
+  return dataSlipDariDb(s, upah, peny);
 }
 
 export async function daftarSlipPeriode(periode: string): Promise<DataSlip[]> {
-  const daftar = await db.slipGaji.findMany({ where: { periodeId: periode }, orderBy: { karyawanKode: "asc" }, include: sertaiSlip });
-  return daftar.map(dataSlipDariDb);
+  const [daftar, upah, peny] = await Promise.all([
+    db.slipGaji.findMany({ where: { periodeId: periode }, orderBy: { karyawanKode: "asc" }, include: sertaiSlip }),
+    muatUpahEvent(db, periode),
+    muatPenyesuaian(db, periode),
+  ]);
+  return daftar.map((s) => dataSlipDariDb(s, upah, peny));
 }
 
 type SlipDb = Awaited<ReturnType<typeof db.slipGaji.findMany<{ include: typeof sertaiSlip }>>>[number];
 
-function dataSlipDariDb(s: SlipDb): DataSlip {
+function dataSlipDariDb(s: SlipDb, upah: Map<string, BarisUpahEvent[]>, peny: Map<string, { bonus: BarisPenyesuaian[]; potongan: BarisPenyesuaian[] }>): DataSlip {
+  const p = peny.get(s.karyawanKode);
   return {
     no: s.no,
     periode: s.periodeId,
@@ -257,6 +326,13 @@ function dataSlipDariDb(s: SlipDb): DataSlip {
     sumberGajiPokok: labelSumberVersi("GOLONGAN", s.golongan.nama, s.versiGajiPokok),
     sumberJabatan: labelSumberVersi("JABATAN", s.jabatan.nama, s.versiJabatan),
     potonganAbsen: s.potonganAbsen,
+    gajiTetap: s.gajiTetap,
+    upahEvent: upah.get(s.karyawanKode) ?? [],
+    totalUpahEvent: s.upahEvent,
+    bonus: p?.bonus ?? [],
+    totalBonus: s.bonus,
+    potongan: p?.potongan ?? [],
+    totalPotongan: s.potonganLain,
     bruto: s.bruto,
     brutoSetahun: s.brutoSetahun,
     biayaJabatan: s.biayaJabatan,
@@ -294,6 +370,8 @@ export type BarisGaji = {
   versi: { kode: string | null; jabatan: string; golongan: string; berlakuMulai: string | null };
   /** Versi lebih baru yang belum berlaku di periode ini, atau pengajuan yang masih menunggu Owner. */
   catatanVersi: string | null;
+  /** Bahan hitung terbaru (objek biasa) untuk pratinjau langsung saat HRD mengisi potongan dan bonus. */
+  input: InputGaji;
 };
 
 const versiRingkasSemua = () =>
@@ -351,8 +429,32 @@ export async function barisHitungGaji(periode: string): Promise<BarisGaji[]> {
       nominalKurang: b.kurang,
       versi,
       catatanVersi,
+      input: b.input,
     };
   });
+}
+
+/** Paket gaji (penggajian) satu periode, terbaru dulu, untuk panel status Gaji Bulanan. */
+export async function paketGajiPeriode(periode: string) {
+  const d = await db.penggajian.findMany({
+    where: { periodeId: periode },
+    orderBy: [{ dibuatPada: "desc" }, { no: "desc" }],
+    include: { dibuatOleh: { select: { nama: true } }, disetujuiOleh: { select: { nama: true } } },
+  });
+  return d.map((g) => ({
+    no: g.no,
+    status: g.status,
+    jumlahSlip: g.jumlahSlip,
+    totalBruto: g.totalBruto,
+    totalPph: g.totalPph,
+    totalThp: g.totalThp,
+    alasanTolak: g.alasanTolak,
+    jurnalNo: g.jurnalNo,
+    dibuatOleh: g.dibuatOleh.nama,
+    dibuatPada: g.dibuatPada.toISOString(),
+    diputuskanOleh: g.disetujuiOleh?.nama ?? null,
+    diputuskanPada: g.disetujuiPada?.toISOString() ?? null,
+  }));
 }
 
 /** Kesiapan hitung gaji satu karyawan inhouse untuk satu periode. */

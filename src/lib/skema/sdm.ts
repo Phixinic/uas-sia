@@ -40,3 +40,14 @@ export const skemaNoDanAlasan = z.object({
   no: z.string({ error: "Nomor dokumen kosong." }).trim().min(1, "Nomor dokumen kosong."),
   alasan: z.string({ error: "Tulis alasan penolakan." }).trim().min(1, "Tulis alasan penolakan.").max(500, "Alasan terlalu panjang (maksimal 500 huruf)."),
 });
+
+/** Potongan atau bonus manual satu karyawan di Gaji Bulanan. Nominal dan keterangan wajib. */
+export const skemaPenyesuaianGaji = z.object({
+  periode: z.string({ error: "Periode tidak valid." }).regex(POLA_PERIODE, "Periode tidak valid."),
+  karyawanKode: z.string({ error: "Karyawan tidak valid." }).trim().min(1, "Karyawan tidak valid."),
+  jenis: z.enum(["POTONGAN", "BONUS"], { error: "Pilih potongan atau bonus." }),
+  nominal: z.coerce.number({ error: "Isi nominal." }).int("Nominal harus bilangan bulat.").min(1, "Nominal harus lebih dari 0.").max(100_000_000, "Nominal terlalu besar (maksimal Rp100.000.000)."),
+  keterangan: z.string({ error: "Tulis keterangan." }).trim().min(1, "Tulis keterangan, misalnya denda merusak kabel.").max(200, "Keterangan maksimal 200 huruf."),
+});
+
+export const skemaIdPenyesuaian = z.object({ id: z.coerce.number({ error: "Data tidak valid." }).int("Data tidak valid.").positive("Data tidak valid.") });
