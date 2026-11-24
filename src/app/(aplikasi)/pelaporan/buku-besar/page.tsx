@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import type { Metadata } from "next";
+import PeringatanPenyusutan from "@/komponen/konversi/penyusutan/PeringatanPenyusutan";
 import { wajibMasuk } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { profilUsaha } from "@/lib/data/umum";
@@ -59,6 +60,7 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
         <PilihBulanTahun periode={periode} tersedia={semua} />
         <PilihTahap alamat="/pelaporan/buku-besar" tahap={tahap} param={{ akun: kode, bulan: String(bulanDari(periode)), tahun: String(tahunDari(periode)) }} />
       </div>
+      <div className="tanpa-cetak"><PeringatanPenyusutan sampai={periode} /></div>
       {bb && (
         <>
           <KepalaCetak usaha={usaha.nama} judul={`${judul}: ${bb.akun.kode} ${bb.akun.nama}`} keterangan={labelBulanTahun(periode)} />

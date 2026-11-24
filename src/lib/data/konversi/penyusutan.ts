@@ -70,3 +70,12 @@ export async function dataPenyusutan(periode: string) {
     jurnalIni: jurnalPeriode(riwayat, periode),
   };
 }
+
+/**
+ * Bulan sampai `sampai` (inklusif) yang masih punya jadwal penyusutan aset aktif belum diproses, urut naik.
+ * Dipakai peringatan di dashboard dan laporan: beban penyusutan bulan itu belum ada di buku besar.
+ */
+export async function bulanPenyusutanBelum(sampai: string): Promise<string[]> {
+  const r = await db.jadwalPenyusutan.findMany({ where: { periodeId: { lte: sampai }, jurnalNo: null, aset: { status: "AKTIF" } }, distinct: ["periodeId"], orderBy: { periodeId: "asc" }, select: { periodeId: true } });
+  return r.map((x) => x.periodeId);
+}

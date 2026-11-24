@@ -8,7 +8,7 @@ import { bukuBesarTahap, neracaLajur, neracaSaldo, saringTahap, type Tahap } fro
 import { dariDate } from "@/lib/inti/tanggal";
 import type { BarisJurnal } from "@/lib/inti/jurnal";
 import type { Prisma } from "@/generated/prisma/client";
-import type { JenisJurnal, StatusPersetujuan } from "@/generated/prisma/enums";
+import type { JenisJurnal, StatusPersetujuan, SumberJurnal } from "@/generated/prisma/enums";
 
 export type RincianJurnal = { label: string; info: string; nilai: number };
 
@@ -26,6 +26,7 @@ export type DataJurnal = {
   disetujuiOleh: string | null;
   disetujuiPada: string | null;
   pembalikDariNo: string | null;
+  sumberTipe: SumberJurnal | null;
   baris: BarisJurnal[];
   rincian: RincianJurnal[];
 };
@@ -55,6 +56,7 @@ function petakan(j: BarisDb, rincian: RincianJurnal[] = []): DataJurnal {
     disetujuiOleh: j.disetujuiOleh?.nama ?? null,
     disetujuiPada: j.disetujuiPada?.toISOString() ?? null,
     pembalikDariNo: j.pembalikDariNo,
+    sumberTipe: j.sumberTipe,
     baris: j.detail.map((d) => ({ akun: d.akunKode, debit: d.debit, kredit: d.kredit })),
     rincian,
   };

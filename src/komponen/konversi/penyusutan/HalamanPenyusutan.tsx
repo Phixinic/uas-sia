@@ -1,8 +1,8 @@
 /*
- * Halaman Proses Penyusutan (komponen server). Satu jurnal penyesuaian per periode, dibuat dari baris jadwal
- * yang belum dijurnal. Periode lebih lama harus diproses dulu.
- * Status persetujuan jurnal (Draf, Diajukan, Disetujui, Ditolak) dan tombol Ajukan, Setujui, Tolak tampil di sini juga,
- * memakai aksi yang sama dengan halaman Jurnal Penyesuaian.
+ * Halaman Proses Penyusutan (komponen server). Admin memilih bulan, memeriksa pratinjau beban per aset, lalu satu tombol
+ * membuat jurnal penyesuaian yang langsung disetujui dan masuk buku besar. Tidak ada langkah ajukan, setujui, atau tolak:
+ * penyusutan dihitung dari jadwal aset. Periode lebih lama harus diproses dulu, dan periode tertutup menolak proses.
+ * Owner dan HRD hanya melihat.
  */
 import Link from "next/link";
 import { wajibMasuk } from "@/lib/server/auth";
@@ -40,25 +40,25 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
       <KepalaHalaman
         judul="Proses Penyusutan"
         lencana={<LencanaPeriode periode={periode} />}
-        keterangan="Saat pembelian diposting, sistem hanya membuat jadwal. Beban tiap bulan baru dijurnal di sini, satu jurnal penyesuaian per periode dengan rincian per aset."
+        keterangan="Saat pembelian diposting, sistem membuat jadwal penyusutan. Pilih bulan, periksa pratinjau, lalu proses. Jurnal penyesuaiannya langsung disetujui dan masuk buku besar, karena bebannya dihitung dari jadwal aset."
         aksi={<PemilihPeriode periode={periode} pilihan={pilihan} />}
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <KartuRingkasan judul={`Aset disusutkan ${labelPeriode(periode)}`} nilai={String(d.baris.length)} bukanUang keterangan={`${d.belumDiproses} belum diproses`} nada={d.belumDiproses ? "kuning" : "netral"} />
         <KartuRingkasan
-          judul="Beban disetujui"
+          judul="Beban masuk buku besar"
           nilai={d.totalDisetujui}
           nada={d.totalBeban && d.totalDisetujui === d.totalBeban ? "hijau" : d.totalBeban ? "kuning" : "netral"}
           keterangan={
             d.totalMenunggu ? `${rupiah(d.totalMenunggu)} masih draf atau diajukan`
             : d.totalBelum ? `${rupiah(d.totalBelum)} belum diproses`
-            : d.totalBeban ? "Semua beban periode ini sudah disetujui" : "Tidak ada beban di periode ini"
+            : d.totalBeban ? "Semua beban periode ini sudah diproses" : "Tidak ada beban di periode ini"
           }
         />
         <KartuRingkasan
           judul={`Status jurnal ${labelPeriode(periode)}`}
-          nilai={d.jurnalIni ? LABEL_STATUS_PERSETUJUAN[d.jurnalIni.status] : "Belum diproses"}
+          nilai={d.jurnalIni?.status === "DISETUJUI" ? "Sudah diproses" : d.jurnalIni ? LABEL_STATUS_PERSETUJUAN[d.jurnalIni.status] : "Belum diproses"}
           bukanUang
           nada={d.jurnalIni?.status === "DISETUJUI" ? "hijau" : d.jurnalIni?.status === "DITOLAK" ? "merah" : d.jurnalIni ? "kuning" : "netral"}
           keterangan={d.jurnalIni ? `${d.jurnalIni.no}${d.jurnalIni.status === "DISETUJUI" ? ", sudah masuk buku besar" : d.jurnalIni.status === "DITOLAK" ? ", proses ulang" : ", belum masuk buku besar"}` : "Belum ada jurnal"}
@@ -143,10 +143,10 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
         <Kartu>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="judul-kartu">Jurnal penyesuaian yang akan dibuat (draf)</h2>
-              <p className="mt-0.5 text-xs text-slate-500">Dikelompokkan per pasangan akun beban dan akun akumulasi.</p>
+              <h2 className="judul-kartu">Jurnal penyesuaian yang akan dibuat</h2>
+              <p className="mt-0.5 text-xs text-slate-500">Dikelompokkan per pasangan akun beban dan akun akumulasi. Langsung disetujui dan masuk buku besar saat diproses.</p>
             </div>
-            {bolehProses ? <TombolProses periode={periode} jumlah={d.belumDiproses} total={d.totalBelum} disabled={tertahan} /> : <p className="teks-redup">Proses penyusutan dijalankan oleh Admin.</p>}
+            {bolehProses ? <TombolProses periode={periode} jumlah={d.belumDiproses} total={d.totalBelum} disabled={tertahan} /> : <p className="teks-redup">Penyusutan diproses oleh Admin. Owner melihat hasilnya di sini dan di Jurnal Penyesuaian.</p>}
           </div>
           <details className="mt-3" open>
             <summary className="cursor-pointer text-sm font-medium text-slate-700">Lihat baris jurnal</summary>
@@ -156,7 +156,7 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
       )}
 
       <TabelRiwayatJurnal
-        judul="Riwayat proses dan persetujuan"
+        judul="Riwayat proses penyusutan"
         riwayat={d.riwayat}
         sumber="penyusutan"
         alamat={ALAMAT}

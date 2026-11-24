@@ -67,7 +67,7 @@ export async function dataDashboard(periode: string) {
 
   const tindakan: Tindakan[] = [];
   if (drafBeli.length) tindakan.push({ judul: `${drafBeli.length} pembelian masih draf`, uraian: "Posting supaya masuk jurnal umum dan kartu aset.", href: drafBeli[0].jenis === "PERALATAN" ? "/konversi/pembelian-peralatan" : "/konversi/pembelian-perlengkapan", peran: ["ADMIN", "OWNER"] });
-  if (susutBelum.length) tindakan.push({ judul: `Penyusutan ${labelPeriode(susutBelum[0].periodeId)} belum diproses`, uraian: susutBelum.length > 1 ? `Ada ${susutBelum.length} periode yang belum diproses.` : "Admin memproses lalu mengajukan jurnalnya.", href: denganPeriode("/konversi/penyusutan", susutBelum[0].periodeId), peran: ["ADMIN"] });
+  if (susutBelum.length) tindakan.push({ judul: `Penyusutan ${labelPeriode(susutBelum[0].periodeId)} belum diproses`, uraian: susutBelum.length > 1 ? `Ada ${susutBelum.length} periode yang belum diproses.` : "Admin memproses; jurnalnya langsung masuk buku besar.", href: denganPeriode("/konversi/penyusutan", susutBelum[0].periodeId), peran: ["ADMIN"] });
   if (drafJurnal) tindakan.push({ judul: `${drafJurnal} jurnal penyesuaian masih draf`, uraian: "Admin perlu mengajukannya ke Owner.", href: "/pelaporan/jurnal-penyesuaian?status=DRAFT", peran: ["ADMIN"] });
   if (jurnalTunggu) tindakan.push({ judul: `${jurnalTunggu} jurnal penyesuaian menunggu persetujuan`, uraian: "Owner menyetujui atau menolak dengan alasan.", href: "/pelaporan/jurnal-penyesuaian?status=DIAJUKAN", peran: ["OWNER"] });
   if (setoranTunggu._count) {

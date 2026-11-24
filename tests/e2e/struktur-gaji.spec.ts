@@ -4,7 +4,7 @@
  * - HRD mengubah nama golongan (form ubah tanpa nominal) dan mengajukan perubahan gaji pokok; jabatan event hanya bisa
  *   dilihat. Owner mengajukan dan menyetujui perubahan tarif jabatan event (riwayat nominal).
  * - Admin hanya melihat.
- * Dijalankan sesudah alur.spec.ts (urutan nama berkas), jadi penyusutan November sudah punya jurnal ditolak dan
+ * Dijalankan sesudah alur.spec.ts (urutan nama berkas), jadi penyusutan November sudah diproses (langsung disetujui) dan
  * disetujui. Potret 1440 dan 390 disimpan di E2E_POTRET (bawaan /tmp/sia-e2e/struktur-gaji).
  */
 import fs from "node:fs";
@@ -155,7 +155,7 @@ test("potret status persetujuan: Proses Penyusutan (Admin, Owner) dan Nilai Sisa
     await buka(p, "/konversi/penyusutan?periode=2026-11");
     const panel = p.getByRole("region", { name: "Jurnal penyusutan November 2026" });
     await expect(panel).toContainText("Disetujui");
-    await expect(p.getByRole("region", { name: "Riwayat proses dan persetujuan" }).getByRole("row", { name: /Ditolak/ }).first()).toContainText("Alasan:");
+    await expect(p.getByRole("region", { name: "Riwayat proses penyusutan" }).getByRole("row", { name: /Disetujui/ }).first()).toContainText("Diproses");
     await potret(p, `penyusutan-status-${peran}`);
   }
   for (const peran of ["admin", "owner"] as const) {

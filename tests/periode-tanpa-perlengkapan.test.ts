@@ -82,9 +82,7 @@ describe.runIf(aktif)("kunci bulan tanpa saldo perlengkapan", async () => {
     expect((await beli.hapusPembelian({ no: "BP-2026-0007" })).ok).toBe(true);
     const h = await susut.prosesPenyusutan({ periode: "2026-11" });
     expect(h.ok).toBe(true);
-    const jurnalNo = h.ok ? h.data!.jurnalNo : "";
-    expect((await susut.ajukanJurnalKonversi({ no: jurnalNo })).ok).toBe(true);
-    await setujui(jurnalNo);
+    await masukSebagai("owner");
     expect((await lepas.tolakPelepasan({ no: "PLP-2026-0001", alasan: "uji kunci bulan tanpa saldo" })).ok).toBe(true);
 
     expect((await cekPeriode("2026-11")).filter((x) => !x.lulus)).toEqual([]);

@@ -18,8 +18,9 @@ export type JurnalPersetujuan = {
   dibuatPada: string;
   diajukanOleh: string | null;
   diajukanPada: string | null;
-  /** Owner yang menyetujui atau menolak. */
+  /** Owner yang menyetujui atau menolak (penyusutan: Admin yang memproses, karena langsung disetujui). */
   diputuskanOleh: string | null;
+  diputuskanOlehId: number | null;
   diputuskanPada: string | null;
 };
 
@@ -29,7 +30,7 @@ export async function riwayatJurnalSumber(sumber: "PENYUSUTAN" | "OPNAME"): Prom
     where: { sumberTipe: sumber },
     orderBy: [{ periodeId: "desc" }, { no: "desc" }],
     select: {
-      no: true, periodeId: true, status: true, alasanTolak: true, dibuatOlehId: true, dibuatPada: true, diajukanPada: true, disetujuiPada: true,
+      no: true, periodeId: true, status: true, alasanTolak: true, dibuatOlehId: true, dibuatPada: true, diajukanPada: true, disetujuiPada: true, disetujuiOlehId: true,
       dibuatOleh: { select: { nama: true } },
       disetujuiOleh: { select: { nama: true } },
       detail: { select: { debit: true } },
@@ -56,6 +57,7 @@ export async function riwayatJurnalSumber(sumber: "PENYUSUTAN" | "OPNAME"): Prom
     diajukanOleh: j.diajukanPada ? (pengaju.get(j.no) ?? null) : null,
     diajukanPada: j.diajukanPada?.toISOString() ?? null,
     diputuskanOleh: j.status === "DISETUJUI" || j.status === "DITOLAK" ? (j.disetujuiOleh?.nama ?? null) : null,
+    diputuskanOlehId: j.status === "DISETUJUI" || j.status === "DITOLAK" ? j.disetujuiOlehId : null,
     diputuskanPada: j.status === "DISETUJUI" || j.status === "DITOLAK" ? (j.disetujuiPada?.toISOString() ?? null) : null,
   }));
 }

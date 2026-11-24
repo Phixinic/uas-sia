@@ -1,7 +1,8 @@
 /*
- * Status persetujuan jurnal penyesuaian di halaman Proses Penyusutan dan Nilai Sisa Perlengkapan (komponen server).
- * Tombol Ajukan, Setujui, dan Tolak memakai AksiJurnal, komponen dan server action yang sama dengan halaman
- * Jurnal Penyesuaian, jadi aturan peran dan larangan menyetujui jurnal sendiri tetap satu tempat.
+ * Status jurnal penyesuaian di halaman Proses Penyusutan dan Nilai Sisa Perlengkapan (komponen server).
+ * Penyusutan langsung disetujui saat diproses, jadi tidak punya tombol keputusan. Tombol jurnal nilai sisa memakai
+ * AksiJurnal, komponen dan server action yang sama dengan halaman Jurnal Penyesuaian, jadi aturan peran dan larangan
+ * menyetujui jurnal sendiri tetap satu tempat.
  */
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -22,10 +23,13 @@ type Sumber = "penyusutan" | "opname";
 const ARTI: Record<JurnalPersetujuan["status"], (s: Sumber) => string> = {
   DRAFT: () => "Draf. Belum masuk buku besar sampai diajukan Admin lalu disetujui Owner.",
   DIAJUKAN: () => "Diajukan, menunggu keputusan Owner. Belum masuk buku besar.",
-  DISETUJUI: () => "Disetujui. Sudah masuk buku besar dan neraca saldo setelah penyesuaian.",
+  DISETUJUI: (s) =>
+    s === "penyusutan"
+      ? "Sudah masuk buku besar dan neraca saldo setelah penyesuaian. Penyusutan dihitung dari jadwal aset, jadi langsung berlaku tanpa persetujuan."
+      : "Disetujui. Sudah masuk buku besar dan neraca saldo setelah penyesuaian.",
   DITOLAK: (s) =>
     s === "penyusutan"
-      ? "Ditolak. Jadwal penyusutan periode ini dibuka lagi, jadi Admin bisa memproses ulang."
+      ? "Ditolak (riwayat dari sebelum penyusutan diproses otomatis). Jadwalnya dibuka lagi saat itu dan diproses ulang."
       : "Ditolak. Form nilai sisa periode ini dibuka lagi supaya Admin bisa menginput ulang.",
 };
 
@@ -37,7 +41,10 @@ function menunggu(j: JurnalPersetujuan, peran: Peran): string | null {
 }
 
 /** Jejak satu jurnal: dibuat, diajukan, diputuskan. */
-export function JejakJurnal({ j }: { j: JurnalPersetujuan }) {
+export function JejakJurnal({ j, sumber }: { j: JurnalPersetujuan; sumber?: Sumber }) {
+  if (sumber === "penyusutan" && j.status === "DISETUJUI" && j.dibuatOlehId === j.diputuskanOlehId) {
+    return <p className="text-xs whitespace-nowrap text-slate-500">Diproses {j.dibuatOleh}, {labelWaktu(j.dibuatPada)}</p>;
+  }
   const baris: ReactNode[] = [`Dibuat ${j.dibuatOleh}, ${labelWaktu(j.dibuatPada)}`];
   if (j.diajukanPada) baris.push(`Diajukan ${j.diajukanOleh ? `${j.diajukanOleh}, ` : ""}${labelWaktu(j.diajukanPada)}`);
   if (j.diputuskanPada) baris.push(`${j.status === "DITOLAK" ? "Ditolak" : "Disetujui"} ${j.diputuskanOleh ?? ""}, ${labelWaktu(j.diputuskanPada)}`);
@@ -48,7 +55,8 @@ export function JejakJurnal({ j }: { j: JurnalPersetujuan }) {
   );
 }
 
-function Tombol({ j, penggunaId, peran }: { j: JurnalPersetujuan; penggunaId: number; peran: Peran }) {
+function Tombol({ j, penggunaId, peran, sumber }: { j: JurnalPersetujuan; penggunaId: number; peran: Peran; sumber: Sumber }) {
+  if (sumber === "penyusutan") return null;
   const tunggu = menunggu(j, peran);
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
@@ -68,9 +76,9 @@ export function PanelStatusJurnal({ j, sumber, penggunaId, peran, judul }: { j: 
             {judul} <span className="kode">{j.no}</span> <LencanaStatus jenis="persetujuan" status={j.status} />
           </h2>
           <p className="text-[13px] text-slate-700">{ARTI[j.status](sumber)} Total {rupiah(j.total)}.</p>
-          <JejakJurnal j={j} />
+          <JejakJurnal j={j} sumber={sumber} />
         </div>
-        <Tombol j={j} penggunaId={penggunaId} peran={peran} />
+        <Tombol j={j} penggunaId={penggunaId} peran={peran} sumber={sumber} />
       </div>
       {j.status === "DITOLAK" && j.alasanTolak && (
         <div className="mt-3">
@@ -98,7 +106,11 @@ export function TabelRiwayatJurnal({ riwayat, sumber, alamat, penggunaId, peran,
     <Kartu rapat label={judul}>
       <KepalaKartu
         judul={judul}
-        keterangan={`${riwayat.length} jurnal. Hanya yang berstatus Disetujui masuk buku besar. Setujui dan tolak juga bisa dari menu Jurnal Penyesuaian.`}
+        keterangan={
+          sumber === "penyusutan"
+            ? `${riwayat.length} jurnal. Jurnal penyusutan langsung disetujui saat diproses dan masuk buku besar.`
+            : `${riwayat.length} jurnal. Hanya yang berstatus Disetujui masuk buku besar. Keputusan Owner juga bisa dari menu Jurnal Penyesuaian.`
+        }
       />
       {riwayat.length === 0 ? (
         <KeadaanKosong judul={sumber === "penyusutan" ? "Belum ada jurnal penyusutan" : "Belum ada jurnal biaya perlengkapan"} />
@@ -111,7 +123,7 @@ export function TabelRiwayatJurnal({ riwayat, sumber, alamat, penggunaId, peran,
               <th className="kolom-angka">Total (Rp)</th>
               <th>Status</th>
               <th>Jejak</th>
-              <th className="text-right">Aksi</th>
+              {sumber !== "penyusutan" && <th className="text-right">Aksi</th>}
             </tr>
           </thead>
           <tbody>
@@ -127,8 +139,10 @@ export function TabelRiwayatJurnal({ riwayat, sumber, alamat, penggunaId, peran,
                   <LencanaStatus jenis="persetujuan" status={j.status} />
                   {j.alasanTolak && j.status === "DITOLAK" && <div className="mt-0.5 max-w-56 text-[11px] text-rose-600">Alasan: {j.alasanTolak}</div>}
                 </td>
-                <td><JejakJurnal j={j} /></td>
-                <td>{j.no === tombolDiAtas && (j.status === "DRAFT" || j.status === "DIAJUKAN") ? <span className="block text-right text-xs text-slate-500">Lihat panel di atas</span> : <Tombol j={j} penggunaId={penggunaId} peran={peran} />}</td>
+                <td><JejakJurnal j={j} sumber={sumber} /></td>
+                {sumber !== "penyusutan" && (
+                  <td>{j.no === tombolDiAtas && (j.status === "DRAFT" || j.status === "DIAJUKAN") ? <span className="block text-right text-xs text-slate-500">Lihat panel di atas</span> : <Tombol j={j} penggunaId={penggunaId} peran={peran} sumber={sumber} />}</td>
+                )}
               </tr>
             ))}
           </tbody>

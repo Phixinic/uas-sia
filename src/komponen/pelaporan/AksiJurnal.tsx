@@ -4,16 +4,21 @@ import { Check, Send, X } from "lucide-react";
 import { ajukanJurnalPenyesuaian, setujuiJurnalPenyesuaian, tolakJurnalPenyesuaian } from "@/lib/aksi/pelaporan/jurnal";
 import TombolAksi from "@/komponen/ui/TombolAksi";
 import { boleh, type Peran } from "@/lib/peran";
-import type { StatusPersetujuan } from "@/generated/prisma/enums";
+import type { StatusPersetujuan, SumberJurnal } from "@/generated/prisma/enums";
 
-/** Tombol per jurnal penyesuaian. Server action tetap memeriksa peran sendiri; ini hanya soal tampilan. */
-export default function AksiJurnal({ no, status, dibuatOlehId, penggunaId, peran }: {
+/**
+ * Tombol per jurnal penyesuaian. Server action tetap memeriksa peran sendiri; ini hanya soal tampilan.
+ * Jurnal penyusutan tidak punya tombol: langsung disetujui saat diproses.
+ */
+export default function AksiJurnal({ no, status, dibuatOlehId, penggunaId, peran, sumber }: {
   no: string;
   status: StatusPersetujuan;
   dibuatOlehId: number;
   penggunaId: number;
   peran: Peran;
+  sumber?: SumberJurnal | null;
 }) {
+  if (sumber === "PENYUSUTAN") return null;
   if (status === "DRAFT" && boleh(peran, "jurnal-penyesuaian.ajukan")) {
     return (
       <TombolAksi aksi={() => ajukanJurnalPenyesuaian({ no })} varian="utama" ikon={<Send className="size-4" />} konfirmasi={{ judul: `Ajukan ${no} ke Owner?`, pesan: "Sesudah diajukan, jurnal menunggu keputusan Owner dan tidak bisa diubah." }}>

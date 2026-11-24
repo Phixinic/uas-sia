@@ -69,6 +69,9 @@ export async function buatJurnal(tx: Tx, input: InputJurnal): Promise<string> {
   return no;
 }
 
+/** Penyusutan dihitung dari jadwal aset, jadi jurnalnya langsung disetujui dan tidak lewat alur ajukan atau tolak. */
+export const PESAN_PENYUSUTAN_OTOMATIS = "Jurnal penyusutan dihitung dari jadwal aset dan langsung disetujui saat diproses, jadi tidak perlu diajukan dan tidak bisa ditolak.";
+
 async function ambilJurnal(tx: Tx, no: string) {
   const j = await tx.jurnal.findUnique({ where: { no } });
   if (!j) throw new GalatAksi(`Jurnal ${no} tidak ditemukan.`);
@@ -78,6 +81,7 @@ async function ambilJurnal(tx: Tx, no: string) {
 /** DRAFT -> DIAJUKAN. Opname sumbernya ikut DIAJUKAN. */
 export async function ajukanJurnal(tx: Tx, no: string, penggunaId: number) {
   const j = await ambilJurnal(tx, no);
+  if (j.sumberTipe === "PENYUSUTAN") throw new GalatAksi(PESAN_PENYUSUTAN_OTOMATIS);
   if (j.status !== "DRAFT") throw new GalatAksi(`${no} bukan draf.`);
   await pastikanTerbuka(tx, j.periodeId);
   await tx.jurnal.update({ where: { no }, data: { status: "DIAJUKAN", diajukanPada: new Date(), alasanTolak: null } });
@@ -112,19 +116,20 @@ export async function setujuiJurnal(tx: Tx, no: string, penggunaId: number) {
 
 /**
  * DIAJUKAN -> DITOLAK dengan alasan. Dokumen sumber dibuka lagi supaya Admin bisa memproses ulang:
- * - penyusutan: baris jadwal yang menunjuk jurnal ini dikosongkan jurnalNo-nya;
+ * - penyusutan: tidak bisa ditolak (langsung disetujui saat diproses). Jurnal penyusutan lama yang dulu ditolak tetap
+ *   tersimpan sebagai riwayat; jadwalnya sudah dikosongkan saat itu;
  * - opname: status DITOLAK dan alasannya disalin, form nilai sisa periode itu terbuka lagi.
  */
 export async function tolakJurnal(tx: Tx, no: string, penggunaId: number, alasan: string) {
   const al = alasan.trim();
   if (!al) throw new GalatAksi("Tulis alasan penolakan.");
   const j = await ambilJurnal(tx, no);
+  if (j.sumberTipe === "PENYUSUTAN") throw new GalatAksi(PESAN_PENYUSUTAN_OTOMATIS);
   if (j.status !== "DIAJUKAN") throw new GalatAksi(`${no} belum diajukan atau sudah diputuskan.`);
   // Penolakan membuka lagi dokumen sumbernya, jadi periode tertutup juga menolak keputusan ini.
   await pastikanTerbuka(tx, j.periodeId);
   const sekarang = new Date();
   await tx.jurnal.update({ where: { no }, data: { status: "DITOLAK", alasanTolak: al, disetujuiOlehId: penggunaId, disetujuiPada: sekarang } });
-  if (j.sumberTipe === "PENYUSUTAN") await tx.jadwalPenyusutan.updateMany({ where: { jurnalNo: no }, data: { jurnalNo: null } });
   if (j.sumberTipe === "OPNAME") {
     await tx.opname.updateMany({ where: { jurnalNo: no }, data: { status: "DITOLAK", alasanTolak: al, disetujuiOlehId: penggunaId, disetujuiPada: sekarang } });
   }

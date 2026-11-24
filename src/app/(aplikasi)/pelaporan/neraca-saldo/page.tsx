@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PeringatanPenyusutan from "@/komponen/konversi/penyusutan/PeringatanPenyusutan";
 import { wajibMasuk } from "@/lib/server/auth";
 import { profilUsaha } from "@/lib/data/umum";
 import { dataNeracaLajur, dataNeracaSaldo } from "@/lib/data/pelaporan/jurnal";
@@ -69,6 +70,7 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
         <PilihBulanTahun periode={periode} tersedia={semua} labelBulan="Sampai akhir bulan" />
         <PilihTahap alamat="/pelaporan/neraca-saldo" tahap={tahap} param={{ bulan: String(bulanDari(periode)), tahun: String(tahunDari(periode)) }} />
       </div>
+      <div className="tanpa-cetak"><PeringatanPenyusutan sampai={periode} /></div>
       <KepalaCetak usaha={usaha.nama} judul={judul} keterangan={`Saldo sampai akhir periode · ${labelBulanTahun(periode)}`} />
       {!seimbang && <Peringatan jenis="galat">Neraca saldo tidak seimbang{n ? `, selisih ${rupiah(Math.abs(n.debit - n.kredit))}` : ""}. Periksa jurnal yang bermasalah sebelum menutup periode.</Peringatan>}
 

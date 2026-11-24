@@ -30,6 +30,8 @@ describe.runIf(aktif)("siklus konversi lewat server action", async () => {
   const lepas = await import("@/lib/aksi/konversi/pelepasan");
   const cepat = await import("@/lib/aksi/konversi/master-cepat");
   const { muatJurnalBuku, setujuiJurnal, tolakJurnal } = await import("@/lib/server/jurnal");
+  const { prosesPenyusutanDalam } = await import("@/lib/server/penyusutan");
+  const jurnalAksi = await import("@/lib/aksi/pelaporan/jurnal");
   const { neracaSaldo } = await import("@/lib/inti/buku-besar");
   const { saldoBukuLkp } = await import("@/lib/data/konversi/nilai-sisa");
   const masukSebagai = async (u: string) => {
@@ -137,59 +139,59 @@ describe.runIf(aktif)("siklus konversi lewat server action", async () => {
     });
 
     let jurnalNo = "";
-    it("Admin memproses November: satu jurnal draf per periode, jadwal 9 aset ditandai", async () => {
+    it("Admin memproses November: satu jurnal langsung disetujui dan masuk buku besar, jadwal 9 aset ditandai", async () => {
       await masukSebagai("admin");
+      const admin = sesi.pengguna!.id;
       const h = await susut.prosesPenyusutan({ periode: "2026-11" });
       expect(h.ok).toBe(true);
       jurnalNo = h.ok ? h.data!.jurnalNo : "";
       const j = await db.jurnal.findUniqueOrThrow({ where: { no: jurnalNo }, include: { detail: true } });
       const baris = await db.jadwalPenyusutan.findMany({ where: { periodeId: "2026-11", jurnalNo } });
       const total = baris.reduce((s, r) => s + r.beban, 0);
-      expect([j.status, j.jenis, j.sumberTipe, j.sumberId, baris.length]).toEqual(["DRAFT", "PENYESUAIAN", "PENYUSUTAN", "2026-11", 9]);
+      expect([j.status, j.jenis, j.sumberTipe, j.sumberId, baris.length]).toEqual(["DISETUJUI", "PENYESUAIAN", "PENYUSUTAN", "2026-11", 9]);
+      expect([j.dibuatOlehId, j.disetujuiOlehId, !!j.disetujuiPada]).toEqual([admin, admin, true]);
       expect(j.detail.reduce((s, d) => s + d.debit, 0)).toBe(total);
       expect(j.detail.reduce((s, d) => s + d.kredit, 0)).toBe(total);
+      const buku = await muatJurnalBuku(db);
+      expect(buku.some((x) => x.no === jurnalNo)).toBe(true);
       expect((await susut.prosesPenyusutan({ periode: "2026-11" })).ok).toBe(false);
     });
 
-    it("jurnal ditolak: baris jadwal terbuka lagi dan bisa diproses ulang", async () => {
+    it("jurnal penyusutan tidak bisa diajukan atau ditolak (layanan dan server action), jadwalnya tetap terkunci", async () => {
+      await masukSebagai("owner");
+      const tolak = await jurnalAksi.tolakJurnalPenyesuaian({ no: jurnalNo, alasan: "Coba tolak" });
+      expect(tolak.ok).toBe(false);
+      if (!tolak.ok) expect(tolak.galat).toContain("tidak bisa ditolak");
+      await expect(db.$transaction((tx) => tolakJurnal(tx, jurnalNo, sesi.pengguna!.id, "uji"))).rejects.toThrow("tidak bisa ditolak");
       await masukSebagai("admin");
-      expect((await susut.ajukanJurnalKonversi({ no: jurnalNo })).ok).toBe(true);
-      await putuskan(jurnalNo, false, "Periksa ulang");
-      expect(await db.jadwalPenyusutan.count({ where: { periodeId: "2026-11", jurnalNo: { not: null } } })).toBe(0);
-      await masukSebagai("admin");
-      const h = await susut.prosesPenyusutan({ periode: "2026-11" });
-      expect(h.ok).toBe(true);
-      jurnalNo = h.ok ? h.data!.jurnalNo : "";
+      expect((await jurnalAksi.ajukanJurnalPenyesuaian({ no: jurnalNo })).ok).toBe(false);
+      expect((await susut.ajukanJurnalKonversi({ no: jurnalNo })).ok).toBe(false);
+      expect((await db.jurnal.findUniqueOrThrow({ where: { no: jurnalNo } })).status).toBe("DISETUJUI");
+      expect(await db.jadwalPenyusutan.count({ where: { periodeId: "2026-11", jurnalNo } })).toBe(9);
     });
 
-    it("Desember (sesudah bulan berjalan) bisa diproses setelah November dijurnal; jurnal ditolak membebaskan jadwalnya lagi", async () => {
+    it("Desember (sesudah bulan berjalan) bisa diproses setelah November; Januari 2027 di luar batas (dicoba lalu dibatalkan)", async () => {
       await masukSebagai("admin");
-      const h = await susut.prosesPenyusutan({ periode: "2026-12" });
-      expect(h.ok).toBe(true);
-      const des = h.ok ? h.data!.jurnalNo : "";
-      const j = await db.jurnal.findUniqueOrThrow({ where: { no: des } });
-      expect([j.status, j.jenis, j.sumberId, j.tanggal.toISOString().slice(0, 10)]).toEqual(["DRAFT", "PENYESUAIAN", "2026-12", "2026-12-31"]);
-      expect(await db.jadwalPenyusutan.count({ where: { periodeId: "2026-12", jurnalNo: des } })).toBeGreaterThan(0);
-      expect((await susut.ajukanJurnalKonversi({ no: des })).ok).toBe(true);
-      await putuskan(des, false, "Uji batas Desember");
+      const batal = new Error("batalkan");
+      await expect(
+        db.$transaction(async (tx) => {
+          const h = await prosesPenyusutanDalam(tx, sesi.pengguna!.id, "2026-12");
+          const j = await tx.jurnal.findUniqueOrThrow({ where: { no: h.jurnalNo } });
+          expect([j.status, j.jenis, j.sumberId, j.tanggal.toISOString().slice(0, 10)]).toEqual(["DISETUJUI", "PENYESUAIAN", "2026-12", "2026-12-31"]);
+          expect(await tx.jadwalPenyusutan.count({ where: { periodeId: "2026-12", jurnalNo: h.jurnalNo } })).toBeGreaterThan(0);
+          throw batal;
+        }),
+      ).rejects.toBe(batal);
       expect(await db.jadwalPenyusutan.count({ where: { periodeId: "2026-12", jurnalNo: { not: null } } })).toBe(0);
       expect((await susut.prosesPenyusutan({ periode: "2027-01" })).ok).toBe(false);
     });
 
-    it("pelepasan ditahan selama penyusutan aset belum disetujui; sesudah disetujui nilai buku mengikuti akumulasi", async () => {
-      await masukSebagai("admin");
-      expect((await susut.ajukanJurnalKonversi({ no: jurnalNo })).ok).toBe(true);
+    it("pelepasan sesudah penyusutan diproses: nilai buku mengikuti akumulasi", async () => {
       await masukSebagai("owner");
-      const tahan = await lepas.setujuiPelepasan({ no: "PLP-2026-0001" });
-      expect(tahan.ok).toBe(false);
-      if (!tahan.ok) expect(tahan.galat).toContain(jurnalNo);
-      expect((await db.pelepasan.findUniqueOrThrow({ where: { no: "PLP-2026-0001" } })).status).toBe("DIAJUKAN");
-
-      await putuskan(jurnalNo, true);
       const h = await lepas.setujuiPelepasan({ no: "PLP-2026-0001" });
       expect(h.ok).toBe(true);
       const p = await db.pelepasan.findUniqueOrThrow({ where: { no: "PLP-2026-0001" }, include: { jurnal: { include: { detail: true } }, aset: { include: { _count: { select: { jadwal: true } } } } } });
-      // AST-0003: 950.000, d = 39.583 per bulan, dua bulan disetujui (Oktober dan November).
+      // AST-0003: 950.000, d = 39.583 per bulan, dua bulan diproses (Oktober dan November).
       expect([p.status, p.akumulasi, p.nilaiBuku, p.labaRugi]).toEqual(["DISETUJUI", 79_166, 870_834, -870_834]);
       expect(p.aset.status).toBe("DILEPAS");
       expect(p.aset._count.jadwal).toBe(2);

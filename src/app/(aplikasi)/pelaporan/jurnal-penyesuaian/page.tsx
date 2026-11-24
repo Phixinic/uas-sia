@@ -36,7 +36,7 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
     <>
       <KepalaHalaman
         judul="Jurnal Penyesuaian"
-        keterangan={`Admin mengajukan, Owner menyetujui atau menolak dengan alasan. Hanya jurnal yang disetujui masuk buku besar dan neraca saldo setelah penyesuaian. Kamu masuk sebagai ${LABEL_PERAN[pengguna.peran]}.`}
+        keterangan={`Jurnal penyusutan dibuat dari jadwal aset dan langsung disetujui. Jurnal biaya perlengkapan (nilai sisa) diajukan Admin lalu diputuskan Owner. Hanya jurnal yang disetujui masuk buku besar dan neraca saldo setelah penyesuaian. Kamu masuk sebagai ${LABEL_PERAN[pengguna.peran]}.`}
         aksi={<TautanTombol href="/pelaporan/neraca-saldo?tahap=setelah">Lihat setelah penyesuaian</TautanTombol>}
       />
 
@@ -74,7 +74,7 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
                     <LencanaStatus jenis="persetujuan" status={j.status} />
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <AksiJurnal no={j.no} status={j.status} dibuatOlehId={j.dibuatOlehId} penggunaId={pengguna.id} peran={pengguna.peran} />
+                    <AksiJurnal no={j.no} status={j.status} dibuatOlehId={j.dibuatOlehId} penggunaId={pengguna.id} peran={pengguna.peran} sumber={j.sumberTipe} />
                   </div>
                 </div>
                 <p className="text-sm text-slate-800">{j.keterangan}</p>
@@ -94,9 +94,11 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
                 )}
                 {j.status === "DITOLAK" && j.alasanTolak && (
                   <Peringatan jenis="galat">
-                    <b>Alasan ditolak:</b> {j.alasanTolak}. Sumbernya sudah dibuka lagi, jadi Admin bisa memproses ulang.
+                    <b>Alasan ditolak:</b> {j.alasanTolak}.{" "}
+                    {j.sumberTipe === "PENYUSUTAN" ? "Riwayat dari sebelum penyusutan diproses otomatis; jadwalnya sudah diproses ulang." : "Sumbernya sudah dibuka lagi, jadi Admin bisa memproses ulang."}
                   </Peringatan>
                 )}
+                {j.sumberTipe === "PENYUSUTAN" && j.status === "DISETUJUI" && <p className="text-xs text-slate-500">Penyusutan dihitung dari jadwal aset, jadi langsung disetujui saat diproses Admin.</p>}
                 <p className="text-xs text-slate-500">
                   Total {rupiah(total)} · dibuat {j.dibuatOleh}
                   {j.diajukanPada && j.status !== "DISETUJUI" && ` · diajukan ${labelWaktu(j.diajukanPada)}`}

@@ -31,7 +31,6 @@ describe.runIf(aktif)("dashboard: penyusutan dan periode", async () => {
   const { db } = await import("@/lib/server/db");
   const susut = await import("@/lib/aksi/konversi/penyusutan");
   const lepas = await import("@/lib/aksi/konversi/pelepasan");
-  const { setujuiJurnal } = await import("@/lib/server/jurnal");
   const { dataDashboard } = await import("@/lib/data/pelaporan/dashboard");
   const { dataPenyusutan } = await import("@/lib/data/konversi/penyusutan");
   const { periodeDipilih } = await import("@/lib/data/sdm/umum");
@@ -53,9 +52,6 @@ describe.runIf(aktif)("dashboard: penyusutan dan periode", async () => {
     const h = await susut.prosesPenyusutan({ periode: "2026-11" });
     expect(h.ok).toBe(true);
     const jurnalNo = h.ok ? h.data!.jurnalNo : "";
-    expect((await susut.ajukanJurnalKonversi({ no: jurnalNo })).ok).toBe(true);
-    const owner = await db.pengguna.findUniqueOrThrow({ where: { namaPengguna: "owner" } });
-    await db.$transaction((tx) => setujuiJurnal(tx, jurnalNo, owner.id));
     // AST-0003 dilepas 10 November (PLP-2026-0001), sesudah penyusutan Novembernya disetujui.
     await masukSebagai("owner");
     expect((await lepas.setujuiPelepasan({ no: "PLP-2026-0001" })).ok).toBe(true);

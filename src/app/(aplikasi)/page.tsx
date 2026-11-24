@@ -18,6 +18,7 @@ import Tabel, { BarisKosong } from "@/komponen/ui/Tabel";
 import Rupiah from "@/komponen/ui/Rupiah";
 import Lencana, { LencanaStatus } from "@/komponen/ui/Lencana";
 import DashboardKapten from "@/komponen/fee-event/DashboardKapten";
+import PeringatanPenyusutan from "@/komponen/konversi/penyusutan/PeringatanPenyusutan";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -62,8 +63,8 @@ function ketPenyusutan(s: { jadwal: number; disetujui: number; menunggu: number;
   const belum = Math.max(s.jadwal - s.disetujui - s.menunggu, 0);
   if (!s.unit && !s.disetujui && !s.menunggu) return "Tidak ada jadwal di periode ini";
   const sisa = [s.menunggu ? `${rupiah(s.menunggu)} menunggu persetujuan` : "", belum ? `${rupiah(belum)} belum diproses` : ""].filter(Boolean).join(", ");
-  if (!sisa) return "Dari jurnal penyusutan yang disetujui";
-  return s.disetujui ? `Disetujui; ${sisa}` : `Belum ada yang disetujui; ${sisa}`;
+  if (!sisa) return "Dari jurnal penyusutan yang sudah diproses";
+  return s.disetujui ? `Sudah diproses; ${sisa}` : `Belum ada yang diproses; ${sisa}`;
 }
 
 export default async function Dashboard({ searchParams }: { searchParams: Promise<{ periode?: string; bulan?: string; tahun?: string }> }) {
@@ -87,12 +88,13 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         lencana={<><LencanaPeriode periode={periode} /><LencanaStatus jenis="periode" status={d.statusPeriode} /></>}
         aksi={<PilihBulanTahun periode={periode} tersedia={semua} />}
       />
+      <PeringatanPenyusutan sampai={periode} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <KartuRingkasan judul="Saldo kas" nilai={d.kas} ikon={<Banknote className="size-4" />} keterangan={`Menurut buku besar sampai akhir ${labelPeriode(periode)}`} nada="hijau" />
         <KartuRingkasan judul="Total aset bersih" nilai={d.totalAset} ikon={<IdCard className="size-4" />} keterangan="Aset dikurangi akumulasi penyusutan" />
         <KartuRingkasan
-          judul="Beban penyusutan disetujui"
+          judul="Beban penyusutan"
           nilai={d.susut.disetujui}
           ikon={<TrendingDown className="size-4" />}
           keterangan={ketPenyusutan(d.susut)}

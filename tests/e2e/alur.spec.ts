@@ -267,65 +267,32 @@ test("3a. Admin input nilai sisa November", async () => {
   await isiNilaiSisa(sesi.admin.page, 0.5);
 });
 
-test("3b. Admin proses penyusutan November lalu mengajukannya dari halaman Proses Penyusutan", async () => {
+test("3b. Admin proses penyusutan November: jurnal langsung disetujui, tanpa tombol ajukan atau tolak", async () => {
   const p = sesi.admin.page;
   await bukaHalaman(p, "/konversi/penyusutan?periode=2026-11");
   await expect(p.getByText("11 belum diproses").first()).toBeVisible();
   await foto(p, "admin", "penyusutan-pratinjau");
-  await p.getByRole("button", { name: "Buat jurnal penyusutan" }).click();
+  await p.getByRole("button", { name: "Proses penyusutan" }).click();
   await konfirmasi(p);
-  await expect(p.getByText(/Riwayat proses/)).toBeVisible();
-  await expect(baris(p, "November 2026").filter({ hasText: "Draf" })).toBeVisible();
-  // Panel status periode ini: Draf, belum masuk buku besar, tombol Ajukan untuk Admin.
+  await expect(p.getByText(/Riwayat proses penyusutan/)).toBeVisible();
+  await expect(baris(p, "November 2026").filter({ hasText: "Disetujui" })).toBeVisible();
   const panel = p.getByRole("region", { name: "Jurnal penyusutan November 2026" });
-  await expect(panel).toContainText("Draf");
-  await expect(panel).toContainText("Belum masuk buku besar");
-  await expect(panel.getByRole("button", { name: "Setujui" })).toHaveCount(0);
-  await panel.getByRole("button", { name: "Ajukan ke Owner" }).click();
-  await konfirmasi(p);
-  await expect(panel).toContainText("Diajukan");
-  await expect(panel).toContainText("Menunggu keputusan Owner");
-  // Admin tidak punya tombol keputusan; kartu ringkasan tidak menyebut beban ini sebagai disetujui.
-  await expect(p.getByRole("button", { name: "Setujui" })).toHaveCount(0);
-  await expect(p.getByRole("button", { name: "Tolak" })).toHaveCount(0);
-  await expect(p.getByText("Status jurnal November 2026").locator("..").locator("..")).toContainText("Diajukan");
+  await expect(panel).toContainText("Disetujui");
+  await expect(panel).toContainText("Sudah masuk buku besar");
+  for (const nama of ["Ajukan ke Owner", "Setujui", "Tolak"]) await expect(p.getByRole("button", { name: nama })).toHaveCount(0);
+  await expect(p.getByText("Status jurnal November 2026").locator("..").locator("..")).toContainText("Sudah diproses");
 });
 
-test("3b2. Owner menolak penyusutan di halamannya (alasan wajib), Admin memproses ulang, Owner menyetujui", async () => {
+test("3b2. Owner melihat penyusutan tanpa tombol keputusan; jurnalnya ada di Jurnal Penyesuaian tanpa tombol", async () => {
   const po = sesi.owner.page;
   await bukaHalaman(po, "/konversi/penyusutan?periode=2026-11");
   const panel = po.getByRole("region", { name: "Jurnal penyusutan November 2026" });
-  await expect(panel).toContainText("Diajukan");
-  await expect(panel.getByRole("button", { name: "Setujui" })).toBeVisible();
-  await panel.getByRole("button", { name: "Tolak" }).click();
-  await expect(po.getByRole("dialog").locator('button[type="submit"]')).toBeDisabled();
-  await konfirmasi(po, "Beban AST-0002 perlu dicek ulang");
-  await expect(panel).toContainText("Ditolak");
-  await expect(panel).toContainText("Beban AST-0002 perlu dicek ulang");
-  await expect(panel).toContainText("Ditolak Owner D'Production");
-  await expect(baris(po, "November 2026").filter({ hasText: "Ditolak" })).toContainText("Beban AST-0002 perlu dicek ulang");
-
-  // Jadwal dibuka lagi: Admin melihat alasan dan bisa memproses ulang.
-  const pa = sesi.admin.page;
-  await bukaHalaman(pa, "/konversi/penyusutan?periode=2026-11");
-  await expect(pa.getByRole("region", { name: "Jurnal penyusutan November 2026" })).toContainText("Beban AST-0002 perlu dicek ulang");
-  await expect(pa.getByText("11 belum diproses").first()).toBeVisible();
-  await pa.getByRole("button", { name: "Buat jurnal penyusutan" }).click();
-  await konfirmasi(pa);
-  const panelA = pa.getByRole("region", { name: "Jurnal penyusutan November 2026" });
-  await expect(panelA).toContainText("Draf");
-  await panelA.getByRole("button", { name: "Ajukan ke Owner" }).click();
-  await konfirmasi(pa);
-  await expect(panelA).toContainText("Diajukan");
-
-  await bukaHalaman(po, "/konversi/penyusutan?periode=2026-11");
-  await panel.getByRole("button", { name: "Setujui" }).click();
-  await konfirmasi(po);
   await expect(panel).toContainText("Disetujui");
-  await expect(panel).toContainText("Sudah masuk buku besar");
-  // Riwayat periode ini: satu ditolak (dengan alasan) dan satu disetujui.
-  await expect(baris(po, "November 2026").filter({ hasText: "Ditolak" })).toHaveCount(1);
-  await expect(baris(po, "November 2026").filter({ hasText: "Disetujui" })).toHaveCount(1);
+  for (const nama of ["Setujui", "Tolak", "Proses penyusutan"]) await expect(po.getByRole("button", { name: nama })).toHaveCount(0);
+  await bukaHalaman(po, "/pelaporan/jurnal-penyesuaian?status=DISETUJUI");
+  const k = kartu(po, "Penyusutan peralatan November 2026");
+  await expect(k).toContainText("langsung disetujui");
+  await expect(k.getByRole("button")).toHaveCount(0);
 });
 
 test("3b3. Desember bisa dipilih di Penyusutan: Bulan 12 pilihan, pratinjau tampil, Januari tahun depan ditahan", async () => {
@@ -334,10 +301,10 @@ test("3b3. Desember bisa dipilih di Penyusutan: Bulan 12 pilihan, pratinjau tamp
   await expect(p.locator("#pemilih-bulan option")).toHaveCount(12);
   await expect(p.locator("#pemilih-bulan")).toHaveValue("12");
   await expect(p.locator("table[aria-label='Pratinjau penyusutan'] tbody tr").first()).toBeVisible();
-  await expect(p.getByRole("button", { name: "Buat jurnal penyusutan" })).toBeEnabled();
+  await expect(p.getByRole("button", { name: "Proses penyusutan" })).toBeEnabled();
   await bukaHalaman(p, "/konversi/penyusutan?bulan=1&tahun=2027");
   await expect(p.getByText(/hanya bisa diproses sampai Desember 2026/).first()).toBeVisible();
-  await expect(p.getByRole("button", { name: "Buat jurnal penyusutan" })).toBeDisabled();
+  await expect(p.getByRole("button", { name: "Proses penyusutan" })).toBeDisabled();
   // Nilai Sisa: Desember tidak dialihkan diam-diam ke bulan lain.
   await bukaHalaman(p, "/konversi/nilai-sisa?bulan=12&tahun=2026");
   await expect(p.locator("#pemilih-bulan")).toHaveValue("12");

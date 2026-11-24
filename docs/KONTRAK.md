@@ -38,7 +38,7 @@ tests/                          vitest: tes inti (tanpa DB) dan tes integrasi (U
 | `/konversi/pembelian-peralatan` | Pembelian Peralatan (**sudah jadi, pola rujukan**) | Konversi |
 | `/konversi/pembelian-perlengkapan` | Pembelian Perlengkapan (sudah jadi, komponen sama) | Konversi |
 | `/konversi/nilai-sisa` | Nilai Sisa Perlengkapan (opname) | Konversi |
-| `/konversi/penyusutan` | Proses Penyusutan: pratinjau, panel status jurnal periode ini, riwayat jurnal dengan status, jejak (dibuat, diajukan, diputuskan), alasan tolak, dan tombol Ajukan/Setujui/Tolak | Konversi |
+| `/konversi/penyusutan` | Proses Penyusutan: pilih bulan, pratinjau beban per aset, tombol "Proses penyusutan" (jurnal langsung disetujui), panel status jurnal periode ini, riwayat proses. Tanpa tombol ajukan, setujui, atau tolak | Konversi |
 | `/konversi/kartu-aset` | Kartu Aset (`?aset=AST-0001` membuka rinciannya) | Konversi |
 | `/konversi/pelepasan` | Pelepasan Peralatan | Konversi |
 | `/sdm/setting-gaji` | Setting Gaji: versi berlaku per karyawan, pengajuan menunggu Owner, riwayat (`?form=baru&karyawan=KRY-01`, `?riwayat=KRY-01`). Tab Setting gaji di Master SDM dialihkan ke sini | SDM |
@@ -74,7 +74,7 @@ Peran **Kapten** (crew freelance yang memimpin event) ditolak secara bawaan: `wa
 | `pembelian.posting` | Admin, Owner | posting draf |
 | `pembelian.balik` | Owner | balik pembelian terposting (jurnal pembalik, alasan wajib) |
 | `nilai-sisa.input` | Admin | input nilai sisa perlengkapan |
-| `penyusutan.proses` | Admin | buat jurnal penyusutan satu periode |
+| `penyusutan.proses` | Admin | proses penyusutan satu periode: jurnal penyesuaian langsung DISETUJUI (tanpa keputusan Owner) |
 | `pelepasan.ajukan` | Admin | ajukan pelepasan |
 | `pelepasan.putuskan` | Owner | setujui atau tolak pelepasan (alasan wajib saat tolak) |
 | `presensi.kelola` | HRD | input, ubah, hapus presensi |
@@ -109,7 +109,8 @@ Enum `StatusPersetujuan` (DRAFT, DIAJUKAN, DISETUJUI, DITOLAK) dipakai jurnal, p
 |---|---|
 | Investasi Kas | dibuat DIAJUKAN oleh Admin atau Owner (periode tanggal setoran harus terbuka) → Owner DISETUJUI (jurnal umum DISETUJUI bertanggal setoran, Dr 1-110 Kas, Kr 3-110 Modal Pemilik, sumber `INVESTASI_KAS`, periode harus terbuka) / DITOLAK (alasan wajib, tanpa jurnal) |
 | Pembelian | DRAFT → (posting Admin/Owner) DISETUJUI → (balik Owner) DIBALIK |
-| Jurnal penyesuaian (penyusutan, opname) | dibuat DRAFT → Admin ajukan DIAJUKAN → Owner DISETUJUI / DITOLAK |
+| Jurnal penyusutan | dibuat langsung DISETUJUI saat Admin memproses (tidak bisa diajukan atau ditolak; `PESAN_PENYUSUTAN_OTOMATIS`) |
+| Jurnal penyesuaian nilai sisa (opname) | dibuat DRAFT → Admin ajukan DIAJUKAN → Owner DISETUJUI / DITOLAK |
 | Jurnal otomatis (pembelian, pelepasan, penggajian, fee event, investasi kas, pembalik, saldo awal) | dibuat langsung DISETUJUI |
 | Opname | ikut status jurnalnya; total beban 0 = langsung DISETUJUI tanpa jurnal |
 | Pelepasan | dibuat DIAJUKAN → Owner DISETUJUI (jurnal umum dibuat, aset DILEPAS, jadwal yang belum dijurnal dihapus) / DITOLAK |
@@ -121,9 +122,9 @@ Enum `StatusPersetujuan` (DRAFT, DIAJUKAN, DISETUJUI, DITOLAK) dipakai jurnal, p
 | Laporan fee | dibuat DIAJUKAN saat kapten mengirim → Owner DISETUJUI (cek saldo kas ≥ total dibayar, periode tanggal selesai event terbuka, jurnal umum DISETUJUI, slip fee per orang) / DITOLAK (tetap tersimpan sebagai jejak; kiriman ulang = nomor baru) |
 | Slip fee | dibuat saat laporan disetujui, selalu tampil "Dibayar" |
 
-Efek penolakan jurnal penyesuaian ke sumbernya sudah ditulis di `src/lib/server/jurnal.ts` (`ajukanJurnal`, `setujuiJurnal`, `tolakJurnal`). Agen pelaporan cukup memanggilnya dari server action.
+Efek penolakan jurnal penyesuaian ke sumbernya sudah ditulis di `src/lib/server/jurnal.ts` (`ajukanJurnal`, `setujuiJurnal`, `tolakJurnal`). Agen pelaporan cukup memanggilnya dari server action. `ajukanJurnal` dan `tolakJurnal` menolak jurnal penyusutan.
 
-Keputusan jurnal penyesuaian bisa diambil di tiga halaman: Jurnal Penyesuaian, Proses Penyusutan, dan Nilai Sisa Perlengkapan. Ketiganya memakai komponen `AksiJurnal` dan server action yang sama (`ajukanJurnalPenyesuaian`, `setujuiJurnalPenyesuaian`, `tolakJurnalPenyesuaian` di `src/lib/aksi/pelaporan/jurnal.ts`), jadi izin dan aturan "pembuat tidak boleh menyetujui jurnalnya sendiri" hanya ada di satu tempat. Riwayat dibaca lewat `riwayatJurnalSumber` (`src/lib/data/konversi/persetujuan.ts`); nama pengaju diambil dari log `jurnal.ajukan` karena tabel jurnal hanya menyimpan waktunya. Menolak jurnal penyusutan mengosongkan `jurnal_no` di jadwal periode itu (`tolakJurnal`), jadi periode tersebut bisa diproses ulang dan jurnal yang ditolak tetap tercatat di riwayat.
+Keputusan jurnal penyesuaian nilai sisa bisa diambil di dua halaman: Jurnal Penyesuaian dan Nilai Sisa Perlengkapan. Keduanya memakai komponen `AksiJurnal` dan server action yang sama (`ajukanJurnalPenyesuaian`, `setujuiJurnalPenyesuaian`, `tolakJurnalPenyesuaian` di `src/lib/aksi/pelaporan/jurnal.ts`), jadi izin dan aturan "pembuat tidak boleh menyetujui jurnalnya sendiri" hanya ada di satu tempat. Riwayat dibaca lewat `riwayatJurnalSumber` (`src/lib/data/konversi/persetujuan.ts`); nama pengaju diambil dari log `jurnal.ajukan` karena tabel jurnal hanya menyimpan waktunya. Jurnal penyusutan tidak punya tombol keputusan di halaman mana pun (lihat "Penyusutan otomatis").
 
 Hanya jurnal DISETUJUI yang masuk buku besar dan neraca saldo. Laporan mengikuti tahap siklus akuntansi untuk periode P (`saringTahap` di `src/lib/inti/buku-besar.ts`):
 
@@ -235,13 +236,23 @@ Selesai mengerjakan: `npm run cek-tipe`, `npm run lint`, `npm run uji`, dan `npm
 - Skema zod mengimpor `z` dari `src/lib/skema/zod.ts`, bukan dari `"zod"`, supaya pesan bawaan (isian tidak terkirim, tipe salah) berbahasa Indonesia di server maupun form klien. Pesan per isian tetap ditulis di skemanya.
 - Petunjuk akun demo di halaman masuk hanya tampil bila `TAMPILKAN_AKUN_DEMO=1` (`.env.example` dan server uji E2E), tidak di docker-compose maupun VPS.
 - Periode bawaan halaman SDM = periode berjalan, sama dengan dashboard. Tautan cepat dashboard ke halaman berperiode membawa `?bulan=&tahun=` yang sedang dipilih; tautan "Perlu tindakan" SDM membawa periode pekerjaan yang tertunda.
-- Kartu penyusutan di dashboard ("Beban penyusutan disetujui") mengambil angkanya hanya dari jurnal penyusutan yang disetujui, jadi aset yang dilepas sesudah penyusutannya disetujui tetap terhitung. Jurnal yang masih draf atau diajukan tidak pernah dipakai sebagai angka kartu; jumlahnya disebut di keterangan ("menunggu persetujuan"), begitu juga beban yang belum diproses. Kartu aset menghitung "disetujui" dan "menunggu persetujuan" terpisah. Tabel halaman Proses Penyusutan juga memuat baris aset yang sudah dilepas (diberi lencana "dilepas"), sehingga total tabel sama dengan jurnal periodenya.
+- Kartu penyusutan di dashboard ("Beban penyusutan", dulu "Beban penyusutan disetujui") mengambil angkanya hanya dari jurnal penyusutan yang disetujui, jadi aset yang dilepas sesudah penyusutannya disetujui tetap terhitung. Jurnal yang masih draf atau diajukan tidak pernah dipakai sebagai angka kartu; jumlahnya disebut di keterangan ("menunggu persetujuan"), begitu juga beban yang belum diproses. Kartu aset menghitung "disetujui" dan "menunggu persetujuan" terpisah. Tabel halaman Proses Penyusutan juga memuat baris aset yang sudah dilepas (diberi lencana "dilepas"), sehingga total tabel sama dengan jurnal periodenya.
 - Kontrol form (`Isian`, `Pilihan`, `AreaTeks`, `IsianRupiah`) otomatis menunjuk pesan galat `<id>-galat` lewat `aria-describedby`. Form yang memakai galat per isian memanggil `useFokusGalat` supaya isian salah pertama difokuskan sesudah kirim gagal. Laci menu layar kecil `inert` saat tertutup, Esc menutupnya, dan fokus pindah ke "Tutup menu" lalu kembali ke "Buka menu".
 
 - Siklus akuntansi tampil berurutan di menu Jurnal & laporan: Jurnal Umum, Buku Besar, Neraca Saldo, Jurnal Penyesuaian, Tutup Periode. Buku Besar dan Neraca Saldo punya pilihan tahap (`?tahap=sebelum|setelah`, bawaan `setelah` supaya tautan lama bermakna sama); judul layar dan cetak ikut tahapnya ("Neraca Saldo Setelah Penyesuaian"). Tidak ada item menu terpisah per tahap; halaman Jurnal Penyesuaian memberi tautan cepat "Lihat setelah penyesuaian".
 - Jurnal PEMBALIK masuk tahap sebelum penyesuaian, sama dengan jurnal UMUM. Alasannya: jurnal pembalik hanya dibuat oleh `balikPembelian` (`src/lib/aksi/konversi/pembelian.ts`) untuk membatalkan jurnal transaksi pembelian, langsung DISETUJUI, dan bertanggal hari pembalikan. Isinya koreksi transaksi, bukan penyesuaian akhir periode, jadi harus sudah tercermin di neraca saldo sebelum penyesuaian.
 - Buku besar tahap setelah: mutasi UMUM dan PEMBALIK periode P tampil lebih dulu, lalu baris "Saldo sebelum penyesuaian", lalu mutasi jurnal penyesuaian P yang diberi lencana "Penyesuaian" (`bukuBesarTahap`). Jurnal penyesuaian selalu bertanggal hari terakhir periode, jadi urutan ini hanya menegaskan batas tahap.
 - Neraca saldo tahap setelah berbentuk neraca lajur ringkas (`neracaLajur`): kolom Neraca Saldo (tahap sebelum), Penyesuaian (jumlah debit dan kredit jurnal penyesuaian P per akun, tidak dinetokan, jadi totalnya sama dengan total jurnal penyesuaian), dan Setelah Penyesuaian, masing-masing debit dan kredit dengan total dan tanda seimbang. Per akun berlaku neraca saldo + penyesuaian = setelah penyesuaian. Di bawah `md` neraca lajur tampil sebagai kartu ringkas per akun; saat dicetak selalu tabel penuh.
+
+### Penyusutan otomatis (masukan dosen, 25 Nov 2026)
+
+Kata dosen: "alat tidak bisa ditolak". Beban penyusutan dihitung dari jadwal aset yang dibuat saat pembelian diposting, jadi tidak ada yang perlu disetujui.
+
+- **Alur**: Admin memilih bulan di Proses Penyusutan, pratinjau beban per aset tampil, lalu tombol "Proses penyusutan" menjalankan `prosesPenyusutanDalam` (`src/lib/server/penyusutan.ts`, dipakai server action dan seed). Jurnal penyesuaian dibuat langsung DISETUJUI bertanggal hari terakhir periode, pembuat dan penyetuju = Admin yang memproses, lalu masuk buku besar. Owner dan HRD hanya melihat halaman dan jurnalnya.
+- **Aturan yang tetap**: urutan periode (periode lebih lama harus diproses dulu), batas `periodeBatasProses`, dan kunci periode (`pastikanTerbuka` di `buatJurnal`).
+- **Tanpa tolak**: tombol Ajukan, Setujui, dan Tolak untuk jurnal penyusutan dihapus dari halaman Penyusutan dan Jurnal Penyesuaian (`AksiJurnal` tidak menampilkan apa pun untuk sumber `PENYUSUTAN`). `ajukanJurnal` dan `tolakJurnal` menolak jurnal penyusutan dengan `PESAN_PENYUSUTAN_OTOMATIS`. Jurnal penyusutan lama yang berstatus DITOLAK tetap terbaca sebagai riwayat.
+- **Migrasi** `20261125090000_penyusutan_otomatis`: jurnal penyusutan lama yang masih DRAFT atau DIAJUKAN disetujui (penyetuju = pembuatnya), karena jalannya di aplikasi sudah tidak ada. Debit, kredit, nomor, dan tanggal tidak berubah.
+- **Peringatan**: dashboard, Buku Besar, dan Neraca Saldo menampilkan `PeringatanPenyusutan` bila ada bulan sampai periode laporan yang jadwal penyusutannya belum diproses (`bulanPenyusutanBelum`), dengan tautan ke bulan paling lama. Kartu dashboard bernama "Beban penyusutan" (dari jurnal penyusutan yang sudah diproses).
 
 ### Fee event (crew freelance per event)
 

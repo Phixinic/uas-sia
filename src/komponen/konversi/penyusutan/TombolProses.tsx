@@ -15,12 +15,12 @@ export default function TombolProses({ periode, jumlah, total, disabled }: { per
       disabled={disabled}
       ikon={<Calculator className="size-4" />}
       konfirmasi={{
-        judul: `Buat jurnal penyusutan ${labelPeriode(periode)}?`,
-        pesan: `Beban ${rupiah(total)} dari ${jumlah} aset dijurnal sebagai draf penyesuaian. Jadwal aset ditandai sudah diproses, lalu Admin mengajukan jurnalnya ke Owner.`,
-        labelKonfirmasi: "Buat jurnal",
+        judul: `Proses penyusutan ${labelPeriode(periode)}?`,
+        pesan: `Beban ${rupiah(total)} dari ${jumlah} aset dijurnal sebagai jurnal penyesuaian yang langsung disetujui dan masuk buku besar. Jadwal aset ditandai sudah diproses.`,
+        labelKonfirmasi: "Proses penyusutan",
       }}
     >
-      Buat jurnal penyusutan
+      Proses penyusutan
     </TombolAksi>
   );
 }

@@ -1,6 +1,6 @@
 /*
- * Tes integrasi persetujuan jurnal penyusutan dan nilai sisa dari halamannya sendiri (UJI_DB=1).
- * Halaman Proses Penyusutan dan Nilai Sisa memakai server action Jurnal Penyesuaian yang sama (ajukan, setujui, tolak);
+ * Tes integrasi jurnal penyusutan (otomatis disetujui) dan persetujuan nilai sisa dari halamannya sendiri (UJI_DB=1).
+ * Halaman Nilai Sisa memakai server action Jurnal Penyesuaian yang sama (ajukan, setujui, kembalikan);
  * tes ini memanggil aksi itu lalu memeriksa data yang dibaca halaman (dataPenyusutan, dataNilaiSisa) dan dashboard.
  * PERHATIAN: database DATABASE_URL diisi ulang dengan data contoh sebelum dan sesudah tes.
  */
@@ -48,102 +48,39 @@ describe.runIf(aktif)("persetujuan jurnal penyusutan dan nilai sisa di halamanny
     seed();
   }, 60_000);
 
-  let pertama = "";
-  let jumlahAset = 0;
-
-  it("Admin memproses: jurnal Draf, kartu dashboard dan angka disetujui belum menghitungnya", async () => {
+  it("Admin memproses: jurnal langsung Disetujui, angka halaman dan dashboard sama dengan jurnalnya, tanpa jejak ajukan", async () => {
     const admin = await masukSebagai("admin");
-    jumlahAset = await jadwalTerbuka();
+    const jumlahAset = await jadwalTerbuka();
     expect(jumlahAset).toBeGreaterThan(0);
+    expect((await dataDashboard(P)).susut.disetujui).toBe(0);
     const h = await susut.prosesPenyusutan({ periode: P });
     expect(h.ok).toBe(true);
-    pertama = h.ok ? h.data!.jurnalNo : "";
+    const no = h.ok ? h.data!.jurnalNo : "";
     const d = await dataPenyusutan(P);
-    expect(d.jurnalIni?.no).toBe(pertama);
-    expect(d.jurnalIni?.status).toBe("DRAFT");
-    expect(d.jurnalIni?.dibuatOleh).toBe(admin.nama);
-    expect(d.totalDisetujui).toBe(0);
-    expect(d.totalMenunggu).toBe(d.jurnalIni?.total);
-    expect(d.jumlahAset[pertama]).toBe(jumlahAset);
-    const dash = await dataDashboard(P);
-    expect(dash.susut.disetujui).toBe(0);
-    expect(dash.susut.menunggu).toBe(d.jurnalIni?.total);
-  });
-
-  it("Admin mengajukan lewat aksi Jurnal Penyesuaian; Admin dan HRD tidak bisa menyetujui", async () => {
-    const admin = await masukSebagai("admin");
-    expect((await jurnal.ajukanJurnalPenyesuaian({ no: pertama })).ok).toBe(true);
-    const d = await dataPenyusutan(P);
-    expect(d.jurnalIni?.status).toBe("DIAJUKAN");
-    expect(d.jurnalIni?.diajukanOleh).toBe(admin.nama);
-    expect(d.jurnalIni?.diajukanPada).toBeTruthy();
-    expect(d.totalDisetujui).toBe(0);
-
-    const hAdmin = await jurnal.setujuiJurnalPenyesuaian({ no: pertama });
-    expect(hAdmin.ok).toBe(false);
-    expect((await jurnal.tolakJurnalPenyesuaian({ no: pertama, alasan: "coba" })).ok).toBe(false);
-    await masukSebagai("hrd");
-    expect((await jurnal.setujuiJurnalPenyesuaian({ no: pertama })).ok).toBe(false);
-    expect((await db.jurnal.findUniqueOrThrow({ where: { no: pertama } })).status).toBe("DIAJUKAN");
-  });
-
-  it("Owner menolak tanpa alasan gagal; dengan alasan jadwal periode itu dilepas", async () => {
-    const owner = await masukSebagai("owner");
-    expect((await jurnal.tolakJurnalPenyesuaian({ no: pertama, alasan: "  " })).ok).toBe(false);
-    expect(await jadwalTerbuka()).toBe(0);
-    expect((await jurnal.tolakJurnalPenyesuaian({ no: pertama, alasan: "Aset AST-0002 sudah rusak, cek dulu" })).ok).toBe(true);
-
-    // Bug yang dicek: jurnal_no di jadwal harus kosong lagi supaya periode bisa diproses ulang.
-    expect(await db.jadwalPenyusutan.count({ where: { jurnalNo: pertama } })).toBe(0);
-    expect(await jadwalTerbuka()).toBe(jumlahAset);
-    const d = await dataPenyusutan(P);
-    expect(d.belumDiproses).toBe(jumlahAset);
-    expect(d.jurnalIni?.status).toBe("DITOLAK");
-    expect(d.jurnalIni?.alasanTolak).toBe("Aset AST-0002 sudah rusak, cek dulu");
-    expect(d.jurnalIni?.diputuskanOleh).toBe(owner.nama);
-    expect(d.jumlahAset[pertama]).toBeUndefined();
-    expect(d.totalMenunggu).toBe(0);
-    expect((await dataDashboard(P)).susut.menunggu).toBe(0);
-  });
-
-  let kedua = "";
-  it("Admin memproses ulang periode yang ditolak: jurnal baru mengklaim jadwal yang sama", async () => {
-    await masukSebagai("admin");
-    const h = await susut.prosesPenyusutan({ periode: P });
-    expect(h.ok).toBe(true);
-    kedua = h.ok ? h.data!.jurnalNo : "";
-    expect(kedua).not.toBe(pertama);
-    expect(await db.jadwalPenyusutan.count({ where: { jurnalNo: kedua } })).toBe(jumlahAset);
-    expect(await jadwalTerbuka()).toBe(0);
-    const d = await dataPenyusutan(P);
-    expect(d.jurnalIni?.no).toBe(kedua);
-    expect(d.riwayat.filter((j) => j.periode === P).map((j) => j.status).sort()).toEqual(["DITOLAK", "DRAFT"]);
-    expect((await jurnal.ajukanJurnalPenyesuaian({ no: kedua })).ok).toBe(true);
-  });
-
-  it("Owner tidak bisa menyetujui jurnal penyusutan buatannya sendiri", async () => {
-    const owner = await masukSebagai("owner");
-    const admin = await db.pengguna.findUniqueOrThrow({ where: { namaPengguna: "admin" } });
-    // Jurnal penyusutan hanya dibuat Admin; pembuatnya dialihkan ke Owner untuk menguji aturan pembuat.
-    await db.jurnal.update({ where: { no: kedua }, data: { dibuatOlehId: owner.id } });
-    const h = await jurnal.setujuiJurnalPenyesuaian({ no: kedua });
-    expect(h.ok).toBe(false);
-    if (!h.ok) expect(h.galat).toMatch(/sendiri/);
-    expect((await db.jurnal.findUniqueOrThrow({ where: { no: kedua } })).status).toBe("DIAJUKAN");
-    await db.jurnal.update({ where: { no: kedua }, data: { dibuatOlehId: admin.id } });
-  });
-
-  it("Owner menyetujui: angka disetujui di halaman dan dashboard sama dengan jurnalnya", async () => {
-    const owner = await masukSebagai("owner");
-    expect((await jurnal.setujuiJurnalPenyesuaian({ no: kedua })).ok).toBe(true);
-    const d = await dataPenyusutan(P);
+    expect(d.jurnalIni?.no).toBe(no);
     expect(d.jurnalIni?.status).toBe("DISETUJUI");
-    expect(d.jurnalIni?.diputuskanOleh).toBe(owner.nama);
+    expect(d.jurnalIni?.dibuatOleh).toBe(admin.nama);
+    expect(d.jurnalIni?.diajukanOleh).toBeNull();
     expect(d.totalDisetujui).toBe(d.jurnalIni?.total);
     expect(d.totalMenunggu).toBe(0);
+    expect(d.belumDiproses).toBe(0);
+    expect(d.jumlahAset[no]).toBe(jumlahAset);
     const dash = await dataDashboard(P);
     expect(dash.susut.disetujui).toBe(d.jurnalIni?.total);
     expect(dash.susut.menunggu).toBe(0);
+    expect(dash.tindakan.some((t) => t.judul.includes("Penyusutan November 2026"))).toBe(false);
+
+    // Owner tidak punya tombol keputusan: aksi setujui dan tolak menolak jurnal penyusutan.
+    await masukSebagai("owner");
+    expect((await jurnal.tolakJurnalPenyesuaian({ no, alasan: "coba" })).ok).toBe(false);
+    expect((await jurnal.setujuiJurnalPenyesuaian({ no })).ok).toBe(false);
+    expect((await db.jurnal.findUniqueOrThrow({ where: { no } })).status).toBe("DISETUJUI");
+  });
+
+  it("peringatan laporan: bulan yang penyusutannya belum diproses terdaftar sampai periode laporan", async () => {
+    const { bulanPenyusutanBelum } = await import("@/lib/data/konversi/penyusutan");
+    expect(await bulanPenyusutanBelum(P)).toEqual([]);
+    expect(await bulanPenyusutanBelum("2026-12")).toEqual(["2026-12"]);
   });
 
   it("nilai sisa: status, pemutus, dan alasan tolak terbaca di halaman Nilai Sisa; input ulang memakai OPN yang sama", async () => {
@@ -176,7 +113,7 @@ describe.runIf(aktif)("persetujuan jurnal penyusutan dan nilai sisa di halamanny
 describe("jurnalPeriode: jurnal yang mewakili satu periode", async () => {
   const { jurnalPeriode } = await import("@/lib/data/konversi/persetujuan");
   const j = (no: string, status: "DRAFT" | "DIAJUKAN" | "DISETUJUI" | "DITOLAK", periode = "2026-11") =>
-    ({ no, periode, status, total: 1, alasanTolak: null, dibuatOlehId: 1, dibuatOleh: "A", dibuatPada: "", diajukanOleh: null, diajukanPada: null, diputuskanOleh: null, diputuskanPada: null });
+    ({ no, periode, status, total: 1, alasanTolak: null, dibuatOlehId: 1, dibuatOleh: "A", dibuatPada: "", diajukanOleh: null, diajukanPada: null, diputuskanOleh: null, diputuskanOlehId: null, diputuskanPada: null });
   it("penolakan terbaru tidak tertutup persetujuan lama (kasus produksi: JP-0003 disetujui, JP-0006 ditolak)", () => {
     expect(jurnalPeriode([j("JP-2026-0006", "DITOLAK"), j("JP-2026-0003", "DISETUJUI")], "2026-11")?.no).toBe("JP-2026-0006");
   });
