@@ -90,8 +90,7 @@ const HALAMAN_UTAMA = [
   "/konversi/kartu-aset",
   "/konversi/pelepasan",
   "/sdm/presensi",
-  "/sdm/hitung-gaji",
-  "/sdm/distribusi",
+  "/sdm/gaji-bulanan",
   "/pelaporan/jurnal-penyesuaian",
   "/pelaporan/jurnal-umum",
   "/pelaporan/buku-besar",
@@ -181,9 +180,11 @@ test("1e. Dashboard HRD: tautan cepat SDM membawa periode yang sedang dipilih", 
   await expect(p).toHaveURL(/\/\?bulan=10&tahun=2026$/);
   const cepat = kartu(p, "Tautan cepat");
   await expect(cepat.getByRole("link", { name: "Presensi", exact: true })).toHaveAttribute("href", "/sdm/presensi?bulan=10&tahun=2026");
-  await expect(cepat.getByRole("link", { name: "Hitung gaji", exact: true })).toHaveAttribute("href", "/sdm/hitung-gaji?bulan=10&tahun=2026");
-  await cepat.getByRole("link", { name: "Distribusi gaji", exact: true }).click();
-  await p.waitForURL(/\/sdm\/distribusi\?bulan=10&tahun=2026/);
+  await cepat.getByRole("link", { name: "Gaji bulanan", exact: true }).click();
+  await p.waitForURL(/\/sdm\/gaji-bulanan\?bulan=10&tahun=2026/);
+  // Rute lama Hitung Gaji dan Distribusi dialihkan ke Gaji Bulanan dengan query yang sama.
+  await bukaHalaman(p, "/sdm/distribusi?bulan=10&tahun=2026");
+  await expect(p).toHaveURL(/\/sdm\/gaji-bulanan\?bulan=10&tahun=2026$/);
   await expect(p.locator("#pilih-bulan")).toHaveValue("10");
   await expect(p.locator("#pilih-tahun")).toHaveValue("2026");
 });
@@ -341,7 +342,7 @@ test("3d. Owner mengembalikan jurnal nilai sisa untuk revisi (alasan wajib) di m
   // Admin melihat form yang sudah terisi nilai yang diajukan, beserta alasannya.
   const pa = sesi.admin.page;
   await bukaHalaman(pa, "/konversi/nilai-sisa?periode=2026-11");
-  await expect(pa.getByText("Dikembalikan Owner untuk revisi:").first()).toBeVisible();
+  await expect(pa.getByText("Alasan dikembalikan:").first()).toBeVisible();
   const isian = pa.locator("table[aria-label='Hitung fisik perlengkapan'] tbody tr").first().locator("input");
   await expect(isian).not.toHaveValue("");
 });
@@ -448,35 +449,46 @@ test("5a. HRD input presensi November", async () => {
   await expect(sel("KRY-02", 7)).toHaveText("1");
 });
 
-test("5b. HRD hitung gaji semua karyawan", async () => {
+test("5b. Gaji Bulanan: HRD mengisi potongan dengan pratinjau langsung, angka tabel masih estimasi", async () => {
   const p = sesi.hrd.page;
-  await bukaHalaman(p, "/sdm/hitung-gaji?periode=2026-11");
-  await p.getByRole("button", { name: /Hitung dan simpan semua/ }).click();
-  await konfirmasi(p);
-  await expect(p.getByText("5 sudah dihitung, 0 masih estimasi")).toBeVisible();
-  const tfoot = p.locator("table[aria-label='Hitung gaji per karyawan'] tfoot tr");
-  const thp = angkaDari(await tfoot.locator("td").nth(3).innerText());
-  const pph = angkaDari(await tfoot.locator("td").nth(2).innerText());
-  const bruto = angkaDari(await tfoot.locator("td").nth(1).innerText());
-  expect(thp).toBe(bruto - pph);
+  await bukaHalaman(p, "/sdm/gaji-bulanan?bulan=11&tahun=2026");
+  await expect(p.getByRole("heading", { name: "Gaji Bulanan", level: 1 })).toBeVisible();
+  await expect(p.getByText("estimasi").first()).toBeVisible();
+  const tabel = p.locator("table[aria-label='Gaji per karyawan']");
+  await tabel.getByRole("row", { name: /Nadia Putri/ }).getByRole("link", { name: "Potongan/bonus" }).click();
+  const editor = p.getByRole("region", { name: /Potongan dan bonus Nadia Putri/ });
+  await editor.getByLabel("Jenis").selectOption("POTONGAN");
+  await editor.getByLabel("Nominal (Rp)").fill("50000");
+  await editor.getByLabel("Keterangan").fill("Denda uji E2E");
+  await expect(editor.getByRole("region", { name: "Pratinjau gaji" })).toContainText("−Rp50.000");
+  await editor.getByRole("button", { name: "Simpan potongan" }).click();
+  await expect(tabel.getByRole("row", { name: /Nadia Putri/ })).toContainText("Denda uji E2E");
+  const tfoot = tabel.locator("tfoot tr td");
+  const tetap = angkaDari(await tfoot.nth(1).innerText());
+  const pph = angkaDari(await tfoot.nth(4).innerText());
+  const thp = angkaDari(await tfoot.nth(5).innerText());
+  expect(thp).toBe(tetap - pph - 50_000);
   expect(thp).toBeGreaterThan(20_000_000);
-  angkaKunci["Gaji November: bruto"] = bruto;
+  angkaKunci["Gaji November: bruto"] = tetap;
   angkaKunci["Gaji November: PPh 21"] = pph;
   angkaKunci["Gaji November: THP"] = thp;
-  await foto(p, "hrd", "hitung-gaji-november");
+  await foto(p, "hrd", "gaji-bulanan-november");
 });
 
-test("5c. HRD mengajukan distribusi gaji, Owner menyetujui", async () => {
+test("5c. HRD mengajukan Gaji Bulanan November, Owner menyetujui", async () => {
   const p = sesi.hrd.page;
-  await bukaHalaman(p, "/sdm/distribusi?periode=2026-11");
-  await p.getByRole("button", { name: "Ajukan ke Owner" }).click();
+  await bukaHalaman(p, "/sdm/gaji-bulanan?bulan=11&tahun=2026");
+  await p.getByRole("button", { name: "Ajukan gaji November 2026 ke Owner" }).click();
   await konfirmasi(p);
   await expect(p.getByText("PAY-2026-0002").first()).toBeVisible();
+  await expect(p.getByText("Menunggu keputusan Owner").first()).toBeVisible();
   const po = sesi.owner.page;
-  await bukaHalaman(po, "/sdm/distribusi?periode=2026-11");
-  await baris(po, "PAY-2026-0002").getByRole("button", { name: "Setujui" }).click();
+  await bukaHalaman(po, "/sdm/gaji-bulanan?bulan=11&tahun=2026");
+  await po.getByRole("button", { name: "Setujui dan bayar" }).click();
   await konfirmasi(po);
-  await expect(baris(po, "PAY-2026-0002")).toContainText("Disetujui");
+  await expect(po.getByText("Sudah dibayar").first()).toBeVisible();
+  await bukaHalaman(po, "/sdm/gaji-bulanan?bulan=11&tahun=2026&slip=KRY-02");
+  await expect(po.getByRole("article", { name: /Slip gaji Nadia/ }).getByRole("region", { name: "Potongan dan bonus" })).toContainText("Denda uji E2E");
 });
 
 /* ------------------------------------------------------------------ 6. Laporan dan tutup periode */
@@ -777,14 +789,14 @@ for (const peran of ["admin", "hrd", "owner"] as const) {
 
 test("8m. Tampilan layar sempit (390px): halaman utama tanpa overflow", async ({ browser }) => {
   const m = await bukaSesi(browser, "hrd", "hrd12345", "hrd-mobile", { width: 390, height: 844 });
-  for (const alamat of ["/", "/sdm/hitung-gaji?periode=2026-11", "/sdm/presensi", "/sdm/distribusi?periode=2026-11", "/konversi/pembelian-peralatan", "/pelaporan/neraca-saldo"]) {
+  for (const alamat of ["/", "/sdm/gaji-bulanan?periode=2026-11", "/sdm/presensi", "/konversi/pembelian-peralatan", "/pelaporan/neraca-saldo"]) {
     await bukaHalaman(m.page, alamat);
     await foto(m.page, "mobile", slug(alamat));
   }
   // Tabel gaji tampil sebagai kartu ringkas, bukan tabel yang digeser.
-  await bukaHalaman(m.page, "/sdm/hitung-gaji?periode=2026-11");
-  await expect(m.page.locator("table[aria-label='Hitung gaji per karyawan']")).toBeHidden();
-  await expect(m.page.getByLabel("Hitung gaji per karyawan (ringkas)")).toBeVisible();
+  await bukaHalaman(m.page, "/sdm/gaji-bulanan?periode=2026-11");
+  await expect(m.page.locator("table[aria-label='Gaji per karyawan']")).toBeHidden();
+  await expect(m.page.getByLabel("Gaji per karyawan (ringkas)")).toBeVisible();
 
   // Satu kotak baris untuk teks kode akun = tidak patah ke baris kedua ("1-" dan "140").
   const tidakPatah = async (kode: Locator) => {

@@ -14,7 +14,7 @@ import { boleh } from "@/lib/peran";
 import { AKUN } from "@/lib/inti/akun";
 import { periodeTerkunciSemua, profilUsaha } from "@/lib/data/umum";
 import { opsiPeriodeSdm, periodeDipilih, type CariPeriode } from "@/lib/data/sdm/umum";
-import { barisHitungGaji, daftarSlipPeriode, kesiapanGaji, muatUpahEvent, paketGajiPeriode, type BarisGaji } from "@/lib/data/sdm/gaji";
+import { barisHitungGaji, kesiapanGaji, muatUpahEvent, paketGajiPeriode, type BarisGaji } from "@/lib/data/sdm/gaji";
 
 import { denganPeriode, kunciPenutup, labelPeriode } from "@/lib/inti/tanggal";
 import { labelWaktu, rupiah } from "@/lib/format";
@@ -83,9 +83,8 @@ export default async function HalamanGajiBulanan({ cari }: { cari: CariGajiBulan
   const thpSiap = siap.reduce((s, b) => s + b.tampil.thp, 0);
   const jumlah = (f: (b: BarisGaji) => number) => baris.reduce((s, b) => s + f(b), 0);
   const editor = bolehUbah && !penutup && cari.ubah ? baris.find((b) => b.karyawanKode === cari.ubah && (!b.slipStatus || b.slipStatus === "DRAFT")) ?? null : null;
-  const slipDibuka = cari.slip ? (await daftarSlipPeriode(periode)).filter((s) => cari.slip === "semua" || s.karyawanKode === cari.slip) : [];
-  const pratinjauSlip = cari.slip && cari.slip !== "semua" && !slipDibuka.length ? baris.find((b) => b.karyawanKode === cari.slip)?.tampil : undefined;
-  const daftarSlip = pratinjauSlip ? [pratinjauSlip] : slipDibuka;
+  // Slip terkunci (diajukan atau dibayar) memakai angka tersimpan; yang belum diajukan memakai hitungan terbaru (pratinjau).
+  const daftarSlip = cari.slip ? baris.filter((b) => cari.slip === "semua" || b.karyawanKode === cari.slip).map((b) => b.tampil) : [];
 
   return (
     <>
@@ -147,7 +146,7 @@ export default async function HalamanGajiBulanan({ cari }: { cari: CariGajiBulan
 
       {editor && (
         <EditorPenyesuaian
-          key={`${editor.karyawanKode}-${editor.tampil.bonus.length}-${editor.tampil.potongan.length}`}
+          key={editor.karyawanKode}
           periode={periode}
           karyawanKode={editor.karyawanKode}
           nama={editor.nama}
@@ -192,16 +191,12 @@ export default async function HalamanGajiBulanan({ cari }: { cari: CariGajiBulan
               <Tabel label="Gaji per karyawan">
                 <thead>
                   <tr>
-                    <th>Karyawan</th>
-                    <th>Setting berlaku</th>
-                    <th>Presensi</th>
+                    <th>Karyawan, setting berlaku, presensi</th>
                     <th className="kolom-angka">Gaji tetap (Rp)</th>
                     <th>Upah event</th>
-                    <th>Potongan</th>
-                    <th>Bonus</th>
+                    <th>Potongan dan bonus</th>
                     <th className="kolom-angka">PPh 21 (Rp)</th>
-                    <th className="kolom-angka">THP (Rp)</th>
-                    <th>Status</th>
+                    <th className="kolom-angka">THP (Rp) dan status</th>
                     <th className="text-right">Aksi</th>
                   </tr>
                 </thead>
@@ -211,29 +206,34 @@ export default async function HalamanGajiBulanan({ cari }: { cari: CariGajiBulan
                     const bisaUbah = bolehUbah && !penutup && (!b.slipStatus || b.slipStatus === "DRAFT");
                     return (
                       <tr key={b.karyawanKode} className={cari.ubah === b.karyawanKode ? "bg-aksen-lembut/60" : undefined}>
-                        <td><div className="font-medium">{b.nama}</div><div className="kode">{b.karyawanKode}</div></td>
-                        <td className="text-[13px]">
-                          <span className="kode">{b.versi.kode ?? "Setting lama"}</span>
-                          <div>{b.versi.jabatan}</div>
-                          <div className="text-xs text-slate-500">{b.versi.golongan}</div>
+                        <td className="min-w-48">
+                          <div className="font-medium">{b.nama}</div>
+                          <div className="text-xs text-slate-500"><span className="kode">{b.karyawanKode}</span> · <span className="kode">{b.versi.kode ?? "setting lama"}</span></div>
+                          <div className="text-xs text-slate-500">{b.versi.jabatan}, {b.versi.golongan}</div>
+                          <div className="mt-0.5 text-xs text-slate-700">{b.jumlahPresensi ? `Presensi: ${ringkasPresensi(b)}` : <StatusSlipKaryawan slipStatus={null} jumlahPresensi={0} periode={periode} karyawanKode={b.karyawanKode} />}</div>
                         </td>
-                        <td className="text-[13px]">{b.jumlahPresensi ? ringkasPresensi(b) : <StatusSlipKaryawan slipStatus={null} jumlahPresensi={0} periode={periode} karyawanKode={b.karyawanKode} />}</td>
                         <td className="kolom-angka">
                           <Rupiah nilai={t.gajiTetap} polos />
                           {t.potonganAbsen > 0 && <div className="text-[11px] text-slate-500">potongan absen {rupiah(t.potonganAbsen)}</div>}
                         </td>
-                        <td className="min-w-36 text-[13px]">
-                          {t.upahEvent.length ? t.upahEvent.map((u) => <div key={u.slipFeeNo} className="whitespace-nowrap"><span className="kode">{u.eventKode}</span> <span className="angka">{rupiah(u.fee)}</span><div className="text-[11px] text-slate-500">{u.event}</div></div>) : <span className="text-slate-400">-</span>}
+                        <td className="text-[13px]">
+                          {t.upahEvent.length ? t.upahEvent.map((u) => <div key={u.slipFeeNo} title={u.event}><span className="angka">{rupiah(u.fee)}</span><div className="text-[11px] text-slate-500">{u.eventKode}</div></div>) : <span className="text-slate-400">-</span>}
                         </td>
-                        <td className="min-w-32 text-[13px]">{t.potongan.length ? t.potongan.map((x) => <div key={x.id}><span className="angka text-rose-700">−{rupiah(x.nominal)}</span><div className="text-[11px] text-slate-500">{x.keterangan}</div></div>) : <span className="text-slate-400">-</span>}</td>
-                        <td className="min-w-32 text-[13px]">{t.bonus.length ? t.bonus.map((x) => <div key={x.id}><span className="angka text-emerald-700">{rupiah(x.nominal)}</span><div className="text-[11px] text-slate-500">{x.keterangan}</div></div>) : <span className="text-slate-400">-</span>}</td>
+                        <td className="text-[13px]">
+                          {t.potongan.map((x) => <div key={`p${x.id}`} title={x.keterangan}><span className="angka text-rose-700">−{rupiah(x.nominal)}</span><div className="max-w-36 truncate text-[11px] text-slate-500">{x.keterangan}</div></div>)}
+                          {t.bonus.map((x) => <div key={`b${x.id}`} title={x.keterangan}><span className="angka text-emerald-700">+{rupiah(x.nominal)}</span><div className="max-w-36 truncate text-[11px] text-slate-500">{x.keterangan}</div></div>)}
+                          {!t.potongan.length && !t.bonus.length && <span className="text-slate-400">-</span>}
+                        </td>
                         <td className="kolom-angka"><Rupiah nilai={t.pph21} polos /></td>
-                        <td className="kolom-angka font-semibold"><Rupiah nilai={t.thp} polos /><Estimasi b={b} /></td>
-                        <td><StatusSlipKaryawan slipStatus={b.slipStatus} jumlahPresensi={b.jumlahPresensi} periode={periode} karyawanKode={b.karyawanKode} dikembalikan={!!b.alasanTolak} /></td>
+                        <td className="kolom-angka">
+                          <span className="font-semibold"><Rupiah nilai={t.thp} polos /></span>
+                          <Estimasi b={b} />
+                          <div className="mt-1"><StatusSlipKaryawan slipStatus={b.slipStatus} jumlahPresensi={b.jumlahPresensi} periode={periode} karyawanKode={b.karyawanKode} dikembalikan={!!b.alasanTolak} /></div>
+                        </td>
                         <td>
                           <div className="flex flex-col items-end gap-1.5">
-                            {bisaUbah && <TautanTombol href={`${alamatPeriode}&ubah=${b.karyawanKode}`} kecil>Potongan dan bonus</TautanTombol>}
-                            <TautanTombol href={`${alamatPeriode}&slip=${b.karyawanKode}`} kecil varian="hantu">{b.slipStatus === "DIAJUKAN" || b.slipStatus === "DISETUJUI" ? "Slip" : "Pratinjau slip"}</TautanTombol>
+                            {bisaUbah && <TautanTombol href={`${alamatPeriode}&ubah=${b.karyawanKode}`} kecil>Potongan/bonus</TautanTombol>}
+                            <TautanTombol href={`${alamatPeriode}&slip=${b.karyawanKode}`} kecil varian="hantu">Slip</TautanTombol>
                           </div>
                         </td>
                       </tr>
@@ -242,14 +242,13 @@ export default async function HalamanGajiBulanan({ cari }: { cari: CariGajiBulan
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colSpan={3}>Total {baris.length} karyawan</td>
+                    <td>Total {baris.length} karyawan</td>
                     <td className="kolom-angka"><Rupiah nilai={jumlah((b) => b.tampil.gajiTetap)} polos /></td>
                     <td className="angka">{rupiah(jumlah((b) => b.tampil.totalUpahEvent))}</td>
-                    <td className="angka">{rupiah(jumlah((b) => b.tampil.totalPotongan))}</td>
-                    <td className="angka">{rupiah(jumlah((b) => b.tampil.totalBonus))}</td>
+                    <td className="angka text-xs">−{rupiah(jumlah((b) => b.tampil.totalPotongan))} / +{rupiah(jumlah((b) => b.tampil.totalBonus))}</td>
                     <td className="kolom-angka"><Rupiah nilai={jumlah((b) => b.tampil.pph21)} polos /></td>
                     <td className="kolom-angka"><Rupiah nilai={jumlah((b) => b.tampil.thp)} polos /></td>
-                    <td colSpan={2} />
+                    <td />
                   </tr>
                 </tfoot>
               </Tabel>

@@ -17,7 +17,7 @@ export default function SlipGaji({ daftar, namaUsaha, alamatTutup }: { daftar: D
   return (
     <div className="space-y-4">
       <div className="tanpa-cetak flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-slate-600">{daftar.length > 1 ? `${daftar.length} slip ${labelPeriode(daftar[0].periode)} siap dicetak.` : "Pratinjau slip siap dicetak."}</p>
+        <p className="text-sm text-slate-600">{daftar.length > 1 ? `${daftar.length} slip ${labelPeriode(daftar[0].periode)} siap dicetak.` : daftar[0].status ? "Slip siap dicetak." : "Pratinjau slip (estimasi, belum diajukan)."}</p>
         <div className="flex gap-2">
           <TombolCetak label={daftar.length > 1 ? "Cetak semua" : "Cetak slip"} />
           <TautanTombol href={alamatTutup} kecil ikon={<X className="size-4" />}>

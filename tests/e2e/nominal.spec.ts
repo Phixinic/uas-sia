@@ -90,15 +90,10 @@ async function isiPresensi(p: Page, tanggal: string, periode: { bulan: number; t
 
 /** Hitung (atau hitung ulang) slip karyawan uji, buka slipnya, dan kembalikan teks baris gaji pokok (nominal + sumber versi). */
 async function hitungDanGajiPokok(p: Page, periode: { bulan: number; tahun: number }): Promise<string> {
-  await p.goto(`/sdm/hitung-gaji?${q(periode)}`);
-  const baris = p.getByRole("table", { name: "Hitung gaji per karyawan" }).getByRole("row", { name: new RegExp(NAMA) });
-  await baris.getByRole("button", { name: /^(Simpan slip|Hitung ulang slip)$/ }).click();
-  await expect(toast(p)).toContainText(`Slip ${NAMA} disimpan sebagai draf`);
-  await p.waitForLoadState("networkidle");
-  const no = `SLP-${periode.tahun}-${String(periode.bulan).padStart(2, "0")}-${kode}`;
-  await p.goto(`/sdm/hitung-gaji?${q(periode)}&slip=${no}`);
+  // Gaji Bulanan menghitung slip dari bahan terbaru; pratinjau slip karyawan uji menampilkan sumber versi gaji pokok.
+  await p.goto(`/sdm/gaji-bulanan?${q(periode)}&slip=${kode}`);
   const slip = p.getByRole("article", { name: `Slip gaji ${NAMA}` });
-  return (await slip.getByRole("table", { name: "Komponen tetap (dari Setting Gaji)" }).getByRole("row", { name: /Gaji pokok/ }).innerText()).replace(/\s+/g, " ");
+  return (await slip.getByRole("table", { name: "Gaji tetap" }).getByRole("row", { name: /Gaji pokok/ }).innerText()).replace(/\s+/g, " ");
 }
 
 test.describe.configure({ mode: "serial" });
@@ -229,9 +224,8 @@ test("slip November dihitung ulang tetap gaji lama, slip Desember memakai gaji b
   expect(des).toContain(`Gaji pokok ${GOLONGAN}, berlaku mulai Desember 2026`);
   await potret(p, "nominal-slip", { cetak: true });
 
-  await p.goto(`/sdm/hitung-gaji?${q(DES)}`);
-  const panel = p.getByRole("list", { name: "Versi nominal komponen" });
-  await expect(panel).toContainText(`Gaji pokok ${GOLONGAN}, berlaku mulai Desember 2026`);
-  await potret(p, "nominal-hitung-gaji");
+  await p.goto(`/sdm/gaji-bulanan?${q(DES)}`);
+  await expect(p.getByRole("table", { name: "Gaji per karyawan" }).getByRole("row", { name: new RegExp(NAMA) })).toContainText("4.500.000");
+  await potret(p, "nominal-gaji-bulanan");
   expect(galatKonsol, galatKonsol.join("\n")).toEqual([]);
 });

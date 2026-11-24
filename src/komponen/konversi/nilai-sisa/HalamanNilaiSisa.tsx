@@ -172,7 +172,7 @@ export default async function HalamanNilaiSisa({ cari }: { cari: { periode?: str
         <TabelHasil o={draf} namaAkun={namaAkun} judul={`Nilai sisa ${labelPeriode(periode)} (draf)`} keterangan={draf.alasanTolak ? `Dikembalikan Owner untuk revisi: ${draf.alasanTolak}. Menunggu Admin mengubah lalu mengajukan ulang.` : `Diinput oleh ${draf.dibuatOleh}. Menunggu Admin mengajukan ke Owner.`} />
       ) : (
         <>
-          {draf?.alasanTolak && <Peringatan jenis="galat"><b>Dikembalikan Owner untuk revisi:</b> {draf.alasanTolak}. Ubah nilainya, simpan, lalu ajukan ulang.</Peringatan>}
+          {draf?.alasanTolak && !d.jurnalIni && <Peringatan jenis="galat"><b>Dikembalikan Owner untuk revisi:</b> {draf.alasanTolak}. Ubah nilainya, simpan, lalu ajukan ulang.</Peringatan>}
           <FormNilaiSisa
             key={`${periode}-${draf?.jurnal?.no ?? "baru"}`}
             periode={periode}

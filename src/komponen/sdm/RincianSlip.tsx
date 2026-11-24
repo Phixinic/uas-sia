@@ -117,7 +117,7 @@ export function RincianSlip({ s, bukaPph }: { s: DataSlip; bukaPph?: boolean }) 
                 {s.totalUpahEvent > 0 && <tr><td>Upah event</td><td className="kolom-angka"><Rupiah nilai={s.totalUpahEvent} polos /></td></tr>}
                 {s.totalBonus > 0 && <tr><td>Bonus</td><td className="kolom-angka"><Rupiah nilai={s.totalBonus} polos /></td></tr>}
                 <tr className="font-semibold"><td>Bruto</td><td className="kolom-angka"><Rupiah nilai={s.bruto} polos /></td></tr>
-                <tr><td>PPh 21 (PTKP {labelPtkp(s.statusPtkp)})</td><td className="kolom-angka">−<Rupiah nilai={s.pph21} polos /></td></tr>
+                <tr><td>PPh 21 (PTKP {labelPtkp(s.statusPtkp)})</td><td className="kolom-angka">{s.pph21 ? <>−<Rupiah nilai={s.pph21} polos /></> : "0"}</td></tr>
                 {s.totalPotongan > 0 && <tr><td>Potongan</td><td className="kolom-angka">−<Rupiah nilai={s.totalPotongan} polos /></td></tr>}
               </tbody>
               <tfoot>

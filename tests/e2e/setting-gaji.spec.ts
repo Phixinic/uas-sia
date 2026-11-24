@@ -86,17 +86,12 @@ async function isiPresensi(p: Page, tanggal: string, periode: { bulan: number; t
   await p.waitForLoadState("networkidle");
 }
 
-/** Hitung (atau hitung ulang) slip karyawan uji di Hitung Gaji, lalu kembalikan teks gaji pokok di slipnya. */
+/** Buka pratinjau slip karyawan uji di Gaji Bulanan, lalu kembalikan teks gaji pokok di slipnya. */
 async function hitungDanGajiPokok(p: Page, periode: { bulan: number; tahun: number }): Promise<string> {
-  await p.goto(`/sdm/hitung-gaji?${q(periode)}`);
-  const baris = p.getByRole("table", { name: "Hitung gaji per karyawan" }).getByRole("row", { name: new RegExp(NAMA) });
-  await baris.getByRole("button", { name: /^(Simpan slip|Hitung ulang slip)$/ }).click();
-  await expect(toast(p)).toContainText(`Slip ${NAMA} disimpan sebagai draf`);
-  await p.waitForLoadState("networkidle"); // tunggu halaman disegarkan sebelum pindah, supaya respons tidak terputus
-  const no = `SLP-${periode.tahun}-${String(periode.bulan).padStart(2, "0")}-${kode}`;
-  await p.goto(`/sdm/hitung-gaji?${q(periode)}&slip=${no}`);
+  // Gaji Bulanan menghitung slip dari bahan terbaru; pratinjau slip karyawan uji menampilkan sumber versi gaji pokok.
+  await p.goto(`/sdm/gaji-bulanan?${q(periode)}&slip=${kode}`);
   const slip = p.getByRole("article", { name: `Slip gaji ${NAMA}` });
-  return (await slip.getByRole("table", { name: "Komponen tetap (dari Setting Gaji)" }).getByRole("row", { name: /Gaji pokok/ }).innerText()).replace(/\s+/g, " ");
+  return (await slip.getByRole("table", { name: "Gaji tetap" }).getByRole("row", { name: /Gaji pokok/ }).innerText()).replace(/\s+/g, " ");
 }
 
 test.describe.configure({ mode: "serial" });
@@ -198,11 +193,12 @@ test("slip bulan berjalan dihitung ulang tetap gaji lama, slip bulan berlaku mem
   expect(await hitungDanGajiPokok(p, NOV)).toContain("3.800.000");
   await isiPresensi(p, "2026-12-01", DES);
   expect(await hitungDanGajiPokok(p, DES)).toContain("5.800.000");
-  await p.goto(`/sdm/hitung-gaji?${q(DES)}`);
-  await expect(p.getByRole("heading", { name: "Hitung Gaji", level: 1 })).toBeVisible();
+  await p.goto(`/sdm/gaji-bulanan?${q(DES)}`);
+  await expect(p.getByRole("heading", { name: "Gaji Bulanan", level: 1 })).toBeVisible();
   await expect(p.getByText("Bulan: Desember · Tahun: 2026").first()).toBeVisible();
-  await expect(p.getByText("Masuk laporan keuangan periode apa?")).toBeVisible();
-  await potret(p, "gaji-riwayat-hitung-gaji");
+  // Setting yang berlaku tampil per baris: versi promosi berlaku Desember.
+  await expect(p.getByRole("table", { name: "Gaji per karyawan" }).getByRole("row", { name: new RegExp(NAMA) })).toContainText("Golongan III");
+  await potret(p, "gaji-riwayat-gaji-bulanan");
 });
 
 test("Owner menolak pengajuan dengan alasan; riwayat per karyawan menampilkannya", async () => {

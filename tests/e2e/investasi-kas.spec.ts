@@ -1,7 +1,7 @@
 /*
  * Uji E2E Investasi Kas dan label biaya tetap/variabel: akses terlarang (HRD, Kapten), Admin mencatat setoran, Owner
  * melihatnya di "Perlu tindakan" lalu menyetujui, jurnal muncul di Jurnal Umum, dan ringkasan "Dari mana kas dan modal"
- * sama dengan saldo Buku Besar akun Kas dan Modal Pemilik. Ditambah potret 1440 dan 390 (Investasi Kas, Hitung Gaji,
+ * sama dengan saldo Buku Besar akun Kas dan Modal Pemilik. Ditambah potret 1440 dan 390 (Investasi Kas, Gaji Bulanan,
  * slip gaji layar dan cetak, slip fee, ringkasan biaya SDM) di artefak-uji/potret/.
  * Dijalankan sesudah alur.spec.ts dan fee-event.spec.ts di database uji yang sama, jadi nomor dokumen tidak dipatok.
  */
@@ -207,19 +207,18 @@ test("potret Investasi Kas Admin dan Owner (1440, 390)", async () => {
   }
 });
 
-test("potret biaya: Hitung Gaji, slip gaji layar dan cetak, slip fee, ringkasan Biaya SDM", async () => {
+test("potret biaya: Gaji Bulanan, slip gaji layar dan cetak, slip fee, ringkasan Biaya SDM", async () => {
   const h = sesi.hrd.page;
-  await h.goto("/sdm/hitung-gaji?periode=2026-11");
-  await expect(h.getByRole("heading", { name: "Hitung Gaji", level: 1 })).toBeVisible();
+  await h.goto("/sdm/gaji-bulanan?periode=2026-11");
+  await expect(h.getByRole("heading", { name: "Gaji Bulanan", level: 1 })).toBeVisible();
   await expect(h.getByText("Biaya tetap").first()).toBeVisible();
-  await expect(h.getByText("Komponen tetap, diatur sekali")).toBeVisible();
-  await expect(h.getByRole("table", { name: "Kesiapan gaji per karyawan" }).getByRole("row")).toHaveCount(6);
-  await potret(h, "biaya-hitung-gaji", { tanpaGeser: false }); // tabel PPh 21 lama tetap menggulir di dalam pembungkusnya
+  await expect(h.getByRole("table", { name: "Gaji per karyawan" }).locator("tbody tr")).toHaveCount(5);
+  await potret(h, "biaya-gaji-bulanan", { tanpaGeser: false });
 
-  await h.goto("/sdm/hitung-gaji?periode=2026-10&slip=semua");
+  await h.goto("/sdm/gaji-bulanan?periode=2026-10&slip=semua");
   const slip = h.getByRole("article", { name: /^Slip gaji / }).first();
-  await expect(slip.getByRole("table", { name: "Komponen tetap (dari Setting Gaji)" })).toBeVisible();
-  await expect(slip.getByRole("table", { name: "Penyesuaian bulan ini (dari presensi)" })).toContainText("Total THP");
+  await expect(slip.getByRole("table", { name: "Gaji tetap" })).toBeVisible();
+  await expect(slip.getByRole("table", { name: "Ringkasan gaji" })).toContainText("Total THP");
   await potret(h, "biaya-slip-gaji");
   await h.emulateMedia({ media: "print" });
   await h.setViewportSize({ width: 794, height: 1123 });

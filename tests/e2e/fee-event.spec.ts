@@ -1,7 +1,7 @@
 /*
  * Uji E2E fee event (crew freelance): HRD mencatat event, kapten menilai dan melapor, Owner menolak lalu menyetujui
  * dengan satu fee diubah, jurnal dan slip fee tampil. Ditambah akses terlarang lewat URL dan lewat server action
- * langsung (permintaan aksi yang ditangkap lalu dikirim ulang dengan sesi atau isi lain), dan satu uji klik Hitung Gaji
+ * langsung (permintaan aksi yang ditangkap lalu dikirim ulang dengan sesi atau isi lain), dan satu uji klik Gaji Bulanan
  * inhouse. Butuh database yang baru di-seed. Potret tiap halaman baru (1440 dan 390 px) disimpan di POTRET.
  */
 import fs from "node:fs";
@@ -211,7 +211,7 @@ test("HRD mencatat event, sesi, penugasan, dan kehadiran", async () => {
 
 test("akses terlarang lewat URL: kapten tidak membuka halaman staf dan event kapten lain", async () => {
   const p = sesi.kapten.page;
-  for (const alamat of ["/sdm/distribusi", "/fee-event/keputusan", "/fee-event/event", "/pelaporan/neraca-saldo", "/master/sdm"]) {
+  for (const alamat of ["/sdm/gaji-bulanan", "/fee-event/keputusan", "/fee-event/event", "/pelaporan/neraca-saldo", "/master/sdm"]) {
     await p.goto(alamat);
     await expect(p).toHaveURL(/\/tanpa-akses$/);
   }
@@ -385,9 +385,9 @@ test("halaman master dan pengguna untuk fee event", async () => {
 /*
  * Memakai Desember 2026, bulan yang tidak disentuh alur.spec.ts: di sana gaji November sudah dibayar sehingga presensi
  * November terkunci dan KRY-02 sudah punya presensi 3 November. Pengecekan tetap sama: presensi tersimpan, crew event
- * tidak bisa dipilih dan tidak ikut Hitung Gaji, lalu slip draf tersimpan.
+ * tidak bisa dipilih dan tidak ikut Gaji Bulanan, lalu gaji Desember diajukan.
  */
-test("gaji inhouse tetap jalan: presensi lalu Hitung Gaji, crew event tidak ikut", async () => {
+test("gaji inhouse tetap jalan: presensi lalu Gaji Bulanan, crew event tidak ikut", async () => {
   const p = sesi.hrd.page;
   await p.goto("/sdm/presensi?periode=2026-12&form=baru");
   await expect(p).toHaveURL(/bulan=12&tahun=2026/);
@@ -400,10 +400,10 @@ test("gaji inhouse tetap jalan: presensi lalu Hitung Gaji, crew event tidak ikut
   await f.getByLabel("Jam keluar").fill("17:00");
   await f.getByRole("button", { name: "Simpan" }).click();
   await tungguToast(p, /Presensi tersimpan/);
-  await p.goto("/sdm/hitung-gaji?bulan=12&tahun=2026");
-  await expect(p.getByText("Bima Satria")).toHaveCount(0);
-  await p.getByRole("button", { name: /Hitung dan simpan semua/ }).click();
+  await p.goto("/sdm/gaji-bulanan?bulan=12&tahun=2026");
+  await expect(p.getByRole("table", { name: "Gaji per karyawan" }).getByText("Bima Satria")).toHaveCount(0);
+  await p.getByRole("button", { name: "Ajukan gaji Desember 2026 ke Owner" }).click();
   await konfirmasi(p);
-  await tungguToast(p, /slip gaji Desember 2026 disimpan sebagai draf/);
+  await tungguToast(p, /diajukan ke Owner/);
   expect(galatKonsol, galatKonsol.join("\n")).toEqual([]);
 });
