@@ -10,7 +10,7 @@ Next.js 16 (App Router, TypeScript), Prisma 7 + PostgreSQL 16 (adapter `pg`), Ta
 prisma/schema.prisma            skema relasional (nama Indonesia, tabel snake_case)
 prisma/migrations/              migrasi (CHECK constraint tambahan ditulis manual di migrasi awal)
 prisma/seed.ts                  data contoh Oktober 2026 + 3 pengguna demo, data contoh fee event November 2026 + 2 akun kapten
-prisma/tambah-dummy*.ts         skrip data dummy untuk database berisi (produksi), satu transaksi, mode --coba, menolak jalan dua kali
+prisma/kosongkan.ts             kosongkan semua tabel data (dari katalog Postgres) kecuali _prisma_migrations
 prisma/data/                    salinan JSON data contoh app lama
 src/lib/inti/                   logika murni tanpa DB/UI: tanggal, penyusutan, penggajian, fee-event, jurnal, buku-besar, akun, modal, setting-gaji, nominal
 src/lib/server/                 khusus server: db, auth, aksi (konvensi), nomor, periode, jurnal, log, menu, logo, setting-gaji, nominal, gaji
@@ -54,7 +54,7 @@ tests/                          vitest: tes inti (tanpa DB) dan tes integrasi (U
 | `/pelaporan/neraca-saldo` | Neraca Saldo (`?bulan=10&tahun=2026&tahap=sebelum\|setelah`; `setelah` = neraca lajur ringkas) | Pelaporan |
 | `/pelaporan/tutup-periode` | Tutup Periode | Pelaporan |
 | `/master/konversi` | Supplier, peralatan, perlengkapan, kategori aset, bagan akun, profil usaha | Pelaporan |
-| `/master/sdm` | Tab Karyawan, Struktur gaji (`?tab=struktur`: jabatan inhouse, jabatan event, golongan atau gaji pokok, tunjangan lain di satu halaman; form `&jenis=<jenis>&form=baru\|<kode>`, form Ajukan perubahan nominal `&jenis=<jenis>&nominal=<kode>`, riwayat nominal `&jenis=<jenis>&riwayat=<kode>`; pengajuan nominal yang menunggu Owner di atas), Jadwal kerja, Setting gaji. Tautan lama `?tab=jabatan\|jabatanEvent\|golongan\|tunjangan` (termasuk `&form=`) dialihkan ke tab Struktur gaji | Pelaporan |
+| `/master/sdm` | Tab Karyawan, Struktur gaji (`?tab=struktur`: satu tabel Jabatan berkolom Kelompok dengan saringan `&kelompok=INHOUSE\|EVENT`, golongan atau gaji pokok, tunjangan lain di satu halaman; form `&jenis=<jenis>&form=baru\|<kode>`, form Ajukan perubahan nominal `&jenis=<jenis>&nominal=<kode>`, riwayat nominal `&jenis=<jenis>&riwayat=<kode>`; pengajuan nominal yang menunggu Owner di atas), Jadwal kerja, Setting gaji. Tautan lama `?tab=jabatan\|jabatanEvent\|golongan\|tunjangan` (termasuk `&form=`) dialihkan ke tab Struktur gaji | Pelaporan |
 | `/pengguna` | Kelola pengguna (Owner saja) | Pelaporan |
 
 Halaman yang belum jadi memakai `HalamanBelumJadi`; ganti seluruh isi `page.tsx`-nya.
@@ -269,6 +269,18 @@ Kata dosen: "perlengkapan bisa direvisi". Logika di `src/lib/server/nilai-sisa.t
 - **Dashboard**: Owner melihat "N revisi nilai sisa menunggu keputusan"; Admin melihat "Nilai sisa ... dikembalikan untuk revisi". Kartu Menunggu persetujuan ikut menghitung revisi.
 - **Tampilan**: label status nilai sisa memakai `LencanaStatus jenis="revisi"` (Draf, Menunggu Owner, Disetujui, Dikembalikan). Kartu "Revisi ... menunggu" membandingkan nilai sisa berlaku dan usulan per perlengkapan. "Riwayat versi nilai sisa" mendaftar input awal dan setiap revisi beserta alasan, keputusan, jurnal pembalik, dan jurnal baru.
 - **Migrasi** `20261125100000_revisi_nilai_sisa`: dua tabel baru beserta CHECK. Data lama tidak berubah.
+
+### Jabatan satu tabel dan audit relasi satu-ke-satu (masukan dosen, 25 Nov 2026)
+
+- **Tampilan Jabatan**: tab Struktur gaji menampilkan satu kartu "Jabatan" berisi jabatan inhouse dan event dalam satu tabel dengan kolom Kelompok (lencana Inhouse atau Event), kolom Rincian (tunjangan jabatan, tunjangan istri/anak, akun, jadwal kerja untuk inhouse; peran, tarif, satuan, akun untuk event), Riwayat nominal, Dipakai, Status, dan Aksi. Saringan Semua, Inhouse, Event berupa tautan (`&kelompok=`). Tombol tambah: "Jabatan baru" (inhouse, HRD dan Owner) dan "Jabatan event baru" (Owner). Form dan izin tetap per jenis (`jabatan`, `jabatanEvent` di `DEF_MASTER`), jadi aturan "jabatan event hanya Owner" tidak berubah.
+- **`versi_nominal` jenis JABATAN dan JABATAN_EVENT tidak disatukan.** Alasannya: jenis menentukan arti kolom `nominal` (tarif per hari atau per jam untuk jabatan event; tidak dipakai untuk jabatan inhouse yang memakai `tunj_jabatan` dan `tunj_keluarga`) dan aturan CHECK `versi_nominal_nilai` (tarif wajib lebih dari 0, tunjangan jabatan boleh 0). CHECK tidak bisa membaca `jabatan.kelompok` di tabel lain, jadi bila jenisnya disatukan aturan itu hanya bisa dijaga di kode. Jenis juga dipakai untuk izin (tarif hanya Owner). Penyatuan tidak memperjelas, malah memindahkan aturan dari database ke kode.
+- **Audit relasi 1:1** (`prisma/schema.prisma`, kolom kunci asing yang `@unique`):
+  - `jabatan` 1:0..1 `jadwal_kerja` (`jadwal_kerja.id_jabatan` unik): **digabung**. Jam masuk, jam keluar, dan hari kerja menjadi kolom `jabatan` (`jam_masuk`, `jam_keluar`, `hari_kerja`, kosong untuk jabatan event dan jabatan inhouse tanpa jadwal; CHECK `jabatan_jadwal_kerja`). `presensi.id_jadwal` diganti `presensi.id_jabatan`, `slip_gaji.id_jadwal` dihapus (jabatan slip sudah ada di `slip_gaji.id_jabatan`, hari kerja di `slip_gaji.hari_kerja`). Tab "Jadwal kerja" tetap ada sebagai tampilan dan form (kode baris = kode jabatan); jadwal tidak dinonaktifkan sendiri (nonaktifkan jabatannya). Migrasi `20261125110000_jadwal_ke_jabatan` menyalin jadwal aktif ke jabatannya, mengarahkan presensi lama ke jabatan pemilik jadwalnya, lalu menghapus tabel `jadwal_kerja` dan penghitung `TM`.
+  - `pengguna` 0..1 : 0..1 `karyawan` (`pengguna.id_karyawan` unik): **tetap terpisah**. Hanya akun kapten yang tertaut; akun staf tidak punya data karyawan dan sebagian besar karyawan tidak punya akun. Tabel pengguna menyimpan kata sandi dan sesi, karyawan menyimpan data SDM dan rekening; siklus hidupnya berbeda.
+  - `periode` 1 : 0..1 `opname` (`opname.periode` unik): **tetap terpisah**. Opname adalah dokumen dengan status, jurnal, detail 1:N, dan revisi 1:N, sedangkan periode dipakai semua dokumen dan ada untuk setiap bulan. Menggabungkan berarti menaruh kolom dokumen yang sering kosong di tabel periode.
+  - `jurnal` 0..1 : 0..1 dokumen sumber (`pembelian.jurnal_no`, `pembelian.jurnal_pembalik`, `opname.jurnal_no`, `pelepasan.jurnal_no`, `penggajian.jurnal_no`, `laporan_fee.jurnal_no`, `investasi_kas.jurnal_no`, `revisi_opname.jurnal_pembalik`, `revisi_opname.jurnal_baru`): **tetap terpisah**. `jurnal` adalah satu buku jurnal umum untuk semua sumber (buku besar dan neraca saldo membacanya), sedangkan dokumen sumbernya berbeda bentuk dan sebagian tidak pernah berjurnal (draf, ditolak).
+  - `jurnal` 0..1 `jurnal` (`pembalik_dari` unik): relasi ke tabel yang sama, tidak ada yang digabung.
+  - Bukan relasi: `pengguna.nama_pengguna`, `sesi.token_hash`, `supplier.npwp` (atribut unik). Unik gabungan `slip_gaji (periode, karyawan)`, `slip_fee (event, karyawan)`, `penugasan_event (event, karyawan)`, `presensi (karyawan, tanggal)` adalah relasi 1:N per karyawan, jadi tidak digabung.
 
 ### Fee event (crew freelance per event)
 

@@ -776,10 +776,15 @@ model Jabatan {
   /// Hanya jabatan EVENT: peran dalam event dan satuan tarif (per hari atau per jam). Tarifnya di versi_nominal.
   peranEvent    PeranEvent?     @map("peran_event")
   satuanTarif   SatuanTarif?    @map("satuan_tarif")
+  /// Jadwal kerja jabatan inhouse (dulu tabel jadwal_kerja, relasi 1:1): jam masuk, jam keluar, hari kerja per bulan.
+  /// Kosong untuk jabatan event dan jabatan inhouse yang belum punya jadwal.
+  jamMasuk      String?         @map("jam_masuk")
+  jamKeluar     String?         @map("jam_keluar")
+  hariKerja     Int?            @map("hari_kerja")
   aktif         Boolean         @default(true)
 
   akunBeban    Akun             @relation(fields: [akunBebanKode], references: [kode])
-  jadwalKerja  JadwalKerja?
+  presensi     Presensi[]
   settingGaji  SettingGaji[]
   slipGaji     SlipGaji[]
   penugasan    PenugasanEvent[]
@@ -813,22 +818,6 @@ model Tunjangan {
   versiNominal VersiNominal[]
 
   @@map("tunjangan")
-}
-
-/// Jadwal kerja per jabatan (jabatan 1:0..1 jadwal kerja). Jam disimpan "HH:MM".
-model JadwalKerja {
-  kode        String  @id @map("id_jadwal")
-  jabatanKode String  @unique @map("id_jabatan")
-  jamMasuk    String  @map("jam_masuk")
-  jamKeluar   String  @map("jam_keluar")
-  hariKerja   Int     @map("hari_kerja")
-  aktif       Boolean @default(true)
-
-  jabatan  Jabatan    @relation(fields: [jabatanKode], references: [kode])
-  presensi Presensi[]
-  slipGaji SlipGaji[]
-
-  @@map("jadwal_kerja")
 }
 
 /// Satu versi setting gaji karyawan inhouse (riwayat, tidak pernah ditimpa). Setiap versi lewat pengajuan HRD atau Owner
@@ -930,7 +919,8 @@ model Presensi {
   id           Int      @id @default(autoincrement()) @map("id_presensi")
   karyawanKode String   @map("id_karyawan")
   tanggal      DateTime @db.Date
-  jadwalKode   String   @map("id_jadwal")
+  /// Jabatan (dan jadwal kerjanya) yang dipakai menghitung terlambat saat presensi dicatat.
+  jabatanKode  String   @map("id_jabatan")
   absensi      Absensi
   jamMasuk     String?  @map("jam_masuk")
   jamKeluar    String?  @map("jam_keluar")
@@ -939,12 +929,13 @@ model Presensi {
   dibuatOlehId Int      @map("dibuat_oleh")
   dibuatPada   DateTime @default(now()) @map("dibuat_pada")
 
-  karyawan   Karyawan    @relation(fields: [karyawanKode], references: [kode])
-  jadwal     JadwalKerja @relation(fields: [jadwalKode], references: [kode])
-  dibuatOleh Pengguna    @relation(fields: [dibuatOlehId], references: [id])
+  karyawan   Karyawan @relation(fields: [karyawanKode], references: [kode])
+  jabatan    Jabatan  @relation(fields: [jabatanKode], references: [kode])
+  dibuatOleh Pengguna @relation(fields: [dibuatOlehId], references: [id])
 
   @@unique([karyawanKode, tanggal])
   @@index([tanggal])
+  @@index([jabatanKode])
   @@map("presensi")
 }
 
@@ -955,7 +946,6 @@ model SlipGaji {
   karyawanKode       String            @map("id_karyawan")
   jabatanKode        String            @map("id_jabatan")
   golonganKode       String            @map("id_golongan")
-  jadwalKode         String?           @map("id_jadwal")
   akunBebanKode      String            @map("akun_beban")
   statusPtkp         StatusPtkp        @map("status_ptkp")
   hariKerja          Int               @map("hari_kerja")
@@ -1000,7 +990,6 @@ model SlipGaji {
   karyawan       Karyawan        @relation(fields: [karyawanKode], references: [kode])
   jabatan        Jabatan         @relation(fields: [jabatanKode], references: [kode])
   golongan       Golongan        @relation(fields: [golonganKode], references: [kode])
-  jadwal         JadwalKerja?    @relation(fields: [jadwalKode], references: [kode])
   akunBeban      Akun            @relation(fields: [akunBebanKode], references: [kode])
   penggajian     Penggajian?     @relation(fields: [penggajianNo], references: [no])
   setting        SettingGaji?    @relation(fields: [settingKode], references: [kode])

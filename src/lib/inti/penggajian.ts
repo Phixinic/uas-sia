@@ -102,7 +102,7 @@ export type InputGaji = {
   statusPtkp: KodePtkp;
   jabatan: { kode: string; tunjJabatan: number; tunjKeluarga: number; akunBebanKode: string };
   golongan: { kode: string; jumlah: number };
-  /** Jadwal kerja jabatan; null = memakai 22 hari kerja. */
+  /** Jadwal kerja jabatan (kode = kode jabatan); null = memakai 22 hari kerja. */
   jadwal: { kode: string; hariKerja: number } | null;
   /** Tunjangan lain yang aktif di setting gaji karyawan. */
   tunjangan: { kode: string; nama: string; nominal: number }[];

@@ -75,8 +75,17 @@ test("navigasi Master SDM: empat tab, tautan lama dialihkan ke Struktur gaji", a
   await expect(nav.getByRole("link")).toHaveText(["Karyawan", "Struktur gaji", "Jadwal kerja", "Setting gaji"]);
   await nav.getByRole("link", { name: "Struktur gaji" }).click();
   await expect(p).toHaveURL(/\/master\/sdm\?tab=struktur/);
-  for (const judul of ["Ringkasan struktur gaji", "Jabatan inhouse", "Jabatan event", "Golongan (gaji pokok)", "Tunjangan lain"]) await expect(bagian(p, judul)).toBeVisible();
-  for (const [lama, judul] of [["jabatan", "Jabatan inhouse"], ["jabatanEvent", "Jabatan event"], ["golongan", "Golongan (gaji pokok)"], ["tunjangan", "Tunjangan lain"]]) {
+  for (const judul of ["Ringkasan struktur gaji", "Jabatan", "Golongan (gaji pokok)", "Tunjangan lain"]) await expect(bagian(p, judul)).toBeVisible();
+  // Satu tabel Jabatan dengan kolom Kelompok dan saringan Semua, Inhouse, Event.
+  const jab = bagian(p, "Jabatan");
+  await expect(jab.getByRole("row", { name: /Kapten Event/ })).toContainText("Event");
+  await expect(jab.getByRole("row", { name: /JBT-01/ })).toContainText("Inhouse");
+  await jab.getByRole("navigation", { name: "Saring kelompok jabatan" }).getByRole("link", { name: /^Event/ }).click();
+  await expect(p).toHaveURL(/kelompok=EVENT/);
+  await expect(bagian(p, "Jabatan").getByRole("row", { name: /JBT-01/ })).toHaveCount(0);
+  await expect(bagian(p, "Jabatan").getByRole("row", { name: /Kapten Event/ })).toBeVisible();
+  await potret(p, "master-jabatan-satu-tabel");
+  for (const [lama, judul] of [["jabatan", "Jabatan"], ["jabatanEvent", "Jabatan"], ["golongan", "Golongan (gaji pokok)"], ["tunjangan", "Tunjangan lain"]]) {
     await buka(p, `/master/sdm?tab=${lama}`);
     await expect(p).toHaveURL(new RegExp(`tab=struktur&jenis=${lama}`));
     await expect(bagian(p, judul)).toBeVisible();
@@ -109,11 +118,11 @@ test("HRD mengubah golongan dan mengajukan gaji pokok baru; jabatan event hanya 
   await expect(gol.getByRole("row", { name: /GP-01/ })).toContainText("Menunggu Owner: Rp3.950.000 mulai Desember 2026");
   await expect(p.getByRole("list", { name: "Pemakaian per golongan" }).locator("li", { hasText: "Golongan I" }).first()).toContainText("3.800.000");
 
-  const ev = bagian(p, "Jabatan event");
+  const ev = bagian(p, "Jabatan");
   await expect(ev).toContainText("hanya bisa melihat jabatan event");
-  await expect(ev.getByRole("link", { name: "Ubah" })).toHaveCount(0);
+  await expect(ev.getByRole("row", { name: /Kapten Event/ }).getByRole("link", { name: "Ubah" })).toHaveCount(0);
   await expect(p.getByRole("link", { name: "Jabatan event baru" })).toHaveCount(0);
-  await expect(bagian(p, "Jabatan inhouse").getByRole("link", { name: "Jabatan baru" })).toBeVisible();
+  await expect(ev.getByRole("link", { name: "Jabatan baru" })).toBeVisible();
   await expect(p.getByRole("button", { name: "Nonaktifkan" })).toHaveCount(0);
   await potret(p, "struktur-gaji-hrd");
 });
@@ -121,7 +130,7 @@ test("HRD mengubah golongan dan mengajukan gaji pokok baru; jabatan event hanya 
 test("Owner mengajukan dan menyetujui tarif Crew Event baru lewat Struktur gaji", async () => {
   const p = sesi.owner.page;
   await buka(p, "/master/sdm?tab=struktur");
-  const ev = bagian(p, "Jabatan event");
+  const ev = bagian(p, "Jabatan");
   await ev.getByRole("row", { name: /JBT-06/ }).getByRole("link", { name: "Ajukan nominal" }).click();
   const f = p.getByRole("form", { name: "Form ajukan perubahan nominal Crew Event" });
   await expect(f).toBeVisible();

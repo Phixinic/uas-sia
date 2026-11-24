@@ -175,8 +175,8 @@ describe.runIf(aktif)("aksi pelaporan, master, dan pengguna", async () => {
 
   it("master SDM: jadwal ganda per jabatan dan setting ganda per karyawan ditolak; setting tidak bisa ditimpa; nonaktif lalu aktif", async () => {
     await masukSebagai("hrd");
-    const jadwal = await db.jadwalKerja.findFirstOrThrow();
-    const dupJ = await master.simpanMaster({ jenis: "jadwal", nilai: { jabatanKode: jadwal.jabatanKode, jamMasuk: "08:00", jamKeluar: "16:00", hariKerja: 22 } });
+    const jadwal = await db.jabatan.findFirstOrThrow({ where: { jamMasuk: { not: null } } });
+    const dupJ = await master.simpanMaster({ jenis: "jadwal", nilai: { jabatanKode: jadwal.kode, jamMasuk: "08:00", jamKeluar: "16:00", hariKerja: 22 } });
     expect(dupJ.ok).toBe(false);
     const setting = await db.settingGaji.findFirstOrThrow({ where: { kode: "SET-01" }, include: { tunjangan: true } });
     // Setting gaji tidak lagi disimpan lewat form master: tambah dan ubah (menimpa) sama-sama ditolak.

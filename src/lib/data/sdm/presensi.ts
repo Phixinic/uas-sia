@@ -51,7 +51,7 @@ export async function rekapBulanan(periode: string): Promise<BarisRekap[]> {
       kode: k.kode,
       nama: k.nama,
       jabatan: jabatan?.nama ?? null,
-      hariKerja: jabatan?.jadwalKerja?.hariKerja ?? null,
+      hariKerja: jabatan?.hariKerja ?? null,
       rekap: rekapPresensi(presensi.filter((p) => p.karyawanKode === k.kode)),
       terkunci: kunci.has(k.kode),
     };
@@ -68,7 +68,8 @@ export type BarisHarian = {
   jamKeluar: string | null;
   terlambat: number;
   jamKerja: number;
-  jadwalKode: string;
+  /** Jabatan yang jadwal kerjanya dipakai menghitung terlambat. */
+  jabatanKode: string;
   terkunci: boolean;
 };
 
@@ -91,7 +92,7 @@ export async function presensiHarian(periode: string, karyawanKode?: string): Pr
     jamKeluar: p.jamKeluar,
     terlambat: p.terlambat,
     jamKerja: jamKerjaHarian(p),
-    jadwalKode: p.jadwalKode,
+    jabatanKode: p.jabatanKode,
     terkunci: kunci.has(p.karyawanKode),
   }));
 }
@@ -102,9 +103,9 @@ export async function opsiKaryawanPresensi(periode: string) {
   return daftar.map((k) => ({
     kode: k.kode,
     nama: k.nama,
-    siapInput: !!k.jabatan?.jadwalKerja,
-    jamMasuk: k.jabatan?.jadwalKerja?.jamMasuk ?? "",
-    jamKeluar: k.jabatan?.jadwalKerja?.jamKeluar ?? "",
+    siapInput: !!k.jabatan?.jamMasuk,
+    jamMasuk: k.jabatan?.jamMasuk ?? "",
+    jamKeluar: k.jabatan?.jamKeluar ?? "",
   }));
 }
 

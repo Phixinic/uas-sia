@@ -178,7 +178,7 @@ export default async function HalamanPresensi({ cari }: { cari: CariPresensi }) 
                   <th>Keluar</th>
                   <th className="kolom-angka">Terlambat</th>
                   <th className="kolom-angka">Jam kerja</th>
-                  <th>Jadwal</th>
+                  <th>Jabatan (jadwal)</th>
                   <th className="text-right">Aksi</th>
                 </tr>
               </thead>
@@ -192,7 +192,7 @@ export default async function HalamanPresensi({ cari }: { cari: CariPresensi }) 
                     <td>{p.jamKeluar ?? "-"}</td>
                     <td className="kolom-angka">{p.terlambat ? <Lencana warna="kuning">{p.terlambat} mnt</Lencana> : "-"}</td>
                     <td className="kolom-angka">{p.jamKerja ? p.jamKerja.toFixed(2) : "-"}</td>
-                    <td className="kode">{p.jadwalKode}</td>
+                    <td className="kode">{p.jabatanKode}</td>
                     <td>
                       {p.terkunci ? (
                         <div className="text-right text-xs text-slate-500">terkunci</div>

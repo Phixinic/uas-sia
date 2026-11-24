@@ -2,75 +2,22 @@
 
 /*
  * Server action presensi (use case: Rekap Presensi). Hanya HRD yang boleh mengelola presensi.
- * Aturan sama dengan app lama: satu catatan per karyawan per tanggal, terlambat dihitung dari jam masuk jadwal
- * jabatan, dan presensi terkunci setelah slip gaji periodenya diajukan atau dibayar.
+ * Aturannya di src/lib/server/presensi.ts (dipakai juga seed).
  */
-import { db, type Tx } from "@/lib/server/db";
+import { db } from "@/lib/server/db";
 import { aksiAman, GalatAksi, segarkan, validasi, type HasilAksi } from "@/lib/server/aksi";
 import { wajibPeran } from "@/lib/server/auth";
 import { IZIN } from "@/lib/peran";
 import { catatLog } from "@/lib/server/log";
+import { pastikanBelumTerkunci, simpanPresensiDalam } from "@/lib/server/presensi";
 import { skemaIdPresensi, skemaPresensi } from "@/lib/skema/sdm";
-import { hitungTerlambat } from "@/lib/inti/penggajian";
-import { keDate, labelPeriode, periodeDari } from "@/lib/inti/tanggal";
-import { versiBerlakuPeriode } from "@/lib/data/sdm/gaji";
-
-async function pastikanBelumTerkunci(tx: Tx, karyawanKode: string, periode: string) {
-  const slip = await tx.slipGaji.findUnique({ where: { periodeId_karyawanKode: { periodeId: periode, karyawanKode } }, select: { status: true } });
-  if (slip && slip.status !== "DRAFT") {
-    throw new GalatAksi(`Gaji ${labelPeriode(periode)} untuk karyawan ini sudah diajukan atau dibayar, jadi presensinya terkunci.`);
-  }
-}
+import { periodeDari } from "@/lib/inti/tanggal";
 
 export async function simpanPresensi(input: unknown): Promise<HasilAksi> {
   return aksiAman(async () => {
     const pengguna = await wajibPeran(IZIN["presensi.kelola"]);
     const d = validasi(skemaPresensi, input);
-    const hadir = d.absensi === "HADIR";
-    const periode = periodeDari(d.tanggal);
-
-    await db.$transaction(async (tx) => {
-      const karyawan = await tx.karyawan.findUnique({ where: { kode: d.karyawanKode }, select: { aktif: true, jenis: true } });
-      if (!karyawan || !karyawan.aktif) throw new GalatAksi("Karyawan tidak ditemukan atau sudah nonaktif.", { karyawanKode: "Karyawan tidak ditemukan." });
-      if (karyawan.jenis !== "INHOUSE") throw new GalatAksi("Crew event tidak memakai presensi bulanan. Catat kehadirannya di menu Event & Kehadiran.", { karyawanKode: "Karyawan event." });
-      // Jadwal kerja mengikuti jabatan di versi setting gaji yang berlaku pada bulan tanggal presensi.
-      const [versi] = await versiBerlakuPeriode(tx, periode, d.karyawanKode);
-      const jadwal = versi?.jabatan.jadwalKerja ?? null;
-      if (!versi) throw new GalatAksi(`Karyawan ini belum punya setting gaji yang disetujui dan berlaku di ${labelPeriode(periode)}.`, { karyawanKode: "Belum ada setting gaji berlaku di bulan ini." });
-      if (!jadwal) throw new GalatAksi("Jabatan karyawan ini belum punya jadwal kerja.", { karyawanKode: "Jadwal kerja belum ada." });
-
-      await pastikanBelumTerkunci(tx, d.karyawanKode, periode);
-
-      let lama: { karyawanKode: string; tanggal: Date } | null = null;
-      if (d.id) {
-        lama = await tx.presensi.findUnique({ where: { id: d.id }, select: { karyawanKode: true, tanggal: true } });
-        if (!lama) throw new GalatAksi("Presensi tidak ditemukan.");
-        await pastikanBelumTerkunci(tx, lama.karyawanKode, periodeDari(lama.tanggal.toISOString().slice(0, 10)));
-      }
-
-      const bentrok = await tx.presensi.findUnique({ where: { karyawanKode_tanggal: { karyawanKode: d.karyawanKode, tanggal: keDate(d.tanggal) } }, select: { id: true } });
-      if (bentrok && bentrok.id !== (d.id ?? null)) {
-        throw new GalatAksi("Presensi karyawan ini pada tanggal tersebut sudah ada.", { tanggal: "Sudah ada presensi pada tanggal ini." });
-      }
-
-      const data = {
-        karyawanKode: d.karyawanKode,
-        tanggal: keDate(d.tanggal),
-        jadwalKode: jadwal.kode,
-        absensi: d.absensi,
-        jamMasuk: hadir ? d.jamMasuk : null,
-        jamKeluar: hadir ? d.jamKeluar : null,
-        terlambat: hitungTerlambat(d.absensi, hadir ? d.jamMasuk : null, jadwal.jamMasuk),
-      };
-      if (d.id) {
-        await tx.presensi.update({ where: { id: d.id }, data });
-        await catatLog(tx, pengguna.id, "presensi.ubah", "presensi", String(d.id), `${d.karyawanKode} ${d.tanggal}`);
-      } else {
-        const baru = await tx.presensi.create({ data: { ...data, dibuatOlehId: pengguna.id }, select: { id: true } });
-        await catatLog(tx, pengguna.id, "presensi.buat", "presensi", String(baru.id), `${d.karyawanKode} ${d.tanggal}`);
-      }
-    });
-
+    await db.$transaction((tx) => simpanPresensiDalam(tx, pengguna.id, d));
     segarkan();
     return { pesan: "Presensi tersimpan." };
   });

@@ -20,7 +20,6 @@ export async function simpanSlip(tx: Tx, b: BahanGaji, periode: string, pengguna
   const data = {
     jabatanKode: h.jabatanKode,
     golonganKode: h.golonganKode,
-    jadwalKode: h.jadwalKode,
     akunBebanKode: h.akunBebanKode,
     statusPtkp: h.statusPtkp,
     hariKerja: h.hariKerja,

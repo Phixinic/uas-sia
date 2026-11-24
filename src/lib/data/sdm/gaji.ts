@@ -89,7 +89,7 @@ export const sidikBahan = (b: BahanGaji) =>
 
 const sertaiVersi = {
   karyawan: true,
-  jabatan: { include: { jadwalKerja: true } },
+  jabatan: true,
   golongan: true,
   tunjangan: { include: { tunjangan: true } },
 } as const;
@@ -130,7 +130,7 @@ export async function muatBahanGaji(klien: DbAtauTx, periode: string, karyawanKo
   });
   return setting.map((s) => {
     const milik = presensi.filter((p) => p.karyawanKode === s.karyawanKode);
-    const jadwal = s.jabatan.jadwalKerja;
+    const hariKerja = s.jabatan.hariKerja;
     // Nominal tiap komponen = versi yang berlaku di periode slip (bukan nilai master saat ini).
     const vGapok = peta.pada("GOLONGAN", s.golonganKode, periode);
     const vJabatan = peta.pada("JABATAN", s.jabatanKode, periode);
@@ -153,7 +153,7 @@ export async function muatBahanGaji(klien: DbAtauTx, periode: string, karyawanKo
         statusPtkp: s.karyawan.statusPtkp as KodePtkp,
         jabatan: { kode: s.jabatan.kode, tunjJabatan: vJabatan?.tunjJabatan ?? 0, tunjKeluarga: vJabatan?.tunjKeluarga ?? 0, akunBebanKode: s.jabatan.akunBebanKode },
         golongan: { kode: s.golongan.kode, jumlah: vGapok?.nominal ?? 0 },
-        jadwal: jadwal ? { kode: jadwal.kode, hariKerja: jadwal.hariKerja } : null,
+        jadwal: hariKerja ? { kode: s.jabatan.kode, hariKerja } : null,
         tunjangan: tunj.map(({ t, v }) => ({ kode: t.tunjangan.kode, nama: t.tunjangan.nama, nominal: v?.nominal ?? 0 })),
         presensi: milik,
       },

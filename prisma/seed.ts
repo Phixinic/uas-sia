@@ -7,6 +7,7 @@
  * Menolak berjalan bila database sudah berisi pengguna, kecuali SEED_PAKSA=1 (semua data dihapus dulu).
  */
 import "dotenv/config";
+import { kosongkanSemua } from "./kosongkan";
 import fs from "node:fs";
 import path from "node:path";
 import { db } from "../src/lib/server/db";
@@ -55,13 +56,6 @@ const besar = (s: string): any => s.toUpperCase();
 const waktu = (s: string | null | undefined) => (s ? new Date(s) : null);
 const kosongJadiNull = (s: string | null | undefined) => (s ? s : null);
 
-const TABEL = [
-  "investasi_kas", "slip_fee", "laporan_fee", "kehadiran_event", "penugasan_event", "sesi_event", "event",
-  "log_aktivitas", "sesi", "riwayat_periode", "slip_tunjangan", "slip_gaji", "penggajian", "presensi", "setting_tunjangan", "setting_gaji",
-  "jadwal_kerja", "tunjangan", "golongan", "jabatan", "karyawan", "pelepasan", "detail_opname", "opname", "jadwal_penyusutan", "aset",
-  "detail_pembelian", "pembelian", "perlengkapan", "peralatan", "kategori_aset", "supplier", "detail_jurnal", "jurnal", "periode", "akun",
-  "penghitung", "profil_usaha", "pengguna",
-];
 
 async function main() {
   const ada = await db.pengguna.count();
@@ -69,7 +63,7 @@ async function main() {
     console.error("Database sudah berisi data. Jalankan dengan SEED_PAKSA=1 untuk menghapus semua data lalu mengisi ulang data contoh.");
     process.exit(1);
   }
-  await db.$executeRawUnsafe(`TRUNCATE ${TABEL.map((t) => `"${t}"`).join(", ")} RESTART IDENTITY CASCADE`);
+  await kosongkanSemua(db);
 
   // ---------- Pengguna ----------
   const idPeran: Record<string, number> = {};
@@ -135,9 +129,11 @@ async function main() {
     const isi = { ...kosong, tunjJabatan: x.tunj_jabatan ?? 0, tunjKeluarga: x.tunj_keluarga ?? 0 };
     versiItem.set(`J:${x.id}`, { kode: await versiAwalSeed(db, { ...versiAwal, ...isi, jenis: "JABATAN", itemKode: x.id }), ...isi });
   }
-  await db.jadwalKerja.createMany({
-    data: daftar("jadwal").map((t) => ({ kode: t.id, jabatanKode: t.jabatan_id, jamMasuk: t.jam_masuk, jamKeluar: t.jam_keluar, hariKerja: t.hari_kerja, aktif: t.aktif !== false })),
-  });
+  // Jadwal kerja sekarang kolom jabatan (dulu tabel jadwal_kerja 1:1); jadwal nonaktif di data lama tidak disalin.
+  for (const t of daftar("jadwal").filter((t) => t.aktif !== false)) {
+    await db.jabatan.update({ where: { kode: t.jabatan_id }, data: { jamMasuk: t.jam_masuk, jamKeluar: t.jam_keluar, hariKerja: t.hari_kerja } });
+  }
+  const jabatanJadwal = new Map(daftar("jadwal").map((t) => [t.id, t.jabatan_id]));
   // Setting gaji = riwayat versi. Data lama menjadi versi DISETUJUI berjenis Setting awal yang berlaku Oktober 2026
   // (aturan sama dengan migrasi 20261123120000_setting_gaji_riwayat), lalu satu contoh promosi disetujui yang berlaku
   // Desember 2026 dan satu pengajuan penyesuaian yang menunggu Owner. Gaji Oktober dan November tidak berubah.
@@ -258,7 +254,7 @@ async function main() {
   // ---------- Presensi ----------
   await db.presensi.createMany({
     data: daftar("presensi").map((p) => ({
-      karyawanKode: p.karyawan_id, tanggal: keDate(p.tanggal), jadwalKode: p.jadwal_id, absensi: besar(p.absensi),
+      karyawanKode: p.karyawan_id, tanggal: keDate(p.tanggal), jabatanKode: jabatanJadwal.get(p.jadwal_id)!, absensi: besar(p.absensi),
       jamMasuk: kosongJadiNull(p.jam_masuk), jamKeluar: kosongJadiNull(p.jam_keluar), terlambat: p.terlambat ?? 0, dibuatOlehId: oleh(p.dibuat_oleh ?? "hrd")!,
     })),
   });
@@ -279,7 +275,7 @@ async function main() {
     const st = statusSlip(s.status);
     await db.slipGaji.create({
       data: {
-        no: s.id, periodeId: s.periode, karyawanKode: s.karyawan_id, jabatanKode: s.jabatan_id, golonganKode: s.golongan_id, jadwalKode: kosongJadiNull(s.jadwal_id),
+        no: s.id, periodeId: s.periode, karyawanKode: s.karyawan_id, jabatanKode: s.jabatan_id, golonganKode: s.golongan_id,
         akunBebanKode: s.akun_beban, statusPtkp: ptkp(s.status_ptkp), hariKerja: s.hari_kerja, jumlahPresensi: s.presensi, hadir: s.hadir, izin: s.izin,
         sakit: s.sakit, cuti: s.cuti, alpa: s.alpa, jamKerja: s.jam_kerja, terlambatMenit: s.terlambat_menit, gajiPokok: s.gaji_pokok,
         tunjJabatan: s.tunj_jabatan, tunjKeluarga: s.tunj_keluarga, tunjLain: (s.tunj_lain ?? []).reduce((x: number, t: any) => x + t.nominal, 0),

@@ -142,13 +142,14 @@ export async function daftarMaster(jenis: JenisMaster, periode = periodeIni()): 
       return { kolom: [{ judul: "Nominal (Rp)", angka: true }], baris: d.map((x) => ({ kode: x.kode, nama: x.nama, aktif: x.aktif, sel: [rpAtau(peta!.pada("TUNJANGAN", x.kode, periode)?.nominal)], nilai: { nama: x.nama } })) };
     }
     case "jadwal": {
-      const d = urut(await db.jadwalKerja.findMany({ include: { jabatan: { select: { nama: true } } } }));
+      // Jadwal kerja melekat di jabatan inhouse (kolom jam_masuk, jam_keluar, hari_kerja); kode baris = kode jabatan.
+      const d = urut(await db.jabatan.findMany({ where: { kelompok: "INHOUSE", jamMasuk: { not: null } } }));
       return {
         kolom: [{ judul: "Jam kerja" }, { judul: "Hari kerja" }],
         baris: d.map((x) => ({
-          kode: x.kode, nama: x.jabatan.nama, aktif: x.aktif,
+          kode: x.kode, nama: x.nama, aktif: x.aktif,
           sel: [`${x.jamMasuk} sampai ${x.jamKeluar}`, `${x.hariKerja} hari/bulan`],
-          nilai: { jabatanKode: x.jabatanKode, jamMasuk: x.jamMasuk, jamKeluar: x.jamKeluar, hariKerja: str(x.hariKerja) },
+          nilai: { jabatanKode: x.kode, jamMasuk: x.jamMasuk ?? "", jamKeluar: x.jamKeluar ?? "", hariKerja: str(x.hariKerja ?? 0) },
         })),
       };
     }

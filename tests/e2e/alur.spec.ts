@@ -700,7 +700,9 @@ for (const t of TAB_MASTER) {
       await expect(ajuan).toHaveCount(0);
     }
     await foto(p, "owner", `master-${t.tab}`);
-    if (!t.nanti) await nonaktifkan(p, t.cari);
+    // Jadwal kerja melekat di jabatan (tidak dinonaktifkan sendiri), jadi tanpa tombol Nonaktifkan.
+    if (t.tab === "jadwal") await expect(baris(p, t.cari).first().getByRole("button", { name: "Nonaktifkan" })).toHaveCount(0);
+    else if (!t.nanti) await nonaktifkan(p, t.cari);
   });
 }
 

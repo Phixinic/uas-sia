@@ -43,7 +43,7 @@ function NavMaster({ kelompok, aktif }: { kelompok: KelompokMaster; aktif: strin
   );
 }
 
-export default async function HalamanMaster({ kelompok, cari }: { kelompok: KelompokMaster; cari: { tab?: string; form?: string; karyawan?: string; jenis?: string; nominal?: string; riwayat?: string } }) {
+export default async function HalamanMaster({ kelompok, cari }: { kelompok: KelompokMaster; cari: { tab?: string; form?: string; karyawan?: string; jenis?: string; nominal?: string; riwayat?: string; kelompok?: string } }) {
   const pengguna = await wajibMasuk();
   if (kelompok === "sdm" && cari.tab) {
     // Jabatan, jabatan event, golongan, dan tunjangan sekarang satu tab; tautan lama (termasuk ?form=) tetap berfungsi.
@@ -128,7 +128,7 @@ export default async function HalamanMaster({ kelompok, cari }: { kelompok: Kelo
                   <td><Lencana warna={b.aktif ? "hijau" : "abu"}>{b.aktif ? "Aktif" : "Nonaktif"}</Lencana></td>
                   {(bolehUbah || bolehNonaktifkan) && (
                     <td>
-                      <AksiMaster jenis={jenis} kode={b.kode} aktif={b.aktif} alamatUbah={`${alamatDaftar}&form=${b.kode}`} bolehUbah={bolehUbah} bolehNonaktifkan={bolehNonaktifkan} />
+                      <AksiMaster jenis={jenis} kode={b.kode} aktif={b.aktif} alamatUbah={`${alamatDaftar}&form=${b.kode}`} bolehUbah={bolehUbah} bolehNonaktifkan={bolehNonaktifkan && jenis !== "jadwal"} />
                     </td>
                   )}
                 </tr>

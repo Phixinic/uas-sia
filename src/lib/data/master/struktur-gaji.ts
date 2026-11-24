@@ -83,7 +83,7 @@ export async function dataStrukturGaji(periode = periodeIni()): Promise<DataStru
     daftarMaster("jabatanEvent"),
     daftarMaster("golongan"),
     daftarMaster("tunjangan"),
-    db.jadwalKerja.findMany({ select: { jabatanKode: true, jamMasuk: true, jamKeluar: true, hariKerja: true, aktif: true } }),
+    db.jabatan.findMany({ where: { jamMasuk: { not: null } }, select: { kode: true, jamMasuk: true, jamKeluar: true, hariKerja: true } }),
     db.golongan.findMany({ orderBy: { kode: "asc" }, select: { kode: true, nama: true, aktif: true } }),
     dataSettingGaji(periode),
     db.versiNominal.findMany({
@@ -166,7 +166,7 @@ export async function dataStrukturGaji(periode = periodeIni()): Promise<DataStru
   }
 
   const jadwal: Record<string, { jam: string; hari: string }> = {};
-  for (const j of jadwalKerja) jadwal[j.jabatanKode] = { jam: `${j.jamMasuk} sampai ${j.jamKeluar}`, hari: `${j.hariKerja} hari/bulan${j.aktif ? "" : " (nonaktif)"}` };
+  for (const j of jadwalKerja) jadwal[j.kode] = { jam: `${j.jamMasuk} sampai ${j.jamKeluar}`, hari: `${j.hariKerja} hari/bulan` };
 
   return {
     periode,

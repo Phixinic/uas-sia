@@ -30,7 +30,6 @@ export const AWALAN = {
   JABATAN: "JBT",
   GOLONGAN: "GP",
   TUNJANGAN: "TNJ",
-  JADWAL_KERJA: "TM",
   SETTING_GAJI: "SET",
   /** Versi nominal master, 4 digit: NOM-0021 (kodeBerikutnya(tx, AWALAN.VERSI_NOMINAL, 4)). */
   VERSI_NOMINAL: "NOM",

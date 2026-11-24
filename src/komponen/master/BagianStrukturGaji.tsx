@@ -1,6 +1,6 @@
 /*
- * Tab Struktur gaji di Master SDM (komponen server): jabatan inhouse, jabatan event, golongan (gaji pokok), dan
- * tunjangan lain dalam satu halaman. Tabel database tetap terpisah; tambah, ubah, dan nonaktifkan memakai aksi master
+ * Tab Struktur gaji di Master SDM (komponen server): satu tabel Jabatan (kelompok Inhouse dan Event, saringan
+ * `&kelompok=INHOUSE|EVENT`), golongan (gaji pokok), dan tunjangan lain dalam satu halaman. Tabel database tetap terpisah; tambah, ubah, dan nonaktifkan memakai aksi master
  * yang sama (simpanMaster, ubahStatusMaster), jadi izinnya tetap per jenis seperti di DEF_MASTER.
  * Keadaan di URL: ?tab=struktur&jenis=<jenis>&form=baru|<kode>, &nominal=<kode> (form ajukan perubahan nominal),
  * &riwayat=<kode> (riwayat nominal satu item).
@@ -101,7 +101,15 @@ function kolomTambahan(jenis: JenisStruktur, d: DataStrukturGaji): { judul: stri
   }
 }
 
-export default async function BagianStrukturGaji({ peran, cari }: { peran: Peran; cari: { jenis?: string; form?: string; nominal?: string; riwayat?: string } }) {
+/** Urutan tampil: jabatan inhouse dan event satu tabel "Jabatan" (kolom Kelompok dan saringan), lalu golongan, tunjangan. */
+const KELOMPOK_TAMPIL: JenisStruktur[][] = [["jabatan", "jabatanEvent"], ["golongan"], ["tunjangan"]];
+const SARINGAN_KELOMPOK = [
+  { nilai: "semua", label: "Semua" },
+  { nilai: "INHOUSE", label: "Inhouse" },
+  { nilai: "EVENT", label: "Event" },
+] as const;
+
+export default async function BagianStrukturGaji({ peran, cari }: { peran: Peran; cari: { jenis?: string; form?: string; nominal?: string; riwayat?: string; kelompok?: string } }) {
   const jenisForm = cari.jenis && termasukStruktur(cari.jenis) ? cari.jenis : null;
   const bolehForm = !!(jenisForm && cari.form && boleh(peran, DEF_MASTER[jenisForm].izin));
   const bolehFormNominal = !!(jenisForm && cari.nominal && boleh(peran, IZIN_NOMINAL[jenisForm]));
@@ -114,6 +122,59 @@ export default async function BagianStrukturGaji({ peran, cari }: { peran: Peran
   const riwayatItem = jenisForm && cari.riwayat ? d.daftar[jenisForm].baris.find((b) => b.kode === cari.riwayat) : null;
   const bolehNonaktifkan = boleh(peran, "master.nonaktifkan");
   const bolehSebagian = JENIS_STRUKTUR.some((j) => boleh(peran, DEF_MASTER[j].izin));
+
+  const kelompokDipilih = cari.kelompok === "INHOUSE" || cari.kelompok === "EVENT" ? cari.kelompok : "semua";
+
+  /** Form tambah, ubah, atau ajukan nominal untuk satu jenis (null bila URL tidak membuka form jenis ini). */
+  const formUntuk = (jenis: JenisStruktur): React.ReactNode => {
+    if (jenisForm !== jenis) return null;
+    const def = DEF_MASTER[jenis];
+    const data = d.daftar[jenis];
+    const kembali = `${ALAMAT_STRUKTUR}#bagian-${jenis}`;
+    if (bolehForm && opsi) {
+      const baris = cari.form === "baru" ? null : data.baris.find((b) => b.kode === cari.form);
+      if (cari.form !== "baru" && !baris) return <Peringatan jenis="galat">Data {cari.form} tidak ditemukan.</Peringatan>;
+      const bawaan = Object.fromEntries(def.isian.filter((x) => x.bawaan).map((x) => [x.kunci, x.bawaan as string]));
+      return (
+        <FormMaster
+          key={`${jenis}-${cari.form}`}
+          def={def}
+          opsi={opsi}
+          kode={baris?.kode ?? null}
+          awal={baris?.nilai ?? bawaan}
+          alamatKembali={kembali}
+          berlaku={{ periodeBerlaku: d.periodeBerlaku, bawaan: d.periode }}
+        />
+      );
+    }
+    if (bolehFormNominal) {
+      const baris = data.baris.find((b) => b.kode === cari.nominal);
+      const info = baris ? d.nominal[jenis][baris.kode] : undefined;
+      if (!baris || !info) return <Peringatan jenis="galat">Data {cari.nominal} tidak ditemukan.</Peringatan>;
+      if (!baris.aktif) return <Peringatan jenis="galat">{baris.nama} sudah dinonaktifkan, jadi nominalnya tidak bisa diubah.</Peringatan>;
+      const ringkas = (v: TampilNominal | null) => (v ? { kode: v.kode, teks: v.teks, berlakuMulai: v.berlakuMulai } : null);
+      return (
+        <FormNominal
+          key={`nominal-${baris.kode}`}
+          bahan={{
+            jenis: NOMINAL_STRUKTUR[jenis],
+            itemKode: baris.kode,
+            item: baris.nama,
+            satuan: jenis === "jabatanEvent" ? baris.sel[2] ?? null : null,
+            berlaku: info.berlaku ? { ...ringkas(info.berlaku)!, nominal: info.berlaku.nominal, tunjJabatan: info.berlaku.tunjJabatan, tunjKeluarga: info.berlaku.tunjKeluarga } : null,
+            berikutnya: ringkas(info.berikutnya),
+            menunggu: info.menunggu.map((m) => ringkas(m)!),
+            palingAwal: info.palingAwal,
+          }}
+          sekarang={d.periode}
+          periodeBerlaku={d.periodeBerlaku}
+          terkunci={terkunci}
+          alamatKembali={kembali}
+        />
+      );
+    }
+    return null;
+  };
 
   const jabatanTampil = d.ringkasJabatan.filter((j) => j.aktif || j.karyawan);
   const golonganTampil = d.ringkasGolongan.filter((g) => g.aktif || g.karyawan);
@@ -235,111 +296,118 @@ export default async function BagianStrukturGaji({ peran, cari }: { peran: Peran
         </div>
       </Kartu>
 
-      {JENIS_STRUKTUR.map((jenis) => {
-        const def = DEF_MASTER[jenis];
-        const info = BAGIAN[jenis];
-        const data = d.daftar[jenis];
-        const bolehUbah = boleh(peran, def.izin);
-        const tambahan = kolomTambahan(jenis, d);
-        const adaAksi = bolehUbah || bolehNonaktifkan;
-
-        const bolehNominal = boleh(peran, IZIN_NOMINAL[jenis]);
-        const kembali = `${ALAMAT_STRUKTUR}#bagian-${jenis}`;
-        let form: React.ReactNode = null;
-        if (bolehForm && opsi && jenisForm === jenis) {
-          const baris = cari.form === "baru" ? null : data.baris.find((b) => b.kode === cari.form);
-          if (cari.form !== "baru" && !baris) form = <Peringatan jenis="galat">Data {cari.form} tidak ditemukan.</Peringatan>;
-          else {
-            const bawaan = Object.fromEntries(def.isian.filter((x) => x.bawaan).map((x) => [x.kunci, x.bawaan as string]));
-            form = (
-              <FormMaster
-                key={`${jenis}-${cari.form}`}
-                def={def}
-                opsi={opsi}
-                kode={baris?.kode ?? null}
-                awal={baris?.nilai ?? bawaan}
-                alamatKembali={kembali}
-                berlaku={{ periodeBerlaku: d.periodeBerlaku, bawaan: d.periode }}
-              />
-            );
-          }
-        } else if (bolehFormNominal && jenisForm === jenis) {
-          const baris = data.baris.find((b) => b.kode === cari.nominal);
-          const info = baris ? d.nominal[jenis][baris.kode] : undefined;
-          if (!baris || !info) form = <Peringatan jenis="galat">Data {cari.nominal} tidak ditemukan.</Peringatan>;
-          else if (!baris.aktif) form = <Peringatan jenis="galat">{baris.nama} sudah dinonaktifkan, jadi nominalnya tidak bisa diubah.</Peringatan>;
-          else {
-            const ringkas = (v: TampilNominal | null) => (v ? { kode: v.kode, teks: v.teks, berlakuMulai: v.berlakuMulai } : null);
-            form = (
-              <FormNominal
-                key={`nominal-${baris.kode}`}
-                bahan={{
-                  jenis: NOMINAL_STRUKTUR[jenis],
-                  itemKode: baris.kode,
-                  item: baris.nama,
-                  satuan: jenis === "jabatanEvent" ? baris.sel[2] ?? null : null,
-                  berlaku: info.berlaku ? { ...ringkas(info.berlaku)!, nominal: info.berlaku.nominal, tunjJabatan: info.berlaku.tunjJabatan, tunjKeluarga: info.berlaku.tunjKeluarga } : null,
-                  berikutnya: ringkas(info.berikutnya),
-                  menunggu: info.menunggu.map((m) => ringkas(m)!),
-                  palingAwal: info.palingAwal,
-                }}
-                sekarang={d.periode}
-                periodeBerlaku={d.periodeBerlaku}
-                terkunci={terkunci}
-                alamatKembali={kembali}
-              />
-            );
-          }
-        }
-
+      {KELOMPOK_TAMPIL.map((kelompokJenis) => {
+        const gabungan = kelompokJenis.length > 1;
+        // Form tambah, ubah, atau ajukan nominal untuk salah satu jenis di kelompok ini.
+        const form = kelompokJenis.map((jenis) => formUntuk(jenis)).find(Boolean) ?? null;
+        const semuaBaris = kelompokJenis.flatMap((jenis) => d.daftar[jenis].baris.map((b) => ({ jenis, b })));
+        const saring = gabungan ? kelompokDipilih : "semua";
+        const baris = semuaBaris.filter((x) => saring === "semua" || (saring === "INHOUSE" ? x.jenis === "jabatan" : x.jenis === "jabatanEvent"));
+        const utama = kelompokJenis[0];
+        const info = gabungan ? { judul: "Jabatan", keterangan: "Satu master jabatan untuk karyawan inhouse (tunjangan jabatan dan tunjangan istri/anak ikut setting gaji, jam kerja di tab Jadwal kerja) dan untuk penugasan event (peran, satuan tarif, dan tarif fee). Jabatan inhouse diubah HRD dan Owner, jabatan event hanya Owner." } : BAGIAN[utama];
+        const bolehUbahSalah = kelompokJenis.some((j) => boleh(peran, DEF_MASTER[j].izin));
+        const adaAksiKolom = kelompokJenis.some((j) => boleh(peran, DEF_MASTER[j].izin) || boleh(peran, IZIN_NOMINAL[j])) || bolehNonaktifkan;
+        const tombolBaru = form ? null : (
+          <div className="flex flex-wrap gap-2">
+            {kelompokJenis.filter((j) => boleh(peran, DEF_MASTER[j].izin)).map((j) => (
+              <TautanTombol key={j} href={alamatBagian(j, "baru")} kecil varian="utama" ikon={<Plus className="size-4" />}>{DEF_MASTER[j].label} baru</TautanTombol>
+            ))}
+          </div>
+        );
+        const tanpaIzin = kelompokJenis.filter((j) => !boleh(peran, DEF_MASTER[j].izin));
         return (
-          <div key={jenis} id={`bagian-${jenis}`} className="scroll-mt-20 space-y-4">
+          <div key={utama} id={`bagian-${utama}`} className="scroll-mt-20 space-y-4">
+            {kelompokJenis.slice(1).map((j) => <span key={j} id={`bagian-${j}`} className="block scroll-mt-20" />)}
             {form}
             <Kartu rapat label={info.judul}>
-              <KepalaKartu
-                judul={info.judul}
-                keterangan={`${data.baris.length} data. ${info.keterangan}`}
-                aksi={bolehUbah && !form ? <TautanTombol href={alamatBagian(jenis, "baru")} kecil varian="utama" ikon={<Plus className="size-4" />}>{def.label} baru</TautanTombol> : null}
-              />
-              {!bolehUbah && bolehSebagian && (
+              <KepalaKartu judul={info.judul} keterangan={`${semuaBaris.length} data. ${info.keterangan}`} aksi={tombolBaru} />
+              {gabungan && (
+                <nav className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-5 py-3" aria-label="Saring kelompok jabatan">
+                  <span className="text-xs text-slate-500">Kelompok:</span>
+                  {SARINGAN_KELOMPOK.map((k) => (
+                    <Link
+                      key={k.nilai}
+                      href={`${ALAMAT_STRUKTUR}${k.nilai === "semua" ? "" : `&kelompok=${k.nilai}`}#bagian-jabatan`}
+                      aria-current={saring === k.nilai ? "page" : undefined}
+                      className={`tombol tombol-kecil ${saring === k.nilai ? "tombol-gelap" : "tombol-garis"}`}
+                    >
+                      {k.label} ({k.nilai === "semua" ? semuaBaris.length : semuaBaris.filter((x) => (k.nilai === "INHOUSE") === (x.jenis === "jabatan")).length})
+                    </Link>
+                  ))}
+                </nav>
+              )}
+              {tanpaIzin.length > 0 && bolehSebagian && (
                 <div className="border-b border-slate-100 px-5 py-3">
-                  <Peringatan>Peran {LABEL_PERAN[peran]} hanya bisa melihat {def.label.toLowerCase()}. Yang boleh mengubah: {info.pengubah}.</Peringatan>
+                  <Peringatan>
+                    {gabungan && tanpaIzin.length === 1
+                      ? `Peran ${LABEL_PERAN[peran]} hanya bisa melihat ${DEF_MASTER[tanpaIzin[0]].label.toLowerCase()}. Yang boleh mengubah: ${BAGIAN[tanpaIzin[0]].pengubah}.`
+                      : `Peran ${LABEL_PERAN[peran]} hanya bisa melihat ${info.judul.toLowerCase()}. Yang boleh mengubah: ${BAGIAN[utama].pengubah}.`}
+                  </Peringatan>
                 </div>
               )}
-              {data.baris.length === 0 ? (
-                <KeadaanKosong judul={`Belum ada data ${def.label.toLowerCase()}`} keterangan={bolehUbah ? `Tekan "${def.label} baru" untuk menambah.` : undefined} />
+              {baris.length === 0 ? (
+                <KeadaanKosong judul={`Belum ada data ${info.judul.toLowerCase()}`} keterangan={bolehUbahSalah ? "Tekan tombol tambah di atas untuk menambah." : undefined} />
               ) : (
                 <Tabel label={`Daftar ${info.judul.toLowerCase()}`}>
                   <thead>
                     <tr>
                       <th>Kode</th>
                       <th>Nama</th>
-                      {data.kolom.map((k) => <th key={k.judul} className={k.angka ? "kolom-angka" : ""}>{k.judul}</th>)}
+                      {gabungan ? (
+                        <>
+                          <th>Kelompok</th>
+                          <th>Rincian</th>
+                        </>
+                      ) : (
+                        d.daftar[utama].kolom.map((k) => <th key={k.judul} className={k.angka ? "kolom-angka" : ""}>{k.judul}</th>)
+                      )}
                       <th>Riwayat nominal</th>
-                      {tambahan.map((k) => <th key={k.judul} className={k.angka ? "kolom-angka" : ""}>{k.judul}</th>)}
+                      {gabungan ? <th>Dipakai</th> : kolomTambahan(utama, d).map((k) => <th key={k.judul} className={k.angka ? "kolom-angka" : ""}>{k.judul}</th>)}
                       <th>Status</th>
-                      {(adaAksi || bolehNominal) && <th className="text-right">Aksi</th>}
+                      {adaAksiKolom && <th className="text-right">Aksi</th>}
                     </tr>
                   </thead>
                   <tbody>
-                    {data.baris.map((b) => (
-                      <tr key={b.kode} className={b.aktif ? "" : "text-slate-400"}>
-                        <td className="kode">{b.kode}</td>
-                        <td className="font-medium">{b.nama}</td>
-                        {b.sel.map((s, i) => <td key={i} className={data.kolom[i]?.angka ? "kolom-angka angka" : ""}>{s}</td>)}
-                        <td><SelRiwayat info={d.nominal[jenis][b.kode]} jenis={jenis} kode={b.kode} /></td>
-                        {tambahan.map((k) => <td key={k.judul} className={k.angka ? "kolom-angka whitespace-nowrap" : ""}>{k.isi(b.kode)}</td>)}
-                        <td><Lencana warna={b.aktif ? "hijau" : "abu"}>{b.aktif ? "Aktif" : "Nonaktif"}</Lencana></td>
-                        {(adaAksi || bolehNominal) && (
-                          <td>
-                            <div className="flex flex-col items-end gap-1.5">
-                              {bolehNominal && b.aktif && <TautanTombol href={alamatNominal(jenis, b.kode)} kecil varian="utama">Ajukan nominal</TautanTombol>}
-                              <AksiMaster jenis={jenis} kode={b.kode} aktif={b.aktif} alamatUbah={alamatBagian(jenis, b.kode)} bolehUbah={bolehUbah} bolehNonaktifkan={bolehNonaktifkan} />
-                            </div>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
+                    {baris.map(({ jenis, b }) => {
+                      const kolom = d.daftar[jenis].kolom;
+                      const tambahan = kolomTambahan(jenis, d);
+                      const bolehUbah = boleh(peran, DEF_MASTER[jenis].izin);
+                      const bolehNominal = boleh(peran, IZIN_NOMINAL[jenis]);
+                      return (
+                        <tr key={`${jenis}-${b.kode}`} className={b.aktif ? "" : "text-slate-400"}>
+                          <td className="kode">{b.kode}</td>
+                          <td className="font-medium">{b.nama}</td>
+                          {gabungan ? (
+                            <>
+                              <td><Lencana warna={jenis === "jabatan" ? "teal" : "biru"}>{jenis === "jabatan" ? "Inhouse" : "Event"}</Lencana></td>
+                              <td className="min-w-52 text-[13px]">
+                                <dl className="space-y-0.5">
+                                  {b.sel.map((x, i) => (kolom[i] && kolom[i].judul !== "Dipakai" ? <div key={i} className="flex gap-1.5"><dt className="text-slate-500">{kolom[i].judul}:</dt><dd className="angka">{x}</dd></div> : null))}
+                                  {tambahan.filter((k) => k.judul !== "Dipakai").map((k) => <div key={k.judul} className="flex gap-1.5"><dt className="text-slate-500">{k.judul}:</dt><dd>{k.isi(b.kode)}</dd></div>)}
+                                </dl>
+                              </td>
+                            </>
+                          ) : (
+                            b.sel.map((x, i) => <td key={i} className={kolom[i]?.angka ? "kolom-angka angka" : ""}>{x}</td>)
+                          )}
+                          <td><SelRiwayat info={d.nominal[jenis][b.kode]} jenis={jenis} kode={b.kode} /></td>
+                          {gabungan ? (
+                            <td className="whitespace-nowrap">{jenis === "jabatan" ? jumlahKaryawan(d.pemakaian.jabatan[b.kode]) : b.sel[kolom.findIndex((k) => k.judul === "Dipakai")] ?? "-"}</td>
+                          ) : (
+                            tambahan.map((k) => <td key={k.judul} className={k.angka ? "kolom-angka whitespace-nowrap" : ""}>{k.isi(b.kode)}</td>)
+                          )}
+                          <td><Lencana warna={b.aktif ? "hijau" : "abu"}>{b.aktif ? "Aktif" : "Nonaktif"}</Lencana></td>
+                          {adaAksiKolom && (
+                            <td>
+                              <div className="flex flex-col items-end gap-1.5">
+                                {bolehNominal && b.aktif && <TautanTombol href={alamatNominal(jenis, b.kode)} kecil varian="utama">Ajukan nominal</TautanTombol>}
+                                <AksiMaster jenis={jenis} kode={b.kode} aktif={b.aktif} alamatUbah={alamatBagian(jenis, b.kode)} bolehUbah={bolehUbah} bolehNonaktifkan={bolehNonaktifkan} />
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </Tabel>
               )}

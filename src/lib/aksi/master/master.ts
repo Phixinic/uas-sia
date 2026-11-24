@@ -186,15 +186,16 @@ async function simpan(tx: Tx, jenis: JenisMaster, kodeLama: string | null, v: Ni
       return kodeLama;
     }
     case "jadwal": {
-      const lama = kodeLama ? await tx.jadwalKerja.findUnique({ where: { kode: kodeLama }, select: { jabatanKode: true } }) : null;
-      await pastikanRujukan([await ada("jabatan", s("jabatanKode"), "Jabatan", "jabatanKode", lama?.jabatanKode === s("jabatanKode"))]);
-      await pastikanInhouse(tx, { jabatanKode: s("jabatanKode") });
-      const bentrok = await tx.jadwalKerja.findFirst({ where: { jabatanKode: s("jabatanKode"), ...(kodeLama ? { kode: { not: kodeLama } } : {}) }, select: { kode: true } });
-      if (bentrok) throw new GalatAksi("Jabatan ini sudah punya jadwal kerja.", { jabatanKode: "Jabatan ini sudah punya jadwal kerja." });
-      const data = { jabatanKode: s("jabatanKode"), jamMasuk: s("jamMasuk"), jamKeluar: s("jamKeluar"), hariKerja: n("hariKerja") };
-      if (baru) return (await tx.jadwalKerja.create({ data: { kode: await kodeBerikutnya(tx, AWALAN.JADWAL_KERJA), ...data } })).kode;
-      await tx.jadwalKerja.update({ where: { kode: kodeLama }, data });
-      return kodeLama;
+      // Jadwal kerja adalah kolom jabatan inhouse (dulu tabel jadwal_kerja 1:1). Kode baris = kode jabatan.
+      const tujuan = s("jabatanKode");
+      await pastikanRujukan([await ada("jabatan", tujuan, "Jabatan", "jabatanKode", kodeLama === tujuan)]);
+      await pastikanInhouse(tx, { jabatanKode: tujuan });
+      const sasaran = await tx.jabatan.findUniqueOrThrow({ where: { kode: tujuan }, select: { jamMasuk: true } });
+      if (sasaran.jamMasuk && tujuan !== kodeLama) throw new GalatAksi("Jabatan ini sudah punya jadwal kerja.", { jabatanKode: "Jabatan ini sudah punya jadwal kerja." });
+      // Jadwal dipindah ke jabatan lain: jabatan lama tidak lagi punya jadwal.
+      if (kodeLama && kodeLama !== tujuan) await tx.jabatan.update({ where: { kode: kodeLama }, data: { jamMasuk: null, jamKeluar: null, hariKerja: null } });
+      await tx.jabatan.update({ where: { kode: tujuan }, data: { jamMasuk: s("jamMasuk"), jamKeluar: s("jamKeluar"), hariKerja: n("hariKerja") } });
+      return tujuan;
     }
     case "setgaji":
       // Setting gaji tidak pernah ditimpa: setiap versi lewat pengajuan dan persetujuan Owner (src/lib/aksi/master/setting-gaji.ts).
@@ -204,7 +205,7 @@ async function simpan(tx: Tx, jenis: JenisMaster, kodeLama: string | null, v: Ni
 
 const MODEL: Record<JenisMaster, string> = {
   supplier: "supplier", peralatan: "peralatan", perlengkapan: "perlengkapan", kategori: "kategoriAset", akun: "akun",
-  karyawan: "karyawan", jabatan: "jabatan", jabatanEvent: "jabatan", golongan: "golongan", tunjangan: "tunjangan", jadwal: "jadwalKerja", setgaji: "settingGaji",
+  karyawan: "karyawan", jabatan: "jabatan", jabatanEvent: "jabatan", golongan: "golongan", tunjangan: "tunjangan", jadwal: "jabatan", setgaji: "settingGaji",
 };
 
 /** Tambah (kode kosong) atau ubah data master. Izin menurut jenisnya. */
@@ -242,6 +243,7 @@ export async function ubahStatusMaster(input: unknown): Promise<HasilAksi> {
     const pengguna = await wajibPeran(IZIN["master.nonaktifkan"]);
     const { jenis, kode, aktif } = validasi(skemaStatusMaster, input);
     if (jenis === "setgaji") throw new GalatAksi("Versi setting gaji tidak dinonaktifkan. Ajukan perubahan setting, atau nonaktifkan karyawannya.");
+    if (jenis === "jadwal") throw new GalatAksi("Jadwal kerja melekat pada jabatan, jadi tidak dinonaktifkan sendiri. Ubah jamnya, atau nonaktifkan jabatannya di tab Struktur gaji.");
     await db.$transaction(async (tx) => {
       const model = tx[MODEL[jenis] as "supplier"] as unknown as { updateMany: (a: unknown) => Promise<{ count: number }> };
       const n = await model.updateMany({ where: { kode }, data: { aktif } });
