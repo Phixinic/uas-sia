@@ -7,12 +7,12 @@ import { dataBukuBesar } from "@/lib/data/pelaporan/jurnal";
 import { periodeLaporanBawaan, semuaPeriode } from "@/lib/data/pelaporan/periode";
 import { AKUN } from "@/lib/inti/akun";
 import { rupiah } from "@/lib/format";
-import { bulanDari, hariTerakhir, labelBulanTahun, labelTanggal, periodeDariCari, tahunDari } from "@/lib/inti/tanggal";
+import { bulanDari, hariTerakhir, labelBulanTahun, labelPeriode, labelTanggal, periodeDariCari, tahunDari } from "@/lib/inti/tanggal";
 import PilihBulanTahun from "@/komponen/ui/PilihBulanTahun";
 import LencanaPeriode from "@/komponen/ui/LencanaPeriode";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
-import Tabel, { BarisKosong } from "@/komponen/ui/Tabel";
+import Tabel from "@/komponen/ui/Tabel";
 import Rupiah from "@/komponen/ui/Rupiah";
 import Lencana from "@/komponen/ui/Lencana";
 import FilterUrl from "@/komponen/pelaporan/FilterUrl";
@@ -38,7 +38,7 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
     profilUsaha(),
   ]);
   const dipilih = periodeDariCari(cari);
-  const periode = dipilih && semua.includes(dipilih) ? dipilih : bawaan;
+  const periode = dipilih && dipilih !== "semua" ? dipilih : bawaan;
   const kode = cari.akun && daftarAkun.some((a) => a.kode === cari.akun) ? cari.akun : AKUN.KAS;
   const bb = await dataBukuBesar(kode, periode, tahap);
 
@@ -84,7 +84,13 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
                   <td />
                   <td className="kolom-angka"><Rupiah nilai={bb.saldoAwal} polos /></td>
                 </tr>
-                {bb.baris.length === 0 && <BarisKosong kolom={6}>Tidak ada mutasi pada periode ini.</BarisKosong>}
+                {bb.baris.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-sm text-slate-400">
+                      <span className="sticky left-4 block max-w-72 sm:mx-auto sm:text-center">Tidak ada mutasi pada {labelPeriode(periode)}.</span>
+                    </td>
+                  </tr>
+                )}
                 {bb.baris.map((b, i) => (
                   <Fragment key={`${b.no}-${i}`}>
                     {/* Batas tahap: baris pertama jurnal penyesuaian didahului saldo sebelum penyesuaian. */}

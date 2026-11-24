@@ -74,7 +74,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const cari = await searchParams;
   const semua = await semuaPeriode();
   const dipilih = periodeDariCari(cari);
-  const periode = dipilih && semua.includes(dipilih) ? dipilih : periodeIni();
+  const periode = dipilih && dipilih !== "semua" ? dipilih : periodeIni();
   const d = await dataDashboard(periode);
   // Pekerjaan untuk peran yang sedang masuk ditaruh paling atas.
   const tindakan = [...d.tindakan].sort((a, b) => Number(b.peran.includes(pengguna.peran)) - Number(a.peran.includes(pengguna.peran)));

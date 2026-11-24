@@ -1,6 +1,6 @@
 /*
  * Halaman Hitung Gaji (komponen server). Keadaan di URL: ?bulan=10&tahun=2026&slip=<no slip>|semua.
- * Gaji dihitung dari Setting Gaji dan rekap presensi (rumus di src/lib/inti/penggajian.ts), disimpan sebagai slip DRAFT,
+ * Gaji dihitung dari Setting Gaji dan rekap presensi (rumus di src/lib/inti/penggajian.ts), disimpan sebagai slip yang sudah dihitung,
  * lalu diajukan lewat Distribusi Gaji.
  */
 import LencanaBiaya from "@/komponen/sdm/LencanaBiaya";
@@ -55,6 +55,7 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
   const periodeKunci = penutup !== null;
   const bisaDihitung = baris.filter((b) => b.jumlahPresensi > 0 && (!b.slipStatus || b.slipStatus === "DRAFT")).length;
   const jumlahSimpan = baris.filter((b) => b.slipNo).length;
+  const estimasi = baris.length - jumlahSimpan;
   const jumlah = (f: (b: (typeof baris)[number]) => number) => baris.reduce((s, b) => s + f(b), 0);
 
   return (
@@ -67,7 +68,7 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
         <KepalaHalaman
           judul="Hitung Gaji"
           lencana={<><LencanaBiaya jenis="tetap" /><LencanaPeriode periode={periode} /></>}
-          keterangan="Gaji bulanan karyawan inhouse (biaya tetap), dihitung dari versi Setting Gaji yang berlaku di bulan itu dan rekap presensi. Crew event dibayar lewat menu Fee event (biaya variabel). Hasilnya disimpan sebagai slip draf, lalu diajukan lewat Distribusi Gaji."
+          keterangan="Gaji bulanan karyawan inhouse (biaya tetap), dihitung dari versi Setting Gaji yang berlaku di bulan itu dan rekap presensi. Crew event dibayar lewat menu Fee event (biaya variabel). Angka sebelum dihitung hanya estimasi. Setelah dihitung, slip disimpan lalu diajukan lewat Distribusi Gaji."
           aksi={
             <>
               <PilihPeriode terpilih={periode} opsi={opsiPeriode} />
@@ -89,15 +90,15 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
         {!bolehHitung && <Peringatan>Hitung gaji dijalankan oleh HRD. Kamu bisa melihat hasil dan slipnya.</Peringatan>}
         {usang.length > 0 && (
           <Peringatan jenis="awas">
-            Setting gaji atau nominal komponen {usang.map((b) => b.nama).join(", ")} berubah sesudah slip draf {usang.map((b) => b.slipNo).join(", ")} dihitung. Hitung ulang slip itu dulu; Distribusi Gaji menolak slip yang dihitung dengan setting atau nominal lama.
+            Setting gaji atau nominal komponen {usang.map((b) => b.nama).join(", ")} berubah sesudah slip {usang.map((b) => b.slipNo).join(", ")} dihitung. Hitung ulang slip itu dulu; Distribusi Gaji menolak slip yang dihitung dengan setting atau nominal lama.
           </Peringatan>
         )}
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <KartuRingkasan judul="Karyawan" nilai={String(baris.length)} bukanUang keterangan={`${jumlahSimpan} slip tersimpan`} />
-          <KartuRingkasan judul="Bruto" nilai={jumlah((b) => b.tampil.bruto)} />
-          <KartuRingkasan judul="PPh 21" nilai={jumlah((b) => b.tampil.pph21)} nada="kuning" keterangan="Menjadi utang PPh 21" />
-          <KartuRingkasan judul="Take home pay" nilai={jumlah((b) => b.tampil.thp)} nada="hijau" keterangan="Kas keluar saat dibayar" />
+          <KartuRingkasan judul="Karyawan" nilai={String(baris.length)} bukanUang keterangan={`${jumlahSimpan} sudah dihitung, ${estimasi} masih estimasi`} />
+          <KartuRingkasan judul="Bruto" nilai={jumlah((b) => b.tampil.bruto)} keterangan={estimasi ? `${estimasi} karyawan masih estimasi` : "Dari slip yang sudah dihitung"} />
+          <KartuRingkasan judul="PPh 21" nilai={jumlah((b) => b.tampil.pph21)} nada="kuning" keterangan={estimasi ? "Sebagian estimasi" : "Menjadi utang PPh 21"} />
+          <KartuRingkasan judul="Take home pay" nilai={jumlah((b) => b.tampil.thp)} nada="hijau" keterangan={estimasi ? "Sebagian estimasi" : "Kas keluar saat dibayar"} />
         </div>
 
         <RingkasanTahunGaji periode={periode} alamat={ALAMAT} />
@@ -107,7 +108,7 @@ export default async function HalamanHitungGaji({ cari }: { cari: CariGaji }) {
         <PanelVersiNominal baris={baris} periode={periode} />
 
         <Kartu rapat>
-          <KepalaKartu judul={`Proses hitung gaji · ${labelBulanTahun(periode)}`} keterangan="Tekan Rincian untuk melihat komponen gaji dan PPh 21 tiap karyawan" />
+          <KepalaKartu judul={`Proses hitung gaji · ${labelBulanTahun(periode)}`} keterangan="Angka berlabel estimasi belum dihitung. Tekan Rincian untuk melihat komponen gaji dan PPh 21." />
           {baris.length === 0 ? (
             <KeadaanKosong judul="Belum ada Setting Gaji" keterangan="Tambahkan setting gaji karyawan di Master SDM." />
           ) : (

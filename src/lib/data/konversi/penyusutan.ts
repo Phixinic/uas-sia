@@ -2,7 +2,7 @@
  * Kueri baca halaman Proses Penyusutan.
  */
 import { db } from "@/lib/server/db";
-import { daftarPeriode, periodeIni } from "@/lib/inti/tanggal";
+import { daftarPeriode, periodeBatasProses, periodeIni } from "@/lib/inti/tanggal";
 import { barisPenyusutan } from "@/lib/inti/jurnal";
 import { jurnalPeriode, riwayatJurnalSumber } from "./persetujuan";
 
@@ -13,10 +13,12 @@ export async function periodePenyusutan(dipilih?: string) {
     db.jadwalPenyusutan.findFirst({ where: { jurnalNo: null, aset: { status: "AKTIF" }, periodeId: { lte: sekarang } }, orderBy: { periodeId: "asc" }, select: { periodeId: true } }),
   ]);
   const pertama = awal?.bulanMulai ?? sekarang;
-  const pilihan = daftarPeriode(pertama < sekarang ? pertama : sekarang, sekarang);
+  const batas = periodeBatasProses();
+  const pilihan = daftarPeriode(pertama < sekarang ? pertama : sekarang, batas);
   const bawaan = belum?.periodeId ?? sekarang;
-  const periode = dipilih && pilihan.includes(dipilih) ? dipilih : bawaan;
-  return { periode, pilihan, sekarang };
+  // Periode yang dipilih dipakai apa adanya (bulan tanpa jadwal tampil kosong), bukan dialihkan diam-diam ke bulan lain.
+  const periode = dipilih && dipilih !== "semua" ? dipilih : bawaan;
+  return { periode, pilihan, sekarang, batas, lewatBatas: periode > batas };
 }
 
 export async function dataPenyusutan(periode: string) {

@@ -2,20 +2,18 @@
 
 /*
  * Dua kontrol periode terpisah, Bulan (Januari sampai Desember) dan Tahun, yang disimpan di query string
- * (?bulan=11&tahun=2026). Dipakai semua halaman berperiode. Tahun tampil sebagai pilihan sendiri, dan pilihan Bulan hanya
- * berisi bulan yang tersedia di tahun terpilih; saat tahun diganti dan bulannya tidak tersedia, dipilih bulan tersedia
- * terakhir di tahun itu.
+ * (?bulan=11&tahun=2026). Dipakai semua halaman berperiode. Pilihan Bulan selalu berisi 12 bulan; bulan tanpa data
+ * ditangani halamannya dengan keadaan kosong. Pilihan Tahun diturunkan dari `tersedia` (periode, jurnal, pembelian)
+ * ditambah tahun berjalan dan tahun yang sedang dipilih. Mengganti tahun mempertahankan bulan yang dipilih.
  * `semua` menambah pilihan "Semua" di Tahun (?tahun=semua), dan Bulan dinonaktifkan selama pilihan itu aktif.
  */
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { NAMA_BULAN, bulanDari, tahunDari } from "@/lib/inti/tanggal";
-
-const pad = (n: number) => String(n).padStart(2, "0");
+import { NAMA_BULAN, bulanDari, periodeIni, tahunDari } from "@/lib/inti/tanggal";
 
 export default function PilihBulanTahun({ periode, tersedia, semua, labelBulan = "Bulan", labelTahun = "Tahun", pertahankan = true, idAwalan = "pilih", keteranganTahun }: {
   /** "YYYY-MM" atau "semua". */
   periode: string;
-  /** Periode yang boleh dipilih ("YYYY-MM"). */
+  /** Periode yang punya data ("YYYY-MM"); dipakai hanya untuk menurunkan daftar Tahun. */
   tersedia: string[];
   /** Label pilihan semua periode di Tahun, misalnya "Semua periode". Kosong = tidak ada pilihan itu. */
   semua?: string;
@@ -33,11 +31,11 @@ export default function PilihBulanTahun({ periode, tersedia, semua, labelBulan =
   const cari = useSearchParams();
   const adaSemua = !!semua;
   const pilihSemua = periode === "semua";
-  const ada = new Set(tersedia);
-  const daftarTahun = [...new Set(tersedia.map(tahunDari))].sort((a, b) => b - a);
   const tahun = pilihSemua ? null : tahunDari(periode);
   const bulan = pilihSemua ? null : bulanDari(periode);
-  if (tahun !== null && !daftarTahun.includes(tahun)) daftarTahun.unshift(tahun);
+  const tahunData = new Set([...tersedia.map(tahunDari), tahunDari(periodeIni())]);
+  if (tahun !== null) tahunData.add(tahun);
+  const daftarTahun = [...tahunData].sort((a, b) => b - a);
 
   const pergi = (b: number | null, t: number | "semua") => {
     const p = new URLSearchParams(pertahankan ? cari.toString() : "");
@@ -54,11 +52,7 @@ export default function PilihBulanTahun({ periode, tersedia, semua, labelBulan =
 
   const gantiTahun = (nilai: string) => {
     if (nilai === "semua") return pergi(null, "semua");
-    const t = Number(nilai);
-    const b = bulan ?? 12;
-    if (ada.has(`${t}-${pad(b)}`)) return pergi(b, t);
-    const diTahun = tersedia.filter((x) => tahunDari(x) === t).sort();
-    pergi(diTahun.length ? bulanDari(diTahun[diTahun.length - 1]) : b, t);
+    pergi(bulan ?? bulanDari(periodeIni()), Number(nilai));
   };
 
   return (
@@ -73,15 +67,11 @@ export default function PilihBulanTahun({ periode, tersedia, semua, labelBulan =
           onChange={(e) => tahun !== null && pergi(Number(e.target.value), tahun)}
         >
           {pilihSemua && <option value="">Semua bulan</option>}
-          {NAMA_BULAN.map((nama, i) => {
-            const b = i + 1;
-            const bisa = tahun !== null && (ada.has(`${tahun}-${pad(b)}`) || b === bulan);
-            return bisa ? (
-              <option key={nama} value={String(b)}>
-                {nama}
-              </option>
-            ) : null;
-          })}
+          {NAMA_BULAN.map((nama, i) => (
+            <option key={nama} value={String(i + 1)}>
+              {nama}
+            </option>
+          ))}
         </select>
       </div>
       <div className="bidang min-w-28">

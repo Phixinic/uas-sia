@@ -30,10 +30,10 @@ const ALAMAT = "/konversi/penyusutan";
 
 export default async function HalamanPenyusutan({ cari }: { cari: { periode?: string; bulan?: string; tahun?: string } }) {
   const pengguna = await wajibMasuk();
-  const { periode, pilihan } = await periodePenyusutan(periodeDariCari(cari) ?? undefined);
+  const { periode, pilihan, batas, lewatBatas } = await periodePenyusutan(periodeDariCari(cari) ?? undefined);
   const [d, namaAkun] = await Promise.all([dataPenyusutan(periode), petaAkun()]);
   const bolehProses = boleh(pengguna.peran, "penyusutan.proses");
-  const tertahan = d.periodeSebelumnyaBelum.length > 0 || d.terkunci;
+  const tertahan = d.periodeSebelumnyaBelum.length > 0 || d.terkunci || lewatBatas;
 
   return (
     <>
@@ -71,6 +71,9 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
           <Link className="font-medium underline" href={denganPeriode(ALAMAT, d.periodeSebelumnyaBelum[0])}>Buka periode itu</Link>
           . Proses periode paling lama dulu supaya urutan jadwal tetap benar.
         </Peringatan>
+      )}
+      {lewatBatas && (
+        <Peringatan jenis="awas">Penyusutan hanya bisa diproses sampai {labelPeriode(batas)}. {labelPeriode(periode)} baru bisa dijurnal di tahun berjalan itu.</Peringatan>
       )}
       {d.penutup && (
         <Peringatan jenis="galat">

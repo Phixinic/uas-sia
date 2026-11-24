@@ -182,7 +182,8 @@ test("HRD mengajukan promosi berlaku bulan depan; Owner melihatnya di dashboard 
   await tindakan.locator("li", { hasText: /pengajuan setting gaji/ }).getByRole("link", { name: /Buka/ }).click();
   await expect(o).toHaveURL(/\/sdm\/setting-gaji$/);
   const ajuan = o.getByRole("list", { name: "Pengajuan setting gaji menunggu Owner" }).locator("li", { hasText: NAMA });
-  await expect(ajuan.getByText("Sebelum (nilai lama)")).toBeVisible();
+  await expect(ajuan.getByText("Sebelum", { exact: true })).toBeVisible();
+  await expect(ajuan.getByText("Sesudah", { exact: true })).toBeVisible();
   await expect(ajuan).toContainText("Golongan I Rp3.800.000");
   await expect(ajuan).toContainText("Golongan III Rp5.800.000");
   await expect(ajuan).toContainText("Berlaku mulai Bulan: Desember · Tahun: 2026");
@@ -245,9 +246,13 @@ test("filter Bulan dan Tahun di Buku Besar: tautan lama dialihkan, pilihan terpi
   await expect(p).toHaveURL(/akun=1-110/);
   await expect(p).toHaveURL(/bulan=11&tahun=2026/);
   await expect(p.getByText(/Saldo normal debit · Bulan: November · Tahun: 2026/)).toBeVisible();
-  // Pilihan bulan mengikuti tahun: bulan yang tidak punya data di tahun itu tidak ditampilkan.
-  await expect(p.locator("#pilih-bulan option[value='1']")).toHaveCount(0);
-  await expect(p.locator("#pilih-bulan option[value='10']")).toHaveCount(1);
+  // Pilihan Bulan selalu 12 bulan; bulan tanpa data tampil kosong, tidak dialihkan ke bulan lain.
+  await expect(p.locator("#pilih-bulan option")).toHaveCount(12);
+  await p.locator("#pilih-bulan").selectOption("1");
+  await expect(p).toHaveURL(/bulan=1&tahun=2026/);
+  await expect(p.locator("#pilih-bulan")).toHaveValue("1");
+  await p.locator("#pilih-bulan").selectOption("11");
+  await expect(p).toHaveURL(/bulan=11&tahun=2026/);
   // Pilihan tahap membawa bulan dan tahun.
   await p.getByRole("link", { name: "Sebelum penyesuaian" }).click();
   await expect(p).toHaveURL(/bulan=11&tahun=2026/);

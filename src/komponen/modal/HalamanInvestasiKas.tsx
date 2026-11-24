@@ -32,7 +32,7 @@ export default async function HalamanInvestasiKas({ cari }: { cari: { form?: str
   const pengguna = await wajibPeranHalaman(IZIN["investasi-kas.lihat"]);
   const semua = await semuaPeriode();
   const dipilih = periodeDariCari(cari);
-  const periode = dipilih && semua.includes(dipilih) ? dipilih : null;
+  const periode = dipilih && dipilih !== "semua" ? dipilih : null;
   const [setoran, namaAkun, { ringkasan, bukuBesar }] = await Promise.all([daftarSetoran(), petaAkun(), ringkasanKasModal(periode)]);
   const bolehCatat = boleh(pengguna.peran, "investasi-kas.catat");
   const owner = boleh(pengguna.peran, "investasi-kas.putuskan");

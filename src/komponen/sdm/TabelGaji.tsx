@@ -12,10 +12,10 @@ import DialogKonfirmasi from "@/komponen/ui/DialogKonfirmasi";
 import { useAksi } from "@/komponen/ui/useAksi";
 import { TautanTombol } from "@/komponen/ui/Tombol";
 import Tombol from "@/komponen/ui/Tombol";
-import Lencana, { LencanaStatus } from "@/komponen/ui/Lencana";
 import Rupiah from "@/komponen/ui/Rupiah";
 import Tabel from "@/komponen/ui/Tabel";
 import { RincianSlip } from "./RincianSlip";
+import { StatusSlipKaryawan } from "./StatusGaji";
 import type { BarisGaji } from "@/lib/data/sdm/gaji";
 import { denganPeriode, labelPeriode } from "@/lib/inti/tanggal";
 
@@ -167,6 +167,7 @@ export default function TabelGaji({ baris, periode, bolehHitung, alamat }: { bar
       {baris.map((b) => {
         const s = b.tampil;
         const buka = terbuka.has(b.karyawanKode);
+        const taksiran = b.slipStatus ? "" : " (estimasi)";
         return (
           <article key={b.karyawanKode} className="space-y-2 px-4 py-3">
             <div className="flex items-start justify-between gap-2">
@@ -179,13 +180,13 @@ export default function TabelGaji({ baris, periode, bolehHitung, alamat }: { bar
                 <KeteranganVersi b={b} />
               </div>
               <div className="shrink-0 text-right">
-                {b.slipStatus ? <LencanaStatus jenis="slip" status={b.slipStatus} /> : b.jumlahPresensi ? <Lencana warna="abu">Belum disimpan</Lencana> : <Lencana warna="kuning">Belum ada presensi</Lencana>}
+                <StatusSlipKaryawan slipStatus={b.slipStatus} jumlahPresensi={b.jumlahPresensi} periode={periode} karyawanKode={b.karyawanKode} />
               </div>
             </div>
             <dl className="grid grid-cols-3 gap-2 text-xs">
-              <div><dt className="text-slate-500">Bruto</dt><dd className="kolom-angka font-medium"><Rupiah nilai={s.bruto} polos /></dd></div>
-              <div><dt className="text-slate-500">PPh 21</dt><dd className="kolom-angka font-medium"><Rupiah nilai={s.pph21} polos /></dd></div>
-              <div><dt className="text-slate-500">THP</dt><dd className="kolom-angka font-semibold text-slate-900"><Rupiah nilai={s.thp} polos /></dd></div>
+              <div><dt className="text-slate-500">Bruto{taksiran}</dt><dd className="kolom-angka font-medium"><Rupiah nilai={s.bruto} polos /></dd></div>
+              <div><dt className="text-slate-500">PPh 21{taksiran}</dt><dd className="kolom-angka font-medium"><Rupiah nilai={s.pph21} polos /></dd></div>
+              <div><dt className="text-slate-500">THP{taksiran}</dt><dd className="kolom-angka font-semibold text-slate-900"><Rupiah nilai={s.thp} polos /></dd></div>
             </dl>
             {b.perluHitungUlang && <div className="text-[11px] text-amber-700">{b.settingBerubah ? "Setting gaji berubah, hitung ulang" : b.nominalBerubah ? "Nominal komponen berubah, hitung ulang" : "Data berubah, hitung ulang"}</div>}
             {b.slipStatus === "DRAFT" && b.alasanTolak && <div className="text-[11px] text-rose-700">Ditolak: {b.alasanTolak}</div>}
@@ -228,16 +229,16 @@ export default function TabelGaji({ baris, periode, bolehHitung, alamat }: { bar
                 </td>
                 <td className="kolom-angka">
                   {s.hadir}/{s.hariKerja}
-                  {s.alpa > 0 && <div className="mt-0.5"><Lencana warna="merah">{s.alpa} alpa</Lencana></div>}
+                  {s.alpa > 0 && <div className="mt-0.5 text-[12px] font-medium text-rose-700">{s.alpa} alpa</div>}
                 </td>
                 <td className="kolom-angka"><Rupiah nilai={s.gajiPokok} polos /></td>
                 <td className="kolom-angka"><Rupiah nilai={s.tunjJabatan + s.tunjKeluarga + s.tunjLain.reduce((x, t) => x + t.nominal, 0)} polos /></td>
                 <td className="kolom-angka">{s.potonganAbsen ? <>−<Rupiah nilai={s.potonganAbsen} polos /></> : "-"}</td>
-                <td className="kolom-angka"><Rupiah nilai={s.bruto} polos /></td>
-                <td className="kolom-angka"><Rupiah nilai={s.pph21} polos /></td>
-                <td className="kolom-angka font-semibold text-slate-900"><Rupiah nilai={s.thp} polos /></td>
+                <td className="kolom-angka"><Rupiah nilai={s.bruto} polos />{!b.slipStatus && <div className="text-[11px] font-normal text-slate-500">estimasi</div>}</td>
+                <td className="kolom-angka"><Rupiah nilai={s.pph21} polos />{!b.slipStatus && <div className="text-[11px] font-normal text-slate-500">estimasi</div>}</td>
+                <td className="kolom-angka font-semibold text-slate-900"><Rupiah nilai={s.thp} polos />{!b.slipStatus && <div className="text-[11px] font-normal text-slate-500">estimasi</div>}</td>
                 <td>
-                  {b.slipStatus ? <LencanaStatus jenis="slip" status={b.slipStatus} /> : b.jumlahPresensi ? <Lencana warna="abu">Belum disimpan</Lencana> : <Lencana warna="kuning">Belum ada presensi</Lencana>}
+                  <StatusSlipKaryawan slipStatus={b.slipStatus} jumlahPresensi={b.jumlahPresensi} periode={periode} karyawanKode={b.karyawanKode} />
                   {b.perluHitungUlang && <div className="mt-0.5 text-[11px] text-amber-700">{b.settingBerubah ? "Setting gaji berubah, hitung ulang" : b.nominalBerubah ? "Nominal komponen berubah, hitung ulang" : "Data berubah, hitung ulang"}</div>}
                   {b.slipStatus === "DRAFT" && b.alasanTolak && <div className="mt-0.5 max-w-44 text-[11px] text-rose-700">Ditolak: {b.alasanTolak}</div>}
                 </td>

@@ -6,7 +6,7 @@ import { hitungJadwal, nDariDasar } from "@/lib/inti/penyusutan";
 import { hitungGaji, hitungPph21, type KodePtkp, type JenisAbsensi } from "@/lib/inti/penggajian";
 import { neracaSaldo, bukuBesar, saldo, type JurnalBuku } from "@/lib/inti/buku-besar";
 import { barisGaji, barisPenyusutan, barisPelepasan, barisPembalik, validasiBaris, GalatJurnal } from "@/lib/inti/jurnal";
-import { tambahBulan, hariTerakhir, tambahBulanTanggal } from "@/lib/inti/tanggal";
+import { tambahBulan, hariTerakhir, tambahBulanTanggal, periodeBatasProses } from "@/lib/inti/tanggal";
 import { muatAppLama, koleksi } from "./app-lama";
 
 const { seed, jalankan } = muatAppLama();
@@ -24,6 +24,12 @@ describe("tanggal", () => {
     expect(tambahBulan("2026-01", -1)).toBe("2025-12");
     expect(hariTerakhir("2028-02")).toBe("2028-02-29");
     expect(tambahBulanTanggal("2026-10-05", 24)).toBe("2028-10-05");
+  });
+
+  it("batas proses penyusutan dan nilai sisa = Desember tahun berjalan", () => {
+    expect(periodeBatasProses(new Date("2026-11-24T05:00:00Z"))).toBe("2026-12");
+    expect(periodeBatasProses(new Date("2026-01-02T05:00:00Z"))).toBe("2026-12");
+    expect(periodeBatasProses(new Date("2027-12-31T05:00:00Z"))).toBe("2027-12");
   });
 });
 

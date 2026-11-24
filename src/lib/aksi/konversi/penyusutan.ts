@@ -12,14 +12,14 @@ import { pastikanTerbuka } from "@/lib/server/periode";
 import { ajukanJurnal, buatJurnal } from "@/lib/server/jurnal";
 import { catatLog } from "@/lib/server/log";
 import { barisPenyusutan } from "@/lib/inti/jurnal";
-import { hariTerakhir, labelPeriode, periodeIni } from "@/lib/inti/tanggal";
+import { hariTerakhir, labelPeriode, periodeBatasProses } from "@/lib/inti/tanggal";
 import { skemaNoJurnal, skemaProsesPenyusutan } from "@/lib/skema/konversi";
 
 export async function prosesPenyusutan(input: unknown): Promise<HasilAksi<{ jurnalNo: string }>> {
   return aksiAman(async () => {
     const pengguna = await wajibPeran(IZIN["penyusutan.proses"]);
     const { periode: P } = validasi(skemaProsesPenyusutan, input);
-    if (P > periodeIni()) throw new GalatAksi("Periode ini belum berjalan, jadi belum bisa diproses.");
+    if (P > periodeBatasProses()) throw new GalatAksi(`Penyusutan hanya bisa diproses sampai ${labelPeriode(periodeBatasProses())}.`);
 
     const hasil = await db.$transaction(async (tx) => {
       await pastikanTerbuka(tx, P);

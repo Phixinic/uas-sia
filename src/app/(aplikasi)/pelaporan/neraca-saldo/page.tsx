@@ -49,7 +49,7 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
   const judul = judulTahap("Neraca Saldo", tahap);
   const [semua, bawaan, usaha] = await Promise.all([semuaPeriode(), periodeLaporanBawaan(), profilUsaha()]);
   const dipilih = periodeDariCari(cari);
-  const periode = dipilih && semua.includes(dipilih) ? dipilih : bawaan;
+  const periode = dipilih && dipilih !== "semua" ? dipilih : bawaan;
   const [n, lajur] = await Promise.all([tahap === "sebelum" ? dataNeracaSaldo(periode, "sebelum") : null, tahap === "setelah" ? dataNeracaLajur(periode) : null]);
   const seimbang = n ? n.seimbang : lajur!.seimbang;
 

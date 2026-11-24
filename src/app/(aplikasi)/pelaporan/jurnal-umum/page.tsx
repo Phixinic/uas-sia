@@ -3,7 +3,7 @@ import { wajibMasuk } from "@/lib/server/auth";
 import { petaAkun, profilUsaha } from "@/lib/data/umum";
 import { daftarJurnalUmum } from "@/lib/data/pelaporan/jurnal";
 import { semuaPeriode } from "@/lib/data/pelaporan/periode";
-import { labelBulanTahun, labelTanggal, periodeDariCari } from "@/lib/inti/tanggal";
+import { labelBulanTahun, labelPeriode, labelTanggal, periodeDariCari } from "@/lib/inti/tanggal";
 import PilihBulanTahun from "@/komponen/ui/PilihBulanTahun";
 import LencanaPeriode from "@/komponen/ui/LencanaPeriode";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
@@ -28,7 +28,7 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
   const cari = await searchParams;
   const semua = await semuaPeriode();
   const dipilih = periodeDariCari(cari);
-  const periode = dipilih && semua.includes(dipilih) ? dipilih : "semua";
+  const periode = dipilih ?? "semua";
   const jenis = cari.jenis === "UMUM" || cari.jenis === "PEMBALIK" ? cari.jenis : null;
   const [daftar, namaAkun, usaha] = await Promise.all([daftarJurnalUmum(periode === "semua" ? null : periode, jenis), petaAkun(), profilUsaha()]);
   const totalD = daftar.reduce((s, j) => s + j.baris.reduce((x, b) => x + b.debit, 0), 0);
@@ -51,7 +51,7 @@ export default async function Halaman({ searchParams }: { searchParams: Promise<
 
       <Kartu rapat>
         {daftar.length === 0 ? (
-          <KeadaanKosong judul="Belum ada jurnal umum" keterangan="Tidak ada jurnal yang cocok dengan filter ini." />
+          <KeadaanKosong judul={periode === "semua" ? "Belum ada jurnal umum" : `Belum ada jurnal umum di ${labelPeriode(periode)}`} keterangan="Tidak ada jurnal yang cocok dengan filter ini." />
         ) : (
           <Tabel label="Jurnal umum">
             <thead>

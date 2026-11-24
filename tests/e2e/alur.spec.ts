@@ -328,6 +328,22 @@ test("3b2. Owner menolak penyusutan di halamannya (alasan wajib), Admin memprose
   await expect(baris(po, "November 2026").filter({ hasText: "Disetujui" })).toHaveCount(1);
 });
 
+test("3b3. Desember bisa dipilih di Penyusutan: Bulan 12 pilihan, pratinjau tampil, Januari tahun depan ditahan", async () => {
+  const p = sesi.admin.page;
+  await bukaHalaman(p, "/konversi/penyusutan?bulan=12&tahun=2026");
+  await expect(p.locator("#pemilih-bulan option")).toHaveCount(12);
+  await expect(p.locator("#pemilih-bulan")).toHaveValue("12");
+  await expect(p.locator("table[aria-label='Pratinjau penyusutan'] tbody tr").first()).toBeVisible();
+  await expect(p.getByRole("button", { name: "Buat jurnal penyusutan" })).toBeEnabled();
+  await bukaHalaman(p, "/konversi/penyusutan?bulan=1&tahun=2027");
+  await expect(p.getByText(/hanya bisa diproses sampai Desember 2026/).first()).toBeVisible();
+  await expect(p.getByRole("button", { name: "Buat jurnal penyusutan" })).toBeDisabled();
+  // Nilai Sisa: Desember tidak dialihkan diam-diam ke bulan lain.
+  await bukaHalaman(p, "/konversi/nilai-sisa?bulan=12&tahun=2026");
+  await expect(p.locator("#pemilih-bulan")).toHaveValue("12");
+  await expect(p.getByText("Saldo buku Desember 2026", { exact: true })).toBeVisible();
+});
+
 test("3c. Admin mengajukan jurnal nilai sisa ke Owner dari menu Jurnal Penyesuaian", async () => {
   const p = sesi.admin.page;
   await bukaHalaman(p, "/pelaporan/jurnal-penyesuaian?status=DRAFT");
@@ -428,7 +444,7 @@ test("5b. HRD hitung gaji semua karyawan", async () => {
   await bukaHalaman(p, "/sdm/hitung-gaji?periode=2026-11");
   await p.getByRole("button", { name: /Hitung dan simpan semua/ }).click();
   await konfirmasi(p);
-  await expect(p.getByText("5 slip tersimpan")).toBeVisible();
+  await expect(p.getByText("5 sudah dihitung, 0 masih estimasi")).toBeVisible();
   const tfoot = p.locator("table[aria-label='Hitung gaji per karyawan'] tfoot tr");
   const thp = angkaDari(await tfoot.locator("td").nth(3).innerText());
   const pph = angkaDari(await tfoot.locator("td").nth(2).innerText());

@@ -36,31 +36,41 @@ function LencanaVersi({ v, berlakuSekarang }: { v: TampilVersi; berlakuSekarang?
   else if (v.status === "DISETUJUI" && v.digantikan) [warna, teks] = ["abu", "Disetujui, digantikan"];
   else if (v.status === "DISETUJUI") [warna, teks] = ["hijau", "Disetujui"];
   return (
-    <span className="inline-flex flex-wrap items-center gap-1">
+    <span className="inline-flex flex-wrap items-center gap-1 md:flex-nowrap md:whitespace-nowrap">
       <Lencana warna={warna}>{teks}</Lencana>
       {berlakuSekarang && <Lencana warna="teal">berlaku sekarang</Lencana>}
     </span>
   );
 }
 
-const ringkasTunjangan = (v: TampilVersi) => (v.tunjangan.length ? v.tunjangan.map((t) => `${t.nama} ${rupiah(t.nominal)}`).join(", ") : "Tanpa tunjangan lain");
+/** Total semua tunjangan (jabatan, keluarga, dan tunjangan lain) dan jumlah komponennya. */
+const totalTunjangan = (v: TampilVersi) => v.estimasiBruto - v.gajiPokok;
+const jumlahTunjangan = (v: TampilVersi) => (v.tunjJabatan > 0 ? 1 : 0) + (v.tunjKeluarga > 0 ? 1 : 0) + v.tunjangan.length;
+const ringkasTunjangan = (v: TampilVersi) => (jumlahTunjangan(v) ? `${rupiah(totalTunjangan(v))} (${jumlahTunjangan(v)} komponen)` : "Tanpa tunjangan");
+/** Rincian per komponen, dipakai sebagai keterangan tambahan (Riwayat dan tooltip tabel). */
+const rincianTunjangan = (v: TampilVersi) =>
+  [
+    v.tunjJabatan ? `Tunj. jabatan ${rupiah(v.tunjJabatan)}` : "",
+    v.tunjKeluarga ? `Tunj. keluarga ${rupiah(v.tunjKeluarga)}` : "",
+    ...v.tunjangan.map((t) => `${t.nama} ${rupiah(t.nominal)}`),
+  ].filter(Boolean).join(", ") || "Tanpa tunjangan";
+const awal = (v: TampilVersi) => v.jenisPerubahan === "SETTING_AWAL";
+const siapaKapan = (nama: string | null, waktu: string | null, v: TampilVersi) =>
+  waktu ? `${nama ?? (awal(v) ? "Data awal" : "Sistem")}, ${labelWaktu(waktu)}` : "Belum diputuskan";
 
-/** Isi satu versi dalam daftar definisi kecil (dipakai di pengajuan: sebelum dan sesudah). */
+/** Isi satu versi untuk pengajuan Owner (sebelum dan sesudah), tiga baris pendek. */
 function IsiVersi({ v, judul }: { v: TampilVersi | null; judul: string }) {
   return (
-    <div className="min-w-0 rounded-lg border border-slate-200 p-3">
+    <div className="min-w-0 rounded-lg border border-slate-200 px-3 py-2">
       <div className="text-[12px] font-semibold tracking-wide text-slate-500 uppercase">{judul}</div>
       {v ? (
-        <dl className="mt-1.5 space-y-1 text-[13px]">
-          <div><dt className="inline text-slate-500">Jabatan: </dt><dd className="inline font-medium text-slate-900">{v.jabatan}</dd></div>
-          <div><dt className="inline text-slate-500">Gaji pokok: </dt><dd className="inline font-medium text-slate-900">{v.golongan} {rupiah(v.gajiPokok)}</dd></div>
-          <div><dt className="inline text-slate-500">Tunj. jabatan: </dt><dd className="inline">{rupiah(v.tunjJabatan)}{v.tunjKeluarga ? `, tunj. keluarga ${rupiah(v.tunjKeluarga)}` : ""}</dd></div>
-          <div><dt className="inline text-slate-500">Tunjangan: </dt><dd className="inline">{ringkasTunjangan(v)}</dd></div>
-          <div><dt className="inline text-slate-500">Estimasi bruto: </dt><dd className="inline font-semibold text-slate-900">{rupiah(v.estimasiBruto)}</dd></div>
-          <div><dt className="inline text-slate-500">Berlaku mulai: </dt><dd className="inline">{labelPeriode(v.berlakuMulai)}</dd></div>
-        </dl>
+        <div className="mt-1 space-y-0.5 text-[13px]">
+          <div className="font-medium text-slate-900">{v.jabatan}, {v.golongan} {rupiah(v.gajiPokok)}</div>
+          <div className="text-slate-600">Tunjangan {ringkasTunjangan(v)}</div>
+          <div>Estimasi bruto <span className="font-semibold text-slate-900">{rupiah(v.estimasiBruto)}</span></div>
+        </div>
       ) : (
-        <p className="mt-1.5 text-[13px] text-slate-500">Belum ada setting yang berlaku.</p>
+        <p className="mt-1 text-[13px] text-slate-500">Belum ada setting yang berlaku.</p>
       )}
     </div>
   );
@@ -71,9 +81,8 @@ export function PanelPeriodeLaporan() {
     <Kartu>
       <h2 className="font-semibold text-slate-900">Masuk laporan keuangan periode apa?</h2>
       <p className="mt-1 text-sm text-slate-600">
-        Mengajukan atau menyetujui setting gaji tidak membuat jurnal. Dampaknya baru muncul di slip dan penggajian bulan berlaku dan bulan sesudahnya,
-        dan jurnal gajinya bertanggal akhir bulan itu saat Owner menyetujui penggajiannya. Slip yang sudah diajukan atau dibayar tidak berubah,
-        dan slip bulan sebelum bulan berlaku tetap memakai setting lama walau dihitung ulang.
+        Setting gaji tidak membuat jurnal. Dampaknya muncul di slip bulan berlaku dan sesudahnya, jurnalnya bertanggal akhir bulan saat Owner menyetujui penggajian.
+        Slip yang sudah diajukan atau dibayar tidak berubah.
       </p>
     </Kartu>
   );
@@ -96,7 +105,7 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
       <KepalaHalaman
         judul="Setting Gaji"
         lencana={<LencanaBiaya jenis="tetap" />}
-        keterangan="Komponen tetap gaji inhouse: jabatan, gaji pokok, dan tunjangan. Setting tidak pernah ditimpa. Setiap setting awal, promosi, demosi, atau penyesuaian diajukan dengan bulan berlaku, lalu disetujui atau ditolak Owner. Nominal jabatan, gaji pokok, dan tunjangan diatur di Master SDM."
+        keterangan="Gaji pokok dan tunjangan tetap tiap karyawan inhouse; setiap perubahan diajukan lalu diputuskan Owner."
         aksi={bolehAjukan && !formTerbuka ? <TautanTombol href={alamatForm()} varian="utama" ikon={<Plus className="size-4" />}>Ajukan setting gaji</TautanTombol> : null}
       />
 
@@ -118,7 +127,7 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
       <Kartu rapat>
         <KepalaKartu
           judul={`Pengajuan menunggu Owner (${d.pengajuan.length})`}
-          keterangan={bolehPutuskan ? "Bandingkan setting sebelum dan sesudah, lalu setujui atau tolak dengan alasan." : "Owner yang menyetujui atau menolak."}
+          keterangan={bolehPutuskan ? "Bandingkan sebelum dan sesudah, lalu setujui atau tolak." : "Diputuskan oleh Owner."}
         />
         {d.pengajuan.length === 0 ? (
           <KeadaanKosong judul="Tidak ada pengajuan yang menunggu" />
@@ -134,7 +143,7 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
                       <Lencana warna="biru">{LABEL_JENIS_PERUBAHAN[p.jenisPerubahan]}</Lencana>
                     </div>
                     <div className="mt-0.5 text-[13px] text-slate-600">
-                      Berlaku mulai {labelBulanTahun(p.berlakuMulai)}. Diajukan {p.diajukanOleh ?? "-"} pada {labelWaktu(p.diajukanPada)}.
+                      Berlaku mulai {labelBulanTahun(p.berlakuMulai)}. Diajukan {p.diajukanOleh ?? "-"}, {labelWaktu(p.diajukanPada)}.
                     </div>
                   </div>
                   {bolehPutuskan && (
@@ -142,14 +151,14 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
                   )}
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
-                  <IsiVersi v={p.lama} judul="Sebelum (nilai lama)" />
-                  <IsiVersi v={p} judul="Sesudah (nilai baru)" />
+                  <IsiVersi v={p.lama} judul="Sebelum" />
+                  <IsiVersi v={p} judul="Sesudah" />
                 </div>
                 <p className="text-[13px] text-slate-700"><span className="text-slate-500">Alasan: </span>{p.alasan}</p>
                 {p.pengaman.galat ? (
                   <Peringatan jenis="galat">Tidak bisa disetujui lagi: {p.pengaman.galat}</Peringatan>
                 ) : p.pengaman.drafTerdampak.length ? (
-                  <Peringatan jenis="awas">Slip draf {p.pengaman.drafTerdampak.map((s) => s.no).join(", ")} akan ditandai perlu dihitung ulang setelah disetujui.</Peringatan>
+                  <Peringatan jenis="awas">Slip draf {p.pengaman.drafTerdampak.map((s) => s.no).join(", ")} perlu dihitung ulang setelah disetujui.</Peringatan>
                 ) : null}
               </li>
             ))}
@@ -158,7 +167,7 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
       </Kartu>
 
       <Kartu rapat>
-        <KepalaKartu judul={`Setting gaji berlaku · ${labelBulanTahun(d.sekarang)}`} keterangan="Versi disetujui dengan bulan berlaku paling akhir yang tidak melewati bulan berjalan." />
+        <KepalaKartu judul={`Setting gaji berlaku · ${labelBulanTahun(d.sekarang)}`} keterangan="Versi disetujui terbaru yang sudah berlaku." />
         {d.baris.length === 0 ? (
           <KeadaanKosong judul="Belum ada karyawan inhouse" keterangan="Tambahkan karyawan di Master SDM." />
         ) : (
@@ -173,7 +182,7 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
                     sub={`${b.kode}${v ? ` · ${v.kode}, mulai ${labelPeriode(v.berlakuMulai)}` : ""}${b.aktif ? "" : " · nonaktif"}`}
                     kanan={v ? <span className="angka text-sm font-semibold">{rupiah(v.estimasiBruto)}</span> : <Lencana warna="merah">Belum ada</Lencana>}
                   >
-                    {v && <RincianHP isi={[["Jabatan", v.jabatan], ["Gaji pokok", `${v.golongan} ${rupiah(v.gajiPokok)}`]]} />}
+                    {v && <RincianHP isi={[["Jabatan", v.jabatan], ["Gaji pokok", `${v.golongan} ${rupiah(v.gajiPokok)}`], ["Tunjangan", ringkasTunjangan(v)]]} />}
                     {b.berikutnya && <p className="text-[12px] text-teal-800">{LABEL_JENIS_PERUBAHAN[b.berikutnya.jenisPerubahan]} berlaku {labelPeriode(b.berikutnya.berlakuMulai)}: {b.berikutnya.jabatan}, {rupiah(b.berikutnya.estimasiBruto)}</p>}
                     {b.menunggu > 0 && <p className="text-[12px] text-blue-800">{b.menunggu} pengajuan menunggu Owner</p>}
                     <div className="flex flex-wrap gap-3 text-[13px]">
@@ -207,10 +216,10 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
                           <div className="font-medium">{b.nama}</div>
                           <div className="text-[11px] text-slate-500">{b.kode}{b.aktif ? "" : " · nonaktif"}</div>
                         </td>
-                        <td>{v ? <><span className="kode">{v.kode}</span><div className="text-[11px] text-slate-500">mulai {labelPeriode(v.berlakuMulai)}</div></> : <Lencana warna="merah">Belum ada</Lencana>}</td>
+                        <td className="whitespace-nowrap">{v ? <><span className="kode">{v.kode}</span><div className="text-[11px] text-slate-500">mulai {labelPeriode(v.berlakuMulai)}</div></> : <Lencana warna="merah">Belum ada</Lencana>}</td>
                         <td>{v?.jabatan ?? "-"}</td>
                         <td>{v ? `${v.golongan} (${rupiah(v.gajiPokok)})` : "-"}</td>
-                        <td className="max-w-56 text-[13px]">{v ? ringkasTunjangan(v) : "-"}</td>
+                        <td className="text-[13px] whitespace-nowrap" title={v ? rincianTunjangan(v) : undefined}>{v ? (jumlahTunjangan(v) ? <>{rupiah(totalTunjangan(v))}<div className="text-[11px] text-slate-500">{jumlahTunjangan(v)} komponen</div></> : "Tanpa tunjangan") : "-"}</td>
                         <td className="kolom-angka angka">{v ? rupiah(v.estimasiBruto).replace("Rp", "") : "-"}</td>
                         <td className="text-[13px]">
                           {b.berikutnya ? <span className="text-teal-800">{LABEL_JENIS_PERUBAHAN[b.berikutnya.jenisPerubahan]} mulai {labelPeriode(b.berikutnya.berlakuMulai)}</span> : "-"}
@@ -236,7 +245,7 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
         <Kartu rapat>
           <KepalaKartu
             judul={namaRiwayat ? `Riwayat setting gaji ${namaRiwayat}` : "Riwayat setting gaji semua karyawan"}
-            keterangan={`${riwayat.length} versi, terbaru di atas per karyawan. Versi lama tidak pernah dihapus.`}
+            keterangan={`${riwayat.length} versi, terbaru di atas. Rincian tunjangan dan alasan muncul saat kursor di atas baris.`}
             aksi={cari.riwayat ? <Link className="text-[13px] font-semibold text-aksen hover:underline" href={`${ALAMAT_SETTING_GAJI}#riwayat`}>Tampilkan semua</Link> : undefined}
           />
           {riwayat.length === 0 ? (
@@ -245,10 +254,15 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
             <>
               <DaftarHP label="Riwayat setting gaji">
                 {riwayat.map((v) => (
-                  <KartuHP key={v.kode} judul={`${v.kode} · ${v.karyawan}`} sub={`${LABEL_JENIS_PERUBAHAN[v.jenisPerubahan]} · berlaku ${labelPeriode(v.berlakuMulai)}`}>
+                  <KartuHP
+                    key={v.kode}
+                    judul={`${v.kode} · ${v.karyawan}`}
+                    sub={<>{awal(v) ? <Lencana warna="teal">Data awal</Lencana> : LABEL_JENIS_PERUBAHAN[v.jenisPerubahan]} · berlaku {labelPeriode(v.berlakuMulai)}</>}
+                    kanan={<span className="angka text-sm font-semibold">{rupiah(v.estimasiBruto)}</span>}
+                  >
                     <LencanaVersi v={v} berlakuSekarang={berlakuSekarang.has(v.kode)} />
-                    <RincianHP isi={[["Jabatan", v.jabatan], ["Gaji pokok", `${v.golongan} ${rupiah(v.gajiPokok)}`], ["Diajukan", `${v.diajukanOleh ?? "Data awal (migrasi)"}, ${labelWaktu(v.diajukanPada)}`], ["Diputuskan", v.diputuskanPada ? `${v.diputuskanOleh ?? "Data awal (migrasi)"}, ${labelWaktu(v.diputuskanPada)}` : "Belum"]]} />
-                    <p className="text-[12px] text-slate-600">Alasan: {v.alasan || "-"}</p>
+                    <p className="text-[12px] text-slate-700">{v.jabatan}, {v.golongan}. Diputuskan: {siapaKapan(v.diputuskanOleh, v.diputuskanPada, v)}</p>
+                    <p className="text-[12px] text-slate-500">{rincianTunjangan(v)}</p>
                     {v.alasanTolak && <p className="text-[12px] text-rose-700">Alasan tolak: {v.alasanTolak}</p>}
                   </KartuHP>
                 ))}
@@ -257,32 +271,31 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
                 <Tabel label="Riwayat setting gaji">
                   <thead>
                     <tr>
-                      <th>Versi</th>
                       <th>Karyawan</th>
-                      <th>Jenis</th>
+                      <th>Versi</th>
                       <th>Berlaku mulai</th>
-                      <th>Isi</th>
+                      <th>Jabatan, golongan</th>
+                      <th className="kolom-angka">Estimasi (Rp)</th>
                       <th>Status</th>
-                      <th>Diajukan</th>
                       <th>Diputuskan</th>
                     </tr>
                   </thead>
                   <tbody>
                     {riwayat.map((v) => (
-                      <tr key={v.kode}>
-                        <td className="kode">{v.kode}</td>
+                      <tr key={v.kode} title={`${rincianTunjangan(v)}. Alasan: ${v.alasan || "-"}`}>
                         <td>{v.karyawan}</td>
-                        <td>{LABEL_JENIS_PERUBAHAN[v.jenisPerubahan]}</td>
-                        <td className="whitespace-nowrap">{labelPeriode(v.berlakuMulai)}</td>
-                        <td className="max-w-72 text-[13px]">
-                          <div>{v.jabatan}, {v.golongan} {rupiah(v.gajiPokok)}</div>
-                          <div className="text-slate-500">{ringkasTunjangan(v)}</div>
-                          <div className="text-slate-500">Alasan: {v.alasan || "-"}</div>
-                          {v.alasanTolak && <div className="text-rose-700">Alasan tolak: {v.alasanTolak}</div>}
+                        <td className="whitespace-nowrap">
+                          <span className="kode">{v.kode}</span>{" "}
+                          {awal(v) ? <Lencana warna="teal">Data awal</Lencana> : <span className="text-[13px] text-slate-600">{LABEL_JENIS_PERUBAHAN[v.jenisPerubahan]}</span>}
                         </td>
-                        <td><LencanaVersi v={v} berlakuSekarang={berlakuSekarang.has(v.kode)} /></td>
-                        <td className="text-[13px]">{v.diajukanOleh ?? "Data awal (migrasi)"}<div className="text-slate-500">{labelWaktu(v.diajukanPada)}</div></td>
-                        <td className="text-[13px]">{v.diputuskanPada ? <>{v.diputuskanOleh ?? "Data awal (migrasi)"}<div className="text-slate-500">{labelWaktu(v.diputuskanPada)}</div></> : "-"}</td>
+                        <td className="whitespace-nowrap">{labelPeriode(v.berlakuMulai)}</td>
+                        <td className="text-[13px]">{v.jabatan}, {v.golongan}</td>
+                        <td className="kolom-angka angka">{rupiah(v.estimasiBruto).replace("Rp", "")}</td>
+                        <td>
+                          <LencanaVersi v={v} berlakuSekarang={berlakuSekarang.has(v.kode)} />
+                          {v.alasanTolak && <div className="mt-0.5 max-w-52 text-[12px] text-rose-700">Alasan tolak: {v.alasanTolak}</div>}
+                        </td>
+                        <td className="text-[13px]">{siapaKapan(v.diputuskanOleh, v.diputuskanPada, v)}</td>
                       </tr>
                     ))}
                   </tbody>

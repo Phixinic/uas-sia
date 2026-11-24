@@ -1,26 +1,32 @@
 /*
  * Ringkasan penggajian per tahun (komponen server) untuk Hitung Gaji dan Distribusi Gaji: tiap bulan statusnya belum ada
- * presensi, presensi tanpa slip, slip draf, diajukan, atau dibayar, beserta total THP. Bulan yang dipilih ditandai.
+ * presensi, siap dihitung, sudah dihitung, diajukan, atau dibayar, beserta total THP. Bulan yang dipilih ditandai.
  */
 import Link from "next/link";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
-import Lencana, { type WarnaLencana } from "@/komponen/ui/Lencana";
 import Tabel from "@/komponen/ui/Tabel";
 import Rupiah from "@/komponen/ui/Rupiah";
 import { DaftarHP, KartuHP, TabelLebar } from "@/komponen/fee-event/Ringkas";
 import { denganPeriode, namaBulan, tahunDari } from "@/lib/inti/tanggal";
 import { ringkasanTahunGaji, type RingkasBulanGaji } from "@/lib/data/sdm/gaji";
+import { alamatPresensi, TandaStatus } from "./StatusGaji";
 
-const STATUS: Record<RingkasBulanGaji["status"], [WarnaLencana, string]> = {
-  KOSONG: ["abu", "Belum ada presensi"],
-  PRESENSI: ["kuning", "Presensi ada, slip belum dihitung"],
-  DRAF: ["kuning", "Slip draf"],
+const STATUS: Record<RingkasBulanGaji["status"], ["abu" | "kuning" | "biru" | "hijau", string]> = {
+  KOSONG: ["kuning", "Belum ada presensi"],
+  PRESENSI: ["abu", "Siap dihitung"],
+  DRAF: ["kuning", "Sudah dihitung"],
   DIAJUKAN: ["biru", "Diajukan"],
   DIBAYAR: ["hijau", "Dibayar"],
 };
 
+/** Status satu bulan; bulan tanpa presensi menautkan ke Presensi bulan itu. */
+function StatusBulan({ r }: { r: RingkasBulanGaji }) {
+  const [warna, teks] = STATUS[r.status];
+  return <TandaStatus warna={warna} href={r.status === "KOSONG" ? alamatPresensi(r.periode) : undefined}>{teks}</TandaStatus>;
+}
+
 function rincian(r: RingkasBulanGaji) {
-  const bagian = [r.dibayar && `${r.dibayar} slip dibayar`, r.diajukan && `${r.diajukan} slip diajukan`, r.draf && `${r.draf} slip draf`].filter(Boolean);
+  const bagian = [r.dibayar && `${r.dibayar} slip dibayar`, r.diajukan && `${r.diajukan} slip diajukan`, r.draf && `${r.draf} slip sudah dihitung`].filter(Boolean);
   return bagian.length ? bagian.join(", ") : r.presensi ? `${r.presensi} catatan presensi` : "-";
 }
 
@@ -38,7 +44,7 @@ export default async function RingkasanTahunGaji({ periode, alamat }: { periode:
             key={r.periode}
             judul={<Link className="underline" href={denganPeriode(alamat, r.periode)} aria-current={r.periode === periode ? "page" : undefined}>{namaBulan(r.periode)}{r.periode === periode ? " (dipilih)" : ""}</Link>}
             sub={rincian(r)}
-            kanan={<Lencana warna={STATUS[r.status][0]}>{STATUS[r.status][1]}</Lencana>}
+            kanan={<StatusBulan r={r} />}
           >
             {r.thp > 0 && <div className="text-xs text-slate-600">Total THP <span className="font-semibold text-slate-900"><Rupiah nilai={r.thp} /></span></div>}
           </KartuHP>
@@ -60,7 +66,7 @@ export default async function RingkasanTahunGaji({ periode, alamat }: { periode:
                 <td>
                   <Link className="font-medium hover:underline" href={denganPeriode(alamat, r.periode)} aria-current={r.periode === periode ? "page" : undefined}>{namaBulan(r.periode)}</Link>
                 </td>
-                <td><Lencana warna={STATUS[r.status][0]}>{STATUS[r.status][1]}</Lencana></td>
+                <td><StatusBulan r={r} /></td>
                 <td className="text-[13px] text-slate-600">{rincian(r)}</td>
                 <td className="kolom-angka">{r.thp ? <Rupiah nilai={r.thp} polos /> : "-"}</td>
               </tr>

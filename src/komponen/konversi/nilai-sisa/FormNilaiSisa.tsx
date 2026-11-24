@@ -22,7 +22,7 @@ import { useFokusGalat } from "@/komponen/ui/useFokusGalat";
 
 type Baris = { kode: string; nama: string; satuan: string; saldoBuku: number };
 
-export default function FormNilaiSisa({ periode, baris, bolehInput, namaAkun }: { periode: string; baris: Baris[]; bolehInput: boolean; namaAkun: Record<string, string> }) {
+export default function FormNilaiSisa({ periode, baris, bolehInput, namaAkun, tertahan }: { periode: string; baris: Baris[]; bolehInput: boolean; namaAkun: Record<string, string>; tertahan?: boolean }) {
   const { jalankan, memuat } = useAksi();
   const [nilai, setNilai] = useState<Record<string, string>>({});
   const [galat, setGalat] = useState<Record<string, string>>({});
@@ -84,7 +84,7 @@ export default function FormNilaiSisa({ periode, baris, bolehInput, namaAkun }: 
                         {pesan && <span className="galat-isian" id={`sisa-${b.kode}-galat`}>{pesan}</span>}
                       </>
                     ) : (
-                      <span className="text-xs text-slate-400">Diisi Admin</span>
+                      <span className="text-xs text-slate-400">{tertahan ? "Menunggu bulan sebelumnya" : "Diisi Admin"}</span>
                     )}
                   </td>
                   <td className="kolom-angka">{v !== undefined && v !== "" && !hitung.salah[b.kode] ? <Rupiah nilai={b.saldoBuku - Number(v)} polos /> : <span className="text-slate-300">-</span>}</td>

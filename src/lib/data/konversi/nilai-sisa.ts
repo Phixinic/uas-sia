@@ -3,7 +3,7 @@
  * saldo yang divalidasi sama dengan yang ditampilkan.
  */
 import { db, type DbAtauTx } from "@/lib/server/db";
-import { dariDate, daftarPeriode, periodeDari, periodeIni, tambahBulan } from "@/lib/inti/tanggal";
+import { dariDate, daftarPeriode, periodeBatasProses, periodeDari, periodeIni, tambahBulan } from "@/lib/inti/tanggal";
 import { jurnalPeriode, riwayatJurnalSumber } from "./persetujuan";
 import { bulanNilaiSisaTerlewat, saldoBukuPerlengkapan, tahanUrutanNilaiSisa, type BebanOpname, type PembelianLkp } from "./hitung";
 
@@ -54,13 +54,15 @@ export async function periodeNilaiSisa(dipilih?: string) {
   const sekarang = periodeIni();
   const pertama = await db.pembelian.findFirst({ where: { jenis: "PERLENGKAPAN", status: "DISETUJUI" }, orderBy: { tanggal: "asc" }, select: { tanggal: true } });
   const awal = pertama ? periodeDari(dariDate(pertama.tanggal)) : sekarang;
-  const pilihan = daftarPeriode(awal < sekarang ? awal : sekarang, sekarang);
+  const batas = periodeBatasProses();
+  const pilihan = daftarPeriode(awal < sekarang ? awal : sekarang, batas);
   const sudah = new Set((await db.opname.findMany({ where: { status: { not: "DITOLAK" } }, select: { periodeId: true } })).map((o) => o.periodeId));
   const terakhir = [...sudah].filter((p) => p <= sekarang).sort().at(-1);
   const mulai = terakhir ? tambahBulan(terakhir, 1) : awal;
   const bawaan = pilihan.find((p) => p >= mulai && !sudah.has(p)) ?? sekarang;
-  const periode = dipilih && pilihan.includes(dipilih) ? dipilih : bawaan;
-  return { periode, pilihan, sekarang };
+  // Periode yang dipilih dipakai apa adanya, bukan dialihkan diam-diam ke bulan lain.
+  const periode = dipilih && dipilih !== "semua" ? dipilih : bawaan;
+  return { periode, pilihan, sekarang, batas, lewatBatas: periode > batas };
 }
 
 export async function dataNilaiSisa(periode: string) {

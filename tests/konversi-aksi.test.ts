@@ -70,6 +70,21 @@ describe.runIf(aktif)("siklus konversi lewat server action", async () => {
       expect((await db.opname.count({ where: { periodeId: "2026-11" } }))).toBe(0);
     });
 
+    it("batas proses sampai Desember tahun berjalan: Desember kena aturan urutan, Januari tahun depan ditolak", async () => {
+      const saldo = await saldoBukuLkp(db, "2026-12");
+      await masukSebagai("admin");
+      const des = await opname.simpanNilaiSisa({ periode: "2026-12", nilai: semua(saldo, (s) => s) });
+      expect(des.ok).toBe(false);
+      if (!des.ok) {
+        expect(des.galat).not.toContain("hanya bisa diinput sampai");
+        expect(des.galat).toContain("Nilai sisa November 2026 belum diinput");
+      }
+      const jan = await opname.simpanNilaiSisa({ periode: "2027-01", nilai: [] });
+      expect(jan.ok).toBe(false);
+      if (!jan.ok) expect(jan.galat).toContain("hanya bisa diinput sampai Desember 2026");
+      expect(await db.opname.count({ where: { periodeId: { in: ["2026-12", "2027-01"] } } })).toBe(0);
+    });
+
     it("simpan: opname DRAFT, jurnal penyesuaian draf biaya = saldo - sisa", async () => {
       const saldo = await saldoBukuLkp(db, "2026-11");
       const h = await opname.simpanNilaiSisa({ periode: "2026-11", nilai: semua(saldo, (s) => Math.floor(s / 2)) });
@@ -106,11 +121,18 @@ describe.runIf(aktif)("siklus konversi lewat server action", async () => {
   });
 
   describe("proses penyusutan", () => {
-    it("periode yang belum berjalan atau yang dilompati ditolak, HRD ditolak", async () => {
+    it("periode di luar batas atau yang dilompati ditolak, HRD ditolak", async () => {
       await masukSebagai("hrd");
       expect((await susut.prosesPenyusutan({ periode: "2026-11" })).ok).toBe(false);
       await masukSebagai("admin");
       expect((await susut.prosesPenyusutan({ periode: "2099-01" })).ok).toBe(false);
+      const jan = await susut.prosesPenyusutan({ periode: "2027-01" });
+      expect(jan.ok).toBe(false);
+      if (!jan.ok) expect(jan.galat).toContain("hanya bisa diproses sampai Desember 2026");
+      // Desember lolos batas, tetapi November belum diproses, jadi ditahan aturan urutan (bukan "belum berjalan").
+      const des = await susut.prosesPenyusutan({ periode: "2026-12" });
+      expect(des.ok).toBe(false);
+      if (!des.ok) expect(des.galat).toContain("November 2026 belum diproses");
       expect((await susut.prosesPenyusutan({ periode: "2026-10" })).ok).toBe(false); // sudah diproses
     });
 
@@ -140,10 +162,18 @@ describe.runIf(aktif)("siklus konversi lewat server action", async () => {
       jurnalNo = h.ok ? h.data!.jurnalNo : "";
     });
 
-    it("periode yang belum berjalan tidak bisa diproses walau periode sebelumnya sudah dijurnal", async () => {
+    it("Desember (sesudah bulan berjalan) bisa diproses setelah November dijurnal; jurnal ditolak membebaskan jadwalnya lagi", async () => {
       await masukSebagai("admin");
       const h = await susut.prosesPenyusutan({ periode: "2026-12" });
-      expect(h.ok).toBe(false);
+      expect(h.ok).toBe(true);
+      const des = h.ok ? h.data!.jurnalNo : "";
+      const j = await db.jurnal.findUniqueOrThrow({ where: { no: des } });
+      expect([j.status, j.jenis, j.sumberId, j.tanggal.toISOString().slice(0, 10)]).toEqual(["DRAFT", "PENYESUAIAN", "2026-12", "2026-12-31"]);
+      expect(await db.jadwalPenyusutan.count({ where: { periodeId: "2026-12", jurnalNo: des } })).toBeGreaterThan(0);
+      expect((await susut.ajukanJurnalKonversi({ no: des })).ok).toBe(true);
+      await putuskan(des, false, "Uji batas Desember");
+      expect(await db.jadwalPenyusutan.count({ where: { periodeId: "2026-12", jurnalNo: { not: null } } })).toBe(0);
+      expect((await susut.prosesPenyusutan({ periode: "2027-01" })).ok).toBe(false);
     });
 
     it("pelepasan ditahan selama penyusutan aset belum disetujui; sesudah disetujui nilai buku mengikuti akumulasi", async () => {

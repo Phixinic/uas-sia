@@ -25,7 +25,7 @@ import FormNilaiSisa from "./FormNilaiSisa";
 
 export default async function HalamanNilaiSisa({ cari }: { cari: { periode?: string; bulan?: string; tahun?: string } }) {
   const pengguna = await wajibMasuk();
-  const { periode, pilihan } = await periodeNilaiSisa(periodeDariCari(cari) ?? undefined);
+  const { periode, pilihan, batas, lewatBatas } = await periodeNilaiSisa(periodeDariCari(cari) ?? undefined);
   const [d, namaAkun, terkunci] = await Promise.all([dataNilaiSisa(periode), petaAkun(), periodeTerkunciSemua()]);
   const bolehInput = boleh(pengguna.peran, "nilai-sisa.input");
   const o = d.opname && d.opname.status !== "DITOLAK" ? d.opname : null;
@@ -112,8 +112,14 @@ export default async function HalamanNilaiSisa({ cari }: { cari: { periode?: str
         </Kartu>
       ) : d.baris.length === 0 ? (
         <Kartu><KeadaanKosong judul={`Tidak ada saldo perlengkapan sampai ${labelPeriode(periode)}`} keterangan="Posting pembelian perlengkapan dulu, lalu saldonya muncul di sini." /></Kartu>
+      ) : lewatBatas ? (
+        <Peringatan jenis="awas">Nilai sisa hanya bisa diinput sampai {labelPeriode(batas)}.</Peringatan>
       ) : periodeTerkunci ? null : d.tahanUrutan ? (
-        <Peringatan jenis="awas">{d.tahanUrutan}</Peringatan>
+        <>
+          <Peringatan jenis="awas">{d.tahanUrutan}</Peringatan>
+          {/* Saldo buku tetap tampil sebagai pratinjau; isiannya baru terbuka sesudah urutan bulan terpenuhi. */}
+          <FormNilaiSisa key={periode} periode={periode} baris={d.baris} bolehInput={false} tertahan namaAkun={namaAkun} />
+        </>
       ) : (
         <FormNilaiSisa key={periode} periode={periode} baris={d.baris} bolehInput={bolehInput} namaAkun={namaAkun} />
       )}

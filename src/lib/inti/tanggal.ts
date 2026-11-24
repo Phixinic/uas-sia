@@ -145,6 +145,12 @@ export function hariIni(sekarang = new Date()): string {
 
 export const periodeIni = (sekarang = new Date()) => periodeDari(hariIni(sekarang));
 
+/**
+ * Batas atas pemrosesan penyusutan dan nilai sisa: Desember tahun berjalan. Jurnal penyesuaian boleh dibuat lebih awal
+ * untuk bulan mana pun sampai batas ini (urutan bulan tetap dijaga oleh aksinya), tetapi tidak untuk tahun berikutnya.
+ */
+export const periodeBatasProses = (sekarang = new Date()) => `${periodeIni(sekarang).slice(0, 4)}-12`;
+
 export const POLA_TANGGAL = /^\d{4}-\d{2}-\d{2}$/;
 export const POLA_PERIODE = /^\d{4}-(0[1-9]|1[0-2])$/;
 

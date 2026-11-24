@@ -17,7 +17,7 @@ import { buatJurnal, saldoAkun } from "@/lib/server/jurnal";
 import { catatLog } from "@/lib/server/log";
 import { barisOpname } from "@/lib/inti/jurnal";
 import { AKUN } from "@/lib/inti/akun";
-import { hariTerakhir, labelPeriode, periodeIni } from "@/lib/inti/tanggal";
+import { hariTerakhir, labelPeriode, periodeBatasProses } from "@/lib/inti/tanggal";
 import { rupiah } from "@/lib/format";
 import { skemaNilaiSisa } from "@/lib/skema/konversi";
 import { bahanNilaiSisa } from "@/lib/data/konversi/nilai-sisa";
@@ -28,7 +28,7 @@ export async function simpanNilaiSisa(input: unknown): Promise<HasilAksi<{ no: s
     const pengguna = await wajibPeran(IZIN["nilai-sisa.input"]);
     const d = validasi(skemaNilaiSisa, input);
     const P = d.periode;
-    if (P > periodeIni()) throw new GalatAksi("Periode ini belum berjalan, jadi nilai sisanya belum bisa diinput.");
+    if (P > periodeBatasProses()) throw new GalatAksi(`Nilai sisa hanya bisa diinput sampai ${labelPeriode(periodeBatasProses())}.`);
     const no = nomorOpname(P);
 
     const hasil = await db.$transaction(async (tx) => {
