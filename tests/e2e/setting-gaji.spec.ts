@@ -155,9 +155,9 @@ test("HRD mengajukan promosi berlaku bulan depan; Owner melihatnya di dashboard 
   await pilihTeks(f, "Jabatan", "Event Manager");
   await pilihTeks(f, "Gaji pokok", "Golongan III");
   await expect(f.getByText(/slip Desember 2026 dan sesudahnya memakai setting ini\. Slip bulan sebelumnya tetap memakai setting lama/)).toBeVisible();
-  // Pratinjau pengaman: memilih November menyebut slip draf yang perlu dihitung ulang.
+  // Gaji Bulanan tidak menyimpan slip draf sebelum diajukan, jadi memilih November tidak menyebut slip yang perlu dihitung ulang.
   await f.getByLabel("Bulan", { exact: true }).selectOption(String(NOV.bulan));
-  await expect(f.getByText(/Slip draf SLP-2026-11-.* perlu|HRD wajib menghitung ulang/).first()).toBeVisible();
+  await expect(f.getByText(/Slip draf SLP-2026-11-/)).toHaveCount(0);
   await f.getByLabel("Bulan", { exact: true }).selectOption(String(DES.bulan));
   await f.getByLabel("Alasan pengajuan").fill("Promosi menjadi Event Manager mulai Desember");
   await potret(p, "gaji-riwayat-form");

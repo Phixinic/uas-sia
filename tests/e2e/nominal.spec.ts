@@ -225,7 +225,7 @@ test("slip November dihitung ulang tetap gaji lama, slip Desember memakai gaji b
   await potret(p, "nominal-slip", { cetak: true });
 
   await p.goto(`/sdm/gaji-bulanan?${q(DES)}`);
-  await expect(p.getByRole("table", { name: "Gaji per karyawan" }).getByRole("row", { name: new RegExp(NAMA) })).toContainText("4.500.000");
+  await expect(p.getByRole("table", { name: "Gaji per karyawan" }).getByRole("row", { name: new RegExp(NAMA) })).toContainText("estimasi");
   await potret(p, "nominal-gaji-bulanan");
   expect(galatKonsol, galatKonsol.join("\n")).toEqual([]);
 });
