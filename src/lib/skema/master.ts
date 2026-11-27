@@ -122,7 +122,7 @@ export const DEF_MASTER: Record<JenisMaster, DefMaster> = {
     ],
   },
   jabatan: {
-    jenis: "jabatan", label: "Jabatan", kelompok: "sdm", izin: "master-sdm.ubah",
+    jenis: "jabatan", label: "Jabatan", kelompok: "sdm", izin: "struktur-gaji.ubah",
     isian: [
       { kunci: "nama", label: "Nama jabatan", tipe: "teks", wajib: true },
       { kunci: "tunjJabatan", label: "Tunjangan jabatan (Rp)", tipe: "angka", nominal: true },
@@ -131,8 +131,8 @@ export const DEF_MASTER: Record<JenisMaster, DefMaster> = {
     ],
   },
   jabatanEvent: {
-    jenis: "jabatanEvent", label: "Jabatan event", kelompok: "sdm", izin: "tarif-event.ubah",
-    petunjuk: "Jabatan event (Kapten, Crew) dan tarifnya hanya bisa diubah Owner. Tarif punya riwayat: perubahan diajukan dengan bulan berlaku lalu disetujui Owner, dan fee event memakai tarif yang berlaku di bulan tanggal selesai event.",
+    jenis: "jabatanEvent", label: "Jabatan event", kelompok: "sdm", izin: "struktur-gaji.ubah",
+    petunjuk: "Jabatan event (Kapten, Crew) dan tarifnya diurus HRD. Tarif punya riwayat: perubahan diajukan HRD dengan bulan berlaku lalu disetujui Owner, dan fee event memakai tarif yang berlaku di bulan tanggal selesai event.",
     isian: [
       { kunci: "nama", label: "Nama jabatan", tipe: "teks", wajib: true },
       { kunci: "peranEvent", label: "Peran di event", tipe: "pilih", sumber: "peranEvent", wajib: true },
@@ -142,14 +142,14 @@ export const DEF_MASTER: Record<JenisMaster, DefMaster> = {
     ],
   },
   golongan: {
-    jenis: "golongan", label: "Gaji pokok", kelompok: "sdm", izin: "master-sdm.ubah",
+    jenis: "golongan", label: "Gaji pokok", kelompok: "sdm", izin: "struktur-gaji.ubah",
     isian: [
       { kunci: "nama", label: "Golongan", tipe: "teks", wajib: true },
       { kunci: "jumlah", label: "Gaji pokok (Rp)", tipe: "angka", wajib: true, nominal: true },
     ],
   },
   tunjangan: {
-    jenis: "tunjangan", label: "Tunjangan", kelompok: "sdm", izin: "master-sdm.ubah",
+    jenis: "tunjangan", label: "Tunjangan", kelompok: "sdm", izin: "struktur-gaji.ubah",
     isian: [
       { kunci: "nama", label: "Nama tunjangan", tipe: "teks", wajib: true },
       { kunci: "nominal", label: "Nominal per bulan (Rp)", tipe: "angka", wajib: true, nominal: true },
@@ -166,7 +166,7 @@ export const DEF_MASTER: Record<JenisMaster, DefMaster> = {
   },
   setgaji: {
     jenis: "setgaji", label: "Setting gaji", kelompok: "sdm", izin: "setting-gaji.ajukan",
-    petunjuk: "Setting gaji tidak pernah ditimpa. Setiap setting awal, promosi, demosi, atau penyesuaian diajukan HRD atau Owner dengan bulan berlaku, lalu disetujui atau ditolak Owner. Riwayatnya tersimpan per karyawan.",
+    petunjuk: "Setting gaji tidak pernah ditimpa. Setiap setting awal, promosi, demosi, atau penyesuaian diajukan HRD dengan bulan berlaku, lalu disetujui atau ditolak Owner. Riwayatnya tersimpan per karyawan.",
     isian: [
       { kunci: "karyawanKode", label: "Karyawan", tipe: "pilih", sumber: "karyawan", wajib: true },
       { kunci: "jabatanKode", label: "Jabatan", tipe: "pilih", sumber: "jabatan", wajib: true },
@@ -183,7 +183,8 @@ export const DAFTAR_KELOMPOK: Record<KelompokMaster, JenisMaster[]> = {
 
 /**
  * Empat master yang membentuk gaji dan fee. Di Master SDM keempatnya tampil bersama di tab Struktur gaji, tetapi
- * tabelnya tetap terpisah (dipakai relasi slip, setting gaji, dan penugasan event) dan izinnya tetap per jenis.
+ * tabelnya tetap terpisah (dipakai relasi slip, setting gaji, dan penugasan event). Keempatnya ditambah dan diubah HRD
+ * (struktur-gaji.ubah).
  */
 export const JENIS_STRUKTUR = ["jabatan", "jabatanEvent", "golongan", "tunjangan"] as const satisfies readonly JenisMaster[];
 export type JenisStruktur = (typeof JENIS_STRUKTUR)[number];

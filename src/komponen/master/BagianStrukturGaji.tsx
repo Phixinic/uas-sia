@@ -1,7 +1,8 @@
 /*
  * Tab Struktur gaji di Master SDM (komponen server): satu tabel Jabatan (kelompok Inhouse dan Event, saringan
  * `&kelompok=INHOUSE|EVENT`), golongan (gaji pokok), dan tunjangan lain dalam satu halaman. Tabel database tetap terpisah; tambah, ubah, dan nonaktifkan memakai aksi master
- * yang sama (simpanMaster, ubahStatusMaster), jadi izinnya tetap per jenis seperti di DEF_MASTER.
+ * yang sama (simpanMaster, ubahStatusMaster) dengan izin dari DEF_MASTER. HRD menambah, mengubah, dan mengajukan
+ * nominal; Owner memutuskan pengajuan dan mengaktifkan atau menonaktifkan; peran lain hanya melihat.
  * Keadaan di URL: ?tab=struktur&jenis=<jenis>&form=baru|<kode>, &nominal=<kode> (form ajukan perubahan nominal),
  * &riwayat=<kode> (riwayat nominal satu item).
  * Nominal (gaji pokok, tunjangan, tunjangan jabatan, tarif event) berversi: kolom nominal = nilai yang berlaku bulan
@@ -9,7 +10,7 @@
  */
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { boleh, LABEL_PERAN, type KunciIzin, type Peran } from "@/lib/peran";
+import { boleh, LABEL_PERAN, type Peran } from "@/lib/peran";
 import { opsiMaster } from "@/lib/data/master/master";
 import { periodeTerkunciSemua } from "@/lib/data/umum";
 import { dataStrukturGaji, type DataStrukturGaji, type InfoNominal, type TampilNominal } from "@/lib/data/master/struktur-gaji";
@@ -33,9 +34,6 @@ export const alamatBagian = (jenis: JenisStruktur, form?: string) => `${ALAMAT_S
 export const alamatNominal = (jenis: JenisStruktur, kode: string) => `${ALAMAT_STRUKTUR}&jenis=${jenis}&nominal=${kode}#bagian-${jenis}`;
 export const alamatRiwayat = (jenis: JenisStruktur, kode: string) => `${ALAMAT_STRUKTUR}&jenis=${jenis}&riwayat=${kode}#riwayat-nominal`;
 
-/** Izin mengajukan perubahan nominal: tarif jabatan event hanya Owner, nominal lain HRD dan Owner. */
-const IZIN_NOMINAL: Record<JenisStruktur, KunciIzin> = { jabatan: "nominal.ajukan", jabatanEvent: "tarif-event.ubah", golongan: "nominal.ajukan", tunjangan: "nominal.ajukan" };
-
 function LencanaVersi({ v, sekarang }: { v: TampilNominal; sekarang: string }) {
   if (v.status === "DIAJUKAN") return <Lencana warna="biru">Menunggu Owner</Lencana>;
   if (v.status === "DITOLAK") return <Lencana warna="merah">Ditolak</Lencana>;
@@ -56,26 +54,22 @@ function SelRiwayat({ info, jenis, kode }: { info: InfoNominal | undefined; jeni
   );
 }
 
-const BAGIAN: Record<JenisStruktur, { judul: string; keterangan: string; pengubah: string }> = {
+const BAGIAN: Record<JenisStruktur, { judul: string; keterangan: string }> = {
   jabatan: {
     judul: "Jabatan inhouse",
     keterangan: "Tunjangan jabatan dan tunjangan istri/anak (hanya PTKP K) ikut setting gaji. Jam kerja diatur di tab Jadwal kerja.",
-    pengubah: "HRD dan Owner",
   },
   jabatanEvent: {
     judul: "Jabatan event",
     keterangan: "Peran, satuan tarif, dan tarif fee crew freelance. Tarif baru langsung dipakai untuk usulan fee yang belum disetujui.",
-    pengubah: "Owner",
   },
   golongan: {
     judul: "Golongan (gaji pokok)",
     keterangan: "Gaji pokok per bulan. Potongan absen dihitung dari gaji pokok dibagi hari kerja.",
-    pengubah: "HRD dan Owner",
   },
   tunjangan: {
     judul: "Tunjangan lain",
     keterangan: "Nominal per bulan, dipilih per karyawan di setting gaji.",
-    pengubah: "HRD dan Owner",
   },
 };
 
@@ -112,7 +106,8 @@ const SARINGAN_KELOMPOK = [
 export default async function BagianStrukturGaji({ peran, cari }: { peran: Peran; cari: { jenis?: string; form?: string; nominal?: string; riwayat?: string; kelompok?: string } }) {
   const jenisForm = cari.jenis && termasukStruktur(cari.jenis) ? cari.jenis : null;
   const bolehForm = !!(jenisForm && cari.form && boleh(peran, DEF_MASTER[jenisForm].izin));
-  const bolehFormNominal = !!(jenisForm && cari.nominal && boleh(peran, IZIN_NOMINAL[jenisForm]));
+  const bolehNominal = boleh(peran, "nominal.ajukan");
+  const bolehFormNominal = !!(jenisForm && cari.nominal && bolehNominal);
   const [d, opsi, terkunci] = await Promise.all([
     dataStrukturGaji(),
     bolehForm ? opsiMaster() : Promise.resolve(null),
@@ -121,7 +116,7 @@ export default async function BagianStrukturGaji({ peran, cari }: { peran: Peran
   const bolehPutuskan = boleh(peran, "nominal.putuskan");
   const riwayatItem = jenisForm && cari.riwayat ? d.daftar[jenisForm].baris.find((b) => b.kode === cari.riwayat) : null;
   const bolehNonaktifkan = boleh(peran, "master.nonaktifkan");
-  const bolehSebagian = JENIS_STRUKTUR.some((j) => boleh(peran, DEF_MASTER[j].izin));
+  const bolehUbah = boleh(peran, "struktur-gaji.ubah");
 
   const kelompokDipilih = cari.kelompok === "INHOUSE" || cari.kelompok === "EVENT" ? cari.kelompok : "semua";
 
@@ -181,12 +176,12 @@ export default async function BagianStrukturGaji({ peran, cari }: { peran: Peran
 
   return (
     <>
-      {!bolehSebagian && <Peringatan>Peran {LABEL_PERAN[peran]} hanya bisa melihat struktur gaji. Yang boleh mengubah: HRD dan Owner, khusus tarif jabatan event hanya Owner.</Peringatan>}
+      {!bolehUbah && !bolehPutuskan && <Peringatan>Peran {LABEL_PERAN[peran]} hanya bisa melihat struktur gaji. HRD yang menambah, mengubah, dan mengajukan nominal; Owner yang memutuskan.</Peringatan>}
 
       <Kartu rapat label="Pengajuan nominal">
         <KepalaKartu
           judul={`Pengajuan nominal menunggu Owner (${d.pengajuan.length})`}
-          keterangan={bolehPutuskan ? "Bandingkan nominal lama dan baru, lalu setujui atau tolak dengan alasan." : "Gaji pokok, tunjangan, dan tunjangan jabatan diajukan HRD atau Owner; tarif event hanya Owner. Owner yang memutuskan."}
+          keterangan={bolehPutuskan ? "Bandingkan nominal lama dan baru, lalu setujui atau tolak dengan alasan." : "Gaji pokok, tunjangan, tunjangan jabatan, dan tarif event diajukan HRD. Owner yang memutuskan."}
         />
         {d.pengajuan.length === 0 ? (
           <KeadaanKosong judul="Tidak ada pengajuan nominal yang menunggu" />
@@ -304,17 +299,15 @@ export default async function BagianStrukturGaji({ peran, cari }: { peran: Peran
         const saring = gabungan ? kelompokDipilih : "semua";
         const baris = semuaBaris.filter((x) => saring === "semua" || (saring === "INHOUSE" ? x.jenis === "jabatan" : x.jenis === "jabatanEvent"));
         const utama = kelompokJenis[0];
-        const info = gabungan ? { judul: "Jabatan", keterangan: "Satu master jabatan untuk karyawan inhouse (tunjangan jabatan dan tunjangan istri/anak ikut setting gaji, jam kerja di tab Jadwal kerja) dan untuk penugasan event (peran, satuan tarif, dan tarif fee). Jabatan inhouse diubah HRD dan Owner, jabatan event hanya Owner." } : BAGIAN[utama];
-        const bolehUbahSalah = kelompokJenis.some((j) => boleh(peran, DEF_MASTER[j].izin));
-        const adaAksiKolom = kelompokJenis.some((j) => boleh(peran, DEF_MASTER[j].izin) || boleh(peran, IZIN_NOMINAL[j])) || bolehNonaktifkan;
-        const tombolBaru = form ? null : (
+        const info = gabungan ? { judul: "Jabatan", keterangan: "Satu master jabatan untuk karyawan inhouse (tunjangan jabatan dan tunjangan istri/anak ikut setting gaji, jam kerja di tab Jadwal kerja) dan untuk penugasan event (peran, satuan tarif, dan tarif fee). Data ditambah dan diubah HRD." } : BAGIAN[utama];
+        const adaAksiKolom = bolehUbah || bolehNominal || bolehNonaktifkan;
+        const tombolBaru = form || !bolehUbah ? null : (
           <div className="flex flex-wrap gap-2">
-            {kelompokJenis.filter((j) => boleh(peran, DEF_MASTER[j].izin)).map((j) => (
+            {kelompokJenis.map((j) => (
               <TautanTombol key={j} href={alamatBagian(j, "baru")} kecil varian="utama" ikon={<Plus className="size-4" />}>{DEF_MASTER[j].label} baru</TautanTombol>
             ))}
           </div>
         );
-        const tanpaIzin = kelompokJenis.filter((j) => !boleh(peran, DEF_MASTER[j].izin));
         return (
           <div key={utama} id={`bagian-${utama}`} className="scroll-mt-20 space-y-4">
             {kelompokJenis.slice(1).map((j) => <span key={j} id={`bagian-${j}`} className="block scroll-mt-20" />)}
@@ -336,17 +329,8 @@ export default async function BagianStrukturGaji({ peran, cari }: { peran: Peran
                   ))}
                 </nav>
               )}
-              {tanpaIzin.length > 0 && bolehSebagian && (
-                <div className="border-b border-slate-100 px-5 py-3">
-                  <Peringatan>
-                    {gabungan && tanpaIzin.length === 1
-                      ? `Peran ${LABEL_PERAN[peran]} hanya bisa melihat ${DEF_MASTER[tanpaIzin[0]].label.toLowerCase()}. Yang boleh mengubah: ${BAGIAN[tanpaIzin[0]].pengubah}.`
-                      : `Peran ${LABEL_PERAN[peran]} hanya bisa melihat ${info.judul.toLowerCase()}. Yang boleh mengubah: ${BAGIAN[utama].pengubah}.`}
-                  </Peringatan>
-                </div>
-              )}
               {baris.length === 0 ? (
-                <KeadaanKosong judul={`Belum ada data ${info.judul.toLowerCase()}`} keterangan={bolehUbahSalah ? "Tekan tombol tambah di atas untuk menambah." : undefined} />
+                <KeadaanKosong judul={`Belum ada data ${info.judul.toLowerCase()}`} keterangan={bolehUbah ? "Tekan tombol tambah di atas untuk menambah." : undefined} />
               ) : (
                 <Tabel label={`Daftar ${info.judul.toLowerCase()}`}>
                   <thead>
@@ -371,8 +355,6 @@ export default async function BagianStrukturGaji({ peran, cari }: { peran: Peran
                     {baris.map(({ jenis, b }) => {
                       const kolom = d.daftar[jenis].kolom;
                       const tambahan = kolomTambahan(jenis, d);
-                      const bolehUbah = boleh(peran, DEF_MASTER[jenis].izin);
-                      const bolehNominal = boleh(peran, IZIN_NOMINAL[jenis]);
                       return (
                         <tr key={`${jenis}-${b.kode}`} className={b.aktif ? "" : "text-slate-400"}>
                           <td className="kode">{b.kode}</td>

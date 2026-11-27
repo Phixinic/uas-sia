@@ -1,6 +1,7 @@
 /*
  * Tes integrasi tab Struktur gaji di Master SDM (UJI_DB=1). Tab ini hanya menggabungkan tampilan: tambah, ubah, dan
- * nonaktifkan tetap lewat simpanMaster dan ubahStatusMaster, jadi izinnya harus sama dengan tab lama per jenis.
+ * nonaktifkan tetap lewat simpanMaster dan ubahStatusMaster. Tambah dan ubah hanya HRD; Owner hanya memutuskan
+ * pengajuan nominal serta mengaktifkan dan menonaktifkan.
  * Ringkasan pemakaian dihitung dari setting gaji yang berlaku bulan berjalan (sama dengan halaman Setting Gaji).
  * Nominal berversi: data baru mengajukan nominal awal (menunggu Owner), ubah data tidak pernah mengubah nominal.
  * PERHATIAN: database DATABASE_URL diisi ulang dengan data contoh sebelum dan sesudah tes.
@@ -54,13 +55,8 @@ describe.runIf(aktif)("tab Struktur gaji: izin aksi dan ringkasan pemakaian", as
     seed();
   }, 60_000);
 
-  it("izin per jenis tidak berubah: jabatan, golongan, tunjangan HRD dan Owner; jabatan event Owner; nonaktifkan Owner", () => {
-    expect(JENIS_STRUKTUR.map((j) => [j, IZIN[DEF_MASTER[j].izin]])).toEqual([
-      ["jabatan", ["HRD", "OWNER"]],
-      ["jabatanEvent", ["OWNER"]],
-      ["golongan", ["HRD", "OWNER"]],
-      ["tunjangan", ["HRD", "OWNER"]],
-    ]);
+  it("izin: keempat jenis ditambah dan diubah HRD saja; nonaktifkan tetap Owner", () => {
+    expect(JENIS_STRUKTUR.map((j) => [j, IZIN[DEF_MASTER[j].izin]])).toEqual(JENIS_STRUKTUR.map((j) => [j, ["HRD"]]));
     expect(IZIN["master.nonaktifkan"]).toEqual(["OWNER"]);
   });
 
@@ -72,28 +68,37 @@ describe.runIf(aktif)("tab Struktur gaji: izin aksi dan ringkasan pemakaian", as
     expect((await nominalDi("GOLONGAN", "GP-01"))?.nominal).toBe(3_800_000);
   });
 
-  it("HRD: jabatan, golongan, tunjangan boleh; tarif jabatan event dan nonaktifkan ditolak", async () => {
+  it("Owner tidak bisa menambah atau mengubah data struktur gaji, jadi tidak ada pengajuan nominal awal dari Owner", async () => {
+    await masukSebagai("owner");
+    const hitung = async () => [await db.jabatan.count(), await db.golongan.count(), await db.tunjangan.count(), await db.versiNominal.count()];
+    const sebelum = await hitung();
+    const kodeContoh = { jabatan: "JBT-01", jabatanEvent: "JBT-06", golongan: "GP-01", tunjangan: "TNJ-01" } as const;
+    for (const jenis of JENIS_STRUKTUR) {
+      for (const kode of [undefined, kodeContoh[jenis]]) {
+        const h = await master.simpanMaster({ jenis, kode, nilai: contoh[jenis] });
+        expect(h.ok ? "" : h.galat, `${jenis} ${kode ?? "baru"}`).toMatch(/hanya untuk HRD\./);
+      }
+    }
+    expect(await hitung()).toEqual(sebelum);
+    expect((await db.golongan.findUniqueOrThrow({ where: { kode: "GP-01" } })).nama).toBe("Golongan I");
+  });
+
+  it("HRD menambah dan mengubah keempat jenis; nominal lewat pengajuan; nonaktifkan ditolak", async () => {
     await masukSebagai("hrd");
-    for (const jenis of ["jabatan", "golongan", "tunjangan"] as const) expect((await master.simpanMaster({ jenis, nilai: contoh[jenis] })).ok, jenis).toBe(true);
+    for (const jenis of JENIS_STRUKTUR) expect((await master.simpanMaster({ jenis, nilai: contoh[jenis] })).ok, jenis).toBe(true);
     // Data baru: nominal awal menjadi pengajuan DIAJUKAN berlaku Desember, belum berlaku sebelum Owner menyetujui.
     const gpBaru = await db.golongan.findFirstOrThrow({ where: { nama: contoh.golongan.nama } });
     const vAwal = await db.versiNominal.findFirstOrThrow({ where: { golonganKode: gpBaru.kode } });
     expect([vAwal.status, vAwal.berlakuMulai, vAwal.nominal]).toEqual(["DIAJUKAN", "2026-12", 4_200_000]);
     expect(await nominalDi("GOLONGAN", gpBaru.kode, "2026-12")).toBeNull();
+    const evBaru = await db.jabatan.findFirstOrThrow({ where: { nama: contoh.jabatanEvent.nama }, select: { kode: true, kelompok: true } });
+    const vEvent = await db.versiNominal.findFirstOrThrow({ where: { jabatanKode: evBaru.kode }, include: { diajukanOleh: true } });
+    expect([evBaru.kelompok, vEvent.jenis, vEvent.status, vEvent.nominal, vEvent.diajukanOleh?.namaPengguna]).toEqual(["EVENT", "JABATAN_EVENT", "DIAJUKAN", 25_000, "hrd"]);
     // Ubah data hanya mengubah nama; nominal kiriman diabaikan (nominal diubah lewat pengajuan).
     expect((await master.simpanMaster({ jenis: "golongan", kode: "GP-01", nilai: { nama: "Golongan I (ubah)", jumlah: 3_900_000 } })).ok).toBe(true);
     expect((await db.golongan.findUniqueOrThrow({ where: { kode: "GP-01" } })).nama).toBe("Golongan I (ubah)");
     expect((await nominalDi("GOLONGAN", "GP-01"))?.nominal).toBe(3_800_000);
 
-    expect((await master.simpanMaster({ jenis: "jabatanEvent", nilai: contoh.jabatanEvent })).ok).toBe(false);
-    const h = await master.simpanMaster({ jenis: "jabatanEvent", kode: "JBT-06", nilai: { ...contoh.jabatanEvent, nama: "Crew Event", tarif: 99_000 } });
-    expect(h.ok).toBe(false);
-    expect((await nominalDi("JABATAN_EVENT", "JBT-06"))?.nominal).toBe(20_000);
-    expect((await master.ubahStatusMaster({ jenis: "tunjangan", kode: "TNJ-01", aktif: false })).ok).toBe(false);
-  });
-
-  it("Owner: mengubah tarif jabatan event dan menonaktifkan; jabatan event tidak bisa diubah lewat jenis jabatan inhouse", async () => {
-    await masukSebagai("owner");
     expect((await master.simpanMaster({ jenis: "jabatanEvent", kode: "JBT-06", nilai: { ...contoh.jabatanEvent, nama: "Crew Event", tarif: 22_000 } })).ok).toBe(true);
     // Ubah data jabatan event tidak mengubah tarif; tarif hanya lewat pengajuan nominal.
     expect((await nominalDi("JABATAN_EVENT", "JBT-06"))?.nominal).toBe(20_000);
@@ -101,8 +106,16 @@ describe.runIf(aktif)("tab Struktur gaji: izin aksi dan ringkasan pemakaian", as
     const satuan = await master.simpanMaster({ jenis: "jabatanEvent", kode: "JBT-06", nilai: { ...contoh.jabatanEvent, nama: "Crew Event", satuanTarif: "HARI" } });
     expect(satuan.ok).toBe(false);
     expect((await master.simpanMaster({ jenis: "jabatan", kode: "JBT-06", nilai: contoh.jabatan })).ok).toBe(false);
+    expect((await master.ubahStatusMaster({ jenis: "tunjangan", kode: "TNJ-01", aktif: false })).ok).toBe(false);
+  });
+
+  it("Owner menonaktifkan dan mengaktifkan data struktur gaji", async () => {
+    await masukSebagai("owner");
     const tunj = await db.tunjangan.findFirstOrThrow({ where: { nama: contoh.tunjangan.nama } });
-    expect((await master.ubahStatusMaster({ jenis: "tunjangan", kode: tunj.kode, aktif: false })).ok).toBe(true);
+    for (const aktifBaru of [false, true, false]) {
+      expect((await master.ubahStatusMaster({ jenis: "tunjangan", kode: tunj.kode, aktif: aktifBaru })).ok).toBe(true);
+      expect((await db.tunjangan.findUniqueOrThrow({ where: { kode: tunj.kode } })).aktif).toBe(aktifBaru);
+    }
   });
 
   it("ringkasan: jumlah karyawan per jabatan dan golongan serta kisaran bruto dari setting yang berlaku", async () => {
@@ -122,7 +135,8 @@ describe.runIf(aktif)("tab Struktur gaji: izin aksi dan ringkasan pemakaian", as
     }
     // Ringkasan hanya jabatan inhouse; jabatan event tetap di daftarnya sendiri.
     expect(d.ringkasJabatan.some((j) => j.kode === "JBT-05")).toBe(false);
-    expect(d.daftar.jabatanEvent.baris.map((b) => b.kode)).toEqual(["JBT-05", "JBT-06"]);
+    // Dua jabatan event contoh ditambah satu yang dibuat HRD di tes sebelumnya.
+    expect(d.daftar.jabatanEvent.baris.map((b) => b.kode)).toEqual(["JBT-05", "JBT-06", expect.any(String)]);
     // Desember: promosi KRY-04 ke JBT-03 berlaku.
     const des = await dataStrukturGaji("2026-12");
     expect(des.pemakaian.jabatan["JBT-02"]).toBe(1);

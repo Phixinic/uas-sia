@@ -2,7 +2,7 @@
  * Tes skema master dan pengguna (tanpa database): aturan validasi sama dengan MDEF di app lama.
  */
 import { describe, expect, it } from "vitest";
-import { DAFTAR_KELOMPOK, DEF_MASTER, JENIS_MASTER, skemaIsiMaster } from "@/lib/skema/master";
+import { DAFTAR_KELOMPOK, DEF_MASTER, JENIS_MASTER, JENIS_STRUKTUR, skemaIsiMaster } from "@/lib/skema/master";
 import { IZIN } from "@/lib/peran";
 
 const galat = (jenis: Parameters<typeof skemaIsiMaster>[0], nilai: Record<string, unknown>) => {
@@ -11,14 +11,20 @@ const galat = (jenis: Parameters<typeof skemaIsiMaster>[0], nilai: Record<string
 };
 
 describe("definisi master", () => {
+  it("urusan gaji: HRD mengajukan, Owner hanya memutuskan", () => {
+    for (const k of ["struktur-gaji.ubah", "setting-gaji.ajukan", "nominal.ajukan", "gaji.hitung", "penggajian.ajukan"] as const) expect(IZIN[k], k).toEqual(["HRD"]);
+    for (const k of ["setting-gaji.putuskan", "nominal.putuskan", "penggajian.putuskan"] as const) expect(IZIN[k], k).toEqual(["OWNER"]);
+  });
   it("semua jenis terbagi ke dua kelompok dan punya izin yang ada di IZIN", () => {
     expect(DAFTAR_KELOMPOK.konversi.length + DAFTAR_KELOMPOK.sdm.length).toBe(JENIS_MASTER.length);
     for (const j of JENIS_MASTER) expect(IZIN[DEF_MASTER[j].izin]).toBeTruthy();
   });
-  it("kategori dan akun hanya untuk Owner, master SDM untuk HRD dan Owner", () => {
+  it("kategori dan akun hanya untuk Owner, karyawan dan jadwal HRD dan Owner, struktur gaji hanya HRD", () => {
     expect(IZIN[DEF_MASTER.kategori.izin]).toEqual(["OWNER"]);
     expect(IZIN[DEF_MASTER.akun.izin]).toEqual(["OWNER"]);
     expect(IZIN[DEF_MASTER.karyawan.izin]).toEqual(["HRD", "OWNER"]);
+    expect(IZIN[DEF_MASTER.jadwal.izin]).toEqual(["HRD", "OWNER"]);
+    for (const j of JENIS_STRUKTUR) expect(IZIN[DEF_MASTER[j].izin], j).toEqual(["HRD"]);
     expect(IZIN[DEF_MASTER.supplier.izin]).toEqual(["ADMIN", "OWNER"]);
   });
 });

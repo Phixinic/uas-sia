@@ -53,7 +53,7 @@ export default async function HalamanMaster({ kelompok, cari }: { kelompok: Kelo
         <>
           <KepalaHalaman
             judul="Master SDM"
-            keterangan="Struktur gaji menyatukan jabatan inhouse, jabatan event, golongan (gaji pokok), dan tunjangan lain di satu halaman. Data master tidak pernah dihapus, hanya dinonaktifkan oleh Owner."
+            keterangan="Struktur gaji menyatukan jabatan inhouse, jabatan event, golongan (gaji pokok), dan tunjangan lain di satu halaman. HRD menambah, mengubah, dan mengajukan nominal; Owner memutuskan pengajuan. Data master tidak pernah dihapus, hanya dinonaktifkan oleh Owner."
           />
           <NavMaster kelompok="sdm" aktif="struktur" />
           <BagianStrukturGaji peran={pengguna.peran} cari={cari} />
@@ -101,7 +101,7 @@ export default async function HalamanMaster({ kelompok, cari }: { kelompok: Kelo
 
       <NavMaster kelompok={kelompok} aktif={jenis} />
 
-      {!bolehUbah && <Peringatan>Peran {LABEL_PERAN[pengguna.peran]} hanya bisa melihat {def.label.toLowerCase()}. Yang boleh mengubah: {def.izin === "master.akun-kategori" || def.izin === "tarif-event.ubah" ? "Owner" : kunciMaster}.</Peringatan>}
+      {!bolehUbah && <Peringatan>Peran {LABEL_PERAN[pengguna.peran]} hanya bisa melihat {def.label.toLowerCase()}. Yang boleh mengubah: {def.izin === "master.akun-kategori" ? "Owner" : kunciMaster}.</Peringatan>}
       {form}
 
       <Kartu rapat>

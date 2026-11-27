@@ -2,16 +2,16 @@
 
 /*
  * Server action riwayat nominal master (Master SDM, tab Struktur gaji).
- *   ajukan : HRD atau Owner mengajukan perubahan gaji pokok, nominal tunjangan, atau tunjangan jabatan dengan bulan berlaku.
- *            Perubahan tarif jabatan event hanya boleh diajukan Owner.
- *   setujui: Owner menyetujui (boleh pengajuannya sendiri). Tidak ada jurnal; nominal berlaku mulai bulan yang dipilih.
+ *   ajukan : HRD mengajukan perubahan gaji pokok, nominal tunjangan, tunjangan jabatan, atau tarif jabatan event
+ *            dengan bulan berlaku. Owner tidak mengajukan.
+ *   setujui: Owner menyetujui. Tidak ada jurnal; nominal berlaku mulai bulan yang dipilih.
  *   tolak  : Owner menolak dengan alasan.
  * Aturan dan pengamannya ada di src/lib/server/nominal.ts (ajukanNominalDalam, setujuiNominalDalam, tolakNominalDalam).
  */
 import { db } from "@/lib/server/db";
 import { aksiAman, GalatAksi, segarkan, validasi, type HasilAksi } from "@/lib/server/aksi";
 import { wajibPeran } from "@/lib/server/auth";
-import { boleh, IZIN } from "@/lib/peran";
+import { IZIN } from "@/lib/peran";
 import { ajukanNominalDalam, setujuiNominalDalam, tolakNominalDalam } from "@/lib/server/nominal";
 import { skemaAjukanNominal, skemaKodeNominal, skemaTolakNominal } from "@/lib/skema/nominal";
 import { LABEL_JENIS_NOMINAL } from "@/lib/inti/nominal";
@@ -19,11 +19,8 @@ import { labelPeriode, periodeDariBulanTahun } from "@/lib/inti/tanggal";
 
 export async function ajukanNominal(input: unknown): Promise<HasilAksi<{ kode: string }>> {
   return aksiAman(async () => {
-    // HRD dan Owner boleh mengajukan; tarif event dicek lagi sesudah jenisnya diketahui (hanya Owner).
-    const pengguna = await wajibPeran([...new Set([...IZIN["nominal.ajukan"], ...IZIN["tarif-event.ubah"]])]);
+    const pengguna = await wajibPeran(IZIN["nominal.ajukan"]);
     const d = validasi(skemaAjukanNominal, input);
-    if (d.jenis === "JABATAN_EVENT" && !boleh(pengguna.peran, "tarif-event.ubah")) throw new GalatAksi("Perubahan tarif jabatan event hanya boleh diajukan Owner.");
-    if (d.jenis !== "JABATAN_EVENT" && !boleh(pengguna.peran, "nominal.ajukan")) throw new GalatAksi("Kamu tidak punya akses untuk mengajukan perubahan nominal ini.");
     const berlaku = periodeDariBulanTahun(d.bulan, d.tahun);
     if (!berlaku) throw new GalatAksi("Pilih bulan dan tahun berlaku.", { bulan: "Pilih bulan dan tahun berlaku.", tahun: "Pilih bulan dan tahun berlaku." });
     const hasil = await db.$transaction((tx) => ajukanNominalDalam(tx, pengguna.id, { ...d, berlaku }));

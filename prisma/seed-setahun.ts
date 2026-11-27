@@ -293,17 +293,17 @@ async function master(tx: Tx, log: (s: string) => void): Promise<Konteks> {
     kapten.set(k, await buatPengguna(tx, p, k));
   }
 
-  // Nominal awal berlaku Januari 2026 lewat pengajuan dan persetujuan Owner (tarif event hanya Owner).
-  const nominal = async (oleh: PenggunaSesi, d: Parameters<typeof ajukanNominalDalam>[2]) => {
-    const a = await ajukanNominalDalam(tx, oleh.id, d);
+  // Nominal awal berlaku Januari 2026: diajukan HRD, disetujui Owner.
+  const nominal = async (d: Parameters<typeof ajukanNominalDalam>[2]) => {
+    const a = await ajukanNominalDalam(tx, hrd.id, d);
     await setujuiNominalDalam(tx, owner.id, a.kode);
   };
   const awal = { berlaku: "2026-01", alasan: "Nominal awal tahun 2026", nominal: 0, tunjJabatan: 0, tunjKeluarga: 0 };
-  for (const [i, [, n]] of GOLONGAN.entries()) await nominal(hrd, { ...awal, jenis: "GOLONGAN", itemKode: golongan[i], nominal: n });
-  for (const [i, [, n]] of TUNJANGAN.entries()) await nominal(hrd, { ...awal, jenis: "TUNJANGAN", itemKode: tunjangan[i], nominal: n });
-  for (const [i, j] of JABATAN.entries()) await nominal(hrd, { ...awal, jenis: "JABATAN", itemKode: jabatan[i], tunjJabatan: j[4], tunjKeluarga: j[5] });
-  await nominal(owner, { ...awal, jenis: "JABATAN_EVENT", itemKode: jabatanKapten, nominal: 200_000 });
-  await nominal(owner, { ...awal, jenis: "JABATAN_EVENT", itemKode: jabatanCrew, nominal: 20_000 });
+  for (const [i, [, n]] of GOLONGAN.entries()) await nominal({ ...awal, jenis: "GOLONGAN", itemKode: golongan[i], nominal: n });
+  for (const [i, [, n]] of TUNJANGAN.entries()) await nominal({ ...awal, jenis: "TUNJANGAN", itemKode: tunjangan[i], nominal: n });
+  for (const [i, j] of JABATAN.entries()) await nominal({ ...awal, jenis: "JABATAN", itemKode: jabatan[i], tunjJabatan: j[4], tunjKeluarga: j[5] });
+  await nominal({ ...awal, jenis: "JABATAN_EVENT", itemKode: jabatanKapten, nominal: 200_000 });
+  await nominal({ ...awal, jenis: "JABATAN_EVENT", itemKode: jabatanCrew, nominal: 20_000 });
 
   // Setting gaji awal semua karyawan inhouse berlaku Januari 2026.
   for (const [i, [, , , , jb, gl, tj]] of INHOUSE.entries()) {

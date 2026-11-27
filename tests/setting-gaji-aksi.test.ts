@@ -32,6 +32,7 @@ describe.runIf(aktif)("riwayat setting gaji dan cek kas pembelian tunai", async 
   const presensi = await import("@/lib/aksi/sdm/presensi");
   const gajiBulanan = await import("@/lib/aksi/sdm/gaji-bulanan");
   const { simpanSlip } = await import("@/lib/server/gaji");
+  const { ajukanSettingDalam } = await import("@/lib/server/setting-gaji");
   /** Slip draf satu karyawan (dulu tombol Hitung Gaji); pengajuan Gaji Bulanan menghitung ulang slip sendiri. */
   const gaji = {
     hitungSlipSatu: async ({ periode, karyawanKode }: { periode: string; karyawanKode: string }) => {
@@ -83,9 +84,13 @@ describe.runIf(aktif)("riwayat setting gaji dan cek kas pembelian tunai", async 
     expect(d.riwayat.filter((v) => v.digantikan)).toEqual([]);
   });
 
-  it("akses terlarang: Admin tidak boleh mengajukan, HRD tidak boleh memutuskan", async () => {
-    await masukSebagai("admin");
-    expect(galat(await ajukan({ karyawanKode: "KRY-01", jenisPerubahan: "PROMOSI", jabatanKode: "JBT-01", golonganKode: "GP-03", bulan: 12, tahun: 2026 }))).toMatch(/hanya untuk HRD atau OWNER/);
+  it("akses terlarang: Owner dan Admin tidak boleh mengajukan, HRD tidak boleh memutuskan", async () => {
+    const sebelum = await db.settingGaji.count();
+    for (const u of ["owner", "admin"]) {
+      await masukSebagai(u);
+      expect(galat(await ajukan({ karyawanKode: "KRY-01", jenisPerubahan: "PROMOSI", jabatanKode: "JBT-01", golonganKode: "GP-03", bulan: 12, tahun: 2026 })), u).toMatch(/hanya untuk HRD\./);
+    }
+    expect(await db.settingGaji.count()).toBe(sebelum);
     await masukSebagai("hrd");
     expect(galat(await sg.setujuiSettingGaji({ kode: "SET-07" }))).toMatch(/hanya untuk OWNER/);
     expect(galat(await sg.tolakSettingGaji({ kode: "SET-07", alasan: "tidak boleh" }))).toMatch(/hanya untuk OWNER/);
@@ -225,7 +230,7 @@ describe.runIf(aktif)("riwayat setting gaji dan cek kas pembelian tunai", async 
     expect((await muatBahanGaji(db, "2026-11", "KRY-03"))[0].settingKode).toBe("SET-03");
   });
 
-  it("karyawan baru: setting awal menunggu Owner, presensi ditolak, kesiapan 'belum ada setting gaji berlaku'; Owner juga boleh mengajukan", async () => {
+  it("karyawan baru: setting awal menunggu Owner, presensi ditolak, kesiapan 'belum ada setting gaji berlaku'", async () => {
     await masukSebagai("hrd");
     const k = await master.simpanMaster({ jenis: "karyawan", nilai: { nama: "Karyawan Baru Uji", statusPtkp: "TK0", bank: "BCA", noRek: "123", jenis: "INHOUSE" } });
     expect(k.ok).toBe(true);
@@ -239,11 +244,21 @@ describe.runIf(aktif)("riwayat setting gaji dan cek kas pembelian tunai", async 
 
     await masukSebagai("owner");
     expect((await sg.setujuiSettingGaji({ kode: a.ok ? a.data!.kode : "" })).ok).toBe(true);
-    const owner = await ajukan({ karyawanKode: "KRY-01", jenisPerubahan: "DEMOSI", jabatanKode: "JBT-03", golonganKode: "GP-03", tunjanganKodes: ["TNJ-01"], bulan: 1, tahun: 2027 });
-    expect(owner.ok, galat(owner)).toBe(true);
     await masukSebagai("hrd");
     expect((await hadir(kode, "2026-12-02")).ok).toBe(true);
     expect((await kesiapanGaji("2026-11", await barisHitungGaji("2026-11"))).find((x) => x.karyawanKode === kode)?.catatanSetting).toBe("Setting disetujui, baru berlaku Desember 2026");
+  });
+
+  it("pengajuan lama buatan Owner yang masih menunggu tetap bisa diputuskan Owner", async () => {
+    // Meniru data sebelum aturan HRD saja: versi DIAJUKAN dengan pengaju Owner, dibuat lewat layanan server.
+    const owner = await db.pengguna.findUniqueOrThrow({ where: { namaPengguna: "owner" } });
+    const a = await db.$transaction((tx) =>
+      ajukanSettingDalam(tx, owner.id, { karyawanKode: "KRY-01", jenisPerubahan: "DEMOSI", jabatanKode: "JBT-03", golonganKode: "GP-03", tunjanganKodes: ["TNJ-01"], alasan: "Pengajuan lama Owner" }, "2027-01"),
+    );
+    await masukSebagai("owner");
+    const s = await sg.setujuiSettingGaji({ kode: a.kode });
+    expect(s.ok, galat(s)).toBe(true);
+    expect(await db.settingGaji.findUniqueOrThrow({ where: { kode: a.kode } })).toMatchObject({ status: "DISETUJUI", diajukanOlehId: owner.id, diputuskanOlehId: owner.id });
   });
 
   it("posting pembelian tunai menolak bila saldo kas tidak cukup, termasuk tanggal mundur; kredit tidak memakai kas", async () => {

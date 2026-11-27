@@ -26,11 +26,11 @@
 <polyline points="337.64,468.00 424.10,390.08" fill="none" stroke="#1F5F99" stroke-width="0.9" stroke-linejoin="round"/>
 <polyline points="830.00,237.86 693.76,283.17" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
 <polyline points="446.52,31.00 349.47,76.38" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="830.00,237.86 678.48,318.61" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="446.52,31.00 312.64,228.96" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
-<polyline points="407.40,468.00 309.95,253.73" fill="none" stroke="#5B3F8C" stroke-width="0.9" stroke-linejoin="round"/>
 <polyline points="337.64,468.00 714.00,398.79" fill="none" stroke="#1F5F99" stroke-width="0.9" stroke-linejoin="round"/>
 <polyline points="830.00,237.86 761.35,378.78" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="446.52,31.00 312.64,228.96" fill="none" stroke="#555555" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="407.40,468.00 309.95,253.73" fill="none" stroke="#5B3F8C" stroke-width="0.9" stroke-linejoin="round"/>
+<polyline points="337.64,468.00 631.81,340.92" fill="none" stroke="#1F5F99" stroke-width="0.9" stroke-linejoin="round"/>
 <polyline points="50.00,217.26 492.14,289.76" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
 <polyline points="830.00,237.86 575.09,288.81" fill="none" stroke="#2E6B3A" stroke-width="0.9" stroke-linejoin="round"/>
 <polyline points="50.00,217.26 359.98,290.35" fill="none" stroke="#8B1A1A" stroke-width="0.9" stroke-linejoin="round"/>
@@ -80,8 +80,8 @@
 <text x="228.10" y="106.05" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">[master belum ada]</tspan></text>
 <text x="201.90" y="336.25" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend» </tspan><tspan font-weight="normal" font-style="normal">[pembelian peralatan]</tspan></text>
 <text x="574.50" y="81.80" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend»</tspan></text>
-<text x="561.25" y="374.75" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend»</tspan></text>
-<text x="561.25" y="383.35" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">[hasil Kurang]</tspan></text>
+<text x="529.25" y="359.75" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend»</tspan></text>
+<text x="529.25" y="368.35" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">[hasil Kurang]</tspan></text>
 <rect x="512.61" y="222.30" width="88.89" height="10.10" rx="0" fill="#FFFFFF" stroke="none" stroke-width="0.6"/>
 <text x="557.05" y="230.30" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend» </tspan><tspan font-weight="normal" font-style="normal">[crew freelance]</tspan></text>
 <text x="427.40" y="228.40" font-size="7.5" fill="#222" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="italic">«extend»</tspan></text>
@@ -160,9 +160,9 @@
 <ellipse cx="756.80" cy="88.00" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
 <text x="756.80" y="86.33" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Setujui/tolak Gaji Bulanan,</tspan></text>
 <text x="756.80" y="94.84" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">setting gaji, nominal</tspan></text>
-<ellipse cx="755.30" cy="391.20" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
-<text x="755.30" y="389.53" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kelola master SDM,</tspan></text>
-<text x="755.30" y="398.04" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">ajukan setting, nominal</tspan></text>
+<ellipse cx="657.10" cy="330.00" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
+<text x="657.10" y="328.33" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kelola struktur gaji,</tspan></text>
+<text x="657.10" y="336.84" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">ajukan setting, nominal</tspan></text>
 <ellipse cx="717.10" cy="122.20" rx="52.00" ry="12.50" fill="#FFF3C4" stroke="#444" stroke-width="0.8"/>
 <text x="717.10" y="120.53" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Tutup periode (mengunci</tspan></text>
 <text x="717.10" y="129.04" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">periode) dan buka kunci</tspan></text>
@@ -192,9 +192,9 @@
 <ellipse cx="430.00" cy="262.00" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
 <text x="430.00" y="260.33" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Teruskan upah event</tspan></text>
 <text x="430.00" y="268.84" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">ke Gaji Bulanan</tspan></text>
-<ellipse cx="657.10" cy="330.00" rx="52.00" ry="12.50" fill="#ECE4F6" stroke="#444" stroke-width="0.8"/>
-<text x="657.10" y="328.33" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Atur tarif jabatan</tspan></text>
-<text x="657.10" y="336.84" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">event</tspan></text>
+<ellipse cx="755.30" cy="391.20" rx="52.00" ry="12.50" fill="#E3EFFA" stroke="#444" stroke-width="0.8"/>
+<text x="755.30" y="389.53" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">Kelola karyawan dan</tspan></text>
+<text x="755.30" y="398.04" font-size="7.6" fill="#111" text-anchor="middle" xml:space="preserve"><tspan font-weight="normal" font-style="normal">jadwal kerja</tspan></text>
 <ellipse cx="446.52" cy="8.00" rx="5.20" ry="5.20" fill="#FFFFFF" stroke="#555555" stroke-width="1.1"/>
 <polyline points="446.52,13.20 446.52,30.00" fill="none" stroke="#555555" stroke-width="1.1" stroke-linejoin="round"/>
 <polyline points="437.52,19.00 455.52,19.00" fill="none" stroke="#555555" stroke-width="1.1" stroke-linejoin="round"/>

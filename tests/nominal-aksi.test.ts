@@ -58,7 +58,7 @@ describe.runIf(aktif)("riwayat nominal master: alur, pengaman, dan pemakaian di 
   const { slipFeeLaporan } = await import("@/lib/data/fee-event/daftar");
   const { dataStrukturGaji } = await import("@/lib/data/master/struktur-gaji");
   const { dataDashboard } = await import("@/lib/data/pelaporan/dashboard");
-  const { muatPetaNominal } = await import("@/lib/server/nominal");
+  const { muatPetaNominal, ajukanNominalDalam } = await import("@/lib/server/nominal");
 
   const masukSebagai = async (u: string) => {
     const p = await db.pengguna.findUniqueOrThrow({ where: { namaPengguna: u } });
@@ -85,14 +85,28 @@ describe.runIf(aktif)("riwayat nominal master: alur, pengaman, dan pemakaian di 
     expect(tampil.tunjLain[0].sumber).toBe("Tunjangan Makan, berlaku mulai Oktober 2026 (NOM-0006)");
   });
 
-  it("akses terlarang: Admin dan Kapten tidak boleh mengajukan, HRD tidak boleh mengajukan tarif event atau memutuskan", async () => {
+  it("akses terlarang: hanya HRD yang mengajukan (Owner, Admin, Kapten ditolak), hanya Owner yang memutuskan", async () => {
     const dasar = { jenis: "GOLONGAN", itemKode: "GP-01", nominal: 4_000_000, bulan: 12, tahun: 2026 };
-    for (const u of ["admin", "kapten"]) {
+    // Satu contoh per jenis nominal, termasuk tarif jabatan event.
+    const semuaJenis = [
+      dasar,
+      { jenis: "TUNJANGAN", itemKode: "TNJ-01", nominal: 360_000, bulan: 1, tahun: 2027 },
+      { jenis: "JABATAN", itemKode: "JBT-01", tunjJabatan: 1_750_000, tunjKeluarga: 0, bulan: 1, tahun: 2027 },
+      { jenis: "JABATAN_EVENT", itemKode: "JBT-06", nominal: 25_000, bulan: 1, tahun: 2027 },
+    ];
+    const sebelum = await db.versiNominal.count();
+    for (const u of ["owner", "admin", "kapten"]) {
       await masukSebagai(u);
-      expect(galat(await ajukan(dasar))).toMatch(/hanya untuk HRD atau OWNER/);
+      for (const x of semuaJenis) expect(galat(await ajukan(x)), `${u} ${x.jenis}`).toMatch(/hanya untuk HRD\./);
     }
+    expect(await db.versiNominal.count()).toBe(sebelum);
+    // HRD juga mengajukan tarif jabatan event; Owner menolaknya supaya hanya satu pengajuan yang tersisa menunggu.
     await masukSebagai("hrd");
-    expect(galat(await ajukan({ jenis: "JABATAN_EVENT", itemKode: "JBT-06", nominal: 25_000, bulan: 12, tahun: 2026 }))).toMatch(/hanya boleh diajukan Owner/);
+    const tarif = await ajukan(semuaJenis[3]);
+    expect(tarif.ok, galat(tarif)).toBe(true);
+    await masukSebagai("owner");
+    expect((await nominal.tolakNominal({ kode: kode(tarif), alasan: "Tarif belum disepakati" })).ok).toBe(true);
+    await masukSebagai("hrd");
     const h = await ajukan(dasar);
     expect(h.ok, galat(h)).toBe(true);
     for (const u of ["hrd", "admin", "kapten"]) {
@@ -118,7 +132,6 @@ describe.runIf(aktif)("riwayat nominal master: alur, pengaman, dan pemakaian di 
     expect(galat(await ajukan({ jenis: "JABATAN", itemKode: "JBT-06", tunjJabatan: 1, bulan: 1, tahun: 2027 }))).toMatch(/jabatan event/);
     // Periode tertutup.
     await db.periode.update({ where: { id: "2026-10" }, data: { status: "TERKUNCI" } });
-    await masukSebagai("owner");
     expect(galat(await ajukan({ jenis: "JABATAN_EVENT", itemKode: "JBT-05", nominal: 210_000, bulan: 10, tahun: 2026 }))).toMatch(/dikunci|tertutup/);
     await db.periode.update({ where: { id: "2026-10" }, data: { status: "TERBUKA" } });
   });
@@ -191,11 +204,12 @@ describe.runIf(aktif)("riwayat nominal master: alur, pengaman, dan pemakaian di 
   });
 
   it("tarif fee per tanggal: event memakai tarif yang berlaku di bulan tanggal selesai; laporan diajukan mengunci tarif bulannya", async () => {
-    await masukSebagai("owner");
+    await masukSebagai("hrd");
     // FEE-2026-0001 (EVT-2026-0001 selesai 14 November) diajukan dan memakai JBT-06.
     expect(galat(await ajukan({ jenis: "JABATAN_EVENT", itemKode: "JBT-06", nominal: 25_000, bulan: 11, tahun: 2026 }))).toMatch(/Laporan fee November 2026 yang memakai nominal ini sudah diajukan ke Owner \(FEE-2026-0001\)/);
     const a = await ajukan({ jenis: "JABATAN_EVENT", itemKode: "JBT-06", nominal: 25_000, bulan: 12, tahun: 2026, alasan: "Tarif crew musim akhir tahun" });
     expect(a.ok, galat(a)).toBe(true);
+    await masukSebagai("owner");
     expect((await nominal.setujuiNominal({ kode: kode(a) })).ok).toBe(true);
 
     // Event November tetap Rp20.000/jam; event yang selesai Desember memakai Rp25.000/jam.
@@ -231,6 +245,21 @@ describe.runIf(aktif)("riwayat nominal master: alur, pengaman, dan pemakaian di 
     expect((await nominal.setujuiNominal({ kode: awal.kode })).ok).toBe(true);
     await masukSebagai("hrd");
     expect((await sg.ajukanSettingGaji(set)).ok).toBe(true);
+  });
+
+  it("pengajuan lama buatan Owner yang masih menunggu tetap bisa diputuskan Owner", async () => {
+    // Meniru data sebelum aturan HRD saja: versi DIAJUKAN dengan pengaju Owner, dibuat lewat layanan server.
+    const owner = await db.pengguna.findUniqueOrThrow({ where: { namaPengguna: "owner" } });
+    const buat = (itemKode: string, nilai: number) =>
+      db.$transaction((tx) => ajukanNominalDalam(tx, owner.id, { jenis: "JABATAN_EVENT", itemKode, nominal: nilai, tunjJabatan: 0, tunjKeluarga: 0, berlaku: "2027-02", alasan: "Pengajuan lama Owner" }));
+    const [setuju, tolak] = [await buat("JBT-05", 230_000), await buat("JBT-06", 28_000)];
+    await masukSebagai("owner");
+    const s = await nominal.setujuiNominal({ kode: setuju.kode });
+    expect(s.ok, galat(s)).toBe(true);
+    const t = await nominal.tolakNominal({ kode: tolak.kode, alasan: "Diajukan ulang oleh HRD" });
+    expect(t.ok, galat(t)).toBe(true);
+    expect(await db.versiNominal.findUniqueOrThrow({ where: { kode: setuju.kode } })).toMatchObject({ status: "DISETUJUI", diajukanOlehId: owner.id, diputuskanOlehId: owner.id });
+    expect((await db.versiNominal.findUniqueOrThrow({ where: { kode: tolak.kode } })).status).toBe("DITOLAK");
   });
 });
 

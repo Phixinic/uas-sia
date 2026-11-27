@@ -197,17 +197,18 @@ export async function tolakNominalDalam(tx: Tx, penggunaId: number, kode: string
 /**
  * Khusus seed (database baru): versi nominal awal langsung DISETUJUI, sama dengan hasil migrasi untuk data lama.
  * Aplikasi dan skrip data dummy memakai ajukanNominalDalam lalu setujuiNominalDalam.
+ * Pengaju dan pemutus dipisah karena pengajuan dibuat HRD dan diputuskan Owner.
  */
 export async function versiAwalSeed(
   klien: DbAtauTx,
-  d: IsiNominal & { jenis: JenisNominal; itemKode: string; berlaku: string; alasan: string; olehId?: number | null; pada?: Date },
+  d: IsiNominal & { jenis: JenisNominal; itemKode: string; berlaku: string; alasan: string; pengajuId?: number | null; pemutusId?: number | null; pada?: Date },
 ): Promise<string> {
   const kode = await kodeBerikutnya(klien, AWALAN.VERSI_NOMINAL, 4);
   const pada = d.pada ?? new Date();
   await klien.versiNominal.create({
     data: {
       kode, jenis: d.jenis, [kolomItem(d.jenis)]: d.itemKode, ...isiDari(d.jenis, d), berlakuMulai: d.berlaku, alasan: d.alasan,
-      status: "DISETUJUI", diajukanOlehId: d.olehId ?? null, diajukanPada: pada, diputuskanOlehId: d.olehId ?? null, diputuskanPada: pada,
+      status: "DISETUJUI", diajukanOlehId: d.pengajuId ?? null, diajukanPada: pada, diputuskanOlehId: d.pemutusId ?? null, diputuskanPada: pada,
     },
   });
   return kode;

@@ -45,7 +45,6 @@ export const IZIN = {
   "event.nilai": ["KAPTEN", "OWNER"],
   "event.lapor": ["KAPTEN"],
   "fee-event.putuskan": ["OWNER"],
-  "tarif-event.ubah": ["OWNER"],
   // Pelaporan
   "jurnal-penyesuaian.ajukan": ["ADMIN"],
   "jurnal-penyesuaian.putuskan": ["OWNER"],
@@ -53,13 +52,18 @@ export const IZIN = {
   // Master
   "master-konversi.ubah": ["ADMIN", "OWNER"],
   "master-konversi.tambah-cepat": ["ADMIN"],
+  // Karyawan dan jadwal kerja.
   "master-sdm.ubah": ["HRD", "OWNER"],
+  // Urusan gaji: HRD mengajukan, Owner hanya memutuskan (setujui atau tolak).
+  // Struktur gaji (jabatan inhouse, jabatan event, golongan, tunjangan): tambah dan ubah data hanya HRD, karena data baru
+  // bernominal otomatis membuat pengajuan nominal awal. Menonaktifkan tetap Owner (master.nonaktifkan).
+  "struktur-gaji.ubah": ["HRD"],
   // Setting gaji inhouse: setiap versi (setting awal, promosi, demosi, penyesuaian) diajukan lalu diputuskan Owner.
-  "setting-gaji.ajukan": ["HRD", "OWNER"],
+  "setting-gaji.ajukan": ["HRD"],
   "setting-gaji.putuskan": ["OWNER"],
-  // Nominal master (gaji pokok, tunjangan, tunjangan jabatan): setiap perubahan diajukan dengan bulan berlaku lalu
-  // diputuskan Owner. Tarif jabatan event hanya boleh diajukan Owner (tarif-event.ubah).
-  "nominal.ajukan": ["HRD", "OWNER"],
+  // Nominal master (gaji pokok, tunjangan, tunjangan jabatan, tarif jabatan event): setiap perubahan diajukan dengan bulan
+  // berlaku lalu diputuskan Owner.
+  "nominal.ajukan": ["HRD"],
   "nominal.putuskan": ["OWNER"],
   "master.akun-kategori": ["OWNER"],
   "master.nonaktifkan": ["OWNER"],

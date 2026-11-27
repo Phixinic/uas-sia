@@ -781,7 +781,7 @@ model Jabatan {
   kode          String          @id @map("id_jabatan")
   nama          String
   akunBebanKode String          @map("akun_beban")
-  /// Data lama otomatis INHOUSE. Jabatan EVENT dipakai di penugasan event dan hanya diubah Owner.
+  /// Data lama otomatis INHOUSE. Jabatan EVENT dipakai di penugasan event; ditambah dan diubah HRD.
   kelompok      KelompokJabatan @default(INHOUSE)
   /// Hanya jabatan EVENT: peran dalam event dan satuan tarif (per hari atau per jam). Tarifnya di versi_nominal.
   peranEvent    PeranEvent?     @map("peran_event")
@@ -830,7 +830,7 @@ model Tunjangan {
   @@map("tunjangan")
 }
 
-/// Satu versi setting gaji karyawan inhouse (riwayat, tidak pernah ditimpa). Setiap versi lewat pengajuan HRD atau Owner
+/// Satu versi setting gaji karyawan inhouse (riwayat, tidak pernah ditimpa). Setiap versi lewat pengajuan HRD
 /// dan persetujuan Owner. Versi berlaku di periode P = versi DISETUJUI dengan berlaku_mulai <= P yang paling akhir
 /// (berlaku_mulai terbesar, lalu diputuskan_pada terakhir). Slip tetap menyalin nilai saat dihitung dan menyimpan id versinya.
 model SettingGaji {
@@ -868,8 +868,8 @@ model SettingGaji {
 }
 
 /// Satu versi nominal satu item master (riwayat, tidak pernah ditimpa): gaji pokok golongan, nominal tunjangan, tunjangan
-/// jabatan dan tunjangan istri/anak jabatan inhouse, atau tarif jabatan event. Setiap versi diajukan HRD atau Owner (tarif
-/// event hanya Owner) dengan bulan berlaku, lalu disetujui atau ditolak Owner. Nominal berlaku di periode P = versi
+/// jabatan dan tunjangan istri/anak jabatan inhouse, atau tarif jabatan event. Setiap versi diajukan HRD dengan bulan
+/// berlaku, lalu disetujui atau ditolak Owner. Nominal berlaku di periode P = versi
 /// DISETUJUI dengan berlaku_mulai <= P yang paling akhir (sama dengan pemilih versi setting gaji). Tepat satu dari
 /// id_golongan, id_tunjangan, id_jabatan terisi sesuai jenis (dijaga CHECK).
 model VersiNominal {

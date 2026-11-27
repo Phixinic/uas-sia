@@ -693,10 +693,21 @@ test("7a. Form master dikirim kosong: pesan Indonesia, isian salah pertama difok
   await expect(p.getByRole("status")).toContainText("Nama supplier wajib diisi.");
 });
 
-/** Tambah satu data lewat form; bila `nanti` kosong, langsung dinonaktifkan lagi. */
+/**
+ * Tambah satu data lewat form; bila `nanti` kosong, langsung dinonaktifkan lagi. Master struktur gaji (jabatan, golongan,
+ * tunjangan) ditambah HRD karena memuat nominal awal, lalu Owner menyetujui pengajuannya; Owner tidak melihat formnya.
+ */
 for (const t of TAB_MASTER) {
-  test(`7. Master ${t.kel}/${t.label}: Owner tambah${t.nanti ? "" : " lalu nonaktifkan"} satu data`, async () => {
-    const p = sesi.owner.page;
+  const struktur = STRUKTUR.includes(t.tab);
+  const judul = struktur ? `HRD tambah, Owner setujui satu data` : `Owner tambah${t.nanti ? "" : " lalu nonaktifkan"} satu data`;
+  test(`7. Master ${t.kel}/${t.label}: ${judul}`, async () => {
+    const owner = sesi.owner.page;
+    if (struktur) {
+      await bukaHalaman(owner, alamatMaster(t, true));
+      await expect(owner.getByRole("form", { name: `Form ${t.label}` })).toHaveCount(0);
+      await expect(owner.getByRole("link", { name: `${t.label} baru` })).toHaveCount(0);
+    }
+    const p = struktur ? sesi.hrd.page : owner;
     await bukaHalaman(p, alamatMaster(t, true));
     const form = p.getByRole("form", { name: `Form ${t.label}` });
     await expect(form).toBeVisible();
@@ -705,13 +716,14 @@ for (const t of TAB_MASTER) {
     await expect(form).toBeHidden();
     await expect(baris(p, t.cari).first()).toBeVisible();
     // Nominal master berversi: nominal awal data baru menjadi pengajuan (berlaku bulan berjalan), Owner menyetujuinya.
-    if (STRUKTUR.includes(t.tab)) {
-      const ajuan = p.getByRole("list", { name: "Pengajuan nominal menunggu Owner" }).locator("li", { hasText: t.cari });
+    if (struktur) {
+      await bukaHalaman(owner, alamatMaster(t, false));
+      const ajuan = owner.getByRole("list", { name: "Pengajuan nominal menunggu Owner" }).locator("li", { hasText: t.cari });
       await ajuan.getByRole("button", { name: /^Setujui/ }).click();
-      await konfirmasi(p);
+      await konfirmasi(owner);
       await expect(ajuan).toHaveCount(0);
     }
-    await foto(p, "owner", `master-${t.tab}`);
+    await foto(owner, "owner", `master-${t.tab}`);
     // Jadwal kerja melekat di jabatan (tidak dinonaktifkan sendiri), jadi tanpa tombol Nonaktifkan.
     if (t.tab === "jadwal") await expect(baris(p, t.cari).first().getByRole("button", { name: "Nonaktifkan" })).toHaveCount(0);
     else if (!t.nanti) await nonaktifkan(p, t.cari);
@@ -726,11 +738,16 @@ async function nonaktifkan(p: Page, cari: string) {
 }
 
 /*
- * Setting gaji tidak lagi lewat form master: tautan lama tab Setting gaji dialihkan ke halaman Setting Gaji, Owner
- * mengajukan setting awal (berlaku bulan berjalan) lalu menyetujuinya sendiri.
+ * Setting gaji tidak lagi lewat form master: tautan lama tab Setting gaji dialihkan ke halaman Setting Gaji. HRD
+ * mengajukan setting awal (berlaku bulan berjalan), Owner hanya memutuskan dan tidak melihat form pengajuan.
  */
-test("7. Setting gaji: Owner mengajukan setting awal Karyawan Uji E2E lalu menyetujuinya", async () => {
-  const p = sesi.owner.page;
+test("7. Setting gaji: HRD mengajukan setting awal Karyawan Uji E2E, Owner menyetujuinya", async () => {
+  const owner = sesi.owner.page;
+  await bukaHalaman(owner, "/master/sdm?tab=setgaji&form=baru");
+  await expect(owner).toHaveURL(/\/sdm\/setting-gaji\?form=baru/);
+  await expect(owner.getByRole("form", { name: "Form pengajuan setting gaji" })).toHaveCount(0);
+  await expect(owner.getByRole("link", { name: /^Ajukan/ })).toHaveCount(0);
+  const p = sesi.hrd.page;
   await bukaHalaman(p, "/master/sdm?tab=setgaji&form=baru");
   await expect(p).toHaveURL(/\/sdm\/setting-gaji\?form=baru/);
   const form = p.getByRole("form", { name: "Form pengajuan setting gaji" });
@@ -742,11 +759,12 @@ test("7. Setting gaji: Owner mengajukan setting awal Karyawan Uji E2E lalu menye
   await form.getByLabel("Alasan pengajuan").fill("Karyawan baru uji E2E");
   await form.getByRole("button", { name: "Ajukan ke Owner" }).click();
   await expect(form).toBeHidden();
-  const ajuan = p.getByRole("list", { name: "Pengajuan setting gaji menunggu Owner" }).locator("li", { hasText: "Karyawan Uji E2E" });
+  await bukaHalaman(owner, "/sdm/setting-gaji");
+  const ajuan = owner.getByRole("list", { name: "Pengajuan setting gaji menunggu Owner" }).locator("li", { hasText: "Karyawan Uji E2E" });
   await ajuan.getByRole("button", { name: /^Setujui/ }).click();
-  await konfirmasi(p);
-  await expect(baris(p, "Karyawan Uji E2E").first()).toContainText("Golongan Uji E2E");
-  await foto(p, "owner", "master-setgaji");
+  await konfirmasi(owner);
+  await expect(baris(owner, "Karyawan Uji E2E").first()).toContainText("Golongan Uji E2E");
+  await foto(owner, "owner", "master-setgaji");
 });
 
 // Data yang dipakai jadwal dan setting gaji baru boleh dinonaktifkan setelah keduanya dibuat.

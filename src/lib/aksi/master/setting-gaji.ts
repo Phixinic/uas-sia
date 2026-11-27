@@ -2,7 +2,8 @@
 
 /*
  * Server action riwayat setting gaji (Master SDM, tab Setting gaji).
- *   ajukan : HRD atau Owner mengajukan versi baru (setting awal, promosi, demosi, penyesuaian) dengan bulan berlaku.
+ *   ajukan : HRD mengajukan versi baru (setting awal, promosi, demosi, penyesuaian) dengan bulan berlaku. Owner tidak
+ *            mengajukan.
  *   setujui: Owner menyetujui. Versi berlaku mulai bulan yang dipilih; tidak ada jurnal yang dibuat.
  *   tolak  : Owner menolak dengan alasan.
  * Baris setting tidak pernah ditimpa. Pengaman bulan berlaku (pengamanBerlaku) dicek saat mengajukan dan sekali lagi

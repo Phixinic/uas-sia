@@ -160,7 +160,7 @@ export default async function HalamanGajiBulanan({ cari }: { cari: CariGajiBulan
       <Kartu rapat className="tanpa-cetak" label="Gaji per karyawan">
         <KepalaKartu judul={`Gaji per karyawan · ${labelPeriode(periode)}`} keterangan="Angka yang belum diajukan ditandai estimasi. Slip yang sudah diajukan atau dibayar terkunci." />
         {baris.length === 0 ? (
-          <KeadaanKosong judul={`Belum ada karyawan dengan setting gaji berlaku di ${labelPeriode(periode)}`} keterangan="Ajukan setting gaji karyawan di menu Setting Gaji." />
+          <KeadaanKosong judul={`Belum ada karyawan dengan setting gaji berlaku di ${labelPeriode(periode)}`} keterangan="Setting gaji karyawan diajukan HRD di menu Setting Gaji, lalu disetujui Owner." />
         ) : (
           <>
             <DaftarHP label="Gaji per karyawan">

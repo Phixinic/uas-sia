@@ -1,7 +1,7 @@
 /*
  * Halaman Setting Gaji (komponen server): komponen tetap gaji inhouse per karyawan dengan riwayat versi.
  * Keadaan di URL: ?form=baru[&karyawan=KRY-01] membuka form pengajuan, ?riwayat=KRY-01 menyaring riwayat.
- * HRD dan Owner mengajukan, Owner menyetujui atau menolak. Server action tetap memeriksa peran.
+ * HRD mengajukan; Owner hanya menyetujui atau menolak; peran lain hanya melihat. Server action tetap memeriksa peran.
  */
 import Link from "next/link";
 import { History, Plus, Send } from "lucide-react";
@@ -105,11 +105,11 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
       <KepalaHalaman
         judul="Setting Gaji"
         lencana={<LencanaBiaya jenis="tetap" />}
-        keterangan="Gaji pokok dan tunjangan tetap tiap karyawan inhouse; setiap perubahan diajukan lalu diputuskan Owner."
+        keterangan="Gaji pokok dan tunjangan tetap tiap karyawan inhouse; setiap perubahan diajukan HRD lalu diputuskan Owner."
         aksi={bolehAjukan && !formTerbuka ? <TautanTombol href={alamatForm()} varian="utama" ikon={<Plus className="size-4" />}>Ajukan setting gaji</TautanTombol> : null}
       />
 
-      {!bolehAjukan && <Peringatan>Peran {LABEL_PERAN[pengguna.peran]} hanya bisa melihat setting gaji. Yang boleh mengajukan: HRD dan Owner. Yang memutuskan: Owner.</Peringatan>}
+      {!bolehAjukan && !bolehPutuskan && <Peringatan>Peran {LABEL_PERAN[pengguna.peran]} hanya bisa melihat setting gaji. HRD yang mengajukan, Owner yang memutuskan.</Peringatan>}
 
       {formTerbuka && opsi && (
         <FormSettingGaji
@@ -127,7 +127,7 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
       <Kartu rapat>
         <KepalaKartu
           judul={`Pengajuan menunggu Owner (${d.pengajuan.length})`}
-          keterangan={bolehPutuskan ? "Bandingkan sebelum dan sesudah, lalu setujui atau tolak." : "Diputuskan oleh Owner."}
+          keterangan={bolehPutuskan ? "Bandingkan sebelum dan sesudah, lalu setujui atau tolak." : "Diajukan HRD, diputuskan Owner."}
         />
         {d.pengajuan.length === 0 ? (
           <KeadaanKosong judul="Tidak ada pengajuan yang menunggu" />

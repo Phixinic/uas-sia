@@ -376,10 +376,15 @@ test("halaman master dan pengguna untuk fee event", async () => {
   await p.getByLabel("Peran").selectOption("KAPTEN");
   await expect(p.getByLabel("Crew yang dipegang")).toBeVisible();
   await potret(p, "owner-pengguna-kapten", false);
+  // Jabatan event dan tarifnya diurus HRD; Owner hanya memutuskan dan menonaktifkan.
+  await p.goto("/master/sdm?tab=jabatanEvent&form=baru");
+  await expect(p.getByRole("row", { name: /Kapten Event/ })).toBeVisible();
+  await expect(p.getByRole("form", { name: "Form Jabatan event" })).toHaveCount(0);
+  await expect(p.getByRole("link", { name: "Jabatan event baru" })).toHaveCount(0);
   const h = sesi.hrd.page;
   await h.goto("/master/sdm?tab=jabatanEvent");
-  await expect(h.getByText("hanya bisa melihat jabatan event")).toBeVisible();
-  await expect(h.getByRole("link", { name: "Jabatan event baru" })).toHaveCount(0);
+  await expect(h.getByRole("link", { name: "Jabatan event baru" })).toBeVisible();
+  await expect(h.getByRole("row", { name: /Kapten Event/ }).getByRole("link", { name: "Ajukan nominal" })).toBeVisible();
 });
 
 /*

@@ -63,11 +63,11 @@ describe.runIf(aktif)("fee event lewat server action", async () => {
     if (!a.ok) expect(a.galat).toMatch(/Karyawan event tidak memakai setting gaji/);
   });
 
-  it("tarif jabatan event hanya diubah Owner; HRD tidak bisa menyentuh jabatan event lewat tab Jabatan", async () => {
-    await masukSebagai("hrd");
-    expect((await master.simpanMaster({ jenis: "jabatanEvent", kode: "JBT-06", nilai: { nama: "Crew Event", peranEvent: "CREW", satuanTarif: "JAM", tarif: 50_000, akunBebanKode: "6-230" } })).ok).toBe(false);
-    expect((await master.simpanMaster({ jenis: "jabatan", kode: "JBT-06", nilai: { nama: "Crew Event", akunBebanKode: "6-230" } })).ok).toBe(false);
+  it("jabatan event hanya diubah HRD; jenis jabatan inhouse tidak bisa menyentuh jabatan event", async () => {
     await masukSebagai("owner");
+    expect((await master.simpanMaster({ jenis: "jabatanEvent", kode: "JBT-06", nilai: { nama: "Crew Event", peranEvent: "CREW", satuanTarif: "JAM", tarif: 50_000, akunBebanKode: "6-230" } })).ok).toBe(false);
+    await masukSebagai("hrd");
+    expect((await master.simpanMaster({ jenis: "jabatan", kode: "JBT-06", nilai: { nama: "Crew Event", akunBebanKode: "6-230" } })).ok).toBe(false);
     expect((await master.simpanMaster({ jenis: "jabatanEvent", kode: "JBT-06", nilai: { nama: "Crew Event", peranEvent: "CREW", satuanTarif: "JAM", tarif: 20_000, akunBebanKode: "6-230" } })).ok).toBe(true);
     // Peran jabatan yang sudah dipakai penugasan tidak bisa diubah.
     expect((await master.simpanMaster({ jenis: "jabatanEvent", kode: "JBT-06", nilai: { nama: "Crew Event", peranEvent: "KAPTEN", satuanTarif: "JAM", tarif: 20_000, akunBebanKode: "6-230" } })).ok).toBe(false);

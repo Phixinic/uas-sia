@@ -41,7 +41,7 @@ export async function seedFeeEvent(db: DbAtauTx, idPeran: Record<string, number>
     if (await db.versiNominal.count({ where: { jenis: "JABATAN_EVENT", jabatanKode: itemKode } })) continue;
     await versiAwalSeed(db, {
       jenis: "JABATAN_EVENT", itemKode, nominal, tunjJabatan: 0, tunjKeluarga: 0, berlaku: "2026-10", alasan: "Tarif awal data contoh fee event.",
-      olehId: idPeran.owner ?? null, pada: new Date("2026-10-01T01:00:00Z"),
+      pengajuId: hrd ?? null, pemutusId: idPeran.owner ?? null, pada: new Date("2026-10-01T01:00:00Z"),
     });
   }
   const crew: [string, string, StatusPtkp, string, string][] = [

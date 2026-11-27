@@ -50,7 +50,7 @@ UC = {
     "gaji":    ("Catat potongan dan\nbonus manual", "gaji.hitung", "H"),
     "dist":    ("Ajukan Gaji Bulanan\n(hitung slip, PPh 21)", "penggajian.ajukan", "H"),
     "setgaji": ("Setujui/tolak Gaji Bulanan,\nsetting gaji, nominal", "penggajian.putuskan+setting-gaji.putuskan+nominal.putuskan", "O"),
-    "msdm":    ("Kelola master SDM,\najukan setting, nominal", "master-sdm.ubah+setting-gaji.ajukan+nominal.ajukan", "HO"),
+    "msdm":    ("Kelola struktur gaji,\najukan setting, nominal", "struktur-gaji.ubah+setting-gaji.ajukan+nominal.ajukan", "H"),
     "kunci":   ("Tutup periode (mengunci\nperiode) dan buka kunci", "periode.kunci", "O"),
     "katakun": ("Kelola akun, kategori,\nprofil, status master", "master.akun-kategori+master.nonaktifkan+profil.ubah", "O"),
     "pengguna": ("Kelola pengguna", "pengguna.kelola", "O"),
@@ -61,7 +61,7 @@ UC = {
     "putfee":  ("Tentukan fee akhir, setujui\natau tolak laporan", "fee-event.putuskan", "O"),
     "slipfee": ("Buat slip fee dan\njurnal fee event", None, ""),
     "upah":    ("Teruskan upah event\nke Gaji Bulanan", None, ""),
-    "tarif":   ("Atur tarif jabatan\nevent", "tarif-event.ubah", "O"),
+    "karyawan": ("Kelola karyawan dan\njadwal kerja", "master-sdm.ubah", "HO"),
 }
 # Relasi antar use case: (dari, ke, jenis, catatan). Panah dari use case yang menyertai/memperluas.
 REL = [
@@ -84,11 +84,11 @@ GRUP = {"masuk": "p", "dash": "p", "lap": "l", "kartu": "k", "cetak": "l", "ceta
         "draf": "k", "cepat": "k", "posting": "k", "aset": "k", "balik": "k", "sisa": "k", "susut": "k", "drafjp": "l", "ajujp": "l",
         "ajulepas": "k", "setlepas": "k", "setjp": "l", "revisi": "k", "invkas": "l", "setinv": "l", "upah": "e", "mkonv": "k", "presensi": "s", "gaji": "s", "dist": "s", "setgaji": "s", "msdm": "s",
         "kunci": "l", "katakun": "l", "pengguna": "l",
-        "event": "e", "nilai": "e", "kurang": "e", "lapor": "e", "putfee": "e", "slipfee": "e", "tarif": "e"}
+        "event": "e", "nilai": "e", "kurang": "e", "lapor": "e", "putfee": "e", "slipfee": "e", "karyawan": "s"}
 
 # Tata letak hasil pencarian: kunci -> (kolom, baris); aktor -> (sisi, posisi 0..1 sepanjang sisi).
 # Hasil --cari (SEED=43 AWAL=kisi T0=3 SIG0=25 LANGKAH=200000) untuk 38 use case di kanvas 880 pt, lalu 'upah' digeser ke (430, 262) supaya label extend-nya muat.
-TATA_LETAK = {'revisi': (177.1, 159.7), 'kunci': (717.1, 122.2), 'putfee': (576.8, 164.1), 'ajulepas': (161.0, 123.8), 'lapor': (452.1, 418.6), 'dist': (402.3, 333.2), 'draf': (307.9, 145.3), 'setgaji': (756.8, 88.0), 'setjp': (617.0, 204.0), 'setinv': (435.0, 205.1), 'presensi': (290.3, 422.1), 'balik': (692.5, 156.6), 'pengguna': (652.3, 239.4), 'ajujp': (140.8, 392.2), 'cepat': (124.3, 88.3), 'lap': (503.5, 88.2), 'katakun': (552.8, 127.8), 'sisa': (268.1, 313.8), 'susut': (288.2, 181.4), 'cetakslip': (448.3, 168.8), 'cetak': (645.5, 87.5), 'gaji': (437.5, 378.0), 'setlepas': (663.3, 293.3), 'kartu': (325.7, 87.5), 'tarif': (657.1, 330.0), 'dash': (304.3, 241.3), 'msdm': (755.3, 391.2), 'mkonv': (535.1, 296.8), 'posting': (397.1, 299.1), 'nilai': (640.9, 391.3), 'invkas': (156.0, 307.2), 'event': (668.3, 425.3), 'masuk': (310.3, 377.4), 'slipfee': (529.3, 252.6), 'upah': (430.0, 262.0), 'drafjp': (185.8, 215.9), 'aset': (198.7, 357.5), 'kurang': (513.6, 330.9)}
+TATA_LETAK = {'revisi': (177.1, 159.7), 'kunci': (717.1, 122.2), 'putfee': (576.8, 164.1), 'ajulepas': (161.0, 123.8), 'lapor': (452.1, 418.6), 'dist': (402.3, 333.2), 'draf': (307.9, 145.3), 'setgaji': (756.8, 88.0), 'setjp': (617.0, 204.0), 'setinv': (435.0, 205.1), 'presensi': (290.3, 422.1), 'balik': (692.5, 156.6), 'pengguna': (652.3, 239.4), 'ajujp': (140.8, 392.2), 'cepat': (124.3, 88.3), 'lap': (503.5, 88.2), 'katakun': (552.8, 127.8), 'sisa': (268.1, 313.8), 'susut': (288.2, 181.4), 'cetakslip': (448.3, 168.8), 'cetak': (645.5, 87.5), 'gaji': (437.5, 378.0), 'setlepas': (663.3, 293.3), 'kartu': (325.7, 87.5), 'karyawan': (755.3, 391.2), 'dash': (304.3, 241.3), 'msdm': (657.1, 330.0), 'mkonv': (535.1, 296.8), 'posting': (397.1, 299.1), 'nilai': (640.9, 391.3), 'invkas': (156.0, 307.2), 'event': (668.3, 425.3), 'masuk': (310.3, 377.4), 'slipfee': (529.3, 252.6), 'upah': (430.0, 262.0), 'drafjp': (185.8, 215.9), 'aset': (198.7, 357.5), 'kurang': (513.6, 330.9)}
 AKTOR_LETAK = {'P': ('T', 0.51), 'A': ('L', 0.448), 'H': ('B', 0.343), 'O': ('R', 0.512), 'K': ('B', 0.45)}
 
 

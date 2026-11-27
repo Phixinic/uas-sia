@@ -116,7 +116,7 @@ async function main() {
   // urutan dan aturannya sama dengan migrasi 20261124090000_nominal_riwayat (golongan, tunjangan, jabatan inhouse;
   // tarif jabatan event dibuat seedFeeEvent).
   await db.periode.createMany({ data: [{ id: "2026-10" }], skipDuplicates: true });
-  const versiAwal = { berlaku: "2026-10", alasan: "Nominal awal data contoh Oktober 2026.", olehId: idPeran.owner, pada: waktu("2026-10-01T08:00:00+07:00")! };
+  const versiAwal = { berlaku: "2026-10", alasan: "Nominal awal data contoh Oktober 2026.", pengajuId: idPeran.hrd, pemutusId: idPeran.owner, pada: waktu("2026-10-01T08:00:00+07:00")! };
   const kosong = { nominal: 0, tunjJabatan: 0, tunjKeluarga: 0 };
   const versiItem = new Map<string, { kode: string; nominal: number; tunjJabatan: number; tunjKeluarga: number }>();
   for (const x of [...daftar("golongan")].sort((a, b) => a.id.localeCompare(b.id))) {

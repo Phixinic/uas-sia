@@ -4,7 +4,8 @@
  * Server action data master (supplier, peralatan, perlengkapan, kategori, akun, karyawan, jabatan, golongan,
  * tunjangan, jadwal kerja, setting gaji) dan profil usaha.
  * Master tidak pernah dihapus, hanya dinonaktifkan, supaya transaksi lama tetap terbaca.
- * Izin per jenis ada di DEF_MASTER (lihat src/lib/skema/master.ts), nonaktifkan hanya Owner.
+ * Izin per jenis ada di DEF_MASTER (lihat src/lib/skema/master.ts), nonaktifkan hanya Owner. Struktur gaji (jabatan,
+ * jabatan event, golongan, tunjangan) hanya ditambah dan diubah HRD.
  * Nominal jabatan, jabatan event, golongan, dan tunjangan berversi (tabel versi_nominal): data baru langsung membuat
  * pengajuan nominal awal dengan bulan berlaku, ubah data hanya mengubah atribut lain (nama, akun biaya, peran, satuan).
  * Perubahan nominal sesudahnya lewat ajukanNominal (src/lib/aksi/master/nominal.ts).
@@ -148,7 +149,7 @@ async function simpan(tx: Tx, jenis: JenisMaster, kodeLama: string | null, v: Ni
     }
     case "jabatan": {
       const lama = kodeLama ? await tx.jabatan.findUnique({ where: { kode: kodeLama }, select: { akunBebanKode: true, kelompok: true } }) : null;
-      if (lama && lama.kelompok !== "INHOUSE") throw new GalatAksi("Jabatan ini jabatan event. Ubah lewat tab Jabatan event (khusus Owner).");
+      if (lama && lama.kelompok !== "INHOUSE") throw new GalatAksi("Jabatan ini jabatan event. Ubah lewat tab Jabatan event.");
       await pastikanRujukan([await ada("akun", s("akunBebanKode"), "Akun biaya gaji", "akunBebanKode", lama?.akunBebanKode === s("akunBebanKode"))]);
       // Tunjangan jabatan dan istri/anak tidak disimpan di jabatan, tetapi di versi nominal (lihat ajukanNominalAwal).
       const data = { nama: s("nama"), akunBebanKode: s("akunBebanKode") };
