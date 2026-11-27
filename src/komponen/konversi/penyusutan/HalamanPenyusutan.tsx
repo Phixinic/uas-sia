@@ -33,7 +33,11 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
   const { periode, pilihan, batas, lewatBatas } = await periodePenyusutan(periodeDariCari(cari) ?? undefined);
   const [d, namaAkun] = await Promise.all([dataPenyusutan(periode), petaAkun()]);
   const bolehProses = boleh(pengguna.peran, "penyusutan.proses");
-  const tertahan = d.periodeSebelumnyaBelum.length > 0 || d.terkunci || lewatBatas;
+  const untukOwner = pengguna.peran === "OWNER";
+  // Owner sekaligus menyetujui periode lebih lama, jadi hanya Admin yang tertahan olehnya.
+  const adaSebelumnya = d.periodeSebelumnyaBelum.length > 0;
+  const tertahan = (!untukOwner && adaSebelumnya) || d.terkunci || lewatBatas;
+  const tampilTombol = bolehProses && (d.belumDiproses > 0 || (untukOwner && adaSebelumnya));
 
   return (
     <>
@@ -69,7 +73,7 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
         <Peringatan jenis="awas">
           Periode {labelPeriode(d.periodeSebelumnyaBelum[0])} belum diproses.{" "}
           <Link className="font-medium underline" href={denganPeriode(ALAMAT, d.periodeSebelumnyaBelum[0])}>Buka periode itu</Link>
-          . Proses periode paling lama dulu supaya urutan jadwal tetap benar.
+          . {untukOwner ? "Tombol Setujui semua ikut menyetujuinya lebih dulu, berurutan dari yang paling lama." : "Proses periode paling lama dulu supaya urutan jadwal tetap benar."}
         </Peringatan>
       )}
       {lewatBatas && (
@@ -87,7 +91,7 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
         <KepalaKartu
           judul={`Pratinjau · ${labelBulanTahun(periode)}`}
           keterangan={`${d.baris.length} aset, ${d.belumDiproses} belum diproses`}
-          aksi={bolehProses && d.belumDiproses > 0 ? <TombolProses periode={periode} jumlah={d.belumDiproses} total={d.totalBelum} disabled={tertahan} untukOwner={pengguna.peran === "OWNER"} /> : undefined}
+          aksi={tampilTombol ? <TombolProses periode={periode} jumlah={d.belumDiproses} total={d.totalBelum} disabled={tertahan} untukOwner={untukOwner} sebelumnya={d.periodeSebelumnyaBelum} /> : undefined}
         />
         {d.baris.length === 0 ? (
           <KeadaanKosong judul={`Tidak ada aset yang disusutkan pada ${labelPeriode(periode)}`} keterangan="Jadwal dibuat saat pembelian peralatan diposting." />

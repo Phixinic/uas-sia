@@ -75,7 +75,7 @@ Peran **Kapten** (crew freelance yang memimpin event) ditolak secara bawaan: `wa
 | `pembelian.posting` | Admin, Owner | posting draf |
 | `pembelian.balik` | Owner | balik pembelian terposting (jurnal pembalik, alasan wajib) |
 | `nilai-sisa.input` | Admin | input dan ubah draf nilai sisa perlengkapan, ajukan revisi sesudah disetujui |
-| `penyusutan.proses` | Admin, Owner | proses penyusutan satu periode untuk semua aset sekaligus: jurnal penyesuaian langsung DISETUJUI |
+| `penyusutan.proses` | Admin, Owner | proses penyusutan untuk semua aset sekaligus: jurnal penyesuaian langsung DISETUJUI. "Setujui semua" milik Owner ikut memproses periode lebih lama yang tertunda, berurutan, satu jurnal per periode (`prosesPenyusutanSampaiDalam`) |
 | `pelepasan.ajukan` | Admin | ajukan pelepasan |
 | `pelepasan.putuskan` | Owner | setujui atau tolak pelepasan (alasan wajib saat tolak) |
 | `presensi.kelola` | HRD | input, ubah, hapus presensi |

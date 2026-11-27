@@ -42,3 +42,16 @@ export async function prosesPenyusutanDalam(tx: Tx, penggunaId: number, P: strin
   await catatLog(tx, penggunaId, "penyusutan.proses", "jurnal", jurnalNo, `${labelPeriode(P)}, ${baris.length} aset, langsung disetujui`);
   return { jurnalNo, jumlah: baris.length, total };
 }
+
+/**
+ * "Setujui semua": semua periode yang belum diproses sampai P, dari yang paling lama, satu jurnal per periode. Dipanggil
+ * dalam satu transaksi, jadi bila satu periode ditolak (misalnya terkunci) tidak ada yang tersimpan.
+ */
+export async function prosesPenyusutanSampaiDalam(tx: Tx, penggunaId: number, P: string, batas: string = periodeBatasProses()) {
+  if (P > batas) throw new GalatAksi(`Penyusutan hanya bisa diproses sampai ${labelPeriode(batas)}.`);
+  const belum = await tx.jadwalPenyusutan.findMany({ where: { periodeId: { lte: P }, jurnalNo: null, aset: { status: "AKTIF" } }, distinct: ["periodeId"], orderBy: { periodeId: "asc" }, select: { periodeId: true } });
+  if (!belum.length) throw new GalatAksi(`Penyusutan sampai ${labelPeriode(P)} sudah diproses atau tidak ada.`);
+  const hasil: (Awaited<ReturnType<typeof prosesPenyusutanDalam>> & { periode: string })[] = [];
+  for (const { periodeId } of belum) hasil.push({ periode: periodeId, ...(await prosesPenyusutanDalam(tx, penggunaId, periodeId, batas)) });
+  return hasil;
+}
