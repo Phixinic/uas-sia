@@ -3,7 +3,7 @@
  * ?bulan=12&tahun=2026, &ubah=KRY-01 (editor potongan dan bonus, HRD), &slip=KRY-01|semua (slip siap cetak).
  * Satu baris per karyawan inhouse: setting berlaku, presensi, gaji tetap, upah event, potongan, bonus, PPh 21, THP.
  * HRD mengisi potongan dan bonus (pratinjau langsung), lalu mengajukan satu paket bulan itu; Owner menyetujui atau menolak.
- * Angka yang belum diajukan adalah estimasi dan ditandai begitu.
+ * Angka yang belum diajukan adalah estimasi dan ditandai begitu. Karyawan yang gajinya belum dibayar tampil di atas.
  */
 import Link from "next/link";
 import { Printer } from "lucide-react";
@@ -14,11 +14,13 @@ import { boleh } from "@/lib/peran";
 import { AKUN } from "@/lib/inti/akun";
 import { periodeTerkunciSemua, profilUsaha } from "@/lib/data/umum";
 import { opsiPeriodeSdm, periodeDipilih, type CariPeriode } from "@/lib/data/sdm/umum";
+import { estimasiBiayaTetap } from "@/lib/data/master/setting-gaji";
 import { barisHitungGaji, kesiapanGaji, muatUpahEvent, paketGajiPeriode, type BarisGaji } from "@/lib/data/sdm/gaji";
 
 import { denganPeriode, kunciPenutup, labelPeriode } from "@/lib/inti/tanggal";
 import { labelWaktu, rupiah } from "@/lib/format";
 import { pesanKasKurang } from "@/lib/inti/modal";
+import { belumDiAtas } from "@/lib/inti/urut";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import LencanaPeriode from "@/komponen/ui/LencanaPeriode";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
@@ -58,13 +60,14 @@ export default async function HalamanGajiBulanan({ cari }: { cari: CariGajiBulan
   const bolehAjukan = boleh(pengguna.peran, "penggajian.ajukan");
   const bolehPutuskan = boleh(pengguna.peran, "penggajian.putuskan");
 
-  const [opsiPeriode, baris, paket, terkunci, profil, upahSemua] = await Promise.all([
+  const [opsiPeriode, baris, paket, terkunci, profil, upahSemua, biayaTetap] = await Promise.all([
     opsiPeriodeSdm(periode),
     barisHitungGaji(periode),
     paketGajiPeriode(periode),
     periodeTerkunciSemua(),
     profilUsaha(),
     muatUpahEvent(db, periode),
+    estimasiBiayaTetap([periode]).then((m) => m.get(periode) ?? null),
   ]);
   const kesiapan = await kesiapanGaji(periode, baris);
   const alamatPeriode = denganPeriode(ALAMAT, periode);
@@ -83,6 +86,7 @@ export default async function HalamanGajiBulanan({ cari }: { cari: CariGajiBulan
   const nominalKurang = siap.filter((b) => b.nominalKurang.length);
   const thpSiap = siap.reduce((s, b) => s + b.tampil.thp, 0);
   const jumlah = (f: (b: BarisGaji) => number) => baris.reduce((s, b) => s + f(b), 0);
+  const barisTampil = belumDiAtas(baris, (b) => b.slipStatus !== "DISETUJUI");
   const editor = bolehUbah && !penutup && cari.ubah ? baris.find((b) => b.karyawanKode === cari.ubah && (!b.slipStatus || b.slipStatus === "DRAFT")) ?? null : null;
   // Slip terkunci (diajukan atau dibayar) memakai angka tersimpan; yang belum diajukan memakai hitungan terbaru (pratinjau).
   const daftarSlip = cari.slip ? baris.filter((b) => cari.slip === "semua" || b.karyawanKode === cari.slip).map((b) => b.tampil) : [];
@@ -98,7 +102,16 @@ export default async function HalamanGajiBulanan({ cari }: { cari: CariGajiBulan
 
       {daftarSlip.length > 0 && <SlipGaji daftar={daftarSlip} namaUsaha={profil.nama} alamatTutup={alamatPeriode} />}
 
-      <div className="tanpa-cetak grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="tanpa-cetak grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KartuRingkasan
+          judul="Estimasi biaya tetap"
+          nilai={biayaTetap ? biayaTetap.total : "-"}
+          keterangan={
+            <span className="whitespace-normal">
+              {biayaTetap ? `Gaji pokok dan tunjangan tetap ${biayaTetap.karyawan} karyawan, sebelum potongan, upah event, bonus, dan PPh 21` : "Belum ada setting gaji yang berlaku di bulan ini"}
+            </span>
+          }
+        />
         <KartuRingkasan judul="Karyawan digaji" nilai={String(baris.length)} bukanUang keterangan={`${siap.length} siap diajukan, ${tanpaPresensi.length} belum ada presensi`} nada={tanpaPresensi.length ? "kuning" : "netral"} />
         <KartuRingkasan judul="Total bruto" nilai={jumlah((b) => b.tampil.bruto)} keterangan={`Upah event ${rupiah(jumlah((b) => b.tampil.totalUpahEvent))}, bonus ${rupiah(jumlah((b) => b.tampil.totalBonus))}`} />
         <KartuRingkasan judul="Total THP" nilai={jumlah((b) => b.tampil.thp)} nada={dibayar.length && !terbuka.length ? "hijau" : "netral"} keterangan={terbuka.length ? "Sebagian masih estimasi (belum diajukan)" : "Sesuai slip yang diajukan atau dibayar"} />
@@ -165,7 +178,7 @@ export default async function HalamanGajiBulanan({ cari }: { cari: CariGajiBulan
         ) : (
           <>
             <DaftarHP label="Gaji per karyawan">
-              {baris.map((b) => {
+              {barisTampil.map((b) => {
                 const t = b.tampil;
                 return (
                   <KartuHP key={b.karyawanKode} judul={`${b.nama}`} sub={<><span className="kode">{b.karyawanKode}</span> · {b.versi.kode ?? "setting lama"} · {b.versi.jabatan}, {b.versi.golongan}</>} kanan={<StatusSlipKaryawan slipStatus={b.slipStatus} jumlahPresensi={b.jumlahPresensi} periode={periode} karyawanKode={b.karyawanKode} dikembalikan={!!b.alasanTolak} />}>
@@ -202,7 +215,7 @@ export default async function HalamanGajiBulanan({ cari }: { cari: CariGajiBulan
                   </tr>
                 </thead>
                 <tbody>
-                  {baris.map((b) => {
+                  {barisTampil.map((b) => {
                     const t = b.tampil;
                     const bisaUbah = bolehUbah && !penutup && (!b.slipStatus || b.slipStatus === "DRAFT");
                     return (

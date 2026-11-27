@@ -28,6 +28,7 @@ import FormMaster from "./FormMaster";
 import AksiMaster from "./AksiMaster";
 import AksiNominal from "./AksiNominal";
 import FormNominal from "./FormNominal";
+import { belumDiAtas, belumDiputuskan } from "@/lib/inti/urut";
 
 export const ALAMAT_STRUKTUR = "/master/sdm?tab=struktur";
 export const alamatBagian = (jenis: JenisStruktur, form?: string) => `${ALAMAT_STRUKTUR}&jenis=${jenis}${form ? `&form=${form}` : ""}#bagian-${jenis}`;
@@ -232,7 +233,7 @@ export default async function BagianStrukturGaji({ peran, cari }: { peran: Peran
               <tr><th>Versi</th><th>Nominal</th><th>Berlaku mulai</th><th>Status</th><th>Alasan</th><th>Diajukan</th><th>Diputuskan</th></tr>
             </thead>
             <tbody>
-              {(d.riwayat[jenisForm][riwayatItem.kode] ?? []).map((v) => (
+              {belumDiAtas(d.riwayat[jenisForm][riwayatItem.kode] ?? [], (v) => belumDiputuskan(v.status)).map((v) => (
                 <tr key={v.kode}>
                   <td className="kode">{v.kode}</td>
                   <td className="whitespace-nowrap font-medium">{v.teks}</td>
@@ -297,7 +298,14 @@ export default async function BagianStrukturGaji({ peran, cari }: { peran: Peran
         const form = kelompokJenis.map((jenis) => formUntuk(jenis)).find(Boolean) ?? null;
         const semuaBaris = kelompokJenis.flatMap((jenis) => d.daftar[jenis].baris.map((b) => ({ jenis, b })));
         const saring = gabungan ? kelompokDipilih : "semua";
-        const baris = semuaBaris.filter((x) => saring === "semua" || (saring === "INHOUSE" ? x.jenis === "jabatan" : x.jenis === "jabatanEvent"));
+        // Data dengan pengajuan nominal menunggu, atau data aktif yang belum punya nominal disetujui, tampil di atas.
+        const baris = belumDiAtas(
+          semuaBaris.filter((x) => saring === "semua" || (saring === "INHOUSE" ? x.jenis === "jabatan" : x.jenis === "jabatanEvent")),
+          ({ jenis, b }) => {
+            const n = d.nominal[jenis][b.kode];
+            return !!n && (n.menunggu.length > 0 || (b.aktif && !n.berlaku && !n.berikutnya));
+          },
+        );
         const utama = kelompokJenis[0];
         const info = gabungan ? { judul: "Jabatan", keterangan: "Satu master jabatan untuk karyawan inhouse (tunjangan jabatan dan tunjangan istri/anak ikut setting gaji, jam kerja di tab Jadwal kerja) dan untuk penugasan event (peran, satuan tarif, dan tarif fee). Data ditambah dan diubah HRD." } : BAGIAN[utama];
         const adaAksiKolom = bolehUbah || bolehNominal || bolehNonaktifkan;

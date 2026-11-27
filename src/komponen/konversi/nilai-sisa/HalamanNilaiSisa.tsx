@@ -26,6 +26,7 @@ import { PanelStatusJurnal, TabelRiwayatJurnal } from "@/komponen/konversi/umum/
 import { TautanTombol } from "@/komponen/ui/Tombol";
 import FormNilaiSisa from "./FormNilaiSisa";
 import { KartuRevisiMenunggu, RiwayatVersi } from "./PanelRevisi";
+import { jurnalDikembalikan } from "@/lib/inti/urut";
 
 type DataOpname = NonNullable<Awaited<ReturnType<typeof dataNilaiSisa>>["opname"]>;
 
@@ -196,6 +197,7 @@ export default async function HalamanNilaiSisa({ cari }: { cari: { periode?: str
         penggunaId={pengguna.id}
         peran={pengguna.peran}
         tombolDiAtas={d.jurnalIni?.no}
+        dikembalikan={jurnalDikembalikan(d.riwayatJurnal, new Set(d.riwayat.filter((r) => r.status === "DRAFT" && !r.jurnalNo).map((r) => r.periode)))}
       />
       {tanpaJurnal.length > 0 && (
         <p className="teks-redup">

@@ -24,6 +24,7 @@ import LencanaBiaya from "@/komponen/sdm/LencanaBiaya";
 import { DaftarHP, KartuHP, RincianHP, TabelLebar } from "@/komponen/fee-event/Ringkas";
 import FormSettingGaji from "./FormSettingGaji";
 import AksiSettingGaji from "./AksiSettingGaji";
+import { belumDiAtas, belumDiputuskan } from "@/lib/inti/urut";
 
 export const ALAMAT_SETTING_GAJI = "/sdm/setting-gaji";
 
@@ -95,7 +96,9 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
   const d = await dataSettingGaji();
   const formTerbuka = cari.form === "baru" && bolehAjukan;
   const [opsi, terkunci] = formTerbuka ? await Promise.all([opsiMaster(), periodeTerkunciSemua()]) : [null, []];
-  const riwayat = cari.riwayat ? d.riwayat.filter((v) => v.karyawanKode === cari.riwayat) : d.riwayat;
+  const riwayat = belumDiAtas(cari.riwayat ? d.riwayat.filter((v) => v.karyawanKode === cari.riwayat) : d.riwayat, (v) => belumDiputuskan(v.status));
+  // Karyawan dengan pengajuan menunggu, atau karyawan aktif tanpa setting berlaku, tampil di atas.
+  const barisTampil = belumDiAtas(d.baris, (b) => b.menunggu > 0 || (b.aktif && !b.aktifSekarang));
   const namaRiwayat = cari.riwayat ? d.baris.find((b) => b.kode === cari.riwayat)?.nama : null;
   const berlakuSekarang = new Set(d.baris.map((b) => b.aktifSekarang?.kode).filter(Boolean));
   const alamatForm = (k?: string) => `${ALAMAT_SETTING_GAJI}?form=baru${k ? `&karyawan=${k}` : ""}`;
@@ -173,7 +176,7 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
         ) : (
           <>
             <DaftarHP label="Setting gaji berlaku">
-              {d.baris.map((b) => {
+              {barisTampil.map((b) => {
                 const v = b.aktifSekarang;
                 return (
                   <KartuHP
@@ -208,7 +211,7 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
                   </tr>
                 </thead>
                 <tbody>
-                  {d.baris.map((b) => {
+                  {barisTampil.map((b) => {
                     const v = b.aktifSekarang;
                     return (
                       <tr key={b.kode} className={b.aktif ? "" : "text-slate-400"}>
@@ -245,7 +248,7 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
         <Kartu rapat>
           <KepalaKartu
             judul={namaRiwayat ? `Riwayat setting gaji ${namaRiwayat}` : "Riwayat setting gaji semua karyawan"}
-            keterangan={`${riwayat.length} versi, urut per karyawan, bulan berlaku paling lama di atas. Rincian tunjangan dan alasan muncul saat kursor di atas baris.`}
+            keterangan={`${riwayat.length} versi. Yang menunggu Owner di atas, lalu per karyawan dari bulan berlaku paling lama. Rincian tunjangan dan alasan muncul saat kursor di atas baris.`}
             aksi={cari.riwayat ? <Link className="text-[13px] font-semibold text-aksen hover:underline" href={`${ALAMAT_SETTING_GAJI}#riwayat`}>Tampilkan semua</Link> : undefined}
           />
           {riwayat.length === 0 ? (

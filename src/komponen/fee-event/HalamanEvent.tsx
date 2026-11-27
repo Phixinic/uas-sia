@@ -26,6 +26,7 @@ import { FormEvent, FormKehadiran, FormPenugasan, FormSesi } from "./FormEvent";
 import { AksiBaris, TombolHapusEvent } from "./AksiEvent";
 import { KeteranganPenilaian, LencanaPenilaian } from "./Penilaian";
 import { DaftarHP, KartuHP, RincianHP, TabelLebar } from "./Ringkas";
+import { belumDiAtas, belumDiputuskan } from "@/lib/inti/urut";
 
 const ALAMAT = "/fee-event/event";
 export type CariEvent = { lihat?: string; form?: string; sesi?: string; tugas?: string; hadir?: string; sesiId?: string };
@@ -39,6 +40,7 @@ export default async function HalamanEvent({ cari }: { cari: CariEvent }) {
   const hari = hariIni();
   const form = cari.form === "baru" && bolehKelola ? <FormEvent awal={{ kode: null, nama: "", klien: "", tanggalMulai: hari, tanggalSelesai: hari }} alamatKembali={ALAMAT} /> : null;
   const n = (s: string) => daftar.filter((e) => e.status === s).length;
+  const daftarTampil = belumDiAtas(daftar, (e) => e.status !== "SELESAI");
 
   return (
     <>
@@ -63,7 +65,7 @@ export default async function HalamanEvent({ cari }: { cari: CariEvent }) {
         ) : (
           <>
 <DaftarHP label="Daftar event">
-            {daftar.map((e) => (
+            {daftarTampil.map((e) => (
               <KartuHP
                 key={e.kode}
                 judul={e.nama}
@@ -98,7 +100,7 @@ export default async function HalamanEvent({ cari }: { cari: CariEvent }) {
               </tr>
             </thead>
             <tbody>
-              {daftar.map((e) => (
+              {daftarTampil.map((e) => (
                 <tr key={e.kode}>
                   <td className="kode">{e.kode}</td>
                   <td>
@@ -147,8 +149,8 @@ async function DetailEvent({ kode, cari, bolehKelola }: { kode: string; cari: Ca
   const kapten = b.orang.filter((o) => o.peranEvent === "KAPTEN");
   const semuaKehadiran = b.orang.flatMap((o) => o.kehadiran);
   const kurang = semuaKehadiran.filter((k) => k.penilaian === "KURANG").length;
-  // riwayat[0] = laporan terbaru (tautan di peringatan); tabel menampilkannya dari yang paling lama.
-  const riwayatNaik = [...riwayat].reverse();
+  // riwayat[0] = laporan terbaru (tautan di peringatan); tabel menampilkan yang menunggu Owner di atas, lalu dari yang paling lama.
+  const riwayatTampil = belumDiAtas([...riwayat].reverse(), (l) => belumDiputuskan(l.status));
 
   const form = kelola ? await formDetail(b, cari, dasar) : null;
 
@@ -274,7 +276,8 @@ async function DetailEvent({ kode, cari, bolehKelola }: { kode: string; cari: Ca
       </Kartu>
 
       {b.sesi.map((s) => {
-        const baris = b.orang.flatMap((o) => o.kehadiran.filter((k) => k.sesiId === s.id).map((k) => ({ o, k })));
+        // Kehadiran crew yang belum dinilai tampil di atas.
+        const baris = belumDiAtas(b.orang.flatMap((o) => o.kehadiran.filter((k) => k.sesiId === s.id).map((k) => ({ o, k }))), ({ o, k }) => o.peranEvent === "CREW" && !k.penilaian);
         return (
           <Kartu rapat key={s.id}>
             <KepalaKartu
@@ -326,7 +329,7 @@ async function DetailEvent({ kode, cari, bolehKelola }: { kode: string; cari: Ca
           <KepalaKartu judul="Riwayat laporan kapten" keterangan={`${riwayat.length} laporan`} />
           <>
 <DaftarHP label="Riwayat laporan">
-            {riwayatNaik.map((l) => (
+            {riwayatTampil.map((l) => (
               <KartuHP key={l.no} judul={<span className="kode">{l.no}</span>} sub={`${labelWaktu(l.diajukanPada)} · ${l.diajukanOleh}`} kanan={<LencanaStatus jenis="persetujuan" status={l.status} />}>
                 <div className="text-[13px] break-words">{l.alasanTolak ? <span className="text-rose-700">Ditolak: {l.alasanTolak}</span> : l.jurnalNo ? `Jurnal ${l.jurnalNo}` : l.catatanKapten || "-"}</div>
                 <TautanTombol href={`/fee-event/keputusan?lihat=${l.no}`} kecil>Buka</TautanTombol>
@@ -337,7 +340,7 @@ async function DetailEvent({ kode, cari, bolehKelola }: { kode: string; cari: Ca
 <Tabel label="Riwayat laporan">
             <thead><tr><th>No.</th><th>Dikirim</th><th>Oleh</th><th>Status</th><th>Keterangan</th><th className="text-right" /></tr></thead>
             <tbody>
-              {riwayatNaik.map((l) => (
+              {riwayatTampil.map((l) => (
                 <tr key={l.no}>
                   <td className="kode">{l.no}</td>
                   <td className="whitespace-nowrap">{labelWaktu(l.diajukanPada)}</td>

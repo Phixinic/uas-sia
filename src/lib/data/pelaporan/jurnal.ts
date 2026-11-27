@@ -9,6 +9,7 @@ import { dariDate } from "@/lib/inti/tanggal";
 import type { BarisJurnal } from "@/lib/inti/jurnal";
 import type { Prisma } from "@/generated/prisma/client";
 import type { JenisJurnal, StatusPersetujuan, SumberJurnal } from "@/generated/prisma/enums";
+import { belumDiAtas, belumDiputuskan, jurnalDikembalikan } from "@/lib/inti/urut";
 
 export type RincianJurnal = { label: string; info: string; nilai: number };
 
@@ -90,9 +91,10 @@ async function rincianPenyesuaian(daftar: BarisDb[]): Promise<Map<string, Rincia
 }
 
 export async function daftarJurnalPenyesuaian(status: StatusPersetujuan | null): Promise<{ daftar: DataJurnal[]; hitung: Record<StatusPersetujuan | "semua", number> }> {
-  const [daftarDb, grup] = await Promise.all([
+  const [daftarDb, grup, opnameKembali] = await Promise.all([
     ambilBaris({ jenis: "PENYESUAIAN", ...(status ? { status } : {}) }),
     db.jurnal.groupBy({ by: ["status"], where: { jenis: "PENYESUAIAN" }, _count: true }),
+    db.opname.findMany({ where: { status: "DRAFT", jurnalNo: null }, select: { periodeId: true } }),
   ]);
   const rincian = await rincianPenyesuaian(daftarDb);
   const hitung = { DRAFT: 0, DIAJUKAN: 0, DISETUJUI: 0, DITOLAK: 0, semua: 0 };
@@ -100,7 +102,10 @@ export async function daftarJurnalPenyesuaian(status: StatusPersetujuan | null):
     hitung[g.status] = g._count;
     hitung.semua += g._count;
   }
-  return { daftar: daftarDb.map((j) => petakan(j, rincian.get(j.no))), hitung };
+  const daftar = daftarDb.map((j) => petakan(j, rincian.get(j.no)));
+  const dikembalikan = jurnalDikembalikan(daftar.filter((j) => j.sumberTipe === "OPNAME"), new Set(opnameKembali.map((o) => o.periodeId)));
+  // Yang belum diputuskan atau dikembalikan dan belum diajukan ulang di atas.
+  return { daftar: belumDiAtas(daftar, (j) => belumDiputuskan(j.status) || dikembalikan.has(j.no)), hitung };
 }
 
 /** Jurnal umum dan pembalik yang sudah disetujui. `periode` null = semua periode. */

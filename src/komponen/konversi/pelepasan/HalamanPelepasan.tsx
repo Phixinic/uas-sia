@@ -22,6 +22,7 @@ import KeadaanKosong from "@/komponen/ui/KeadaanKosong";
 import TabelJurnal from "@/komponen/ui/TabelJurnal";
 import FormPelepasan from "./FormPelepasan";
 import AksiPelepasan from "./AksiPelepasan";
+import { belumDiAtas, belumDiputuskan } from "@/lib/inti/urut";
 
 const ALAMAT = "/konversi/pelepasan";
 
@@ -108,7 +109,7 @@ export default async function HalamanPelepasan({ cari }: { cari: { form?: string
               </tr>
             </thead>
             <tbody>
-              {d.pelepasan.map((p) => (
+              {belumDiAtas(d.pelepasan, (p) => belumDiputuskan(p.status)).map((p) => (
                 <tr key={p.no} className={cari.lihat === p.no ? "bg-aksen-lembut/50" : ""}>
                   <td className="kode">{p.no}</td>
                   <td><span className="kode mr-1">{p.asetKode}</span>{p.nama}</td>

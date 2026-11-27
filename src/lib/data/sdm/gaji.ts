@@ -13,6 +13,7 @@ import { labelSumberVersi, sidikVersiSlip, type PetaNominal } from "@/lib/inti/n
 import { muatPetaNominal } from "@/lib/server/nominal";
 import { labelDurasi } from "@/lib/inti/fee-event";
 import type { StatusPersetujuan } from "@/generated/prisma/enums";
+import { estimasiBiayaTetap } from "@/lib/data/master/setting-gaji";
 
 /** Versi nominal yang dipakai satu komponen slip. null = nominal sebelum riwayat (slip lama) atau belum berlaku. */
 export type RefVersi = { kode: string; berlakuMulai: string } | null;
@@ -530,6 +531,8 @@ export type RingkasBulanGaji = {
   dibayar: number;
   /** Total THP semua slip bulan itu (draf, diajukan, dan dibayar). */
   thp: number;
+  /** Estimasi biaya tetap untuk bulan yang belum ada slip diajukan atau dibayar dan punya setting gaji berlaku; selain itu null. */
+  estimasi: number | null;
   /** Keadaan yang paling perlu ditindaklanjuti: diajukan, slip draf, dibayar, presensi tanpa slip, atau belum ada presensi. */
   status: "DIAJUKAN" | "DRAF" | "DIBAYAR" | "PRESENSI" | "KOSONG";
 };
@@ -538,12 +541,13 @@ export type RingkasBulanGaji = {
 export async function ringkasanTahunGaji(tahun: number): Promise<RingkasBulanGaji[]> {
   const awal = `${tahun}-01`;
   const akhir = `${tahun}-12`;
-  const [presensi, slip] = await Promise.all([
+  const bulan = Array.from({ length: 12 }, (_, i) => `${tahun}-${String(i + 1).padStart(2, "0")}`);
+  const [estimasi, presensi, slip] = await Promise.all([
+    estimasiBiayaTetap(bulan),
     db.$queryRaw<{ p: string; n: bigint }[]>`select to_char(tanggal, 'YYYY-MM') as p, count(*)::bigint as n from presensi where tanggal >= ${keDate(`${awal}-01`)} and tanggal <= ${keDate(hariTerakhir(akhir))} group by 1`,
     db.slipGaji.groupBy({ by: ["periodeId", "status"], where: { periodeId: { gte: awal, lte: akhir } }, _count: true, _sum: { thp: true } }),
   ]);
-  return Array.from({ length: 12 }, (_, i) => {
-    const periode = `${tahun}-${String(i + 1).padStart(2, "0")}`;
+  return bulan.map((periode) => {
     const milik = slip.filter((s) => s.periodeId === periode);
     const n = (st: string) => milik.find((s) => s.status === st)?._count ?? 0;
     const r = {
@@ -555,6 +559,6 @@ export async function ringkasanTahunGaji(tahun: number): Promise<RingkasBulanGaj
       thp: milik.reduce((x, s) => x + (s._sum.thp ?? 0), 0),
     };
     const status: RingkasBulanGaji["status"] = r.diajukan ? "DIAJUKAN" : r.draf ? "DRAF" : r.dibayar ? "DIBAYAR" : r.presensi ? "PRESENSI" : "KOSONG";
-    return { ...r, status };
+    return { ...r, status, estimasi: r.diajukan || r.dibayar ? null : (estimasi.get(periode)?.total ?? null) };
   });
 }

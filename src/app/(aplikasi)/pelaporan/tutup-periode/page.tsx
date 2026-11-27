@@ -9,6 +9,7 @@ import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu from "@/komponen/ui/Kartu";
 import { LencanaStatus } from "@/komponen/ui/Lencana";
 import { TombolBukaKunci, TombolKunci } from "@/komponen/pelaporan/AksiPeriode";
+import { belumDiAtas } from "@/lib/inti/urut";
 
 export const metadata: Metadata = { title: "Tutup Periode" };
 
@@ -24,7 +25,8 @@ export default async function Halaman() {
         keterangan="Periode yang dikunci menolak jurnal baru bertanggal di dalamnya. Periode dikunci berurutan dari yang paling lama dan dibuka berurutan dari yang paling akhir. Owner mengunci setelah semua pemeriksaan lulus, dan bisa membuka lagi dengan alasan."
       />
       <div className="space-y-4">
-        {daftar.map((p) => {
+        {/* Periode yang belum dikunci di atas, lalu yang terkunci; masing-masing dari yang paling lama. */}
+        {belumDiAtas(daftar, (p) => p.status === "TERBUKA").map((p) => {
           const lulus = p.periksa?.every((x) => x.lulus) ?? false;
           return (
             <Kartu key={p.id} className="space-y-3">

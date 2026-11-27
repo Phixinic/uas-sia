@@ -106,6 +106,26 @@ function keTampil(v: VersiDb, digantikan: Set<string>, peta: PetaNominal, period
   };
 }
 
+/**
+ * Estimasi biaya tetap tiap bulan: gaji pokok dan seluruh tunjangan tetap (angka "Estimasi bruto" Setting Gaji, nominal
+ * versi bulan itu) dari setting yang berlaku, untuk semua karyawan inhouse aktif. Belum termasuk potongan absen, upah
+ * event, bonus, potongan manual, dan PPh 21. Hanya membaca. Bulan tanpa setting berlaku tidak masuk hasil.
+ */
+export async function estimasiBiayaTetap(periode: readonly string[]): Promise<Map<string, { total: number; karyawan: number }>> {
+  const [versi, peta] = await Promise.all([
+    db.settingGaji.findMany({ where: { karyawan: { jenis: "INHOUSE", aktif: true } }, include: sertai }),
+    muatPetaNominal(db),
+  ]);
+  const per = new Map<string, VersiDb[]>();
+  for (const v of versi) per.set(v.karyawanKode, [...(per.get(v.karyawanKode) ?? []), v]);
+  const hasil = new Map<string, { total: number; karyawan: number }>();
+  for (const p of periode) {
+    const berlaku = [...per.values()].flatMap((milik) => pilihVersiBerlaku(milik, p) ?? []);
+    if (berlaku.length) hasil.set(p, { total: berlaku.reduce((s, v) => s + keTampil(v, new Set(), peta, p).estimasiBruto, 0), karyawan: berlaku.length });
+  }
+  return hasil;
+}
+
 export async function dataSettingGaji(sekarang = periodeIni()) {
   const [karyawan, versi, slip, barisPeriode, peta] = await Promise.all([
     db.karyawan.findMany({ where: { jenis: "INHOUSE" }, orderBy: { kode: "asc" }, select: { kode: true, nama: true, aktif: true, statusPtkp: true } }),

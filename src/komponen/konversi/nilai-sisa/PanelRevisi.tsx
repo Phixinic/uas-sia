@@ -73,6 +73,29 @@ export function KartuRevisiMenunggu({ r, bolehPutuskan }: { r: DataRevisi; boleh
 export function RiwayatVersi({ revisi, totalSekarang }: { revisi: DataRevisi[]; totalSekarang: number }) {
   const urut = [...revisi].sort((a, b) => a.ke - b.ke);
   const awal = urut[0]?.totalBebanLama ?? totalSekarang;
+  // Di atas: revisi yang menunggu Owner, atau revisi terakhir yang dikembalikan dan belum diganti.
+  const belum = (r: DataRevisi) => r.status === "DIAJUKAN" || (r.status === "DITOLAK" && r === urut.at(-1));
+  const atas = urut.filter(belum);
+  const baris = (r: DataRevisi) => (
+    <tr key={r.no}>
+      <td><span className="kode">{r.no}</span><div className="text-[11px] text-slate-500">Diajukan {r.diajukanOleh}, {labelWaktu(r.diajukanPada)}</div></td>
+      <td className="kolom-angka"><Rupiah nilai={r.totalBeban} polos /><div className="text-[11px] text-slate-500">dari {rupiah(r.totalBebanLama)}</div></td>
+      <td>
+        <LencanaStatus jenis="revisi" status={r.status} />
+        {r.diputuskanPada && <div className="mt-0.5 text-[11px] text-slate-500">{r.status === "DITOLAK" ? "Dikembalikan" : "Disetujui"} {r.diputuskanOleh}, {labelWaktu(r.diputuskanPada)}</div>}
+      </td>
+      <td className="max-w-72 text-xs">
+        {r.alasan}
+        {r.alasanTolak && <div className="mt-0.5 text-rose-600">Alasan dikembalikan: {r.alasanTolak}</div>}
+      </td>
+      <td className="text-xs">
+        {r.jurnalPembalikNo && <div>Pembalik <span className="kode">{r.jurnalPembalikNo}</span></div>}
+        {r.jurnalBaruNo && <div>Baru <span className="kode">{r.jurnalBaruNo}</span></div>}
+        {r.status === "DISETUJUI" && !r.jurnalBaruNo && <div className="text-slate-500">Biaya 0, tanpa jurnal baru</div>}
+        {r.status !== "DISETUJUI" && <span className="text-slate-400">-</span>}
+      </td>
+    </tr>
+  );
   return (
     <Kartu rapat label="Riwayat versi nilai sisa">
       <KepalaKartu judul="Riwayat versi nilai sisa" keterangan="Setiap revisi yang disetujui membalik jurnal lama dan membuat jurnal baru. Revisi yang dikembalikan tetap tercatat beserta alasannya." />
@@ -87,6 +110,7 @@ export function RiwayatVersi({ revisi, totalSekarang }: { revisi: DataRevisi[]; 
           </tr>
         </thead>
         <tbody>
+          {atas.map(baris)}
           <tr>
             <td>Input awal</td>
             <td className="kolom-angka"><Rupiah nilai={awal} polos /></td>
@@ -94,26 +118,7 @@ export function RiwayatVersi({ revisi, totalSekarang }: { revisi: DataRevisi[]; 
             <td className="text-xs text-slate-500">-</td>
             <td className="kode">{urut[0]?.jurnalLamaNo ?? "-"}</td>
           </tr>
-          {urut.map((r) => (
-            <tr key={r.no}>
-              <td><span className="kode">{r.no}</span><div className="text-[11px] text-slate-500">Diajukan {r.diajukanOleh}, {labelWaktu(r.diajukanPada)}</div></td>
-              <td className="kolom-angka"><Rupiah nilai={r.totalBeban} polos /><div className="text-[11px] text-slate-500">dari {rupiah(r.totalBebanLama)}</div></td>
-              <td>
-                <LencanaStatus jenis="revisi" status={r.status} />
-                {r.diputuskanPada && <div className="mt-0.5 text-[11px] text-slate-500">{r.status === "DITOLAK" ? "Dikembalikan" : "Disetujui"} {r.diputuskanOleh}, {labelWaktu(r.diputuskanPada)}</div>}
-              </td>
-              <td className="max-w-72 text-xs">
-                {r.alasan}
-                {r.alasanTolak && <div className="mt-0.5 text-rose-600">Alasan dikembalikan: {r.alasanTolak}</div>}
-              </td>
-              <td className="text-xs">
-                {r.jurnalPembalikNo && <div>Pembalik <span className="kode">{r.jurnalPembalikNo}</span></div>}
-                {r.jurnalBaruNo && <div>Baru <span className="kode">{r.jurnalBaruNo}</span></div>}
-                {r.status === "DISETUJUI" && !r.jurnalBaruNo && <div className="text-slate-500">Biaya 0, tanpa jurnal baru</div>}
-                {r.status !== "DISETUJUI" && <span className="text-slate-400">-</span>}
-              </td>
-            </tr>
-          ))}
+          {urut.filter((r) => !belum(r)).map(baris)}
         </tbody>
       </Tabel>
     </Kartu>
