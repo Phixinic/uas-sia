@@ -1,15 +1,28 @@
 /*
- * Data contoh satu tahun penuh (Januari sampai Desember 2026) dari database kosong sesudah migrasi.
- * Master diisi sekali, lalu ditransaksikan tiap bulan lewat layanan yang sama dengan server action aplikasi
+ * Data contoh enam tahun (Januari 2023 sampai Desember 2028) dari database kosong sesudah migrasi. Nama berkas tetap
+ * seed-setahun.ts supaya perintah lama (`npm run db:seed`, seed Prisma, bangun-ulang-setahun.ts) tidak berubah.
+ * Master diisi sekali (Januari 2023), lalu ditransaksikan tiap bulan lewat layanan yang sama dengan server action aplikasi
  * (src/lib/server/*Dalam, skema zod aplikasi), jadi tidak ada jurnal yang ditulis tangan:
- *   setoran Investasi Kas bila kas perlu ditambah, pembelian peralatan (45 aset) dan perlengkapan, penyusutan tiap bulan,
- *   nilai sisa tiap bulan (Maret dikembalikan Owner lalu disetujui, November direvisi sesudah disetujui), pelepasan
- *   (dijual, dibuang, satu ditolak Owner), presensi dan Gaji Bulanan tiap bulan (potongan dan bonus sesekali, Mei ditolak
- *   lalu diajukan ulang), 1 sampai 3 event per bulan dengan kapten, crew freelance, dan sesekali karyawan inhouse (satu
- *   laporan ditolak lalu dikirim ulang), promosi Juli, kenaikan tunjangan Makan April, setoran Maret ditolak.
- * Desember sengaja terbuka untuk dicoba di UI: penyusutan dan nilai sisa belum diproses, presensi ada tetapi Gaji Bulanan
- * belum diajukan (sudah ada upah event inhouse dari event akhir November), satu event menunggu keputusan Owner, satu event
- * masih dinilai kapten (berisi karyawan inhouse), satu setoran menunggu Owner, satu pembelian masih draf.
+ *   setoran Investasi Kas bila kas perlu ditambah (setoran 2024 dan 2026 ditolak), pembelian peralatan dan perlengkapan
+ *   tiap tahun, penyusutan dan nilai sisa tiap bulan (Maret 2026 dikembalikan Owner lalu disetujui, November 2026 direvisi
+ *   sesudah disetujui), pelepasan dijual dan dibuang termasuk aset yang masa manfaatnya habis (satu ditolak Owner di 2026
+ *   dan 2028), karyawan inhouse bertambah 2023 sampai 2026, presensi dan Gaji Bulanan tiap bulan (Agustus 2024 dan Mei
+ *   2026 ditolak lalu diajukan ulang), 1 sampai 3 event per bulan dengan kapten, crew freelance, dan sesekali karyawan
+ *   inhouse (satu laporan Februari 2026 ditolak lalu dikirim ulang), kenaikan nominal tiap Januari dan tarif event
+ *   2025 dan Juli 2027 (diajukan HRD, diputuskan Owner, satu kenaikan Januari 2025 ditolak), promosi dan penyesuaian
+ *   golongan sesekali.
+ *
+ * Bulan yang sengaja terbuka untuk dicoba di UI:
+ *  - Desember 2026 (bulan berjalan user): Gaji Bulanan sudah diajukan HRD dan menunggu Owner (berisi upah event inhouse
+ *    dari event akhir November), satu event menunggu keputusan Owner, satu event masih dinilai kapten, satu setoran
+ *    menunggu Owner, satu pembelian perlengkapan masih draf. Kedua event Desember hanya memakai crew freelance: karena
+ *    gaji 2027 sampai November 2028 sudah dibayar, upah inhouse yang diputuskan sesudah gaji Desember 2026 diajukan baru
+ *    masuk Gaji Bulanan Desember 2028. Penyusutan dan nilai sisa Desember 2026 tetap diproses, karena bulan sesudahnya
+ *    hanya boleh diproses bila bulan yang lebih lama sudah selesai.
+ *  - Desember 2028: penyusutan, nilai sisa, dan Gaji Bulanan belum diproses; pengajuan setting gaji dan nominal dari HRD
+ *    berlaku Desember 2028 menunggu Owner (bisa disetujui karena belum ada slip sesudahnya).
+ * Penyusutan dan nilai sisa 2027 dan 2028 diproses seed dengan batas BATAS_PROSES. Aplikasi sendiri membatasi pemrosesan
+ * sampai Desember tahun berjalan (periodeBatasProses), jadi Desember 2028 baru bisa diproses lewat UI di tahun 2028.
  *
  * Semua dalam satu transaksi. Di akhir skrip memeriksa neraca saldo seimbang tiap bulan dan semua periode, saldo kas tidak
  * pernah negatif, dan penghitung nomor dokumen cocok dengan data; bila ada yang gagal transaksi dibatalkan dan skrip
@@ -28,7 +41,7 @@ import { hashKataSandi } from "../src/lib/server/kata-sandi";
 import { AWALAN, kodeBerikutnya } from "../src/lib/server/nomor";
 import { pastikanPeriode } from "../src/lib/server/periode";
 import { ajukanJurnal, muatJurnalBuku, saldoAkun, setujuiJurnal, tolakJurnal } from "../src/lib/server/jurnal";
-import { ajukanNominalDalam, setujuiNominalDalam } from "../src/lib/server/nominal";
+import { ajukanNominalDalam, setujuiNominalDalam, tolakNominalDalam } from "../src/lib/server/nominal";
 import { ajukanSettingDalam, setujuiSettingDalam } from "../src/lib/server/setting-gaji";
 import { catatInvestasiKasDalam, setujuiInvestasiKasDalam, tolakInvestasiKasDalam } from "../src/lib/server/investasi-kas";
 import { simpanPembelianDalam } from "../src/lib/server/pembelian";
@@ -36,7 +49,7 @@ import { prosesPenyusutanDalam } from "../src/lib/server/penyusutan";
 import { ajukanRevisiDalam, setujuiRevisiDalam, simpanNilaiSisaDalam } from "../src/lib/server/nilai-sisa";
 import { ajukanPelepasanDalam, setujuiPelepasanDalam, tolakPelepasanDalam } from "../src/lib/server/pelepasan";
 import { simpanPresensiDalam } from "../src/lib/server/presensi";
-import { ajukanGajiBulananDalam, setujuiPenggajianDalam, simpanPenyesuaianDalam, tolakPenggajianDalam } from "../src/lib/server/gaji-bulanan";
+import { ajukanGajiBulananDalam, hapusPenyesuaianDalam, setujuiPenggajianDalam, simpanPenyesuaianDalam, tolakPenggajianDalam } from "../src/lib/server/gaji-bulanan";
 import { simpanEventDalam, simpanKehadiranDalam, simpanPenugasanDalam, simpanSesiDalam } from "../src/lib/server/event";
 import { kirimLaporanDalam, nilaiKehadiranDalam } from "../src/lib/server/penilaian";
 import { setujuiFeeDalam, tolakFeeDalam } from "../src/lib/server/keputusan-fee";
@@ -44,22 +57,43 @@ import { muatBahanEvent } from "../src/lib/data/fee-event/bahan";
 import { bahanNilaiSisa } from "../src/lib/data/konversi/nilai-sisa";
 import { AKUN, AKUN_GAJI_BULANAN } from "../src/lib/inti/akun";
 import { neracaSaldo } from "../src/lib/inti/buku-besar";
-import { daftarPeriode, hariTerakhir, keMenit, labelPeriode, tambahHari } from "../src/lib/inti/tanggal";
+import { daftarPeriode, hariTerakhir, keMenit, labelPeriode, tambahBulanTanggal, tambahHari } from "../src/lib/inti/tanggal";
 import { rupiah } from "../src/lib/format";
 import { skemaInvestasiKas } from "../src/lib/skema/modal";
 import { skemaPembelian } from "../src/lib/skema/pembelian";
 import { skemaAjukanPelepasan } from "../src/lib/skema/konversi";
 import { skemaPresensi } from "../src/lib/skema/sdm";
 import { skemaEvent, skemaKehadiran, skemaPenilaian, skemaPenugasan, skemaSesi } from "../src/lib/skema/fee-event";
-import type { Peran, StatusPtkp, TipeAkun } from "../src/generated/prisma/enums";
+import type { JenisNominal, Peran, StatusPtkp, TipeAkun } from "../src/generated/prisma/enums";
 import { kosongkanSemua } from "./kosongkan";
 
-const BULAN = daftarPeriode("2026-01", "2026-11");
-const DES = "2026-12";
-/** Hari libur nasional 2026 (disederhanakan) yang tidak diisi presensi. */
-const LIBUR = new Set(["2026-01-01", "2026-02-17", "2026-03-19", "2026-03-20", "2026-04-03", "2026-05-01", "2026-05-14", "2026-05-27", "2026-06-01", "2026-08-17", "2026-12-25"]);
-/** Kas dijaga minimal sebesar ini di awal bulan lewat setoran Investasi Kas. */
-const TARGET_KAS = 170_000_000;
+const AWAL = "2023-01";
+/** Bulan berjalan user: sebagian alur dibiarkan terbuka (lihat keterangan berkas). */
+const DES_COBA = "2026-12";
+/** Bulan terakhir data: penyusutan, nilai sisa, dan Gaji Bulanan belum diproses. */
+const DES_AKHIR = "2028-12";
+const BULAN = daftarPeriode(AWAL, DES_AKHIR);
+const TAHUN = [2023, 2024, 2025, 2026, 2027, 2028];
+/** Seed memproses penyusutan dan nilai sisa sampai bulan terakhir data (aplikasi: Desember tahun berjalan). */
+const BATAS_PROSES = DES_AKHIR;
+const tahunDari = (P: string) => Number(P.slice(0, 4));
+
+/** Hari libur nasional per tahun (disederhanakan) yang tidak diisi presensi. */
+const LIBUR = new Set([
+  "2023-01-02", "2023-01-23", "2023-03-22", "2023-04-07", "2023-04-21", "2023-04-24", "2023-04-25", "2023-05-01", "2023-05-18", "2023-06-01", "2023-06-29", "2023-07-19", "2023-08-17", "2023-09-28", "2023-12-25",
+  "2024-01-01", "2024-02-08", "2024-03-11", "2024-03-29", "2024-04-10", "2024-04-11", "2024-05-01", "2024-05-09", "2024-05-23", "2024-06-17", "2024-08-16", "2024-09-16", "2024-12-25",
+  "2025-01-01", "2025-01-27", "2025-01-29", "2025-03-31", "2025-04-01", "2025-04-18", "2025-05-01", "2025-05-12", "2025-05-29", "2025-06-06", "2025-06-27", "2025-09-05", "2025-12-25",
+  "2026-01-01", "2026-02-17", "2026-03-19", "2026-03-20", "2026-04-03", "2026-05-01", "2026-05-14", "2026-05-27", "2026-06-01", "2026-08-17", "2026-12-25",
+  "2027-01-01", "2027-02-08", "2027-03-08", "2027-03-10", "2027-03-11", "2027-03-26", "2027-05-06", "2027-05-17", "2027-05-20", "2027-06-01", "2027-08-17", "2027-12-24",
+  "2028-01-26", "2028-02-28", "2028-02-29", "2028-04-14", "2028-05-01", "2028-05-05", "2028-05-09", "2028-05-25", "2028-06-01", "2028-08-03", "2028-08-17", "2028-12-25",
+]);
+/** Kas dijaga minimal sebesar ini di awal bulan lewat setoran Investasi Kas (naik mengikuti gaji dan event). */
+const TARGET_KAS: Record<number, number> = { 2023: 120_000_000, 2024: 135_000_000, 2025: 150_000_000, 2026: 170_000_000, 2027: 185_000_000, 2028: 200_000_000 };
+/**
+ * Tambahan target kas sesudah Desember 2026. Gaji Bulanan, fee event, dan pembelian draf Desember 2026 baru dibayar saat
+ * dicoba di UI, jadi saldo kas 2027 dan 2028 harus tetap positif sesudah semuanya disetujui.
+ */
+const CADANGAN_DES_COBA = 100_000_000;
 
 // ---------------------------------------------------------------- PRNG berbiji supaya data selalu sama
 
@@ -143,15 +177,30 @@ const PERALATAN: [string, string, number][] = [
   ["Wireless Microphone (set)", "set", 0],
   ["Lampu Par LED 54x3W", "unit", 0],
 ];
-const PERLENGKAPAN: [string, string][] = [
-  ["Gaffer Tape", "roll"],
-  ["Kabel Ties", "pak"],
-  ["Baterai AA", "pak"],
-  ["ID Card dan Lanyard", "pcs"],
-  ["Cetak Banner/X-Banner", "lembar"],
-  ["Plastik Wrap", "roll"],
+/** Harga 2026, dasar N, garansi, dan masa manfaat bawaan tiap peralatan (urutan sama dengan PERALATAN). */
+const ALAT_DASAR: [number, "GARANSI" | "MASA_MANFAAT", number, number][] = [
+  [14_500_000, "MASA_MANFAAT", 24, 60],
+  [9_800_000, "MASA_MANFAAT", 12, 60],
+  [18_000_000, "MASA_MANFAAT", 12, 60],
+  [12_500_000, "MASA_MANFAAT", 12, 48],
+  [950_000, "GARANSI", 24, 24],
+  [9_000_000, "MASA_MANFAAT", 12, 48],
+  [2_800_000, "MASA_MANFAAT", 12, 60],
+  [3_200_000, "MASA_MANFAAT", 12, 60],
 ];
-/** [nama, akun biaya, jam masuk, jam keluar, tunj. jabatan, tunj. istri/anak] */
+/** [nama, satuan, harga 2026] */
+const PERLENGKAPAN: [string, string, number][] = [
+  ["Gaffer Tape", "roll", 35_000],
+  ["Kabel Ties", "pak", 25_000],
+  ["Baterai AA", "pak", 48_000],
+  ["ID Card dan Lanyard", "pcs", 12_000],
+  ["Cetak Banner/X-Banner", "lembar", 85_000],
+  ["Plastik Wrap", "roll", 60_000],
+];
+/** Harga naik kira-kira 3,5% per tahun dari harga 2026. */
+const hargaTahun = (dasar: number, Y: number, pembulat: number) => Math.round((dasar * (1 + 0.035 * (Y - 2026))) / pembulat) * pembulat;
+
+/** [nama, akun biaya, jam masuk, jam keluar, tunj. jabatan 2026, tunj. istri/anak 2026] */
 const JABATAN: [string, string, string, string, number, number][] = [
   ["Event Manager", "6-210", "08:00", "17:00", 1_500_000, 400_000],
   ["Crew Produksi", "6-210", "07:00", "16:00", 250_000, 200_000],
@@ -159,20 +208,53 @@ const JABATAN: [string, string, string, string, number, number][] = [
   ["Admin Keuangan", "6-220", "08:00", "17:00", 400_000, 250_000],
   ["Marketing & Promosi", "6-220", "08:00", "17:00", 450_000, 250_000],
 ];
-const GOLONGAN: [string, number][] = [["Golongan I", 3_800_000], ["Golongan II", 4_500_000], ["Golongan III", 5_800_000], ["Golongan IV", 8_000_000]];
-const TUNJANGAN: [string, number][] = [["Transport", 300_000], ["Makan", 400_000], ["Komunikasi", 100_000], ["Kesehatan", 200_000]];
-/** Karyawan inhouse: [nama, PTKP, bank, rekening, indeks jabatan, indeks golongan, indeks tunjangan] */
-const INHOUSE: [string, StatusPtkp, string, string, number, number, number[]][] = [
-  ["Raka Aditya Wijaya", "K2", "BCA", "1234567890", 0, 3, [0, 1, 2, 3]],
-  ["Nadia Putri Anggraini", "TK0", "Mandiri", "1370012345678", 3, 1, [0, 1, 3]],
-  ["Bagas Setiawan", "K1", "BRI", "002101009876", 2, 1, [0, 1]],
-  ["Dimas Prakoso", "TK1", "BNI", "0987654321", 1, 0, [1]],
-  ["Fajar Ramadhan", "K0", "BCA", "5550001234", 1, 0, [0, 1]],
-  ["Andrew Pratama", "TK0", "BCA", "7781234500", 4, 1, [0, 1, 2]],
-  ["Citra Lestari", "TK0", "Mandiri", "1440099887766", 4, 0, [0, 1, 2]],
-  ["Yoga Saputra", "TK0", "BRI", "005522114455", 1, 0, [1]],
-  ["Intan Permatasari", "K0", "BNI", "0466778899", 3, 0, [0, 1, 3]],
-  ["Rizky Firmansyah", "TK1", "BCA", "3349876501", 2, 1, [0, 1]],
+/** Tunjangan jabatan dan istri/anak per tahun relatif terhadap 2026, dibulatkan ke Rp10.000. */
+const FAKTOR_JABATAN: Record<number, number> = { 2023: 0.85, 2024: 0.9, 2025: 0.95, 2026: 1, 2027: 1.05, 2028: 1.1 };
+const bulat10rb = (x: number) => Math.round(x / 10_000) * 10_000;
+const GOLONGAN = ["Golongan I", "Golongan II", "Golongan III", "Golongan IV"];
+/** Gaji pokok per golongan, berlaku tiap Januari. */
+const NOMINAL_GOLONGAN: Record<number, number[]> = {
+  2023: [3_200_000, 3_800_000, 4_900_000, 6_800_000],
+  2024: [3_400_000, 4_000_000, 5_200_000, 7_200_000],
+  2025: [3_600_000, 4_250_000, 5_500_000, 7_600_000],
+  2026: [3_800_000, 4_500_000, 5_800_000, 8_000_000],
+  2027: [4_000_000, 4_750_000, 6_100_000, 8_400_000],
+  2028: [4_200_000, 5_000_000, 6_400_000, 8_800_000],
+};
+const TUNJANGAN = ["Transport", "Makan", "Komunikasi", "Kesehatan"];
+/** Tunjangan lain per tahun, berlaku tiap Januari (Makan naik lagi April 2026). Nilai sama dengan tahun lalu tidak diajukan. */
+const NOMINAL_TUNJANGAN: Record<number, number[]> = {
+  2023: [250_000, 350_000, 75_000, 150_000],
+  2024: [275_000, 375_000, 100_000, 175_000],
+  2025: [300_000, 400_000, 100_000, 200_000],
+  2026: [300_000, 400_000, 100_000, 200_000],
+  2027: [325_000, 475_000, 125_000, 225_000],
+  2028: [350_000, 500_000, 125_000, 250_000],
+};
+/** Tarif jabatan event: [berlaku, kapten per hari, crew per jam]. */
+const TARIF_EVENT: [string, number, number][] = [["2023-01", 175_000, 17_500], ["2025-01", 200_000, 20_000], ["2027-07", 225_000, 22_500]];
+
+/** Karyawan inhouse: [nama, PTKP, bank, rekening, indeks jabatan, indeks golongan, indeks tunjangan, mulai bekerja] */
+const INHOUSE: [string, StatusPtkp, string, string, number, number, number[], string][] = [
+  ["Raka Aditya Wijaya", "K2", "BCA", "1234567890", 0, 3, [0, 1, 2, 3], "2023-01"],
+  ["Nadia Putri Anggraini", "TK0", "Mandiri", "1370012345678", 3, 1, [0, 1, 3], "2023-01"],
+  ["Bagas Setiawan", "K1", "BRI", "002101009876", 2, 1, [0, 1], "2023-01"],
+  ["Dimas Prakoso", "TK1", "BNI", "0987654321", 1, 0, [1], "2023-01"],
+  ["Fajar Ramadhan", "K0", "BCA", "5550001234", 1, 0, [0, 1], "2023-01"],
+  ["Andrew Pratama", "TK0", "BCA", "7781234500", 4, 1, [0, 1, 2], "2024-03"],
+  ["Citra Lestari", "TK0", "Mandiri", "1440099887766", 4, 0, [0, 1, 2], "2025-02"],
+  ["Yoga Saputra", "TK0", "BRI", "005522114455", 1, 0, [1], "2023-01"],
+  ["Intan Permatasari", "K0", "BNI", "0466778899", 3, 0, [0, 1, 3], "2023-01"],
+  ["Rizky Firmansyah", "TK1", "BCA", "3349876501", 2, 1, [0, 1], "2026-01"],
+];
+/** Perubahan setting gaji: [berlaku, karyawan, jenis, jabatan, golongan, tunjangan, alasan, tunggu Owner?] */
+const UBAH_SETTING: [string, number, "PROMOSI" | "PENYESUAIAN", number, number, number[], string, boolean][] = [
+  ["2024-07", 1, "PENYESUAIAN", 3, 2, [0, 1, 3], "Penyesuaian golongan sesudah 18 bulan masa kerja", false],
+  ["2026-07", 3, "PROMOSI", 2, 1, [0, 1], "Promosi menjadi operator sound sesudah sertifikasi", false],
+  ["2027-08", 7, "PROMOSI", 2, 1, [0, 1], "Promosi menjadi operator sound & lighting sesudah sertifikasi", false],
+  ["2028-04", 2, "PENYESUAIAN", 2, 2, [0, 1], "Penyesuaian golongan operator senior", false],
+  // Pengajuan HRD yang menunggu Owner dan bisa disetujui: berlaku Desember 2028, belum ada slip di bulan itu atau sesudahnya.
+  ["2028-12", 8, "PENYESUAIAN", 3, 1, [0, 1, 3], "Penyesuaian golongan sesudah hampir enam tahun masa kerja", true],
 ];
 /** Crew freelance; enam pertama kapten (akun kapten sampai kapten6). */
 const FREELANCE: [string, StatusPtkp, string, string][] = [
@@ -193,10 +275,32 @@ const FREELANCE: [string, StatusPtkp, string, string][] = [
 // ---------------------------------------------------------------- Rencana transaksi
 
 type BarisAlat = { alat: number; qty: number; harga: number; dasar: "GARANSI" | "MASA_MANFAAT"; garansi: number; masa: number };
+type RencanaBeli = { tanggal: string; cara: "TUNAI" | "KREDIT" | "INVESTASI"; supplier: number | null; tempo?: string; ket: string; baris: BarisAlat[] };
 const alat = (a: number, qty: number, harga: number, dasar: "GARANSI" | "MASA_MANFAAT", garansi: number, masa: number): BarisAlat => ({ alat: a, qty, harga, dasar, garansi, masa });
-/** Pembelian peralatan: total 45 unit (satu kartu aset per unit). */
-const BELI_ALAT: { tanggal: string; cara: "TUNAI" | "KREDIT" | "INVESTASI"; supplier: number | null; tempo?: string; ket: string; baris: BarisAlat[] }[] = [
-  { tanggal: "2026-01-08", cara: "INVESTASI", supplier: null, ket: "Setoran peralatan awal dari pemilik", baris: [alat(0, 2, 14_500_000, "MASA_MANFAAT", 24, 60), alat(1, 4, 9_800_000, "MASA_MANFAAT", 12, 60), alat(2, 1, 18_000_000, "MASA_MANFAAT", 12, 60), alat(4, 3, 950_000, "GARANSI", 24, 24)] },
+/** Pembelian dengan harga, dasar N, garansi, dan masa manfaat bawaan tahun itu. Kredit jatuh tempo sebulan. */
+function beli(tanggal: string, cara: RencanaBeli["cara"], supplier: number | null, ket: string, isi: [number, number][]): RencanaBeli {
+  const Y = tahunDari(tanggal);
+  const baris = isi.map(([a, qty]) => alat(a, qty, hargaTahun(ALAT_DASAR[a][0], Y, 50_000), ALAT_DASAR[a][1], ALAT_DASAR[a][2], ALAT_DASAR[a][3]));
+  return { tanggal, cara, supplier, tempo: cara === "KREDIT" ? tambahBulanTanggal(tanggal, 1) : undefined, ket, baris };
+}
+/** Pembelian peralatan 2023 sampai 2028 (satu kartu aset per unit). Daftar 2026 sama dengan data contoh setahun sebelumnya. */
+const BELI_ALAT: RencanaBeli[] = [
+  beli("2023-01-09", "INVESTASI", null, "Setoran peralatan awal dari pemilik", [[0, 2], [2, 1], [4, 4], [1, 2]]),
+  beli("2023-03-14", "TUNAI", 1, "Kamera dan laptop pertama", [[3, 1], [5, 1]]),
+  beli("2023-06-12", "KREDIT", 0, "Wireless mic dan lampu par", [[6, 3], [7, 4]]),
+  beli("2023-09-18", "TUNAI", 3, "Lighting untuk musim wisuda", [[1, 2], [7, 2]]),
+  beli("2023-11-08", "TUNAI", 4, "Laptop dan HT tambahan", [[5, 1], [4, 2]]),
+  beli("2024-02-06", "TUNAI", 1, "Kamera kedua dan HT", [[3, 1], [4, 3]]),
+  beli("2024-04-15", "KREDIT", 3, "Moving head dan lampu par", [[1, 2], [7, 4]]),
+  beli("2024-07-10", "TUNAI", 0, "Speaker dan wireless mic", [[0, 2], [6, 2]]),
+  beli("2024-09-10", "TUNAI", 3, "Lampu par dan wireless mic tambahan", [[7, 4], [6, 2]]),
+  beli("2024-10-07", "TUNAI", 4, "Laptop editing", [[5, 2]]),
+  beli("2025-01-13", "INVESTASI", null, "Setoran peralatan kedua dari pemilik", [[2, 1], [0, 2]]),
+  beli("2025-03-11", "TUNAI", 1, "Kamera dan HT", [[3, 2], [4, 3]]),
+  beli("2025-06-16", "KREDIT", 3, "Lighting panggung besar", [[1, 4], [7, 4]]),
+  beli("2025-08-12", "TUNAI", 2, "Wireless mic dan HT", [[6, 3], [4, 2]]),
+  beli("2025-11-10", "TUNAI", 4, "Laptop operasional", [[5, 2]]),
+  { tanggal: "2026-01-08", cara: "INVESTASI", supplier: null, ket: "Setoran peralatan ketiga dari pemilik", baris: [alat(0, 2, 14_500_000, "MASA_MANFAAT", 24, 60), alat(1, 4, 9_800_000, "MASA_MANFAAT", 12, 60), alat(2, 1, 18_000_000, "MASA_MANFAAT", 12, 60), alat(4, 3, 950_000, "GARANSI", 24, 24)] },
   { tanggal: "2026-02-12", cara: "TUNAI", supplier: 1, ket: "Kamera dan laptop dokumentasi", baris: [alat(3, 2, 12_500_000, "MASA_MANFAAT", 12, 48), alat(5, 2, 9_000_000, "MASA_MANFAAT", 12, 48), alat(4, 2, 950_000, "GARANSI", 24, 24)] },
   { tanggal: "2026-03-10", cara: "KREDIT", supplier: 0, tempo: "2026-04-10", ket: "Wireless mic dan lampu par", baris: [alat(6, 4, 2_800_000, "MASA_MANFAAT", 12, 60), alat(7, 2, 3_200_000, "MASA_MANFAAT", 12, 60)] },
   { tanggal: "2026-05-15", cara: "TUNAI", supplier: 3, ket: "Tambahan lighting musim wisuda", baris: [alat(1, 2, 9_800_000, "MASA_MANFAAT", 12, 60), alat(7, 4, 3_200_000, "MASA_MANFAAT", 12, 60)] },
@@ -204,27 +308,75 @@ const BELI_ALAT: { tanggal: string; cara: "TUNAI" | "KREDIT" | "INVESTASI"; supp
   { tanggal: "2026-09-11", cara: "KREDIT", supplier: 1, tempo: "2026-10-11", ket: "Kamera dan laptop baru", baris: [alat(3, 1, 13_000_000, "MASA_MANFAAT", 12, 48), alat(5, 2, 9_500_000, "MASA_MANFAAT", 12, 48)] },
   { tanggal: "2026-09-21", cara: "TUNAI", supplier: 0, ket: "Mixer cadangan dan speaker", baris: [alat(2, 1, 18_500_000, "MASA_MANFAAT", 12, 60), alat(0, 2, 15_000_000, "MASA_MANFAAT", 24, 60)] },
   { tanggal: "2026-11-06", cara: "TUNAI", supplier: 3, ket: "Persiapan event akhir tahun", baris: [alat(7, 3, 3_300_000, "MASA_MANFAAT", 12, 60), alat(6, 2, 2_900_000, "MASA_MANFAAT", 12, 60)] },
+  beli("2027-02-09", "TUNAI", 1, "Kamera dan laptop pengganti", [[3, 2], [5, 1]]),
+  beli("2027-04-13", "KREDIT", 3, "Lighting untuk panggung outdoor", [[1, 4], [7, 6]]),
+  beli("2027-06-08", "TUNAI", 0, "Speaker dan mixer pengganti", [[0, 2], [2, 1]]),
+  beli("2027-07-13", "TUNAI", 3, "Moving head dan lampu par tambahan", [[1, 2], [7, 4]]),
+  beli("2027-09-14", "TUNAI", 2, "HT pengganti dan wireless mic", [[4, 6], [6, 2]]),
+  beli("2027-11-09", "TUNAI", 4, "Laptop operasional", [[5, 2]]),
+  beli("2028-01-11", "TUNAI", 1, "Kamera dokumentasi", [[3, 2]]),
+  beli("2028-03-14", "KREDIT", 3, "Moving head dan lampu par", [[1, 4], [7, 6]]),
+  beli("2028-05-09", "TUNAI", 0, "Speaker dan wireless mic", [[0, 2], [6, 4]]),
+  beli("2028-06-13", "TUNAI", 1, "Kamera dan laptop untuk tim dokumentasi kedua", [[3, 2], [5, 2]]),
+  beli("2028-08-08", "TUNAI", 2, "HT untuk crew", [[4, 6]]),
+  beli("2028-10-10", "TUNAI", 4, "Laptop dan mixer cadangan", [[5, 2], [2, 1]]),
 ];
 /** Bulan tanpa pembelian perlengkapan (sisanya tiap bulan). */
-const TANPA_PERLENGKAPAN = new Set(["2026-08"]);
-/** Pelepasan: [tanggal, alat, bulan beli, alasan, harga jual, ditolak Owner?] */
+const TANPA_PERLENGKAPAN = new Set(["2023-02", "2024-08", "2025-05", "2026-08", "2027-03", "2028-07"]);
+/**
+ * Pelepasan: [tanggal, alat, bulan beli, alasan, harga jual, alasan tolak Owner]. Aset yang dipilih = aset aktif pertama
+ * jenis itu yang dibeli pada bulan beli atau sesudahnya. Sebagian aset sudah habis masa manfaatnya (nilai buku 0).
+ */
 const PELEPASAN: [string, number, string, "DIJUAL" | "DIBUANG", number, string | null][] = [
+  ["2023-10-17", 4, "2023-01", "DIBUANG", 0, null],
+  ["2024-05-21", 5, "2023-03", "DIJUAL", 4_500_000, null],
+  ["2025-02-18", 4, "2023-01", "DIBUANG", 0, null],
+  ["2025-02-19", 4, "2023-01", "DIBUANG", 0, null],
+  ["2025-09-23", 1, "2023-01", "DIJUAL", 5_000_000, null],
   ["2026-03-20", 5, "2026-02", "DIBUANG", 0, "Laptop masih bisa diperbaiki, jangan dibuang dulu."],
   ["2026-06-18", 4, "2026-01", "DIJUAL", 500_000, null],
   ["2026-08-20", 4, "2026-02", "DIBUANG", 0, null],
   ["2026-10-14", 1, "2026-01", "DIJUAL", 6_500_000, null],
+  ["2027-03-16", 4, "2025-03", "DIBUANG", 0, null],
+  ["2027-07-20", 3, "2023-03", "DIJUAL", 2_500_000, null],
+  ["2027-10-19", 0, "2023-01", "DIJUAL", 3_000_000, null],
+  ["2028-02-15", 5, "2023-11", "DIBUANG", 0, null],
+  ["2028-06-20", 2, "2023-01", "DIJUAL", 4_000_000, null],
+  ["2028-09-19", 4, "2025-08", "DIBUANG", 0, null],
+  ["2028-11-14", 1, "2024-04", "DIJUAL", 6_000_000, "Masih dipakai untuk event akhir tahun, jual sesudah Januari."],
 ];
-/** Event per bulan (Januari sampai November). */
-const JUMLAH_EVENT = [1, 2, 2, 1, 2, 3, 2, 1, 2, 2, 2];
+/** Event biasa per bulan (Januari sampai Desember). Desember 2026 diisi alur khusus yang terbuka untuk dicoba. */
+const JUMLAH_EVENT: Record<number, number[]> = {
+  2023: [1, 1, 1, 1, 2, 1, 2, 1, 1, 2, 1, 2],
+  2024: [1, 2, 1, 1, 2, 2, 2, 1, 2, 2, 1, 2],
+  2025: [1, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 2],
+  2026: [1, 2, 2, 1, 2, 3, 2, 1, 2, 2, 2, 0],
+  2027: [2, 2, 2, 1, 2, 3, 2, 2, 2, 2, 3, 2],
+  2028: [2, 2, 3, 1, 2, 3, 3, 2, 2, 2, 3, 1],
+};
 const NAMA_EVENT = ["Gathering Tahunan", "Wedding Expo", "Seminar Nasional", "Launching Produk", "Pameran UMKM", "Konser Amal", "Wisuda Kampus", "Festival Kuliner", "Family Day", "Dies Natalis", "Ulang Tahun Kota", "Pentas Seni"];
 const KLIEN = ["PT Sinar Abadi", "Hotel Tugu Malang", "Universitas Brawijaya", "Bank Jatim", "Pemkot Malang", "PT Kalbe Farma", "SMA Negeri 3 Malang", "Komunitas Kuliner Malang"];
 /** Potongan dan bonus manual: [bulan, indeks karyawan inhouse, jenis, nominal, keterangan] */
 const PENYESUAIAN: [string, number, "POTONGAN" | "BONUS", number, string][] = [
+  ["2023-07", 2, "BONUS", 500_000, "Bonus operator event wisuda"],
+  ["2023-12", 0, "BONUS", 1_000_000, "Bonus akhir tahun"],
+  ["2024-04", 3, "POTONGAN", 100_000, "Denda terlambat mengembalikan HT"],
+  // Agustus 2024: nominal bonus salah ketik, Owner menolak, HRD membetulkan (lihat gajiBulan).
+  ["2024-08", 5, "BONUS", 7_500_000, "Bonus pameran Agustus"],
+  ["2024-12", 0, "BONUS", 1_200_000, "Bonus akhir tahun"],
+  ["2025-06", 6, "BONUS", 600_000, "Bonus pameran Juni"],
+  ["2025-10", 7, "POTONGAN", 150_000, "Denda merusak kabel XLR saat loading out"],
   ["2026-03", 7, "POTONGAN", 150_000, "Denda merusak kabel XLR saat loading out"],
   ["2026-06", 0, "BONUS", 1_000_000, "Bonus target event Juni"],
   ["2026-08", 5, "BONUS", 750_000, "Bonus pameran Agustus"],
   ["2026-10", 4, "POTONGAN", 100_000, "Denda terlambat mengembalikan HT"],
   ["2026-11", 2, "BONUS", 500_000, "Bonus lembur persiapan akhir tahun"],
+  ["2027-05", 9, "BONUS", 500_000, "Bonus lembur musim wisuda"],
+  ["2027-09", 4, "POTONGAN", 125_000, "Denda kehilangan ID card crew"],
+  ["2027-12", 0, "BONUS", 1_500_000, "Bonus akhir tahun"],
+  ["2028-03", 6, "BONUS", 750_000, "Bonus target sponsor Maret"],
+  ["2028-08", 3, "POTONGAN", 150_000, "Denda terlambat loading in"],
+  ["2028-11", 2, "BONUS", 600_000, "Bonus lembur persiapan akhir tahun"],
 ];
 
 // ---------------------------------------------------------------- Konteks
@@ -245,8 +397,10 @@ type Konteks = {
   tunjangan: string[];
   inhouse: string[];
   freelance: string[];
+  /** Nominal terakhir yang disetujui per item ("JENIS:kode" -> isi), supaya kenaikan yang sama tidak diajukan. */
+  nominal: Map<string, string>;
   log: (s: string) => void;
-  hitung: { event: number; laporanDitolak: number; pengajuanDitolak: string[] };
+  hitung: { event: number; laporanDitolak: number; pengajuanDitolak: string[]; menungguOwner: string[] };
 };
 
 async function buatPengguna(tx: Tx, p: (typeof PENGGUNA)[number], karyawanKode: string | null): Promise<PenggunaSesi> {
@@ -255,7 +409,7 @@ async function buatPengguna(tx: Tx, p: (typeof PENGGUNA)[number], karyawanKode: 
 }
 
 async function master(tx: Tx, log: (s: string) => void): Promise<Konteks> {
-  await pastikanPeriode(tx, ...daftarPeriode("2026-01", "2027-12"));
+  await pastikanPeriode(tx, ...BULAN);
   await tx.profilUsaha.create({ data: { id: 1, nama: "D'Production", keterangan: "SIA Konversi & SDM" } });
   await tx.akun.createMany({ data: [...AKUN_DASAR, ...AKUN_GAJI_BULANAN.map((a) => ({ ...a }))] });
   const kode = (awalan: string) => kodeBerikutnya(tx, awalan);
@@ -277,9 +431,9 @@ async function master(tx: Tx, log: (s: string) => void): Promise<Konteks> {
   const jabatanKapten = (await tx.jabatan.create({ data: { kode: await kode(AWALAN.JABATAN), nama: "Kapten Event", akunBebanKode: AKUN.BIAYA_FEE_EVENT, kelompok: "EVENT", peranEvent: "KAPTEN", satuanTarif: "HARI" } })).kode;
   const jabatanCrew = (await tx.jabatan.create({ data: { kode: await kode(AWALAN.JABATAN), nama: "Crew Event", akunBebanKode: AKUN.BIAYA_FEE_EVENT, kelompok: "EVENT", peranEvent: "CREW", satuanTarif: "JAM" } })).kode;
   const golongan: string[] = [];
-  for (const [nama] of GOLONGAN) golongan.push((await tx.golongan.create({ data: { kode: await kode(AWALAN.GOLONGAN), nama } })).kode);
+  for (const nama of GOLONGAN) golongan.push((await tx.golongan.create({ data: { kode: await kode(AWALAN.GOLONGAN), nama } })).kode);
   const tunjangan: string[] = [];
-  for (const [nama] of TUNJANGAN) tunjangan.push((await tx.tunjangan.create({ data: { kode: await kode(AWALAN.TUNJANGAN), nama } })).kode);
+  for (const nama of TUNJANGAN) tunjangan.push((await tx.tunjangan.create({ data: { kode: await kode(AWALAN.TUNJANGAN), nama } })).kode);
 
   const inhouse: string[] = [];
   for (const [nama, ptkp, bank, noRek] of INHOUSE) inhouse.push((await tx.karyawan.create({ data: { kode: await kode(AWALAN.KARYAWAN), nama, statusPtkp: ptkp, bank, noRek, jenis: "INHOUSE" } })).kode);
@@ -292,27 +446,78 @@ async function master(tx: Tx, log: (s: string) => void): Promise<Konteks> {
     const k = freelance[FREELANCE.findIndex((f) => f[0] === p.karyawan)];
     kapten.set(k, await buatPengguna(tx, p, k));
   }
-
-  // Nominal awal berlaku Januari 2026: diajukan HRD, disetujui Owner.
-  const nominal = async (d: Parameters<typeof ajukanNominalDalam>[2]) => {
-    const a = await ajukanNominalDalam(tx, hrd.id, d);
-    await setujuiNominalDalam(tx, owner.id, a.kode);
+  const k: Konteks = {
+    admin, hrd, owner, kapten, supplier, alat: alatKode, lkp, jabatan, jabatanKapten, jabatanCrew, golongan, tunjangan, inhouse, freelance,
+    nominal: new Map(), log, hitung: { event: 0, laporanDitolak: 0, pengajuanDitolak: [], menungguOwner: [] },
   };
-  const awal = { berlaku: "2026-01", alasan: "Nominal awal tahun 2026", nominal: 0, tunjJabatan: 0, tunjKeluarga: 0 };
-  for (const [i, [, n]] of GOLONGAN.entries()) await nominal({ ...awal, jenis: "GOLONGAN", itemKode: golongan[i], nominal: n });
-  for (const [i, [, n]] of TUNJANGAN.entries()) await nominal({ ...awal, jenis: "TUNJANGAN", itemKode: tunjangan[i], nominal: n });
-  for (const [i, j] of JABATAN.entries()) await nominal({ ...awal, jenis: "JABATAN", itemKode: jabatan[i], tunjJabatan: j[4], tunjKeluarga: j[5] });
-  await nominal({ ...awal, jenis: "JABATAN_EVENT", itemKode: jabatanKapten, nominal: 200_000 });
-  await nominal({ ...awal, jenis: "JABATAN_EVENT", itemKode: jabatanCrew, nominal: 20_000 });
-
-  // Setting gaji awal semua karyawan inhouse berlaku Januari 2026.
-  for (const [i, [, , , , jb, gl, tj]] of INHOUSE.entries()) {
-    const a = await ajukanSettingDalam(tx, hrd.id, { karyawanKode: inhouse[i], jenisPerubahan: "SETTING_AWAL", jabatanKode: jabatan[jb], golonganKode: golongan[gl], tunjanganKodes: tj.map((t) => tunjangan[t]), alasan: "Setting awal tahun 2026" }, "2026-01");
-    await setujuiSettingDalam(tx, owner.id, a.kode);
-  }
+  // Nominal awal berlaku Januari 2023: diajukan HRD, disetujui Owner.
+  await nominalTahun(tx, k, 2023, "Nominal awal tahun 2023");
   log(`Master: ${supplier.length} supplier, ${alatKode.length} peralatan, ${lkp.length} perlengkapan, ${jabatan.length + 2} jabatan, ${inhouse.length} karyawan inhouse, ${freelance.length} crew freelance, ${PENGGUNA.length} pengguna.`);
-  return { admin, hrd, owner, kapten, supplier, alat: alatKode, lkp, jabatan, jabatanKapten, jabatanCrew, golongan, tunjangan, inhouse, freelance, log, hitung: { event: 0, laporanDitolak: 0, pengajuanDitolak: [] } };
+  return k;
 }
+
+// ---------------------------------------------------------------- Nominal dan setting gaji (HRD mengajukan, Owner memutuskan)
+
+type IsiNominal = { jenis: JenisNominal; itemKode: string; nominal?: number; tunjJabatan?: number; tunjKeluarga?: number };
+
+/** Ajukan satu versi nominal lalu putuskan. Versi yang isinya sama dengan yang berlaku dilewati (null). */
+async function ubahNominal(tx: Tx, k: Konteks, d: IsiNominal, berlaku: string, alasan: string, putusan: "setujui" | "tolak" | "tunggu" = "setujui", alasanTolak = "") {
+  const isi = { nominal: d.nominal ?? 0, tunjJabatan: d.tunjJabatan ?? 0, tunjKeluarga: d.tunjKeluarga ?? 0 };
+  const kunci = `${d.jenis}:${d.itemKode}`;
+  const jejak = `${isi.nominal}/${isi.tunjJabatan}/${isi.tunjKeluarga}`;
+  if (k.nominal.get(kunci) === jejak) return null;
+  const a = await ajukanNominalDalam(tx, k.hrd.id, { jenis: d.jenis, itemKode: d.itemKode, ...isi, berlaku, alasan });
+  if (putusan === "setujui") {
+    await setujuiNominalDalam(tx, k.owner.id, a.kode);
+    k.nominal.set(kunci, jejak);
+  } else if (putusan === "tolak") {
+    await tolakNominalDalam(tx, k.owner.id, a.kode, alasanTolak);
+    k.hitung.pengajuanDitolak.push(`Nominal ${a.kode}`);
+  } else {
+    k.hitung.menungguOwner.push(`Nominal ${a.kode} (${a.nama}, berlaku ${labelPeriode(berlaku)})`);
+  }
+  return a.kode;
+}
+
+/** Nominal golongan, tunjangan, dan tunjangan jabatan tahun Y berlaku Januari (yang tidak berubah dilewati). */
+async function nominalTahun(tx: Tx, k: Konteks, Y: number, alasan: string) {
+  const P = `${Y}-01`;
+  for (const [i, n] of NOMINAL_GOLONGAN[Y].entries()) {
+    // Januari 2025: kenaikan Golongan IV pertama ditolak Owner karena melebihi anggaran, lalu diajukan ulang.
+    if (Y === 2025 && i === 3) {
+      await ubahNominal(tx, k, { jenis: "GOLONGAN", itemKode: k.golongan[i], nominal: 8_000_000 }, P, alasan, "tolak", "Kenaikan Golongan IV melebihi rencana anggaran 2025. Ajukan ulang paling banyak Rp7.600.000.");
+    }
+    await ubahNominal(tx, k, { jenis: "GOLONGAN", itemKode: k.golongan[i], nominal: n }, P, alasan);
+  }
+  for (const [i, n] of NOMINAL_TUNJANGAN[Y].entries()) await ubahNominal(tx, k, { jenis: "TUNJANGAN", itemKode: k.tunjangan[i], nominal: n }, P, alasan);
+  for (const [i, j] of JABATAN.entries()) {
+    await ubahNominal(tx, k, { jenis: "JABATAN", itemKode: k.jabatan[i], tunjJabatan: bulat10rb(j[4] * FAKTOR_JABATAN[Y]), tunjKeluarga: bulat10rb(j[5] * FAKTOR_JABATAN[Y]) }, P, alasan);
+  }
+}
+
+async function tarifEvent(tx: Tx, k: Konteks, P: string) {
+  for (const [berlaku, kapten, crew] of TARIF_EVENT.filter((t) => t[0] === P)) {
+    const alasan = P === AWAL ? "Tarif awal jabatan event" : "Penyesuaian tarif event mengikuti harga pasar crew Malang";
+    await ubahNominal(tx, k, { jenis: "JABATAN_EVENT", itemKode: k.jabatanKapten, nominal: kapten }, berlaku, alasan);
+    await ubahNominal(tx, k, { jenis: "JABATAN_EVENT", itemKode: k.jabatanCrew, nominal: crew }, berlaku, alasan);
+  }
+}
+
+async function settingKaryawan(tx: Tx, k: Konteks, P: string) {
+  for (const [i, x] of INHOUSE.entries()) {
+    if (x[7] !== P) continue;
+    const a = await ajukanSettingDalam(tx, k.hrd.id, { karyawanKode: k.inhouse[i], jenisPerubahan: "SETTING_AWAL", jabatanKode: k.jabatan[x[4]], golonganKode: k.golongan[x[5]], tunjanganKodes: x[6].map((t) => k.tunjangan[t]), alasan: P === AWAL ? "Setting awal karyawan tahun 2023" : "Setting awal karyawan baru" }, P);
+    await setujuiSettingDalam(tx, k.owner.id, a.kode);
+  }
+  for (const [berlaku, i, jenis, jb, gl, tj, alasan, tunggu] of UBAH_SETTING.filter((x) => x[0] === P)) {
+    const a = await ajukanSettingDalam(tx, k.hrd.id, { karyawanKode: k.inhouse[i], jenisPerubahan: jenis, jabatanKode: k.jabatan[jb], golonganKode: k.golongan[gl], tunjanganKodes: tj.map((t) => k.tunjangan[t]), alasan }, berlaku);
+    if (tunggu) k.hitung.menungguOwner.push(`Setting gaji ${a.kode} (${a.nama}, berlaku ${labelPeriode(berlaku)})`);
+    else await setujuiSettingDalam(tx, k.owner.id, a.kode);
+  }
+}
+
+/** Karyawan inhouse yang sudah bekerja di bulan P. */
+const sudahBekerja = (k: Konteks, P: string) => k.inhouse.filter((_, i) => INHOUSE[i][7] <= P);
 
 // ---------------------------------------------------------------- Langkah per jenis transaksi
 
@@ -324,18 +529,21 @@ async function setoran(tx: Tx, k: Konteks, tanggal: string, jumlah: number, kete
     await tolakInvestasiKasDalam(tx, k.owner, no, "Dana belum masuk rekening usaha, catat ulang sesudah transfer diterima.");
     k.hitung.pengajuanDitolak.push(`Investasi Kas ${no}`);
   }
+  if (putusan === "tunggu") k.hitung.menungguOwner.push(`Investasi Kas ${no}`);
   return no;
 }
 
-/** Setoran awal bulan supaya kas cukup untuk pembelian tunai, gaji, dan fee bulan itu. */
+/** Setoran awal bulan supaya kas cukup untuk pembelian tunai, gaji, dan fee bulan itu (ditambah cadangan sesudah Desember 2026). */
 async function jagaKas(tx: Tx, k: Konteks, P: string) {
+  const tunai = BELI_ALAT.filter((b) => b.cara === "TUNAI" && b.tanggal.startsWith(P)).reduce((s, b) => s + b.baris.reduce((t, x) => t + x.qty * x.harga, 0), 0);
+  const target = TARGET_KAS[tahunDari(P)] + tunai + (P > DES_COBA ? CADANGAN_DES_COBA : 0);
   const kas = await saldoAkun(tx, AKUN.KAS);
-  if (kas >= TARGET_KAS) return;
-  const jumlah = Math.ceil((TARGET_KAS - kas) / 5_000_000) * 5_000_000;
+  if (kas >= target) return;
+  const jumlah = Math.ceil((target - kas) / 5_000_000) * 5_000_000;
   await setoran(tx, k, tgl(P, 2), jumlah, `Setoran modal pemilik ${labelPeriode(P)}`);
 }
 
-async function beliAlat(tx: Tx, k: Konteks, b: (typeof BELI_ALAT)[number]) {
+async function beliAlat(tx: Tx, k: Konteks, b: RencanaBeli) {
   const d = validasi(skemaPembelian, {
     jenis: "PERALATAN",
     tanggal: b.tanggal,
@@ -352,14 +560,14 @@ async function beliAlat(tx: Tx, k: Konteks, b: (typeof BELI_ALAT)[number]) {
 async function beliPerlengkapan(tx: Tx, k: Konteks, P: string, r: () => number, posting = true) {
   const pilih = k.lkp.filter(() => r() < 0.6);
   const daftar = pilih.length ? pilih : [k.lkp[0], k.lkp[2]];
-  const harga: Record<number, number> = { 0: 35_000, 1: 25_000, 2: 48_000, 3: 12_000, 4: 85_000, 5: 60_000 };
+  const Y = tahunDari(P);
   const d = validasi(skemaPembelian, {
     jenis: "PERLENGKAPAN",
     tanggal: tgl(P, 4 + Math.floor(r() * 5)),
     caraBayar: "TUNAI",
     supplierKode: k.supplier[2],
     keterangan: `Perlengkapan event ${labelPeriode(P)}`,
-    baris: daftar.map((kode) => ({ barangKode: kode, qty: 10 + Math.floor(r() * 30), harga: harga[k.lkp.indexOf(kode)] })),
+    baris: daftar.map((kode) => ({ barangKode: kode, qty: 10 + Math.floor(r() * 30) + (Y - 2023) * 2, harga: hargaTahun(PERLENGKAPAN[k.lkp.indexOf(kode)][2], Y, 1_000) })),
     posting,
   });
   return simpanPembelianDalam(tx, k.admin, d);
@@ -367,25 +575,25 @@ async function beliPerlengkapan(tx: Tx, k: Konteks, P: string, r: () => number, 
 
 async function prosesSusut(tx: Tx, k: Konteks, P: string) {
   const ada = await tx.jadwalPenyusutan.count({ where: { periodeId: P, jurnalNo: null, aset: { status: "AKTIF" } } });
-  if (ada) await prosesPenyusutanDalam(tx, k.admin.id, P);
+  if (ada) await prosesPenyusutanDalam(tx, k.admin.id, P, BATAS_PROSES);
 }
 
 async function nilaiSisa(tx: Tx, k: Konteks, P: string, r: () => number) {
   const { saldo } = await bahanNilaiSisa(tx, P);
   if (!saldo.length) return;
   const isi = (f: () => number) => ({ periode: P, nilai: saldo.map((s) => ({ perlengkapanKode: s.kode, nilaiSisa: Math.floor(s.saldoBuku * f()) })) });
-  // Maret: hitung fisik pertama terlalu rendah, Owner mengembalikan untuk revisi, Admin mengubah lalu mengajukan ulang.
+  // Maret 2026: hitung fisik pertama terlalu rendah, Owner mengembalikan untuk revisi, Admin mengubah lalu mengajukan ulang.
   if (P === "2026-03") {
-    const h = await simpanNilaiSisaDalam(tx, k.admin.id, isi(() => 0.15));
+    const h = await simpanNilaiSisaDalam(tx, k.admin.id, isi(() => 0.15), BATAS_PROSES);
     await ajukanJurnal(tx, h.jurnalNo!, k.admin.id);
     await tolakJurnal(tx, h.jurnalNo!, k.owner.id, "Gudang belakang belum dihitung, nilai sisanya terlalu rendah. Hitung ulang lalu ajukan lagi.");
   }
-  const h = await simpanNilaiSisaDalam(tx, k.admin.id, isi(() => 0.35 + r() * 0.25));
+  const h = await simpanNilaiSisaDalam(tx, k.admin.id, isi(() => 0.35 + r() * 0.25), BATAS_PROSES);
   if (h.jurnalNo) {
     await ajukanJurnal(tx, h.jurnalNo, k.admin.id);
     await setujuiJurnal(tx, h.jurnalNo, k.owner.id);
   }
-  // November: revisi sesudah disetujui (jurnal lama dibalik, jurnal baru dibuat).
+  // November 2026: revisi sesudah disetujui (jurnal lama dibalik, jurnal baru dibuat).
   if (P === "2026-11") {
     const o = await tx.opname.findUniqueOrThrow({ where: { periodeId: P }, include: { detail: true } });
     const nilai = o.detail.map((x, i) => ({ perlengkapanKode: x.perlengkapanKode, nilaiSisa: i === 0 ? Math.min(x.saldoBuku, x.nilaiSisa + Math.floor((x.saldoBuku - x.nilaiSisa) / 2)) : x.nilaiSisa }));
@@ -411,16 +619,18 @@ async function lepas(tx: Tx, k: Konteks, p: (typeof PELEPASAN)[number]) {
 }
 
 async function presensiBulan(tx: Tx, k: Konteks, P: string, r: () => number) {
-  for (const [i, karyawanKode] of k.inhouse.entries()) {
-    // Jadwal kerja dari jabatan versi setting yang berlaku bulan itu (promosi Juli mengganti jabatan dan jamnya).
+  for (const karyawanKode of sudahBekerja(k, P)) {
+    // Jadwal kerja dari jabatan versi setting yang berlaku bulan itu (promosi mengganti jabatan dan jamnya).
     const versi = await tx.settingGaji.findFirstOrThrow({ where: { karyawanKode, status: "DISETUJUI", berlakuMulai: { lte: P } }, orderBy: [{ berlakuMulai: "desc" }, { diputuskanPada: "desc" }] });
-    const jb = JABATAN[k.jabatan.indexOf(versi.jabatanKode)] ?? JABATAN[INHOUSE[i][4]];
+    const jb = JABATAN[k.jabatan.indexOf(versi.jabatanKode)];
     for (const tanggal of hariKerja(P)) {
       const x = r();
       const absensi = x < 0.92 ? "HADIR" : x < 0.95 ? "IZIN" : x < 0.97 ? "SAKIT" : x < 0.985 ? "CUTI" : "ALPA";
       const masuk = keMenit(jb[2]) - 10 + Math.floor(r() * 15) + (r() < 0.1 ? 10 + Math.floor(r() * 25) : 0);
       const keluar = keMenit(jb[3]) + Math.floor(r() * 40);
-      const d = validasi(skemaPresensi, { karyawanKode, tanggal, absensi, ...(absensi === "HADIR" ? { jamMasuk: jam(masuk), jamKeluar: jam(keluar) } : {}) });
+      // Mei 2026: presensi Fajar 12 Mei salah tercatat alpa (dibetulkan sesudah Owner menolak Gaji Bulanan).
+      const salah = P === "2026-05" && tanggal === "2026-05-12" && karyawanKode === k.inhouse[4];
+      const d = validasi(skemaPresensi, { karyawanKode, tanggal, absensi: salah ? "ALPA" : absensi, ...(absensi === "HADIR" && !salah ? { jamMasuk: jam(masuk), jamKeluar: jam(keluar) } : {}) });
       await simpanPresensiDalam(tx, k.hrd.id, d);
     }
   }
@@ -473,14 +683,15 @@ async function event(tx: Tx, k: Konteks, o: { nama: string; klien: string; mulai
   return kode;
 }
 
-async function eventBulan(tx: Tx, k: Konteks, P: string, ke: number, r: () => number) {
-  const n = JUMLAH_EVENT[ke];
+async function eventBulan(tx: Tx, k: Konteks, P: string, r: () => number) {
+  const n = JUMLAH_EVENT[tahunDari(P)][Number(P.slice(5)) - 1];
+  const bekerja = new Set(sudahBekerja(k, P));
   for (let i = 0; i < n; i++) {
     const urut = k.hitung.event;
     const crewFreelance = k.freelance.slice(6).filter(() => r() < 0.55).slice(0, 4);
     const crew = crewFreelance.length >= 2 ? crewFreelance : k.freelance.slice(6 + (urut % 5), 8 + (urut % 5));
     // Karyawan inhouse ikut sebagai crew sesekali (marketing di pameran, crew produksi di event besar).
-    const inhouse = urut % 3 === 1 ? [k.inhouse[5]] : urut % 4 === 2 ? [k.inhouse[7]] : [];
+    const inhouse = (urut % 3 === 1 ? [k.inhouse[5]] : urut % 4 === 2 ? [k.inhouse[7]] : []).filter((x) => bekerja.has(x));
     const hari = 5 + i * 7 + Math.floor(r() * 3);
     await event(tx, k, {
       nama: `${NAMA_EVENT[urut % NAMA_EVENT.length]} ${KLIEN[urut % KLIEN.length].replace(/^PT /, "")}`,
@@ -501,12 +712,23 @@ async function gajiBulan(tx: Tx, k: Konteks, P: string) {
     if (bulan === P) await simpanPenyesuaianDalam(tx, k.hrd.id, { periode: P, karyawanKode: k.inhouse[i], jenis, nominal, keterangan });
   }
   const a = await ajukanGajiBulananDalam(tx, k.hrd.id, P);
-  // Mei: Owner menolak karena satu presensi salah, HRD memperbaiki lalu mengajukan ulang.
+  // Mei 2026: Owner menolak karena satu presensi salah, HRD memperbaiki lalu mengajukan ulang.
   if (P === "2026-05") {
     await tolakPenggajianDalam(tx, k.owner.id, a.no, "Presensi Fajar tanggal 12 Mei tertulis alpa, padahal ada surat sakit. Perbaiki lalu ajukan ulang.");
     k.hitung.pengajuanDitolak.push(`Gaji Bulanan ${a.no}`);
     const p = await tx.presensi.findFirstOrThrow({ where: { karyawanKode: k.inhouse[4], tanggal: new Date("2026-05-12T00:00:00Z") } });
     await simpanPresensiDalam(tx, k.hrd.id, validasi(skemaPresensi, { id: p.id, karyawanKode: k.inhouse[4], tanggal: "2026-05-12", absensi: "SAKIT" }));
+    const ulang = await ajukanGajiBulananDalam(tx, k.hrd.id, P);
+    await setujuiPenggajianDalam(tx, k.owner.id, ulang.no);
+    return;
+  }
+  // Agustus 2024: bonus Andrew salah ketik Rp7.500.000, Owner menolak, HRD mengganti menjadi Rp750.000 lalu mengajukan ulang.
+  if (P === "2024-08") {
+    await tolakPenggajianDalam(tx, k.owner.id, a.no, "Bonus pameran Andrew tertulis Rp7.500.000, seharusnya Rp750.000. Betulkan lalu ajukan ulang.");
+    k.hitung.pengajuanDitolak.push(`Gaji Bulanan ${a.no}`);
+    const salah = await tx.penyesuaianGaji.findFirstOrThrow({ where: { periodeId: P, karyawanKode: k.inhouse[5], nominal: 7_500_000 } });
+    await hapusPenyesuaianDalam(tx, k.hrd.id, salah.id);
+    await simpanPenyesuaianDalam(tx, k.hrd.id, { periode: P, karyawanKode: k.inhouse[5], jenis: "BONUS", nominal: 750_000, keterangan: "Bonus pameran Agustus" });
     const ulang = await ajukanGajiBulananDalam(tx, k.hrd.id, P);
     await setujuiPenggajianDalam(tx, k.owner.id, ulang.no);
     return;
@@ -548,9 +770,13 @@ async function nomorTerpakai(tx: Tx): Promise<Map<string, number>> {
 export async function periksaAkhir(tx: Tx): Promise<HasilPeriksa> {
   const buku = await muatJurnalBuku(tx);
   const akun = (await tx.akun.findMany({ select: { kode: true } })).map((a) => a.kode);
-  const seimbang = [...daftarPeriode("2026-01", DES), null].map((P) => {
-    const n = neracaSaldo(P ? buku.filter((j) => j.periode <= P) : buku, akun, P);
-    return { periode: P ?? "semua", debit: n.debit, kredit: n.kredit, seimbang: n.seimbang };
+  // Jurnal urut periode supaya neraca tiap bulan cukup memotong awal daftar (72 bulan, tanpa menyaring ulang semua jurnal).
+  const urut = [...buku].sort((a, b) => a.periode.localeCompare(b.periode));
+  let n = 0;
+  const seimbang = [...BULAN, null].map((P) => {
+    if (P) while (n < urut.length && urut[n].periode <= P) n++;
+    const ns = neracaSaldo(P ? urut.slice(0, n) : buku, akun, P);
+    return { periode: P ?? "semua", debit: ns.debit, kredit: ns.kredit, seimbang: ns.seimbang };
   });
   // Saldo kas berjalan urut tanggal lalu nomor jurnal (jurnal DISETUJUI saja).
   let saldo = 0;
@@ -582,69 +808,103 @@ export async function ringkasan(tx: Tx) {
   return { jurnal, jurnalPerStatus: Object.fromEntries(perStatus.map((s) => [s.status, s._count])), aset, asetAktif, pelepasan, event, slip, kas };
 }
 
+/** Ringkasan per tahun: jurnal, slip gaji, event, aset dibeli dan dilepas, kas akhir Desember. */
+export async function ringkasanPerTahun(tx: Tx) {
+  const hasil = [];
+  for (const Y of TAHUN) {
+    const awal = new Date(`${Y}-01-01T00:00:00Z`);
+    const akhir = new Date(`${Y}-12-31T00:00:00Z`);
+    const [jurnal, slip, event, asetBeli, asetLepas, kas] = await Promise.all([
+      tx.jurnal.count({ where: { periodeId: { gte: `${Y}-01`, lte: `${Y}-12` } } }),
+      tx.slipGaji.count({ where: { periodeId: { gte: `${Y}-01`, lte: `${Y}-12` } } }),
+      tx.event.count({ where: { tanggalMulai: { gte: awal, lte: akhir } } }),
+      tx.aset.count({ where: { bulanMulai: { gte: `${Y}-01`, lte: `${Y}-12` } } }),
+      tx.pelepasan.count({ where: { status: "DISETUJUI", tanggal: { gte: awal, lte: akhir } } }),
+      saldoAkun(tx, AKUN.KAS, `${Y}-12`),
+    ]);
+    hasil.push({ tahun: Y, jurnal, slip, event, asetBeli, asetLepas, kas });
+  }
+  return hasil;
+}
+
 // ---------------------------------------------------------------- Seed utama
 
 export async function seedSetahun(tx: Tx, log: (s: string) => void = console.log) {
   const k = await master(tx, log);
-  const r = acak("sia-setahun-2026");
+  const r = acak("sia-multi-tahun-2023-2028");
 
-  // Contoh pengajuan ditolak: setoran Maret yang dananya belum masuk.
-  for (const [ke, P] of BULAN.entries()) {
+  for (const P of BULAN) {
+    const Y = tahunDari(P);
     await jagaKas(tx, k, P);
+    if (P.endsWith("-01") && Y > 2023) await nominalTahun(tx, k, Y, `Kenaikan tahunan ${Y}`);
+    await tarifEvent(tx, k, P);
+    // Kenaikan tunjangan Makan April 2026, diajukan HRD dan disetujui Owner di awal April.
+    if (P === "2026-04") await ubahNominal(tx, k, { jenis: "TUNJANGAN", itemKode: k.tunjangan[1], nominal: 450_000 }, P, "Kenaikan uang makan mengikuti harga bahan pokok");
+    // Desember 2028: kenaikan tunjangan Kesehatan diajukan HRD, menunggu Owner (bisa disetujui).
+    if (P === DES_AKHIR) await ubahNominal(tx, k, { jenis: "TUNJANGAN", itemKode: k.tunjangan[3], nominal: 275_000 }, P, "Penyesuaian premi asuransi kesehatan", "tunggu");
+    await settingKaryawan(tx, k, P);
+    // Contoh setoran ditolak: dana yang dicatat belum masuk rekening usaha.
+    if (P === "2024-06") await setoran(tx, k, "2024-06-07", 20_000_000, "Setoran tambahan dari rekening pribadi pemilik", "tolak");
     if (P === "2026-03") await setoran(tx, k, "2026-03-05", 25_000_000, "Setoran tambahan dari rekening pribadi pemilik", "tolak");
-    if (P === "2026-04") {
-      // Kenaikan tunjangan Makan berlaku April, diajukan HRD dan disetujui Owner di awal April.
-      const a = await ajukanNominalDalam(tx, k.hrd.id, { jenis: "TUNJANGAN", itemKode: k.tunjangan[1], nominal: 450_000, tunjJabatan: 0, tunjKeluarga: 0, berlaku: "2026-04", alasan: "Kenaikan uang makan mengikuti harga bahan pokok" });
-      await setujuiNominalDalam(tx, k.owner.id, a.kode);
-    }
-    if (P === "2026-07") {
-      // Promosi Dimas Prakoso: Crew Produksi Golongan I menjadi Operator Sound & Lighting Golongan II mulai Juli.
-      const a = await ajukanSettingDalam(tx, k.hrd.id, { karyawanKode: k.inhouse[3], jenisPerubahan: "PROMOSI", jabatanKode: k.jabatan[2], golonganKode: k.golongan[1], tunjanganKodes: [k.tunjangan[0], k.tunjangan[1]], alasan: "Promosi menjadi operator sound sesudah sertifikasi" }, "2026-07");
-      await setujuiSettingDalam(tx, k.owner.id, a.kode);
-    }
     for (const b of BELI_ALAT.filter((x) => x.tanggal.startsWith(P))) await beliAlat(tx, k, b);
-    if (!TANPA_PERLENGKAPAN.has(P)) await beliPerlengkapan(tx, k, P, r);
+    if (P === DES_COBA) await beliPerlengkapan(tx, k, P, r, false);
+    else if (!TANPA_PERLENGKAPAN.has(P)) await beliPerlengkapan(tx, k, P, r);
     for (const p of PELEPASAN.filter((x) => x[0].startsWith(P))) await lepas(tx, k, p);
     await presensiBulan(tx, k, P, r);
-    await eventBulan(tx, k, P, ke, r);
+
+    if (P === DES_COBA) {
+      // Event 27-28 November diputuskan Owner 2 Desember, jadi upah karyawan inhouse-nya masuk Gaji Bulanan Desember 2026.
+      const lapNov = await tx.laporanFee.findFirstOrThrow({ where: { status: "DIAJUKAN", event: { tanggalMulai: new Date("2026-11-27T00:00:00Z") } } });
+      const bNov = (await muatBahanEvent(tx, lapNov.eventKode))!;
+      await setujuiFeeDalam(tx, k.owner.id, { no: lapNov.no, fee: bNov.orang.map((x) => ({ karyawanKode: x.karyawanKode, feeAkhir: x.usulan.fee })) }, "2026-12-02");
+      await event(tx, k, { nama: "Natal Bersama Hotel Tugu", klien: "Hotel Tugu Malang", mulai: "2026-12-05", duaHari: false, kaptenKe: 0, crew: [k.freelance[7], k.freelance[9], k.freelance[10]], inhouse: [], sampai: "dikirim" }, r);
+      await event(tx, k, { nama: "Malam Tahun Baru Alun-alun", klien: "Pemkot Malang", mulai: "2026-12-12", duaHari: false, kaptenKe: 1, crew: [k.freelance[6], k.freelance[11]], inhouse: [], sampai: "sebagian" }, r);
+      await setoran(tx, k, "2026-12-10", 50_000_000, "Setoran modal untuk event akhir tahun", "tunggu");
+    } else {
+      await eventBulan(tx, k, P, r);
+    }
     if (P === "2026-11") {
-      // Event akhir November dengan karyawan inhouse; Owner memutuskan 2 Desember, jadi upahnya masuk Gaji Bulanan Desember.
+      // Event akhir November dengan karyawan inhouse; Owner memutuskan 2 Desember (lihat Desember 2026).
       await event(tx, k, { nama: "Pameran Akhir Tahun Malang Town Square", klien: "Malang Town Square", mulai: "2026-11-27", duaHari: true, kaptenKe: 2, crew: [k.freelance[6], k.freelance[8]], inhouse: [k.inhouse[5], k.inhouse[7]], sampai: "dikirim" }, r);
     }
-    await gajiBulan(tx, k, P);
-    await prosesSusut(tx, k, P);
-    await nilaiSisa(tx, k, P, r);
-    log(`${labelPeriode(P)}: selesai, kas ${rupiah(await saldoAkun(tx, AKUN.KAS))}.`);
+    // Gaji Bulanan Desember 2026 berhenti di pengajuan HRD (Owner memutuskan lewat UI), Desember 2028 belum diajukan.
+    if (P === DES_COBA) {
+      const a = await ajukanGajiBulananDalam(tx, k.hrd.id, P);
+      k.hitung.menungguOwner.push(`Gaji Bulanan ${a.no} (${labelPeriode(P)})`);
+    } else if (P !== DES_AKHIR) await gajiBulan(tx, k, P);
+    // Penyusutan dan nilai sisa Desember 2026 tetap diproses: bulan 2027 hanya boleh diproses bila bulan sebelumnya sudah.
+    if (P !== DES_AKHIR) {
+      await prosesSusut(tx, k, P);
+      await nilaiSisa(tx, k, P, r);
+    }
+    if (P.endsWith("-12")) log(`${Y}: selesai, kas ${rupiah(await saldoAkun(tx, AKUN.KAS))}, ${k.hitung.event} event sejak 2023.`);
   }
-
-  // Desember: sebagian alur sengaja dibiarkan terbuka untuk dicoba di UI.
-  await jagaKas(tx, k, DES);
-  const lapNov = await tx.laporanFee.findFirstOrThrow({ where: { status: "DIAJUKAN", event: { tanggalMulai: new Date("2026-11-27T00:00:00Z") } } });
-  const bNov = (await muatBahanEvent(tx, lapNov.eventKode))!;
-  await setujuiFeeDalam(tx, k.owner.id, { no: lapNov.no, fee: bNov.orang.map((x) => ({ karyawanKode: x.karyawanKode, feeAkhir: x.usulan.fee })) }, "2026-12-02");
-  await beliPerlengkapan(tx, k, DES, r, false);
-  await presensiBulan(tx, k, DES, r);
-  await event(tx, k, { nama: "Natal Bersama Hotel Tugu", klien: "Hotel Tugu Malang", mulai: "2026-12-05", duaHari: false, kaptenKe: 0, crew: [k.freelance[7], k.freelance[9], k.freelance[10]], inhouse: [], sampai: "dikirim" }, r);
-  await event(tx, k, { nama: "Malam Tahun Baru Alun-alun", klien: "Pemkot Malang", mulai: "2026-12-12", duaHari: false, kaptenKe: 1, crew: [k.freelance[6], k.freelance[11]], inhouse: [k.inhouse[7]], sampai: "sebagian" }, r);
-  await setoran(tx, k, "2026-12-10", 50_000_000, "Setoran modal untuk event akhir tahun", "tunggu");
-  log("Desember: presensi, setoran menunggu, pembelian draf, event menunggu Owner, event dinilai kapten. Penyusutan, nilai sisa, dan Gaji Bulanan belum diproses.");
+  log("Desember 2026: setoran menunggu Owner, pembelian perlengkapan draf, event menunggu Owner, event dinilai kapten, Gaji Bulanan menunggu Owner.");
+  log("Desember 2028: penyusutan, nilai sisa, dan Gaji Bulanan belum diproses; setting gaji dan nominal menunggu Owner.");
   return k.hitung;
 }
 
-function cetak(h: HasilPeriksa, r: Awaited<ReturnType<typeof ringkasan>>, catatan: Awaited<ReturnType<typeof seedSetahun>>) {
-  console.log("\nNeraca saldo (debit = kredit):");
-  for (const s of h.seimbang) console.log(`  ${s.periode.padEnd(7)} ${rupiah(s.debit).padStart(18)} ${rupiah(s.kredit).padStart(18)} ${s.seimbang ? "seimbang" : "TIDAK SEIMBANG"}`);
+function cetak(h: HasilPeriksa, r: Awaited<ReturnType<typeof ringkasan>>, tahun: Awaited<ReturnType<typeof ringkasanPerTahun>>, catatan: Awaited<ReturnType<typeof seedSetahun>>) {
+  const tidakSeimbang = h.seimbang.filter((s) => !s.seimbang);
+  console.log(`\nNeraca saldo: ${h.seimbang.length - 1} bulan (${BULAN[0]} sampai ${BULAN.at(-1)}) dan semua periode, ${tidakSeimbang.length ? `${tidakSeimbang.length} TIDAK SEIMBANG` : "semuanya seimbang"}.`);
+  for (const s of h.seimbang.filter((x) => x.periode.endsWith("-12") || x.periode === "semua" || !x.seimbang)) {
+    console.log(`  ${s.periode.padEnd(7)} ${rupiah(s.debit).padStart(18)} ${rupiah(s.kredit).padStart(18)} ${s.seimbang ? "seimbang" : "TIDAK SEIMBANG"}`);
+  }
   console.log(`Saldo kas terendah: ${rupiah(h.kasTerendah.saldo)} sesudah ${h.kasTerendah.no} (${h.kasTerendah.tanggal}).`);
   const tidakCocok = h.penghitung.filter((p) => p.nilai !== p.data);
   console.log(`Penghitung nomor: ${h.penghitung.length} kunci, ${tidakCocok.length ? `${tidakCocok.length} tidak cocok` : "semua cocok dengan data"}.`);
-  console.log(`Ringkasan: ${r.jurnal} jurnal (${Object.entries(r.jurnalPerStatus).map(([s, n]) => `${s} ${n}`).join(", ")}), ${r.aset} aset (${r.asetAktif} aktif, ${r.pelepasan} dilepas), ${r.event} event, ${r.slip} slip gaji, kas akhir ${rupiah(r.kas)}.`);
+  console.log("\nPer tahun (jurnal, slip gaji, event, aset dibeli, aset dilepas, kas akhir Desember):");
+  for (const t of tahun) console.log(`  ${t.tahun}  ${String(t.jurnal).padStart(4)} jurnal  ${String(t.slip).padStart(4)} slip  ${String(t.event).padStart(3)} event  ${String(t.asetBeli).padStart(3)} aset  ${String(t.asetLepas).padStart(2)} dilepas  kas ${rupiah(t.kas)}`);
+  console.log(`Total: ${r.jurnal} jurnal (${Object.entries(r.jurnalPerStatus).map(([s, n]) => `${s} ${n}`).join(", ")}), ${r.aset} aset (${r.asetAktif} aktif, ${r.pelepasan} dilepas), ${r.event} event, ${r.slip} slip gaji, kas akhir ${rupiah(r.kas)}.`);
   console.log(`Contoh pengajuan ditolak: ${catatan.pengajuanDitolak.join(", ")}.`);
+  console.log(`Menunggu Owner: ${catatan.menungguOwner.join(", ")}.`);
 }
 
 /** Satu transaksi penuh: kosongkan (opsional), seed, periksa. Dipakai skrip ini dan bangun-ulang-setahun.ts. */
 export async function jalankanSeedSetahun(opsi: { kosongkan: boolean; coba: boolean }) {
   class Batal extends Error {}
   const OPSI_TX = { timeout: 30 * 60_000, maxWait: 60_000 };
+  const mulai = Date.now();
   try {
     await db.$transaction(async (tx) => {
       if (opsi.kosongkan) {
@@ -653,8 +913,9 @@ export async function jalankanSeedSetahun(opsi: { kosongkan: boolean; coba: bool
       }
       const catatan = await seedSetahun(tx);
       const h = await periksaAkhir(tx);
-      cetak(h, await ringkasan(tx), catatan);
+      cetak(h, await ringkasan(tx), await ringkasanPerTahun(tx), catatan);
       wajibLolos(h);
+      console.log(`Waktu di dalam transaksi: ${Math.round((Date.now() - mulai) / 1000)} detik.`);
       if (opsi.coba) throw new Batal();
     }, OPSI_TX);
     console.log("\nSelesai dan tersimpan. Masuk dengan admin/adminsia, hrd/hrdsia, owner/ownersia, kapten sampai kapten6/kaptensia.");
@@ -684,4 +945,3 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     })
     .finally(() => db.$disconnect());
 }
-

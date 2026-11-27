@@ -72,7 +72,7 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
           . Proses periode paling lama dulu supaya urutan jadwal tetap benar.
         </Peringatan>
       )}
-      {lewatBatas && (
+      {lewatBatas && d.belumDiproses > 0 && (
         <Peringatan jenis="awas">Penyusutan hanya bisa diproses sampai {labelPeriode(batas)}. {labelPeriode(periode)} baru bisa dijurnal di tahun berjalan itu.</Peringatan>
       )}
       {d.penutup && (

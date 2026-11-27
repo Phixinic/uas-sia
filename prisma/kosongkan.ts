@@ -1,7 +1,7 @@
 /*
  * Mengosongkan semua tabel data di skema public kecuali `_prisma_migrations`. Daftar tabel dibaca dari katalog
  * Postgres (bukan daftar tulis tangan), jadi tabel baru dari migrasi berikutnya ikut terhapus. Dipakai seed.ts,
- * seed-setahun.ts, dan bangun-ulang-setahun.ts. Mengembalikan nama tabel yang dikosongkan.
+ * seed-setahun.ts (data contoh 2023 sampai 2028), dan bangun-ulang-setahun.ts. Mengembalikan nama tabel yang dikosongkan.
  */
 import type { DbAtauTx } from "../src/lib/server/db";
 

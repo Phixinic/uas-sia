@@ -8,13 +8,17 @@ import { jurnalPeriode, riwayatJurnalSumber } from "./persetujuan";
 
 export async function periodePenyusutan(dipilih?: string) {
   const sekarang = periodeIni();
-  const [awal, belum] = await Promise.all([
+  const [awal, belum, terakhir] = await Promise.all([
     db.aset.findFirst({ where: { status: { not: "BATAL" } }, orderBy: { bulanMulai: "asc" }, select: { bulanMulai: true } }),
     db.jadwalPenyusutan.findFirst({ where: { jurnalNo: null, aset: { status: "AKTIF" }, periodeId: { lte: sekarang } }, orderBy: { periodeId: "asc" }, select: { periodeId: true } }),
+    db.jadwalPenyusutan.findFirst({ where: { jurnalNo: { not: null } }, orderBy: { periodeId: "desc" }, select: { periodeId: true } }),
   ]);
   const pertama = awal?.bulanMulai ?? sekarang;
   const batas = periodeBatasProses();
-  const pilihan = daftarPeriode(pertama < sekarang ? pertama : sekarang, batas);
+  // Pilihan sampai batas proses, atau sampai bulan terakhir yang sudah diproses bila lebih jauh (data contoh tahun depan),
+  // supaya tahun yang punya jurnal penyusutan tetap bisa dipilih.
+  const akhir = terakhir && terakhir.periodeId > batas ? terakhir.periodeId : batas;
+  const pilihan = daftarPeriode(pertama < sekarang ? pertama : sekarang, akhir);
   const bawaan = belum?.periodeId ?? sekarang;
   // Periode yang dipilih dipakai apa adanya (bulan tanpa jadwal tampil kosong), bukan dialihkan diam-diam ke bulan lain.
   const periode = dipilih && dipilih !== "semua" ? dipilih : bawaan;

@@ -40,6 +40,6 @@ const jalan = (perintah, args) => {
   if (h.status !== 0) process.exit(h.status ?? 1);
 };
 jalan("npx", ["prisma", "migrate", "deploy"]);
-// Data uji tetap (Oktober 2026, prisma/seed.ts), bukan data contoh setahun: skenario E2E bergantung pada angkanya.
+// Data uji tetap (Oktober 2026, prisma/seed.ts), bukan data contoh 2023 sampai 2028: skenario E2E bergantung pada angkanya.
 jalan("npm", ["run", "db:seed-uji"]);
 jalan("npx", ["playwright", "test", ...process.argv.slice(2)]);

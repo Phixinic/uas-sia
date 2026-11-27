@@ -31,13 +31,18 @@ npx playwright install chromium
 npm run dev            # http://localhost:3000
 ```
 
+`npm run db:seed` mengisi data contoh Januari 2023 sampai Desember 2028 (`prisma/seed-setahun.ts`, sekitar 2 menit, satu transaksi). Semua bulan diproses penuh kecuali bagian yang sengaja dibiarkan terbuka untuk dicoba: Desember 2026 (Gaji Bulanan, setoran, dan satu fee event menunggu Owner, satu event masih dinilai kapten, satu pembelian perlengkapan draf) dan Desember 2028 (penyusutan, nilai sisa, Gaji Bulanan, serta setting gaji dan nominal yang menunggu Owner). Rinciannya di `docs/KONTRAK.md`, bagian "Data contoh 2023 sampai 2028".
+
 Akun demo (dibuat oleh seed, khusus pengembangan):
 
 | Nama pengguna | Kata sandi | Peran |
 |---|---|---|
-| `admin` | `admin123` | Admin |
-| `hrd` | `hrd12345` | HRD |
-| `owner` | `owner123` | Owner |
+| `admin` | `adminsia` | Admin |
+| `hrd` | `hrdsia` | HRD |
+| `owner` | `ownersia` | Owner |
+| `kapten` sampai `kapten6` | `kaptensia` | Kapten event |
+
+Data uji tes (`npm run db:seed-uji`, `prisma/seed.ts`, Oktober 2026) memakai `admin123`, `hrd12345`, `owner123`.
 
 `npm run db:seed` menolak berjalan kalau database sudah berisi data. Untuk mengisi ulang dari awal: `SEED_PAKSA=1 npm run db:seed` (semua data dihapus).
 
@@ -57,7 +62,7 @@ Halaman masuk hanya menampilkan petunjuk akun demo bila `TAMPILKAN_AKUN_DEMO=1` 
 ## Struktur singkat
 
 ```
-prisma/            skema, migrasi, seed data contoh Oktober 2026
+prisma/            skema, migrasi, data contoh 2023 sampai 2028 (seed-setahun.ts), data uji Oktober 2026 (seed.ts)
 src/app/           rute Next.js (halaman, layout, api/sehat)
 src/komponen/      komponen UI per siklus (konversi, sdm, pelaporan, master) dan kerangka
 src/lib/           inti (logika murni), server (db, auth, jurnal), aksi (server action), data (kueri), skema (zod)

@@ -2,13 +2,14 @@
  * Uji E2E menyeluruh SIA D'Production: satu periode November 2026 dari pembelian sampai tutup periode.
  * Skenario berurutan (serial) dan saling bergantung, jadi dijalankan di database uji yang baru di-seed
  * (lihat tests/e2e/jalankan.mjs). Tiga sesi login hidup berdampingan: Admin, HRD, Owner.
- * Screenshot tiap halaman utama per peran disimpan di /tmp/sia-e2e/<peran>/.
+ * Screenshot tiap halaman utama per peran disimpan di E2E_KELUARAN/<peran>/ (bawaan /tmp/sia-e2e; folder ini dikosongkan
+ * di awal, jadi uji yang berjalan bersamaan di worktree lain perlu folder sendiri).
  */
 import fs from "node:fs";
 import { expect, test, type Browser, type BrowserContext, type Locator, type Page } from "@playwright/test";
 
 const BASE = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${process.env.E2E_PORT ?? 3200}`;
-const KELUARAN = "/tmp/sia-e2e";
+const KELUARAN = process.env.E2E_KELUARAN ?? "/tmp/sia-e2e";
 
 type Sesi = { ctx: BrowserContext; page: Page };
 const sesi: Record<"admin" | "hrd" | "owner", Sesi> = {} as never;
