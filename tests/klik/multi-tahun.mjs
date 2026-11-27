@@ -140,7 +140,6 @@ async function coba() {
   const admin = await sesi("admin", "adminsia");
   const owner = await sesi("owner", "ownersia");
   const hrd = await sesi("hrd", "hrdsia");
-  const kapten = await sesi("kapten", "kaptensia");
   const kapten2 = await sesi("kapten2", "kaptensia");
   const o = owner.p;
   try {
@@ -178,7 +177,9 @@ async function coba() {
     await langkah("4. Kapten menilai Malam Tahun Baru dan mengirim, Owner menyetujui fee-nya", async () => {
       const k = kapten2.p;
       await k.goto("/kapten");
-      await k.getByRole("row", { name: /Malam Tahun Baru/ }).getByRole("link", { name: "Nilai crew" }).first().click();
+      // Hanya satu event milik kapten2 yang belum selesai (daftar kapten berupa kartu, bukan tabel).
+      await expect(k.getByRole("main")).toContainText("Malam Tahun Baru");
+      await k.getByRole("link", { name: "Nilai crew" }).click();
       await k.waitForURL(/lihat=EVT-/);
       for (let putaran = 0; putaran < 12; putaran++) {
         const belum = k.getByRole("group", { name: /^Penilaian / }).filter({ has: k.getByRole("button", { name: "Sesuai", pressed: false }) });
@@ -262,7 +263,7 @@ async function coba() {
       }
     });
   } finally {
-    for (const s of [admin, owner, hrd, kapten, kapten2]) await s.ctx.close();
+    for (const s of [admin, owner, hrd, kapten2]) await s.ctx.close();
   }
 }
 
