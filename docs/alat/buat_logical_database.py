@@ -292,7 +292,7 @@ KONFIG = {
     },
     "logical-database-konversi": {
         "judul": "siklus konversi",
-        "kolom": KOLOM_KONVERSI, "lebar": [80, 96, 90], "gutter": [22, 24],
+        "kolom": KOLOM_KONVERSI, "lebar": [80, 96, 90], "gutter": [24, 24],  # 24: kolom sumber_investasi memanjangkan pembelian, pada 22 garis detail_revisi_opname->perlengkapan melewati simbol aset->peralatan
         "lajur_kiri": 5.0, "tepi_kiri": TEPI_KIRI_KONVERSI,
     },
     "logical-database-sdm": {

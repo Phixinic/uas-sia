@@ -29,6 +29,8 @@ export const skemaPembelian = z
     jenis: z.enum(["PERALATAN", "PERLENGKAPAN"], { error: "Jenis pembelian tidak valid." }),
     tanggal: z.string({ error: "Isi tanggal pembelian." }).regex(POLA_TANGGAL, "Isi tanggal pembelian."),
     caraBayar: z.enum(["TUNAI", "KREDIT", "INVESTASI"], { error: "Pilih cara bayar." }),
+    /** Hanya dipakai untuk Investasi (kosong dianggap Pemilik); diabaikan untuk Tunai dan Kredit. */
+    sumberInvestasi: z.enum(["PEMILIK", "INVESTOR", "HIBAH"], { error: "Pilih sumber investasi." }).optional().nullable(),
     jatuhTempo: z.string({ error: "Isi jatuh tempo utang." }).optional().default(""),
     supplierKode: z.string({ error: "Pilih supplier." }).trim().optional().default(""),
     keterangan: z.string({ error: "Keterangan tidak valid." }).trim().max(200, "Keterangan maksimal 200 karakter.").default(""),
@@ -38,7 +40,7 @@ export const skemaPembelian = z
   })
   .superRefine((d, ctx) => {
     if (d.caraBayar !== "INVESTASI" && !d.supplierKode) {
-      ctx.addIssue({ code: "custom", path: ["supplierKode"], message: "Pilih supplier, atau pilih cara bayar Investasi untuk setoran pemilik." });
+      ctx.addIssue({ code: "custom", path: ["supplierKode"], message: "Pilih supplier, atau pilih cara bayar Investasi untuk barang dari pemilik, investor, atau hibah." });
     }
     if (d.caraBayar === "KREDIT" && (!POLA_TANGGAL.test(d.jatuhTempo) || d.jatuhTempo < d.tanggal)) {
       ctx.addIssue({ code: "custom", path: ["jatuhTempo"], message: "Isi jatuh tempo utang, minimal sama dengan tanggal pembelian." });

@@ -14,7 +14,7 @@ import { AKUN } from "@/lib/inti/akun";
 import { barisPembelian } from "@/lib/inti/jurnal";
 import { hitungJadwal, nDariDasar } from "@/lib/inti/penyusutan";
 import { dariDate, keDate, labelPeriode, periodeDari, tambahBulanTanggal } from "@/lib/inti/tanggal";
-import { LABEL_CARA_BAYAR, LABEL_JENIS_PEMBELIAN } from "@/lib/format";
+import { LABEL_CARA_BAYAR, LABEL_JENIS_PEMBELIAN, LABEL_SUMBER_INVESTASI, namaSupplierAtauSumber } from "@/lib/format";
 import type { z } from "zod";
 
 /** Posting membuat banyak baris jadwal (n bulan x jumlah unit), jadi batas waktu transaksi dilonggarkan. */
@@ -54,6 +54,8 @@ export async function simpanPembelianDalam(tx: Tx, pengguna: PenggunaSesi, d: z.
     tanggal: keDate(d.tanggal),
     supplierKode: d.supplierKode || null,
     caraBayar: d.caraBayar,
+    // Sumber hanya bermakna untuk Investasi (CHECK pembelian_sumber_investasi); bawaannya Pemilik.
+    sumberInvestasi: d.caraBayar === "INVESTASI" ? (d.sumberInvestasi ?? "PEMILIK") : null,
     jatuhTempo: d.caraBayar === "KREDIT" ? keDate(d.jatuhTempo) : null,
     keterangan: d.keterangan,
     total,
@@ -123,13 +125,13 @@ export async function postingPembelianDalam(tx: Tx, no: string, pengguna: Penggu
     }
   }
 
-  const namaSupplier = b.supplier?.nama ?? "Setoran pemilik";
+  const namaSupplier = namaSupplierAtauSumber(b.supplier?.nama, b.sumberInvestasi);
   const jurnalNo = await buatJurnal(tx, {
     tanggal,
     jenis: "UMUM",
     status: "DISETUJUI",
-    keterangan: `Pembelian ${LABEL_JENIS_PEMBELIAN[b.jenis].toLowerCase()} ${no}, ${namaSupplier} (${LABEL_CARA_BAYAR[b.caraBayar]})`,
-    baris: barisPembelian(debit, b.caraBayar),
+    keterangan: `Pembelian ${LABEL_JENIS_PEMBELIAN[b.jenis].toLowerCase()} ${no}, ${namaSupplier} (${LABEL_CARA_BAYAR[b.caraBayar]}${b.sumberInvestasi ? `, ${LABEL_SUMBER_INVESTASI[b.sumberInvestasi]}` : ""})`,
+    baris: barisPembelian(debit, b.caraBayar, b.sumberInvestasi),
     sumberTipe: "PEMBELIAN",
     sumberId: no,
     dibuatOlehId: pengguna.id,

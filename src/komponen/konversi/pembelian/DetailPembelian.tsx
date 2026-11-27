@@ -8,7 +8,7 @@ import { LencanaStatus } from "@/komponen/ui/Lencana";
 import { TautanTombol } from "@/komponen/ui/Tombol";
 import Peringatan from "@/komponen/ui/Peringatan";
 import AksiPembelian from "./AksiPembelian";
-import { LABEL_CARA_BAYAR, LABEL_DASAR_N, labelWaktu } from "@/lib/format";
+import { LABEL_DASAR_N, labelCaraBayar, labelWaktu, namaSupplierAtauSumber } from "@/lib/format";
 import { dariDate, labelTanggal } from "@/lib/inti/tanggal";
 import type { ambilPembelian } from "@/lib/data/konversi/pembelian";
 import type { Peran } from "@/lib/peran";
@@ -40,8 +40,8 @@ export default function DetailPembelian({ b, namaAkun, peran, alamat }: { b: Pem
       <div className="space-y-5 p-5">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {ubin("Tanggal", labelTanggal(dariDate(b.tanggal)))}
-          {ubin("Supplier", b.supplier?.nama ?? "Setoran pemilik")}
-          {ubin("Cara bayar", `${LABEL_CARA_BAYAR[b.caraBayar]}${b.jatuhTempo ? `, jatuh tempo ${labelTanggal(dariDate(b.jatuhTempo))}` : ""}`)}
+          {ubin("Supplier", namaSupplierAtauSumber(b.supplier?.nama, b.sumberInvestasi))}
+          {ubin("Cara bayar", `${labelCaraBayar(b.caraBayar, b.sumberInvestasi)}${b.jatuhTempo ? `, jatuh tempo ${labelTanggal(dariDate(b.jatuhTempo))}` : ""}`)}
           {ubin("Total", <Rupiah nilai={b.total} />)}
         </div>
         {b.keterangan && <p className="teks-redup">{b.keterangan}</p>}

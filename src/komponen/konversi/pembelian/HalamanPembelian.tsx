@@ -10,7 +10,7 @@ import { boleh } from "@/lib/peran";
 import { petaAkun, periodeTerkunciSemua } from "@/lib/data/umum";
 import { ambilPembelian, daftarPembelian, opsiFormPembelian } from "@/lib/data/konversi/pembelian";
 import { dariDate, hariIni, labelTanggal } from "@/lib/inti/tanggal";
-import { LABEL_CARA_BAYAR } from "@/lib/format";
+import { labelCaraBayar } from "@/lib/format";
 import KepalaHalaman from "@/komponen/ui/KepalaHalaman";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
 import Tabel from "@/komponen/ui/Tabel";
@@ -50,6 +50,7 @@ export default async function HalamanPembelian({ jenis, cari }: { jenis: JenisPe
             no: d.no,
             tanggal: dariDate(d.tanggal),
             caraBayar: d.caraBayar,
+            sumberInvestasi: d.sumberInvestasi ?? "PEMILIK",
             jatuhTempo: dariDate(d.jatuhTempo),
             supplierKode: d.supplierKode ?? "",
             keterangan: d.keterangan,
@@ -129,7 +130,7 @@ export default async function HalamanPembelian({ jenis, cari }: { jenis: JenisPe
                   <td>{b.supplier}</td>
                   <td className="text-[12px] leading-5">{b.barang.map((x, i) => <div key={i}>{x}</div>)}</td>
                   <td className="whitespace-nowrap">
-                    {LABEL_CARA_BAYAR[b.caraBayar]}
+                    {labelCaraBayar(b.caraBayar, b.sumberInvestasi)}
                     {b.caraBayar === "KREDIT" && b.jatuhTempo && <div className="text-[11px] text-slate-500">jatuh tempo {labelTanggal(b.jatuhTempo)}</div>}
                   </td>
                   <td className="kolom-angka"><Rupiah nilai={b.total} polos /></td>

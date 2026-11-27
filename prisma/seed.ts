@@ -13,7 +13,7 @@ import path from "node:path";
 import { db } from "../src/lib/server/db";
 import { hashKataSandi } from "../src/lib/server/kata-sandi";
 import { dariDate, keDate, periodeDari } from "../src/lib/inti/tanggal";
-import { AKUN } from "../src/lib/inti/akun";
+import { AKUN, AKUN_MODAL_TAMBAHAN } from "../src/lib/inti/akun";
 import { muatJurnalBuku } from "../src/lib/server/jurnal";
 import { versiAwalSeed } from "../src/lib/server/nominal";
 import { neracaSaldo } from "../src/lib/inti/buku-besar";
@@ -80,6 +80,7 @@ async function main() {
   await db.akun.createMany({
     data: daftar("akun").map((a) => ({ kode: a.kode, nama: a.nama, tipe: TIPE_AKUN[a.tipe], saldoNormal: a.saldo_normal, aktif: a.aktif !== false })),
   });
+  await db.akun.createMany({ data: AKUN_MODAL_TAMBAHAN.map((a) => ({ ...a })) });
 
   const aset = daftar("aset");
   const semuaPeriode = new Set<string>();
@@ -204,6 +205,7 @@ async function main() {
     await db.pembelian.create({
       data: {
         no: b.id, jenis: besar(b.jenis), tanggal: keDate(b.tanggal), supplierKode: kosongJadiNull(b.supplier_id), caraBayar: besar(b.cara_bayar),
+        sumberInvestasi: b.cara_bayar === "investasi" ? "PEMILIK" : null,
         jatuhTempo: b.jatuh_tempo ? keDate(b.jatuh_tempo) : null, keterangan: b.keterangan ?? "", total: b.total, status: statusBeli(b.status),
         jurnalNo: b.jurnal_id ?? null, jurnalPembalikNo: b.jurnal_pembalik ?? null, alasanBalik: b.alasan_balik ?? null,
         dibuatOlehId: oleh(b.dibuat_oleh)!, disetujuiOlehId: oleh(b.diposting_oleh), disetujuiPada: waktu(b.diposting_pada),

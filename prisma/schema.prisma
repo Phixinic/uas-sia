@@ -119,6 +119,14 @@ enum CaraBayar {
   INVESTASI
 }
 
+/// Asal barang pada cara bayar INVESTASI, menentukan akun modal lawan jurnalnya:
+/// PEMILIK 3-110 Modal Pemilik, INVESTOR 3-120 Modal Investor, HIBAH 3-130 Modal Hibah.
+enum SumberInvestasi {
+  PEMILIK
+  INVESTOR
+  HIBAH
+}
+
 enum DasarN {
   GARANSI
   MASA_MANFAAT
@@ -511,28 +519,30 @@ model Perlengkapan {
 }
 
 model Pembelian {
-  no               String          @id @map("no_pembelian")
+  no               String           @id @map("no_pembelian")
   jenis            JenisPembelian
-  tanggal          DateTime        @db.Date
-  /// Kosong untuk cara bayar INVESTASI (barang disetor pemilik).
-  supplierKode     String?         @map("id_supplier")
-  caraBayar        CaraBayar       @map("cara_bayar")
-  jatuhTempo       DateTime?       @map("jatuh_tempo") @db.Date
-  keterangan       String          @default("")
+  tanggal          DateTime         @db.Date
+  /// Boleh kosong untuk cara bayar INVESTASI (barang disetor tanpa supplier).
+  supplierKode     String?          @map("id_supplier")
+  caraBayar        CaraBayar        @map("cara_bayar")
+  /// Terisi hanya untuk cara bayar INVESTASI (CHECK di migrasi); kosong untuk TUNAI dan KREDIT.
+  sumberInvestasi  SumberInvestasi? @map("sumber_investasi")
+  jatuhTempo       DateTime?        @map("jatuh_tempo") @db.Date
+  keterangan       String           @default("")
   total            Int
-  status           StatusPembelian @default(DRAFT)
-  alasanTolak      String?         @map("alasan_tolak")
-  jurnalNo         String?         @unique @map("jurnal_no")
-  jurnalPembalikNo String?         @unique @map("jurnal_pembalik")
-  alasanBalik      String?         @map("alasan_balik")
-  dibuatOlehId     Int             @map("dibuat_oleh")
-  dibuatPada       DateTime        @default(now()) @map("dibuat_pada")
-  diubahPada       DateTime        @updatedAt @map("diubah_pada")
+  status           StatusPembelian  @default(DRAFT)
+  alasanTolak      String?          @map("alasan_tolak")
+  jurnalNo         String?          @unique @map("jurnal_no")
+  jurnalPembalikNo String?          @unique @map("jurnal_pembalik")
+  alasanBalik      String?          @map("alasan_balik")
+  dibuatOlehId     Int              @map("dibuat_oleh")
+  dibuatPada       DateTime         @default(now()) @map("dibuat_pada")
+  diubahPada       DateTime         @updatedAt @map("diubah_pada")
   /// Yang memposting (Admin atau Owner). Posting = status DISETUJUI.
-  disetujuiOlehId  Int?            @map("disetujui_oleh")
-  disetujuiPada    DateTime?       @map("disetujui_pada")
-  dibalikOlehId    Int?            @map("dibalik_oleh")
-  dibalikPada      DateTime?       @map("dibalik_pada")
+  disetujuiOlehId  Int?             @map("disetujui_oleh")
+  disetujuiPada    DateTime?        @map("disetujui_pada")
+  dibalikOlehId    Int?             @map("dibalik_oleh")
+  dibalikPada      DateTime?        @map("dibalik_pada")
 
   supplier       Supplier?         @relation(fields: [supplierKode], references: [kode])
   jurnal         Jurnal?           @relation("PembelianJurnal", fields: [jurnalNo], references: [no])

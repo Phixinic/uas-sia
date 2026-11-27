@@ -10,6 +10,10 @@ export const AKUN = {
   UTANG_USAHA: "2-110",
   UTANG_PPH21: "2-120",
   MODAL: "3-110",
+  /** Barang yang disetor investor lewat pembelian cara bayar Investasi. */
+  MODAL_INVESTOR: "3-120",
+  /** Barang hibah lewat pembelian cara bayar Investasi. */
+  MODAL_HIBAH: "3-130",
   BIAYA_PENYUSUTAN: "6-110",
   BIAYA_PERLENGKAPAN: "6-120",
   BIAYA_GAJI_PRODUKSI: "6-210",
@@ -32,11 +36,31 @@ export const AKUN_GAJI_BULANAN = [
   { kode: AKUN.PENDAPATAN_DENDA, nama: "Pendapatan Lain-lain (Denda Karyawan)", tipe: "PENDAPATAN", saldoNormal: "K" },
 ] as const;
 
-export type CaraBayar = "TUNAI" | "KREDIT" | "INVESTASI";
+/** Akun modal untuk sumber investasi selain pemilik (migrasi 20261127090000_sumber_investasi dan seed). */
+export const AKUN_MODAL_TAMBAHAN = [
+  { kode: AKUN.MODAL_INVESTOR, nama: "Modal Investor", tipe: "EKUITAS", saldoNormal: "K" },
+  { kode: AKUN.MODAL_HIBAH, nama: "Modal Hibah", tipe: "EKUITAS", saldoNormal: "K" },
+] as const;
 
-/** Akun lawan (kredit) pembelian menurut cara bayar. */
-export const AKUN_LAWAN_BAYAR: Record<CaraBayar, string> = {
-  TUNAI: AKUN.KAS,
-  KREDIT: AKUN.UTANG_USAHA,
-  INVESTASI: AKUN.MODAL,
+export type CaraBayar = "TUNAI" | "KREDIT" | "INVESTASI";
+export type SumberInvestasi = "PEMILIK" | "INVESTOR" | "HIBAH";
+
+/** Akun modal lawan pembelian cara bayar Investasi, menurut sumbernya. */
+export const AKUN_SUMBER_INVESTASI: Record<SumberInvestasi, string> = {
+  PEMILIK: AKUN.MODAL,
+  INVESTOR: AKUN.MODAL_INVESTOR,
+  HIBAH: AKUN.MODAL_HIBAH,
 };
+
+/** Semua akun modal yang ditelusuri ringkasan "Dari mana kas dan modal", urut kode. */
+export const AKUN_MODAL_SEMUA: readonly string[] = [AKUN.MODAL, AKUN.MODAL_INVESTOR, AKUN.MODAL_HIBAH];
+
+/**
+ * Akun lawan (kredit) pembelian: Tunai ke Kas, Kredit ke Utang Usaha, Investasi ke akun modal sumbernya.
+ * Sumber kosong pada Investasi dianggap Pemilik (perilaku sebelum ada pilihan sumber).
+ */
+export function akunLawanBayar(caraBayar: CaraBayar, sumber?: SumberInvestasi | null): string {
+  if (caraBayar === "TUNAI") return AKUN.KAS;
+  if (caraBayar === "KREDIT") return AKUN.UTANG_USAHA;
+  return AKUN_SUMBER_INVESTASI[sumber ?? "PEMILIK"];
+}

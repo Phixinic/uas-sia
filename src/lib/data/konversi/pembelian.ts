@@ -3,6 +3,7 @@
  */
 import { db } from "@/lib/server/db";
 import { dariDate } from "@/lib/inti/tanggal";
+import { namaSupplierAtauSumber } from "@/lib/format";
 import type { JenisPembelian } from "@/generated/prisma/enums";
 
 export async function daftarPembelian(jenis: JenisPembelian) {
@@ -17,8 +18,9 @@ export async function daftarPembelian(jenis: JenisPembelian) {
   return daftar.map((b) => ({
     no: b.no,
     tanggal: dariDate(b.tanggal),
-    supplier: b.supplier?.nama ?? "Setoran pemilik",
+    supplier: namaSupplierAtauSumber(b.supplier?.nama, b.sumberInvestasi),
     caraBayar: b.caraBayar,
+    sumberInvestasi: b.sumberInvestasi,
     jatuhTempo: dariDate(b.jatuhTempo),
     total: b.total,
     status: b.status,

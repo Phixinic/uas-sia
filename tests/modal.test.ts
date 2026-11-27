@@ -6,7 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { barisInvestasiKas, pesanKasKurang, ringkasModal, type JurnalSumber } from "@/lib/inti/modal";
 import { saldo } from "@/lib/inti/buku-besar";
-import { AKUN } from "@/lib/inti/akun";
+import { AKUN, AKUN_MODAL_SEMUA } from "@/lib/inti/akun";
 import { muatSeedLama, koleksi } from "./app-lama";
 
 const j = (no: string, tanggal: string, sumberTipe: string | null, baris: [string, number, number][], extra: Partial<JurnalSumber> = {}): JurnalSumber => ({
@@ -28,6 +28,13 @@ function cocokBukuBesar(jurnal: JurnalSumber[], periode: string | null) {
   const buku = jurnal.map((x) => ({ ...x }));
   expect(r.kas.akhir).toBe(saldo(buku, AKUN.KAS, "D", periode));
   expect(r.modal.akhir).toBe(saldo(buku, AKUN.MODAL, "K", periode));
+  // Akun modal investor dan hibah juga ditelusuri, jadi tidak ada rupiah modal yang hilang dari ringkasan.
+  for (const s of [r.modalInvestor, r.modalHibah]) {
+    expect(s.akhir).toBe(saldo(buku, s.akun, "K", periode));
+    expect(s.awal + s.setoranBarang.jumlah + s.lainnya.jumlah).toBe(s.akhir);
+  }
+  expect(r.totalModal.akhir).toBe(r.modal.akhir + r.modalInvestor.akhir + r.modalHibah.akhir);
+  expect(r.totalModal.akhir).toBe(AKUN_MODAL_SEMUA.reduce((t, a) => t + saldo(buku, a, "K", periode), 0));
   expect(r.kas.awal + r.kas.masuk.total - r.kas.keluar.total).toBe(r.kas.akhir);
   expect(r.modal.awal + r.modal.setoranKas.jumlah + r.modal.setoranBarang.jumlah + r.modal.lainnya.jumlah).toBe(r.modal.akhir);
   expect(r.biayaSdm.tetap.bruto.jumlah + r.biayaSdm.variabel.bruto.jumlah - r.biayaSdm.pph21).toBe(r.kas.keluar.sdm);
@@ -120,6 +127,48 @@ describe("ringkasModal", () => {
     expect(r.kas.keluar.gaji.jumlah).toBe(31_200_343);
     expect(r.biayaSdm.tetap.bruto.jumlah).toBe(25_904_546 + 5_595_455);
     cocokBukuBesar(jurnal, null);
+  });
+});
+
+describe("ringkasModal: modal investor dan hibah", () => {
+  const SUMBER: JurnalSumber[] = [
+    ...CONTOH,
+    // Investasi sumber Investor: Dr Peralatan, Kr 3-120. Kas tidak bergerak.
+    j("JU-20", "2026-10-25", "PEMBELIAN", [[AKUN.PERALATAN, 12_000_000, 0], [AKUN.MODAL_INVESTOR, 0, 12_000_000]], { sumberId: "BP-2026-0020" }),
+    // Investasi sumber Hibah lalu dibalik sebagian di bulan berikutnya.
+    j("JU-21", "2026-11-05", "PEMBELIAN", [[AKUN.PERLENGKAPAN, 400_000, 0], [AKUN.MODAL_HIBAH, 0, 400_000]], { sumberId: "BL-2026-0021" }),
+    j("JB-21", "2026-11-06", "PEMBELIAN", [[AKUN.MODAL_HIBAH, 400_000, 0], [AKUN.PERLENGKAPAN, 0, 400_000]], { sumberId: "BL-2026-0021", jenis: "PEMBALIK" }),
+    j("JU-22", "2026-11-07", "PEMBELIAN", [[AKUN.PERLENGKAPAN, 250_000, 0], [AKUN.MODAL_HIBAH, 0, 250_000]], { sumberId: "BL-2026-0022" }),
+    // Jurnal umum manual ke Modal Investor masuk pos "lainnya".
+    j("JU-23", "2026-11-08", null, [[AKUN.MODAL, 1_000_000, 0], [AKUN.MODAL_INVESTOR, 0, 1_000_000]]),
+  ];
+
+  it("kumulatif: setoran barang per sumber, kas dan Modal Pemilik tidak tersentuh pembelian investor/hibah", () => {
+    const dasar = ringkasModal(CONTOH, null);
+    const r = cocokBukuBesar(SUMBER, null);
+    expect(r.modalInvestor.akun).toBe("3-120");
+    expect(r.modalInvestor.setoranBarang.jumlah).toBe(12_000_000);
+    expect(r.modalInvestor.lainnya.jumlah).toBe(1_000_000);
+    expect(r.modalInvestor.akhir).toBe(13_000_000);
+    expect(r.modalHibah.akun).toBe("3-130");
+    expect(r.modalHibah.setoranBarang.rincian.map((x) => [x.sumberId, x.jumlah])).toEqual([["BL-2026-0021", 400_000], ["BL-2026-0021", -400_000], ["BL-2026-0022", 250_000]]);
+    expect(r.modalHibah.akhir).toBe(250_000);
+    expect(r.modal.setoranBarang.jumlah).toBe(dasar.modal.setoranBarang.jumlah);
+    expect(r.modal.lainnya.jumlah).toBe(dasar.modal.lainnya.jumlah - 1_000_000);
+    expect(r.kas.akhir).toBe(dasar.kas.akhir);
+    expect(r.kas.keluar.pembelianTunai.jumlah).toBe(dasar.kas.keluar.pembelianTunai.jumlah);
+    expect(r.totalModal.akhir).toBe(dasar.modal.akhir + 12_000_000 + 250_000);
+  });
+
+  it("per periode: saldo awal investor dan hibah dibawa dari periode sebelumnya", () => {
+    const okt = cocokBukuBesar(SUMBER, "2026-10");
+    expect([okt.modalInvestor.awal, okt.modalInvestor.akhir, okt.modalHibah.akhir]).toEqual([0, 12_000_000, 0]);
+    const nov = cocokBukuBesar(SUMBER, "2026-11");
+    expect(nov.modalInvestor.awal).toBe(12_000_000);
+    expect(nov.modalInvestor.setoranBarang.jumlah).toBe(0);
+    expect(nov.modalHibah.setoranBarang.jumlah).toBe(250_000);
+    expect(nov.totalModal.awal).toBe(okt.totalModal.akhir);
+    expect(cocokBukuBesar(SUMBER, "2026-12").totalModal.awal).toBe(nov.totalModal.akhir);
   });
 });
 
