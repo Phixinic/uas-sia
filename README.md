@@ -73,7 +73,7 @@ Gaya cetak (laporan dan slip gaji) ada di `src/app/globals.css`. Rincian konvens
 |---|---|
 | Admin | Pembelian, nilai sisa perlengkapan, proses penyusutan, pengajuan pelepasan dan jurnal penyesuaian |
 | HRD | Master SDM, presensi, hitung gaji, pengajuan distribusi gaji |
-| Owner | Menyetujui atau menolak jurnal, pelepasan, dan penggajian; membalik pembelian; bagan akun; kunci periode; kelola pengguna |
+| Owner | Menyetujui atau menolak jurnal, pelepasan, dan penggajian; menyetujui semua penyusutan sebulan; membalik pembelian; bagan akun; kunci periode; kelola pengguna |
 
 Rincian per aksi ada di `src/lib/peran.ts` dan `docs/KONTRAK.md`.
 

@@ -40,7 +40,7 @@ tests/                          vitest: tes inti (tanpa DB) dan tes integrasi (U
 | `/konversi/pembelian-peralatan` | Pembelian Peralatan (**sudah jadi, pola rujukan**) | Konversi |
 | `/konversi/pembelian-perlengkapan` | Pembelian Perlengkapan (sudah jadi, komponen sama) | Konversi |
 | `/konversi/nilai-sisa` | Nilai Sisa Perlengkapan (opname): form hitung fisik (draf bisa diubah, termasuk yang dikembalikan Owner), panel jurnal, `?revisi=baru` form revisi sesudah disetujui, kartu revisi menunggu Owner, Riwayat versi | Konversi |
-| `/konversi/penyusutan` | Proses Penyusutan: pilih bulan, pratinjau beban per aset, tombol "Proses penyusutan" (jurnal langsung disetujui), panel status jurnal periode ini, riwayat proses. Tanpa tombol ajukan, setujui, atau tolak | Konversi |
+| `/konversi/penyusutan` | Proses Penyusutan: pilih bulan, pratinjau beban per aset, satu tombol untuk semua aset periode itu (Admin "Proses penyusutan", Owner "Setujui semua"; jurnal langsung disetujui), panel status jurnal periode ini, riwayat proses. Tanpa tombol ajukan, setujui, atau tolak | Konversi |
 | `/konversi/kartu-aset` | Kartu Aset (`?aset=AST-0001` membuka rinciannya) | Konversi |
 | `/konversi/pelepasan` | Pelepasan Peralatan | Konversi |
 | `/sdm/setting-gaji` | Setting Gaji: versi berlaku per karyawan, pengajuan menunggu Owner, riwayat (`?form=baru&karyawan=KRY-01`, `?riwayat=KRY-01`). Tab Setting gaji di Master SDM dialihkan ke sini | SDM |
@@ -75,7 +75,7 @@ Peran **Kapten** (crew freelance yang memimpin event) ditolak secara bawaan: `wa
 | `pembelian.posting` | Admin, Owner | posting draf |
 | `pembelian.balik` | Owner | balik pembelian terposting (jurnal pembalik, alasan wajib) |
 | `nilai-sisa.input` | Admin | input dan ubah draf nilai sisa perlengkapan, ajukan revisi sesudah disetujui |
-| `penyusutan.proses` | Admin | proses penyusutan satu periode: jurnal penyesuaian langsung DISETUJUI (tanpa keputusan Owner) |
+| `penyusutan.proses` | Admin, Owner | proses penyusutan satu periode untuk semua aset sekaligus: jurnal penyesuaian langsung DISETUJUI |
 | `pelepasan.ajukan` | Admin | ajukan pelepasan |
 | `pelepasan.putuskan` | Owner | setujui atau tolak pelepasan (alasan wajib saat tolak) |
 | `presensi.kelola` | HRD | input, ubah, hapus presensi |
@@ -251,7 +251,7 @@ Selesai mengerjakan: `npm run cek-tipe`, `npm run lint`, `npm run uji`, dan `npm
 
 Kata dosen: "alat tidak bisa ditolak". Beban penyusutan dihitung dari jadwal aset yang dibuat saat pembelian diposting, jadi tidak ada yang perlu disetujui.
 
-- **Alur**: Admin memilih bulan di Proses Penyusutan, pratinjau beban per aset tampil, lalu tombol "Proses penyusutan" menjalankan `prosesPenyusutanDalam` (`src/lib/server/penyusutan.ts`, dipakai server action dan seed). Jurnal penyesuaian dibuat langsung DISETUJUI bertanggal hari terakhir periode, pembuat dan penyetuju = Admin yang memproses, lalu masuk buku besar. Owner dan HRD hanya melihat halaman dan jurnalnya.
+- **Alur**: Admin atau Owner memilih bulan di Proses Penyusutan, pratinjau beban per aset tampil, lalu tombol di kepala pratinjau (Admin "Proses penyusutan", Owner "Setujui semua") menjalankan `prosesPenyusutanDalam` (`src/lib/server/penyusutan.ts`, dipakai server action dan seed). Jurnal penyesuaian dibuat langsung DISETUJUI bertanggal hari terakhir periode, pembuat dan penyetuju = pengguna yang memproses, lalu masuk buku besar. HRD hanya melihat halaman dan jurnalnya.
 - **Aturan yang tetap**: urutan periode (periode lebih lama harus diproses dulu), batas `periodeBatasProses`, dan kunci periode (`pastikanTerbuka` di `buatJurnal`).
 - **Tanpa tolak**: tombol Ajukan, Setujui, dan Tolak untuk jurnal penyusutan dihapus dari halaman Penyusutan dan Jurnal Penyesuaian (`AksiJurnal` tidak menampilkan apa pun untuk sumber `PENYUSUTAN`). `ajukanJurnal` dan `tolakJurnal` menolak jurnal penyusutan dengan `PESAN_PENYUSUTAN_OTOMATIS`. Jurnal penyusutan lama yang berstatus DITOLAK tetap terbaca sebagai riwayat.
 - **Migrasi** `20261125090000_penyusutan_otomatis`: jurnal penyusutan lama yang masih DRAFT atau DIAJUKAN disetujui (penyetuju = pembuatnya), karena jalannya di aplikasi sudah tidak ada. Debit, kredit, nomor, dan tanggal tidak berubah.

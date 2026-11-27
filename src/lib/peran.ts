@@ -32,7 +32,7 @@ export const IZIN = {
   "pembelian.posting": ["ADMIN", "OWNER"],
   "pembelian.balik": ["OWNER"],
   "nilai-sisa.input": ["ADMIN"],
-  "penyusutan.proses": ["ADMIN"],
+  "penyusutan.proses": ["ADMIN", "OWNER"],
   "pelepasan.ajukan": ["ADMIN"],
   "pelepasan.putuskan": ["OWNER"],
   // Siklus SDM

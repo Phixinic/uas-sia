@@ -1,8 +1,8 @@
 /*
- * Halaman Proses Penyusutan (komponen server). Admin memilih bulan, memeriksa pratinjau beban per aset, lalu satu tombol
- * membuat jurnal penyesuaian yang langsung disetujui dan masuk buku besar. Tidak ada langkah ajukan, setujui, atau tolak:
- * penyusutan dihitung dari jadwal aset. Periode lebih lama harus diproses dulu, dan periode tertutup menolak proses.
- * Owner dan HRD hanya melihat.
+ * Halaman Proses Penyusutan (komponen server). Admin atau Owner memilih bulan, memeriksa pratinjau beban per aset, lalu
+ * satu tombol di kepala pratinjau (Admin: "Proses penyusutan", Owner: "Setujui semua") membuat jurnal penyesuaian yang
+ * langsung disetujui dan masuk buku besar. Tidak ada langkah ajukan atau tolak: penyusutan dihitung dari jadwal aset.
+ * Periode lebih lama harus diproses dulu, dan periode tertutup menolak proses. HRD hanya melihat.
  */
 import Link from "next/link";
 import { wajibMasuk } from "@/lib/server/auth";
@@ -84,7 +84,11 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
       {d.jurnalIni && <PanelStatusJurnal judul={`Jurnal penyusutan ${labelPeriode(periode)}`} j={d.jurnalIni} sumber="penyusutan" penggunaId={pengguna.id} peran={pengguna.peran} />}
 
       <Kartu rapat>
-        <KepalaKartu judul={`Pratinjau · ${labelBulanTahun(periode)}`} keterangan={`${d.baris.length} aset, ${d.belumDiproses} belum diproses`} />
+        <KepalaKartu
+          judul={`Pratinjau · ${labelBulanTahun(periode)}`}
+          keterangan={`${d.baris.length} aset, ${d.belumDiproses} belum diproses`}
+          aksi={bolehProses && d.belumDiproses > 0 ? <TombolProses periode={periode} jumlah={d.belumDiproses} total={d.totalBelum} disabled={tertahan} untukOwner={pengguna.peran === "OWNER"} /> : undefined}
+        />
         {d.baris.length === 0 ? (
           <KeadaanKosong judul={`Tidak ada aset yang disusutkan pada ${labelPeriode(periode)}`} keterangan="Jadwal dibuat saat pembelian peralatan diposting." />
         ) : (
@@ -146,7 +150,7 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
               <h2 className="judul-kartu">Jurnal penyesuaian yang akan dibuat</h2>
               <p className="mt-0.5 text-xs text-slate-500">Dikelompokkan per pasangan akun beban dan akun akumulasi. Langsung disetujui dan masuk buku besar saat diproses.</p>
             </div>
-            {bolehProses ? <TombolProses periode={periode} jumlah={d.belumDiproses} total={d.totalBelum} disabled={tertahan} /> : <p className="teks-redup">Penyusutan diproses oleh Admin. Owner melihat hasilnya di sini dan di Jurnal Penyesuaian.</p>}
+            {!bolehProses && <p className="teks-redup">Penyusutan diproses Admin atau disetujui Owner.</p>}
           </div>
           <details className="mt-3" open>
             <summary className="cursor-pointer text-sm font-medium text-slate-700">Lihat baris jurnal</summary>

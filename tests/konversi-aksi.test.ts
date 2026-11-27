@@ -146,6 +146,11 @@ describe.runIf(aktif)("siklus konversi lewat server action", async () => {
       expect(des.ok).toBe(false);
       if (!des.ok) expect(des.galat).toContain("November 2026 belum diproses");
       expect((await susut.prosesPenyusutan({ periode: "2026-10" })).ok).toBe(false); // sudah diproses
+      // Owner lolos pemeriksaan peran (tombol "Setujui semua"), jadi yang menolaknya hanya aturan periode.
+      await masukSebagai("owner");
+      const owner = await susut.prosesPenyusutan({ periode: "2026-10" });
+      expect(owner.ok).toBe(false);
+      if (!owner.ok) expect(owner.galat).toContain("sudah diproses");
     });
 
     let jurnalNo = "";
