@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Masuk" };
  * dan uji E2E. Di server sungguhan sandinya sudah diganti, jadi petunjuk itu menyesatkan dan bisa membuat akun
  * terkunci 10 menit sesudah 5 kali gagal.
  */
-/** TAMPILKAN_AKUN_DEMO=1: akun data uji (prisma/seed.ts, E2E); =setahun: akun data contoh 2023 sampai 2028 (prisma/seed-setahun.ts, nilai lama dipertahankan). */
+/** TAMPILKAN_AKUN_DEMO=1: akun data uji (prisma/seed.ts, E2E); =setahun: akun data contoh (prisma/seed-setahun.ts, nilai lama dipertahankan). */
 const PETUNJUK_DEMO: Record<string, string> = {
   "1": "admin / admin123, hrd / hrd12345, owner / owner123",
   setahun: "admin / adminsia, hrd / hrdsia, owner / ownersia, kapten / kaptensia",

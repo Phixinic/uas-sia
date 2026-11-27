@@ -57,7 +57,7 @@ export async function periodeNilaiSisa(dipilih?: string) {
   const awal = pertama ? periodeDari(dariDate(pertama.tanggal)) : sekarang;
   const batas = periodeBatasProses();
   const sudah = new Set((await db.opname.findMany({ where: { status: { not: "DITOLAK" } }, select: { periodeId: true } })).map((o) => o.periodeId));
-  // Pilihan sampai batas proses, atau sampai opname terakhir bila lebih jauh (data contoh tahun depan), supaya tahun yang
+  // Pilihan sampai batas proses, atau sampai opname terakhir bila lebih jauh (data contoh yang rentangnya diperluas), supaya tahun yang
   // punya nilai sisa tetap bisa dipilih. Bawaan tetap dicari sampai batas saja.
   const opnameAkhir = [...sudah].sort().at(-1);
   const pilihan = daftarPeriode(awal < sekarang ? awal : sekarang, opnameAkhir && opnameAkhir > batas ? opnameAkhir : batas);

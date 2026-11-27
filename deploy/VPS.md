@@ -58,7 +58,7 @@ Berkas `.env.docker`, `KREDENSIAL.txt`, dan data tidak ikut tertimpa karena `git
 ## Migrasi dan seed
 
 - Migrasi: otomatis lewat service `migrasi` setiap `up -d`. Manual: `$C run --rm migrasi npx prisma migrate deploy`.
-- Data contoh Januari 2023 sampai Desember 2028 diisi lewat `npm run db:bangun-ulang` (`prisma/bangun-ulang-setahun.ts`): coba dulu dengan `npm run db:bangun-ulang -- --coba` (semua langkah lalu rollback), lalu jalankan dengan `SAYA_YAKIN=1`. Semua data lama dihapus dan diganti dalam satu transaksi, jadi bila ada yang gagal data lama tetap utuh. `npm run db:seed` biasa menolak jalan bila sudah ada pengguna, dan dengan `SEED_PAKSA=1` semua data dihapus.
+- Data contoh Januari 2025 sampai Desember 2026 diisi lewat `npm run db:bangun-ulang` (`prisma/bangun-ulang-setahun.ts`): coba dulu dengan `npm run db:bangun-ulang -- --coba` (semua langkah lalu rollback), lalu jalankan dengan `SAYA_YAKIN=1`. Semua data lama dihapus dan diganti dalam satu transaksi, jadi bila ada yang gagal data lama tetap utuh. `npm run db:seed` biasa menolak jalan bila sudah ada pengguna, dan dengan `SEED_PAKSA=1` semua data dihapus.
 - Ganti kata sandi admin, hrd, owner dengan acak kuat: `deploy/atur-sandi.sh` (menulis ulang `KREDENSIAL.txt` dan menghapus semua sesi). Seed membuat akun demo berkata sandi lemah, jadi skrip ini wajib dijalankan sesudah seed.
 
 ## Backup dan restore

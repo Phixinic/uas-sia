@@ -30,7 +30,7 @@ export type InputSetujuiFee = { no: string; fee: { karyawanKode: string; feeAkhi
 /** Bulan gaji yang membayar upah event karyawan inhouse yang diputuskan pada `tanggal` (lihat keterangan berkas). */
 export async function periodeGajiUpah(tx: Tx, karyawanKode: string, tanggal: string): Promise<string> {
   let P = periodeDari(tanggal);
-  // Batas pencarian 10 tahun: data contoh berisi gaji yang sudah dibayar sampai dua tahun ke depan.
+  // Batas pencarian 10 tahun: gaji bisa sudah dibayar jauh ke depan (data contoh yang rentangnya diperluas).
   for (let i = 0; i < 120; i++, P = tambahBulan(P, 1)) {
     const [slip, paket, penutup] = await Promise.all([
       tx.slipGaji.findUnique({ where: { periodeId_karyawanKode: { periodeId: P, karyawanKode } }, select: { status: true } }),

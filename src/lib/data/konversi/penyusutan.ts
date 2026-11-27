@@ -15,7 +15,7 @@ export async function periodePenyusutan(dipilih?: string) {
   ]);
   const pertama = awal?.bulanMulai ?? sekarang;
   const batas = periodeBatasProses();
-  // Pilihan sampai batas proses, atau sampai bulan terakhir yang sudah diproses bila lebih jauh (data contoh tahun depan),
+  // Pilihan sampai batas proses, atau sampai bulan terakhir yang sudah diproses bila lebih jauh (data contoh yang rentangnya diperluas),
   // supaya tahun yang punya jurnal penyusutan tetap bisa dipilih.
   const akhir = terakhir && terakhir.periodeId > batas ? terakhir.periodeId : batas;
   const pilihan = daftarPeriode(pertama < sekarang ? pertama : sekarang, akhir);

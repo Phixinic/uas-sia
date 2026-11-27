@@ -31,7 +31,7 @@ npx playwright install chromium
 npm run dev            # http://localhost:3000
 ```
 
-`npm run db:seed` mengisi data contoh Januari 2023 sampai Desember 2028 (`prisma/seed-setahun.ts`, sekitar 2 menit, satu transaksi). Semua bulan diproses penuh kecuali bagian yang sengaja dibiarkan terbuka untuk dicoba: Desember 2026 (Gaji Bulanan, setoran, dan satu fee event menunggu Owner, satu event masih dinilai kapten, satu pembelian perlengkapan draf) dan Desember 2028 (penyusutan, nilai sisa, Gaji Bulanan, serta setting gaji dan nominal yang menunggu Owner). Rinciannya di `docs/KONTRAK.md`, bagian "Data contoh 2023 sampai 2028".
+`npm run db:seed` mengisi data contoh Januari 2025 sampai Desember 2026 (`prisma/seed-setahun.ts`, di bawah satu menit, satu transaksi). Sampai November 2026 semua bulan diproses penuh. Desember 2026 dibiarkan terbuka untuk dicoba: Gaji Bulanan, setoran, satu fee event, serta pengajuan setting gaji dan nominal (berlaku Januari 2027) menunggu Owner, satu event masih dinilai kapten, satu pembelian perlengkapan draf, penyusutan dan nilai sisa belum diproses. Rinciannya di `docs/KONTRAK.md`, bagian "Data contoh Januari 2025 sampai Desember 2026".
 
 Akun demo (dibuat oleh seed, khusus pengembangan):
 
@@ -62,7 +62,7 @@ Halaman masuk hanya menampilkan petunjuk akun demo bila `TAMPILKAN_AKUN_DEMO=1` 
 ## Struktur singkat
 
 ```
-prisma/            skema, migrasi, data contoh 2023 sampai 2028 (seed-setahun.ts), data uji Oktober 2026 (seed.ts)
+prisma/            skema, migrasi, data contoh 2025 sampai 2026 (seed-setahun.ts), data uji Oktober 2026 (seed.ts)
 src/app/           rute Next.js (halaman, layout, api/sehat)
 src/komponen/      komponen UI per siklus (konversi, sdm, pelaporan, master) dan kerangka
 src/lib/           inti (logika murni), server (db, auth, jurnal), aksi (server action), data (kueri), skema (zod)
