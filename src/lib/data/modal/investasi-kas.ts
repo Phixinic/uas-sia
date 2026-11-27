@@ -5,7 +5,7 @@
  */
 import { db, type DbAtauTx } from "@/lib/server/db";
 import { saldoAkun } from "@/lib/server/jurnal";
-import { AKUN } from "@/lib/inti/akun";
+import { AKUN, AKUN_MODAL_SEMUA } from "@/lib/inti/akun";
 import { ringkasModal, type JurnalSumber, type RingkasanModal } from "@/lib/inti/modal";
 import { dariDate } from "@/lib/inti/tanggal";
 import type { StatusPersetujuan } from "@/generated/prisma/enums";
@@ -44,10 +44,10 @@ export async function daftarSetoran(klien: DbAtauTx = db): Promise<DataSetoran[]
   }));
 }
 
-/** Jurnal DISETUJUI yang menyentuh Kas atau Modal Pemilik, beserta sumbernya (bahan ringkasModal). */
+/** Jurnal DISETUJUI yang menyentuh Kas atau salah satu akun modal, beserta sumbernya (bahan ringkasModal). */
 export async function muatJurnalSumber(klien: DbAtauTx = db): Promise<JurnalSumber[]> {
   const daftar = await klien.jurnal.findMany({
-    where: { status: "DISETUJUI", detail: { some: { akunKode: { in: [AKUN.KAS, AKUN.MODAL] } } } },
+    where: { status: "DISETUJUI", detail: { some: { akunKode: { in: [AKUN.KAS, ...AKUN_MODAL_SEMUA] } } } },
     orderBy: [{ tanggal: "asc" }, { no: "asc" }],
     select: {
       no: true, tanggal: true, periodeId: true, status: true, jenis: true, sumberTipe: true, sumberId: true, keterangan: true,
@@ -67,11 +67,36 @@ export async function muatJurnalSumber(klien: DbAtauTx = db): Promise<JurnalSumb
   }));
 }
 
-export type CocokBukuBesar = { kas: number; modal: number; kasCocok: boolean; modalCocok: boolean };
+export type CocokBukuBesar = {
+  kas: number;
+  /** Modal Pemilik 3-110. */
+  modal: number;
+  modalInvestor: number;
+  modalHibah: number;
+  kasCocok: boolean;
+  modalCocok: boolean;
+  modalInvestorCocok: boolean;
+  modalHibahCocok: boolean;
+};
 
-/** Ringkasan satu periode atau kumulatif (null), plus saldo Kas dan Modal di buku besar untuk pembanding. */
+/** Ringkasan satu periode atau kumulatif (null), plus saldo Kas dan tiap akun modal di buku besar untuk pembanding. */
 export async function ringkasanKasModal(periode: string | null, klien: DbAtauTx = db): Promise<{ ringkasan: RingkasanModal; bukuBesar: CocokBukuBesar }> {
-  const [jurnal, kas, modal] = await Promise.all([muatJurnalSumber(klien), saldoAkun(klien, AKUN.KAS, periode), saldoAkun(klien, AKUN.MODAL, periode)]);
-  const ringkasan = ringkasModal(jurnal, periode);
-  return { ringkasan, bukuBesar: { kas, modal, kasCocok: kas === ringkasan.kas.akhir, modalCocok: modal === ringkasan.modal.akhir } };
+  const [jurnal, kas, modal, modalInvestor, modalHibah] = await Promise.all([
+    muatJurnalSumber(klien),
+    saldoAkun(klien, AKUN.KAS, periode),
+    saldoAkun(klien, AKUN.MODAL, periode),
+    saldoAkun(klien, AKUN.MODAL_INVESTOR, periode),
+    saldoAkun(klien, AKUN.MODAL_HIBAH, periode),
+  ]);
+  const r = ringkasModal(jurnal, periode);
+  return {
+    ringkasan: r,
+    bukuBesar: {
+      kas, modal, modalInvestor, modalHibah,
+      kasCocok: kas === r.kas.akhir,
+      modalCocok: modal === r.modal.akhir,
+      modalInvestorCocok: modalInvestor === r.modalInvestor.akhir,
+      modalHibahCocok: modalHibah === r.modalHibah.akhir,
+    },
+  };
 }

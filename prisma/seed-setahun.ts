@@ -144,6 +144,8 @@ const AKUN_DASAR: { kode: string; nama: string; tipe: TipeAkun; saldoNormal: "D"
   { kode: "2-110", nama: "Utang Usaha", tipe: "LIABILITAS", saldoNormal: "K" },
   { kode: "2-120", nama: "Utang PPh 21", tipe: "LIABILITAS", saldoNormal: "K" },
   { kode: "3-110", nama: "Modal Pemilik", tipe: "EKUITAS", saldoNormal: "K" },
+  { kode: "3-120", nama: "Modal Investor", tipe: "EKUITAS", saldoNormal: "K" },
+  { kode: "3-130", nama: "Modal Hibah", tipe: "EKUITAS", saldoNormal: "K" },
   { kode: "6-110", nama: "Biaya Penyusutan Peralatan", tipe: "BEBAN", saldoNormal: "D" },
   { kode: "6-120", nama: "Biaya Perlengkapan", tipe: "BEBAN", saldoNormal: "D" },
   { kode: "6-210", nama: "Biaya Gaji Crew & Produksi Event", tipe: "BEBAN", saldoNormal: "D" },

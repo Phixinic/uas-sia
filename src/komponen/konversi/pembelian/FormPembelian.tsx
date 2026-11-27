@@ -18,15 +18,20 @@ import DialogKonfirmasi from "@/komponen/ui/DialogKonfirmasi";
 import TabelJurnal from "@/komponen/ui/TabelJurnal";
 import { barisKosong, type Baris, type NilaiAwalForm } from "./nilai-awal";
 import { TambahBarangCepat, TambahSupplierCepat, type KategoriForm } from "./TambahCepat";
-import { AKUN } from "@/lib/inti/akun";
+import { AKUN, AKUN_SUMBER_INVESTASI } from "@/lib/inti/akun";
 import { barisPembelian } from "@/lib/inti/jurnal";
 import { hitungJadwal, nDariDasar, type DasarN } from "@/lib/inti/penyusutan";
 import { kunciPenutup, periodeDari, labelPeriode } from "@/lib/inti/tanggal";
-import { rupiah, LABEL_CARA_BAYAR } from "@/lib/format";
+import { rupiah, LABEL_CARA_BAYAR, LABEL_SUMBER_INVESTASI, TANPA_SUPPLIER } from "@/lib/format";
 import type { BarangForm } from "@/lib/data/konversi/pembelian";
-import type { CaraBayar, JenisPembelian } from "@/generated/prisma/enums";
+import type { CaraBayar, JenisPembelian, SumberInvestasi } from "@/generated/prisma/enums";
 
-
+/** Penjelasan lawan jurnal Investasi per sumber (tampil di bawah isian). */
+const KET_SUMBER: Record<SumberInvestasi, string> = {
+  PEMILIK: "barang disetor pemilik, jadi lawan jurnalnya Modal Pemilik",
+  INVESTOR: "barang disetor investor, jadi lawan jurnalnya Modal Investor",
+  HIBAH: "barang diterima sebagai hibah, jadi lawan jurnalnya Modal Hibah",
+};
 
 const int = (v: string) => {
   const n = parseInt(String(v).replace(/[^\d-]/g, ""), 10);
@@ -101,7 +106,7 @@ export default function FormPembelian({ jenis, awal, supplier: supplierAwal, bar
         return { nama, teks: (e as Error).message, galat: true };
       }
     });
-    return { total, jadwal, jurnal: total > 0 ? barisPembelian(debit, f.caraBayar) : [] };
+    return { total, jadwal, jurnal: total > 0 ? barisPembelian(debit, f.caraBayar, f.sumberInvestasi) : [] };
   }, [f, barang, peralatan]);
 
   // Periode tertutup bila periode itu sendiri atau periode sesudahnya sudah dikunci (kunci berurutan).
@@ -120,6 +125,7 @@ export default function FormPembelian({ jenis, awal, supplier: supplierAwal, bar
           ...f,
           jenis,
           posting,
+          sumberInvestasi: f.caraBayar === "INVESTASI" ? f.sumberInvestasi : null,
           baris: f.baris.map((b) => ({ ...b, qty: int(b.qty), harga: int(b.harga), residu: int(b.residu), garansiBulan: int(b.garansiBulan), masaManfaatBulan: int(b.masaManfaatBulan) })),
         }),
       { setelahBerhasil: (h) => router.push(`${alamatKembali}?lihat=${h.data?.no}`) },
@@ -159,6 +165,15 @@ export default function FormPembelian({ jenis, awal, supplier: supplierAwal, bar
               ))}
             </Pilihan>
           </Bidang>
+          {f.caraBayar === "INVESTASI" && (
+            <Bidang label="Sumber investasi" htmlFor="sumberInvestasi" wajib galat={g("sumberInvestasi")}>
+              <Pilihan id="sumberInvestasi" value={f.sumberInvestasi} onChange={(e) => ubah({ sumberInvestasi: e.target.value as SumberInvestasi })} galat={!!g("sumberInvestasi")}>
+                {(Object.keys(LABEL_SUMBER_INVESTASI) as SumberInvestasi[]).map((k) => (
+                  <option key={k} value={k}>{LABEL_SUMBER_INVESTASI[k]} ({AKUN_SUMBER_INVESTASI[k]})</option>
+                ))}
+              </Pilihan>
+            </Bidang>
+          )}
           {f.caraBayar === "KREDIT" && (
             <Bidang label="Jatuh tempo utang" htmlFor="jatuhTempo" wajib galat={g("jatuhTempo")}>
               <Isian id="jatuhTempo" type="date" value={f.jatuhTempo} min={f.tanggal} onChange={(e) => ubah({ jatuhTempo: e.target.value })} galat={!!g("jatuhTempo")} />
@@ -166,7 +181,7 @@ export default function FormPembelian({ jenis, awal, supplier: supplierAwal, bar
           )}
           <Bidang label="Supplier" htmlFor="supplierKode" wajib={f.caraBayar !== "INVESTASI"} galat={g("supplierKode")}>
             <Pilihan id="supplierKode" value={f.supplierKode} onChange={(e) => ubah({ supplierKode: e.target.value })} galat={!!g("supplierKode")}>
-              <option value="">{f.caraBayar === "INVESTASI" ? "Tanpa supplier (setoran pemilik)" : "Pilih supplier"}</option>
+              <option value="">{f.caraBayar === "INVESTASI" ? `Tanpa supplier (${TANPA_SUPPLIER[f.sumberInvestasi].toLowerCase()})` : "Pilih supplier"}</option>
               {supplier.map((s) => (
                 <option key={s.kode} value={s.kode}>{s.kode} · {s.nama}</option>
               ))}
@@ -181,7 +196,7 @@ export default function FormPembelian({ jenis, awal, supplier: supplierAwal, bar
             <Isian id="keterangan" value={f.keterangan} placeholder="opsional" maxLength={200} onChange={(e) => ubah({ keterangan: e.target.value })} />
           </Bidang>
         </div>
-        {f.caraBayar === "INVESTASI" && <Peringatan>Investasi: barang disetor pemilik, jadi lawan jurnalnya Modal Pemilik.</Peringatan>}
+        {f.caraBayar === "INVESTASI" && <Peringatan>Investasi ({LABEL_SUMBER_INVESTASI[f.sumberInvestasi]}): {KET_SUMBER[f.sumberInvestasi]} {AKUN_SUMBER_INVESTASI[f.sumberInvestasi]}. Kas tidak berkurang.</Peringatan>}
 
         <fieldset className="space-y-3">
           <legend className="mb-2 text-sm font-semibold text-slate-800">Barang</legend>

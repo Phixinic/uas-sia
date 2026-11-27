@@ -63,7 +63,7 @@ export default async function HalamanInvestasiKas({ cari }: { cari: { form?: str
 
       <Peringatan>
         Aplikasi ini hanya mencakup siklus konversi (peralatan dan perlengkapan) dan siklus SDM (gaji inhouse dan fee event), tanpa siklus pendapatan.
-        Jadi kas untuk pembelian tunai, gaji, dan fee berasal dari setoran modal pemilik yang dicatat di sini. Barang yang disetor pemilik dicatat lewat pembelian dengan cara bayar Investasi.
+        Jadi kas untuk pembelian tunai, gaji, dan fee berasal dari setoran modal pemilik yang dicatat di sini. Barang dari pemilik, investor, atau hibah dicatat lewat pembelian dengan cara bayar Investasi dan sumbernya.
       </Peringatan>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -124,7 +124,7 @@ export default async function HalamanInvestasiKas({ cari }: { cari: { form?: str
       <Kartu rapat>
         <KepalaKartu
           judul="Dari mana kas dan modal"
-          keterangan="Dihitung dari jurnal yang sudah disetujui, sama dengan Buku Besar akun Kas dan Modal Pemilik."
+          keterangan="Dihitung dari jurnal yang sudah disetujui, sama dengan Buku Besar akun Kas dan tiap akun modal."
           aksi={<PilihBulanTahun periode={periode ?? "semua"} tersedia={semua} semua="Kumulatif" idAwalan="rentang" />}
         />
         <RingkasanKasModal r={ringkasan} bb={bukuBesar} periodeBuku={periodeBuku} />

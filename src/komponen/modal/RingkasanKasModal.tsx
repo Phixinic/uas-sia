@@ -68,20 +68,43 @@ export default function RingkasanKasModal({ r, bb, periodeBuku }: { r: Ringkasan
   const perPeriode = r.periode !== null;
   const ket = perPeriode ? labelPeriode(r.periode) : "kumulatif";
   const { modal: m, kas: k, biayaSdm: b } = r;
+  const tanda = perPeriode ? ("+" as const) : undefined;
   return (
     <div className="grid grid-cols-1 gap-6 p-5 lg:grid-cols-2">
-      <section aria-label="Modal Pemilik">
-        <h3 className="text-sm font-semibold text-slate-900">Modal Pemilik <span className="kode">{AKUN.MODAL}</span></h3>
-        <p className="teks-redup">Semua modal berasal dari setoran pemilik, berupa kas atau barang.</p>
-        <ul className="mt-2 text-sm">
-          {perPeriode && <Baris label={`Modal awal ${ket}`} nilai={m.awal} />}
-          <Baris label="Setoran kas (Investasi Kas)" nilai={m.setoranKas.jumlah} rincian={m.setoranKas.rincian} tanda={perPeriode ? "+" : undefined} />
-          <Baris label="Setoran barang (pembelian cara bayar Investasi)" nilai={m.setoranBarang.jumlah} rincian={m.setoranBarang.rincian} tanda={perPeriode ? "+" : undefined} catatan="Peralatan atau perlengkapan yang disetor pemilik. Pembalikannya mengurangi angka ini." />
-          {m.lainnya.jumlah !== 0 && <Baris label="Jurnal lain ke Modal Pemilik" nilai={m.lainnya.jumlah} rincian={m.lainnya.rincian} tanda={perPeriode ? "+" : undefined} />}
-          <Baris label={perPeriode ? `Modal Pemilik akhir ${ket}` : "Total Modal Pemilik"} nilai={m.akhir} tebal />
-        </ul>
-        <Cocok ok={bb.modalCocok} saldo={bb.modal} akun={AKUN.MODAL} periode={periodeBuku} />
-      </section>
+      <div className="space-y-6">
+        <section aria-label="Modal Pemilik">
+          <h3 className="text-sm font-semibold text-slate-900">Modal Pemilik <span className="kode">{AKUN.MODAL}</span></h3>
+          <p className="teks-redup">Setoran pemilik, berupa kas atau barang.</p>
+          <ul className="mt-2 text-sm">
+            {perPeriode && <Baris label={`Modal awal ${ket}`} nilai={m.awal} />}
+            <Baris label="Setoran kas (Investasi Kas)" nilai={m.setoranKas.jumlah} rincian={m.setoranKas.rincian} tanda={tanda} />
+            <Baris label="Setoran barang (Investasi, sumber Pemilik)" nilai={m.setoranBarang.jumlah} rincian={m.setoranBarang.rincian} tanda={tanda} catatan="Peralatan atau perlengkapan yang disetor pemilik. Pembalikannya mengurangi angka ini." />
+            {m.lainnya.jumlah !== 0 && <Baris label="Jurnal lain ke Modal Pemilik" nilai={m.lainnya.jumlah} rincian={m.lainnya.rincian} tanda={tanda} />}
+            <Baris label={perPeriode ? `Modal Pemilik akhir ${ket}` : "Total Modal Pemilik"} nilai={m.akhir} tebal />
+          </ul>
+          <Cocok ok={bb.modalCocok} saldo={bb.modal} akun={AKUN.MODAL} periode={periodeBuku} />
+        </section>
+
+        <section aria-label="Modal investor dan hibah">
+          <h3 className="text-sm font-semibold text-slate-900">Modal Investor dan Modal Hibah</h3>
+          <p className="teks-redup">Barang dari investor atau hibah, dicatat lewat pembelian cara bayar Investasi. Keduanya tidak menambah kas.</p>
+          <ul className="mt-2 text-sm">
+            {([["Investor", r.modalInvestor, bb.modalInvestor, bb.modalInvestorCocok], ["Hibah", r.modalHibah, bb.modalHibah, bb.modalHibahCocok]] as const).map(([nama, s, saldo, ok]) => (
+              <li key={s.akun} className="py-1">
+                <ul>
+                  <Subjudul>Modal {nama} <span className="kode normal-case">{s.akun}</span></Subjudul>
+                  {perPeriode && <Baris label={`Modal ${nama} awal ${ket}`} nilai={s.awal} />}
+                  <Baris label={`Setoran barang (Investasi, sumber ${nama})`} nilai={s.setoranBarang.jumlah} rincian={s.setoranBarang.rincian} tanda={tanda} />
+                  {s.lainnya.jumlah !== 0 && <Baris label={`Jurnal lain ke Modal ${nama}`} nilai={s.lainnya.jumlah} rincian={s.lainnya.rincian} tanda={tanda} />}
+                  <Baris label={perPeriode ? `Modal ${nama} akhir ${ket}` : `Total Modal ${nama}`} nilai={s.akhir} tebal />
+                </ul>
+                <Cocok ok={ok} saldo={saldo} akun={s.akun} periode={periodeBuku} />
+              </li>
+            ))}
+            <Baris label={perPeriode ? `Total modal akhir ${ket} (${AKUN.MODAL}, ${AKUN.MODAL_INVESTOR}, ${AKUN.MODAL_HIBAH})` : `Total modal (${AKUN.MODAL}, ${AKUN.MODAL_INVESTOR}, ${AKUN.MODAL_HIBAH})`} nilai={r.totalModal.akhir} tebal />
+          </ul>
+        </section>
+      </div>
 
       <section aria-label="Arus kas">
         <h3 className="text-sm font-semibold text-slate-900">Arus Kas <span className="kode">{AKUN.KAS}</span></h3>

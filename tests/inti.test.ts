@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest";
 import { hitungJadwal, nDariDasar } from "@/lib/inti/penyusutan";
 import { hitungGaji, hitungPph21, type KodePtkp, type JenisAbsensi } from "@/lib/inti/penggajian";
 import { neracaSaldo, bukuBesar, saldo, type JurnalBuku } from "@/lib/inti/buku-besar";
-import { barisGaji, barisPenyusutan, barisPelepasan, barisPembalik, validasiBaris, GalatJurnal } from "@/lib/inti/jurnal";
+import { barisGaji, barisPenyusutan, barisPelepasan, barisPembalik, barisPembelian, validasiBaris, GalatJurnal } from "@/lib/inti/jurnal";
+import type { CaraBayar, SumberInvestasi } from "@/lib/inti/akun";
 import { tambahBulan, hariTerakhir, tambahBulanTanggal, periodeBatasProses } from "@/lib/inti/tanggal";
 import { muatAppLama, koleksi } from "./app-lama";
 
@@ -171,6 +172,19 @@ describe("pembentuk jurnal", () => {
       { akun: "8-110", debit: 910_417, kredit: 0 },
       { akun: "1-150", debit: 0, kredit: 950_000 },
     ]);
+  });
+  it("pembelian: lawan jurnal menurut cara bayar dan sumber investasi", () => {
+    const debit = { "1-150": 900_000, "1-140": 100_000 };
+    const lawan = (cara: CaraBayar, sumber?: SumberInvestasi) => barisPembelian(debit, cara, sumber).at(-1);
+    expect(lawan("TUNAI")).toEqual({ akun: "1-110", debit: 0, kredit: 1_000_000 });
+    expect(lawan("KREDIT")).toEqual({ akun: "2-110", debit: 0, kredit: 1_000_000 });
+    expect(lawan("INVESTASI")).toEqual({ akun: "3-110", debit: 0, kredit: 1_000_000 }); // tanpa sumber = Pemilik (data lama)
+    expect(lawan("INVESTASI", "PEMILIK")?.akun).toBe("3-110");
+    expect(lawan("INVESTASI", "INVESTOR")?.akun).toBe("3-120");
+    expect(lawan("INVESTASI", "HIBAH")?.akun).toBe("3-130");
+    // Sumber diabaikan untuk Tunai dan Kredit.
+    expect(lawan("TUNAI", "HIBAH")?.akun).toBe("1-110");
+    expect(validasiBaris(barisPembelian(debit, "INVESTASI", "INVESTOR"))).toHaveLength(3);
   });
   it("pembalik menukar debit dan kredit", () => {
     expect(barisPembalik([{ akun: "1-150", debit: 5, kredit: 0 }, { akun: "1-110", debit: 0, kredit: 5 }])).toEqual([

@@ -2,7 +2,7 @@
  * Pembentuk baris jurnal dan validasinya. Murni (tanpa database): dipakai server action, pratinjau di form, dan tes.
  * Aturan sama dengan versi-statis: tiap baris hanya debit atau kredit, minimal dua baris, total debit = kredit > 0.
  */
-import { AKUN, AKUN_LAWAN_BAYAR, type CaraBayar } from "./akun";
+import { AKUN, akunLawanBayar, type CaraBayar, type SumberInvestasi } from "./akun";
 
 export type BarisJurnal = { akun: string; debit: number; kredit: number };
 
@@ -27,12 +27,12 @@ export const totalBaris = (baris: BarisJurnal[]) => ({
   kredit: baris.reduce((s, b) => s + (b.kredit || 0), 0),
 });
 
-/** Pembelian: debit akun aset/perlengkapan (per akun), kredit kas/utang/modal sebesar total. */
-export function barisPembelian(debitPerAkun: Record<string, number>, caraBayar: CaraBayar): BarisJurnal[] {
+/** Pembelian: debit akun aset/perlengkapan (per akun), kredit kas/utang/akun modal sumber investasi sebesar total. */
+export function barisPembelian(debitPerAkun: Record<string, number>, caraBayar: CaraBayar, sumber?: SumberInvestasi | null): BarisJurnal[] {
   const total = Object.values(debitPerAkun).reduce((s, x) => s + x, 0);
   return Object.keys(debitPerAkun)
     .map((akun) => ({ akun, debit: debitPerAkun[akun], kredit: 0 }))
-    .concat([{ akun: AKUN_LAWAN_BAYAR[caraBayar], debit: 0, kredit: total }]);
+    .concat([{ akun: akunLawanBayar(caraBayar, sumber), debit: 0, kredit: total }]);
 }
 
 /** Penyusutan satu periode: dikelompokkan per pasangan akun beban dan akun akumulasi. */

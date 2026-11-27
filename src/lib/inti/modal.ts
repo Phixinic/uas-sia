@@ -3,8 +3,9 @@
  *
  * Aplikasi ini hanya mencakup siklus konversi (peralatan, perlengkapan) dan siklus SDM (gaji inhouse, fee event),
  * tanpa siklus pendapatan. Jadi kas yang dipakai pembelian tunai, gaji, dan fee harus berasal dari setoran modal
- * pemilik. Ringkasan di sini menelusuri setiap rupiah di akun Kas 1-110 dan Modal Pemilik 3-110 ke sumber jurnalnya,
- * dihitung hanya dari jurnal DISETUJUI, sehingga totalnya selalu sama dengan saldo kedua akun di buku besar.
+ * pemilik. Ringkasan di sini menelusuri setiap rupiah di akun Kas 1-110 dan akun modal (3-110 Modal Pemilik,
+ * 3-120 Modal Investor, 3-130 Modal Hibah) ke sumber jurnalnya, dihitung hanya dari jurnal DISETUJUI, sehingga
+ * totalnya selalu sama dengan saldo tiap akun itu di buku besar. Investor dan hibah hanya menyetor barang.
  *
  * Biaya SDM dipisah menurut perilakunya: gaji inhouse = biaya tetap (komponen dari Setting Gaji, hanya potongan absen
  * yang berubah per bulan), fee crew event = biaya variabel (tarif x jam atau hari, per event). Biaya dicatat bruto;
@@ -67,9 +68,27 @@ const pos = (): Pos => ({ jumlah: 0, rincian: [] });
 /** Biaya SDM satu jenis: bruto (akun beban) dan PPh 21 yang dipotong (Kr Utang PPh 21). */
 export type BiayaSdm = { bruto: Pos; pph21: number; dibayar: number };
 
+/** Satu akun modal selain Modal Pemilik (3-120 Modal Investor, 3-130 Modal Hibah). Saldo normal kredit. */
+export type ModalSumber = {
+  akun: string;
+  awal: number;
+  /** Barang dari pembelian cara bayar Investasi dengan sumber ini (pembaliknya mengurangi). */
+  setoranBarang: Pos;
+  /** Jurnal lain yang menyentuh akun ini (misalnya jurnal umum manual). Biasanya 0. */
+  lainnya: Pos;
+  mutasi: number;
+  akhir: number;
+};
+
 export type RingkasanModal = {
   /** null = kumulatif (semua jurnal disetujui); selain itu satu periode "YYYY-MM". */
   periode: string | null;
+  /** Investor (3-120) dan hibah (3-130); hanya dari pembelian cara bayar Investasi. */
+  modalInvestor: ModalSumber;
+  modalHibah: ModalSumber;
+  /** Jumlah ketiga akun modal (3-110, 3-120, 3-130). */
+  totalModal: { awal: number; akhir: number };
+  /** Modal Pemilik 3-110. */
   modal: {
     /** Saldo Modal Pemilik sebelum periode (0 untuk kumulatif). */
     awal: number;
@@ -139,9 +158,12 @@ const bersih = (j: JurnalSumber, akun: string) => j.baris.reduce((s, b) => (b.ak
  *   modal.awal + modal.mutasi = modal.akhir = saldo Modal Pemilik di buku besar sampai periode itu
  * Penggolongan memakai sumber jurnal: INVESTASI_KAS, PELEPASAN (hasil jual aset), PEMBELIAN (termasuk pembaliknya),
  * PENGGAJIAN, FEE_EVENT; sumber lain masuk pos "lainnya" supaya tidak ada rupiah yang hilang dari ringkasan.
+ * Modal Investor 3-120 dan Modal Hibah 3-130 ditelusuri dengan cara yang sama (pembelian = setoran barang, sisanya
+ * "lainnya"), jadi akhir tiap akun modal juga sama dengan buku besarnya dan totalModal = jumlah ketiga saldo itu.
  */
 export function ringkasModal(jurnal: JurnalSumber[], periode: string | null): RingkasanModal {
   const m = { awal: 0, setoranKas: pos(), setoranBarang: pos(), lainnya: pos() };
+  const sumber = [AKUN.MODAL_INVESTOR, AKUN.MODAL_HIBAH].map((akun) => ({ akun, awal: 0, setoranBarang: pos(), lainnya: pos() }));
   const biaya = { tetap: pos(), variabel: pos(), pphTetap: 0, pphVariabel: 0 };
   const k = { awal: 0, investasi: pos(), penjualanAset: pos(), masukLain: pos(), pembelianTunai: pos(), gaji: pos(), fee: pos(), keluarLain: pos() };
   const urut = [...jurnal].sort((a, b) => a.tanggal.localeCompare(b.tanggal) || a.no.localeCompare(b.no));
@@ -153,8 +175,10 @@ export function ringkasModal(jurnal: JurnalSumber[], periode: string | null): Ri
     if (periode && j.periode < periode) {
       k.awal += kas;
       m.awal += modal;
+      for (const s of sumber) s.awal += -bersih(j, s.akun);
       continue;
     }
+    for (const s of sumber) tambah(j.sumberTipe === "PEMBELIAN" ? s.setoranBarang : s.lainnya, j, -bersih(j, s.akun));
     switch (j.sumberTipe) {
       case "INVESTASI_KAS":
         tambah(k.investasi, j, kas);
@@ -195,8 +219,15 @@ export function ringkasModal(jurnal: JurnalSumber[], periode: string | null): Ri
   const sdm = k.gaji.jumlah + k.fee.jumlah;
   const keluar = konversi + sdm + k.keluarLain.jumlah;
   const mutasiModal = m.setoranKas.jumlah + m.setoranBarang.jumlah + m.lainnya.jumlah;
+  const [modalInvestor, modalHibah] = sumber.map((s): ModalSumber => {
+    const mutasi = s.setoranBarang.jumlah + s.lainnya.jumlah;
+    return { ...s, mutasi, akhir: s.awal + mutasi };
+  });
   return {
     periode,
+    modalInvestor,
+    modalHibah,
+    totalModal: { awal: m.awal + modalInvestor.awal + modalHibah.awal, akhir: m.awal + mutasiModal + modalInvestor.akhir + modalHibah.akhir },
     modal: { awal: m.awal, setoranKas: m.setoranKas, setoranBarang: m.setoranBarang, lainnya: m.lainnya, mutasi: mutasiModal, akhir: m.awal + mutasiModal },
     kas: {
       awal: k.awal,

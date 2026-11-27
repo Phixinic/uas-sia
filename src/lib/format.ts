@@ -3,7 +3,7 @@
  */
 import type {
   AlasanPelepasan, CaraBayar, DasarN, JenisJurnal, JenisPembelian, StatusAset, StatusPembelian, StatusPeriode, StatusPersetujuan, TipeAkun, Absensi,
-  HasilPenilaian, JenisKaryawan, PeranEvent, SatuanTarif, StatusEvent,
+  HasilPenilaian, JenisKaryawan, PeranEvent, SatuanTarif, StatusEvent, SumberInvestasi,
 } from "@/generated/prisma/enums";
 
 export { labelPeriode, labelTanggal } from "@/lib/inti/tanggal";
@@ -35,6 +35,16 @@ export const LABEL_STATUS_SLIP: Record<StatusPersetujuan, string> = { DRAFT: "Dr
 export const LABEL_STATUS_ASET: Record<StatusAset, string> = { AKTIF: "Aktif", DILEPAS: "Dilepas", BATAL: "Batal" };
 export const LABEL_STATUS_PERIODE: Record<StatusPeriode, string> = { TERBUKA: "Terbuka", TERKUNCI: "Terkunci" };
 export const LABEL_CARA_BAYAR: Record<CaraBayar, string> = { TUNAI: "Tunai", KREDIT: "Kredit", INVESTASI: "Investasi" };
+export const LABEL_SUMBER_INVESTASI: Record<SumberInvestasi, string> = { PEMILIK: "Pemilik", INVESTOR: "Investor", HIBAH: "Hibah" };
+/** Pengganti nama supplier bila pembelian Investasi tidak punya supplier. */
+export const TANPA_SUPPLIER: Record<SumberInvestasi, string> = { PEMILIK: "Setoran pemilik", INVESTOR: "Setoran investor", HIBAH: "Hibah barang" };
+
+/** "Tunai", "Kredit", atau "Investasi (Investor)". Investasi tanpa sumber (data sebelum kolomnya ada) = Pemilik. */
+export const labelCaraBayar = (caraBayar: CaraBayar, sumber?: SumberInvestasi | null) =>
+  caraBayar === "INVESTASI" ? `${LABEL_CARA_BAYAR.INVESTASI} (${LABEL_SUMBER_INVESTASI[sumber ?? "PEMILIK"]})` : LABEL_CARA_BAYAR[caraBayar];
+
+/** Nama supplier, atau asal barang untuk pembelian Investasi tanpa supplier. */
+export const namaSupplierAtauSumber = (supplier: string | null | undefined, sumber?: SumberInvestasi | null) => supplier ?? TANPA_SUPPLIER[sumber ?? "PEMILIK"];
 export const LABEL_JENIS_PEMBELIAN: Record<JenisPembelian, string> = { PERALATAN: "Peralatan", PERLENGKAPAN: "Perlengkapan" };
 export const LABEL_DASAR_N: Record<DasarN, string> = { GARANSI: "Garansi", MASA_MANFAAT: "Masa manfaat" };
 export const LABEL_ALASAN_PELEPASAN: Record<AlasanPelepasan, string> = { DIJUAL: "Dijual", DIBUANG: "Dibuang / rusak", HILANG: "Hilang" };
