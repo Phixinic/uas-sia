@@ -19,6 +19,7 @@ import KeadaanKosong from "@/komponen/ui/KeadaanKosong";
 import { TautanTombol } from "@/komponen/ui/Tombol";
 import { FormPenilaian, TombolKirimLaporan } from "./FormPenilaian";
 import { KeteranganPenilaian, LencanaPenilaian } from "./Penilaian";
+import { belumDiAtas } from "@/lib/inti/urut";
 
 const ALAMAT = "/kapten";
 
@@ -45,7 +46,7 @@ export default async function HalamanKapten({ cari }: { cari: { lihat?: string }
           <KeadaanKosong judul="Belum ada event" keterangan="HRD akan menugaskanmu sebagai kapten di sebuah event." />
         ) : (
           <ul className="divide-y divide-slate-100">
-            {daftar.map((e) => (
+            {belumDiAtas(daftar, (e) => e.status !== "SELESAI").map((e) => (
               <li key={e.kode} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2 font-semibold text-slate-900">
@@ -108,7 +109,8 @@ async function DetailKapten({ kode, saya }: { kode: string; saya: string }) {
       </div>
 
       {b.sesi.map((s) => {
-        const baris = b.orang.flatMap((o) => o.kehadiran.filter((k) => k.sesiId === s.id).map((k) => ({ o, k })));
+        // Kehadiran crew yang belum dinilai tampil di atas.
+        const baris = belumDiAtas(b.orang.flatMap((o) => o.kehadiran.filter((k) => k.sesiId === s.id).map((k) => ({ o, k }))), ({ o, k }) => o.peranEvent === "CREW" && !k.penilaian);
         return (
           <Kartu rapat key={s.id}>
             <KepalaKartu judul={s.nama} keterangan={`${labelTanggal(s.tanggal)}, jadwal ${s.jamMulai} sampai ${s.jamSelesai}`} />

@@ -185,11 +185,11 @@ export async function pastikanKaptenEvent(klien: DbAtauTx, penggunaId: number, e
   return karyawanKode;
 }
 
-/** Event yang dipegang kapten, terbaru dulu. */
+/** Event yang dipegang kapten, paling lama lebih dulu. */
 export async function eventMilikKapten(karyawanKode: string) {
   const d = await db.event.findMany({
     where: { penugasan: { some: { karyawanKode, jabatan: { peranEvent: "KAPTEN" } } } },
-    orderBy: [{ tanggalMulai: "desc" }, { kode: "desc" }],
+    orderBy: [{ tanggalMulai: "asc" }, { kode: "asc" }],
     select: { kode: true, nama: true, klien: true, tanggalMulai: true, tanggalSelesai: true, status: true, alasanTolak: true },
   });
   return d.map((e) => ({ ...e, tanggalMulai: dariDate(e.tanggalMulai), tanggalSelesai: dariDate(e.tanggalSelesai) }));

@@ -30,7 +30,7 @@ describe.runIf(aktif)("siklus konversi lewat server action", async () => {
   const lepas = await import("@/lib/aksi/konversi/pelepasan");
   const cepat = await import("@/lib/aksi/konversi/master-cepat");
   const { muatJurnalBuku, setujuiJurnal, tolakJurnal } = await import("@/lib/server/jurnal");
-  const { prosesPenyusutanDalam } = await import("@/lib/server/penyusutan");
+  const { prosesPenyusutanDalam, prosesPenyusutanSampaiDalam } = await import("@/lib/server/penyusutan");
   const jurnalAksi = await import("@/lib/aksi/pelaporan/jurnal");
   const { neracaSaldo } = await import("@/lib/inti/buku-besar");
   const { saldoBukuLkp } = await import("@/lib/data/konversi/nilai-sisa");
@@ -146,6 +146,25 @@ describe.runIf(aktif)("siklus konversi lewat server action", async () => {
       expect(des.ok).toBe(false);
       if (!des.ok) expect(des.galat).toContain("November 2026 belum diproses");
       expect((await susut.prosesPenyusutan({ periode: "2026-10" })).ok).toBe(false); // sudah diproses
+      // Owner lolos pemeriksaan peran (tombol "Setujui semua"), jadi yang menolaknya hanya aturan periode.
+      await masukSebagai("owner");
+      const owner = await susut.prosesPenyusutan({ periode: "2026-10" });
+      expect(owner.ok).toBe(false);
+      if (!owner.ok) expect(owner.galat).toContain("sudah diproses");
+    });
+
+    it("Setujui semua: November dan Desember diproses berurutan dalam satu transaksi (dicoba lalu dibatalkan)", async () => {
+      await masukSebagai("owner");
+      const batal = new Error("batalkan");
+      await expect(
+        db.$transaction(async (tx) => {
+          const h = await prosesPenyusutanSampaiDalam(tx, sesi.pengguna!.id, "2026-12");
+          expect(h.map((x) => x.periode)).toEqual(["2026-11", "2026-12"]);
+          expect(await tx.jadwalPenyusutan.count({ where: { periodeId: { lte: "2026-12" }, jurnalNo: null, aset: { status: "AKTIF" } } })).toBe(0);
+          throw batal;
+        }),
+      ).rejects.toBe(batal);
+      expect(await db.jadwalPenyusutan.count({ where: { periodeId: "2026-11", jurnalNo: { not: null } } })).toBe(0);
     });
 
     let jurnalNo = "";

@@ -306,6 +306,9 @@ test("3b3. Desember bisa dipilih di Penyusutan: Bulan 12 pilihan, pratinjau tamp
   await expect(p.locator("#pemilih-bulan")).toHaveValue("12");
   await expect(p.locator("table[aria-label='Pratinjau penyusutan'] tbody tr").first()).toBeVisible();
   await expect(p.getByRole("button", { name: "Proses penyusutan" })).toBeEnabled();
+  await bukaHalaman(sesi.owner.page, "/konversi/penyusutan?bulan=12&tahun=2026");
+  await expect(sesi.owner.page.getByRole("button", { name: "Setujui semua" })).toBeEnabled();
+  await foto(sesi.owner.page, "owner", "penyusutan-setujui-semua");
   await bukaHalaman(p, "/konversi/penyusutan?bulan=1&tahun=2027");
   await expect(p.getByText(/hanya bisa diproses sampai Desember 2026/).first()).toBeVisible();
   await expect(p.getByRole("button", { name: "Proses penyusutan" })).toBeDisabled();

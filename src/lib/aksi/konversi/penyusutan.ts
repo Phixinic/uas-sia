@@ -10,8 +10,9 @@ import { aksiAman, GalatAksi, segarkan, validasi, type HasilAksi } from "@/lib/s
 import { wajibPeran } from "@/lib/server/auth";
 import { IZIN } from "@/lib/peran";
 import { ajukanJurnal } from "@/lib/server/jurnal";
-import { prosesPenyusutanDalam } from "@/lib/server/penyusutan";
+import { prosesPenyusutanDalam, prosesPenyusutanSampaiDalam } from "@/lib/server/penyusutan";
 import { rupiah } from "@/lib/format";
+import { labelPeriode } from "@/lib/inti/tanggal";
 import { skemaNoJurnal, skemaProsesPenyusutan } from "@/lib/skema/konversi";
 
 export async function prosesPenyusutan(input: unknown): Promise<HasilAksi<{ jurnalNo: string }>> {
@@ -21,6 +22,18 @@ export async function prosesPenyusutan(input: unknown): Promise<HasilAksi<{ jurn
     const hasil = await db.$transaction((tx) => prosesPenyusutanDalam(tx, pengguna.id, P));
     segarkan();
     return { pesan: `Jurnal ${hasil.jurnalNo} (${rupiah(hasil.total)}, ${hasil.jumlah} aset) sudah masuk buku besar.`, data: { jurnalNo: hasil.jurnalNo } };
+  });
+}
+
+/** Satu klik: periode terpilih beserta semua periode lebih lama yang belum diproses. */
+export async function setujuiSemuaPenyusutan(input: unknown): Promise<HasilAksi> {
+  return aksiAman(async () => {
+    const pengguna = await wajibPeran(IZIN["penyusutan.proses"]);
+    const { periode: P } = validasi(skemaProsesPenyusutan, input);
+    const hasil = await db.$transaction((tx) => prosesPenyusutanSampaiDalam(tx, pengguna.id, P), { timeout: 60_000 });
+    segarkan();
+    const rinci = hasil.map((h) => `${labelPeriode(h.periode)} ${h.jurnalNo} (${rupiah(h.total)}, ${h.jumlah} aset)`).join("; ");
+    return { pesan: `Disetujui dan masuk buku besar: ${rinci}.` };
   });
 }
 

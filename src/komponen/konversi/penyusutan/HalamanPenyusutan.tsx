@@ -1,8 +1,8 @@
 /*
- * Halaman Proses Penyusutan (komponen server). Admin memilih bulan, memeriksa pratinjau beban per aset, lalu satu tombol
- * membuat jurnal penyesuaian yang langsung disetujui dan masuk buku besar. Tidak ada langkah ajukan, setujui, atau tolak:
- * penyusutan dihitung dari jadwal aset. Periode lebih lama harus diproses dulu, dan periode tertutup menolak proses.
- * Owner dan HRD hanya melihat.
+ * Halaman Proses Penyusutan (komponen server). Admin atau Owner memilih bulan, memeriksa pratinjau beban per aset, lalu
+ * satu tombol di kepala pratinjau (Admin: "Proses penyusutan", Owner: "Setujui semua") membuat jurnal penyesuaian yang
+ * langsung disetujui dan masuk buku besar. Tidak ada langkah ajukan atau tolak: penyusutan dihitung dari jadwal aset.
+ * Periode lebih lama harus diproses dulu, dan periode tertutup menolak proses. HRD hanya melihat.
  */
 import Link from "next/link";
 import { wajibMasuk } from "@/lib/server/auth";
@@ -25,6 +25,7 @@ import PemilihPeriode from "@/komponen/konversi/umum/PemilihPeriode";
 import { PanelStatusJurnal, TabelRiwayatJurnal } from "@/komponen/konversi/umum/StatusJurnal";
 import TombolProses from "./TombolProses";
 import type { StatusPersetujuan } from "@/generated/prisma/enums";
+import { belumDiAtas } from "@/lib/inti/urut";
 
 const ALAMAT = "/konversi/penyusutan";
 
@@ -33,7 +34,11 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
   const { periode, pilihan, batas, lewatBatas } = await periodePenyusutan(periodeDariCari(cari) ?? undefined);
   const [d, namaAkun] = await Promise.all([dataPenyusutan(periode), petaAkun()]);
   const bolehProses = boleh(pengguna.peran, "penyusutan.proses");
-  const tertahan = d.periodeSebelumnyaBelum.length > 0 || d.terkunci || lewatBatas;
+  const untukOwner = pengguna.peran === "OWNER";
+  // Owner sekaligus menyetujui periode lebih lama, jadi hanya Admin yang tertahan olehnya.
+  const adaSebelumnya = d.periodeSebelumnyaBelum.length > 0;
+  const tertahan = (!untukOwner && adaSebelumnya) || d.terkunci || lewatBatas;
+  const tampilTombol = bolehProses && (d.belumDiproses > 0 || (untukOwner && adaSebelumnya));
 
   return (
     <>
@@ -69,7 +74,7 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
         <Peringatan jenis="awas">
           Periode {labelPeriode(d.periodeSebelumnyaBelum[0])} belum diproses.{" "}
           <Link className="font-medium underline" href={denganPeriode(ALAMAT, d.periodeSebelumnyaBelum[0])}>Buka periode itu</Link>
-          . Proses periode paling lama dulu supaya urutan jadwal tetap benar.
+          . {untukOwner ? "Tombol Setujui semua ikut menyetujuinya lebih dulu, berurutan dari yang paling lama." : "Proses periode paling lama dulu supaya urutan jadwal tetap benar."}
         </Peringatan>
       )}
       {lewatBatas && d.belumDiproses > 0 && (
@@ -84,7 +89,11 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
       {d.jurnalIni && <PanelStatusJurnal judul={`Jurnal penyusutan ${labelPeriode(periode)}`} j={d.jurnalIni} sumber="penyusutan" penggunaId={pengguna.id} peran={pengguna.peran} />}
 
       <Kartu rapat>
-        <KepalaKartu judul={`Pratinjau · ${labelBulanTahun(periode)}`} keterangan={`${d.baris.length} aset, ${d.belumDiproses} belum diproses`} />
+        <KepalaKartu
+          judul={`Pratinjau · ${labelBulanTahun(periode)}`}
+          keterangan={`${d.baris.length} aset, ${d.belumDiproses} belum diproses`}
+          aksi={tampilTombol ? <TombolProses periode={periode} jumlah={d.belumDiproses} total={d.totalBelum} disabled={tertahan} untukOwner={untukOwner} sebelumnya={d.periodeSebelumnyaBelum} /> : undefined}
+        />
         {d.baris.length === 0 ? (
           <KeadaanKosong judul={`Tidak ada aset yang disusutkan pada ${labelPeriode(periode)}`} keterangan="Jadwal dibuat saat pembelian peralatan diposting." />
         ) : (
@@ -100,7 +109,7 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
               </tr>
             </thead>
             <tbody>
-              {d.baris.map((r) => (
+              {belumDiAtas(d.baris, (r) => !r.jurnalNo || r.statusJurnal !== "DISETUJUI").map((r) => (
                 <tr key={r.asetKode}>
                   <td>
                     <Link className="kode hover:underline" href={`/konversi/kartu-aset?aset=${r.asetKode}`}>{r.asetKode}</Link> {r.nama}
@@ -146,7 +155,7 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
               <h2 className="judul-kartu">Jurnal penyesuaian yang akan dibuat</h2>
               <p className="mt-0.5 text-xs text-slate-500">Dikelompokkan per pasangan akun beban dan akun akumulasi. Langsung disetujui dan masuk buku besar saat diproses.</p>
             </div>
-            {bolehProses ? <TombolProses periode={periode} jumlah={d.belumDiproses} total={d.totalBelum} disabled={tertahan} /> : <p className="teks-redup">Penyusutan diproses oleh Admin. Owner melihat hasilnya di sini dan di Jurnal Penyesuaian.</p>}
+            {!bolehProses && <p className="teks-redup">Penyusutan diproses Admin atau disetujui Owner.</p>}
           </div>
           <details className="mt-3" open>
             <summary className="cursor-pointer text-sm font-medium text-slate-700">Lihat baris jurnal</summary>

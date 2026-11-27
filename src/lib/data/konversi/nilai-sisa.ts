@@ -88,7 +88,7 @@ export async function dataNilaiSisa(periode: string) {
         },
       },
     }),
-    db.opname.findMany({ orderBy: { periodeId: "desc" }, include: { jurnal: { select: { no: true, status: true } } } }),
+    db.opname.findMany({ orderBy: { periodeId: "asc" }, include: { jurnal: { select: { no: true, status: true } } } }),
     riwayatJurnalSumber("OPNAME"),
     db.$transaction((tx) => tahanRevisiOpname(tx, periode)),
   ]);

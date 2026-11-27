@@ -36,7 +36,7 @@ UC = {
     "aset":    ("Buat kartu aset dan\njadwal penyusutan", None, ""),
     "balik":   ("Balik pembelian\n(jurnal pembalik)", "pembelian.balik", "O"),
     "sisa":    ("Input nilai sisa\nperlengkapan", "nilai-sisa.input", "A"),
-    "susut":   ("Proses penyusutan\nbulanan (otomatis)", "penyusutan.proses", "A"),
+    "susut":   ("Proses penyusutan\nbulanan (otomatis)", "penyusutan.proses", "AO"),
     "drafjp":  ("Buat jurnal\npenyesuaian", None, ""),
     "ajujp":   ("Ajukan jurnal\nnilai sisa", "jurnal-penyesuaian.ajukan", "A"),
     "revisi":  ("Ajukan revisi nilai sisa\nyang sudah disetujui", "nilai-sisa.input", "A"),
@@ -87,9 +87,9 @@ GRUP = {"masuk": "p", "dash": "p", "lap": "l", "kartu": "k", "cetak": "l", "ceta
         "event": "e", "nilai": "e", "kurang": "e", "lapor": "e", "putfee": "e", "slipfee": "e", "karyawan": "s"}
 
 # Tata letak hasil pencarian: kunci -> (kolom, baris); aktor -> (sisi, posisi 0..1 sepanjang sisi).
-# Hasil --cari (SEED=43 AWAL=kisi T0=3 SIG0=25 LANGKAH=200000) untuk 38 use case di kanvas 880 pt, lalu 'upah' digeser ke (430, 262) supaya label extend-nya muat.
-TATA_LETAK = {'revisi': (177.1, 159.7), 'kunci': (717.1, 122.2), 'putfee': (576.8, 164.1), 'ajulepas': (161.0, 123.8), 'lapor': (452.1, 418.6), 'dist': (402.3, 333.2), 'draf': (307.9, 145.3), 'setgaji': (756.8, 88.0), 'setjp': (617.0, 204.0), 'setinv': (435.0, 205.1), 'presensi': (290.3, 422.1), 'balik': (692.5, 156.6), 'pengguna': (652.3, 239.4), 'ajujp': (140.8, 392.2), 'cepat': (124.3, 88.3), 'lap': (503.5, 88.2), 'katakun': (552.8, 127.8), 'sisa': (268.1, 313.8), 'susut': (288.2, 181.4), 'cetakslip': (448.3, 168.8), 'cetak': (645.5, 87.5), 'gaji': (437.5, 378.0), 'setlepas': (663.3, 293.3), 'kartu': (325.7, 87.5), 'karyawan': (755.3, 391.2), 'dash': (304.3, 241.3), 'msdm': (657.1, 330.0), 'mkonv': (535.1, 296.8), 'posting': (397.1, 299.1), 'nilai': (640.9, 391.3), 'invkas': (156.0, 307.2), 'event': (668.3, 425.3), 'masuk': (310.3, 377.4), 'slipfee': (529.3, 252.6), 'upah': (430.0, 262.0), 'drafjp': (185.8, 215.9), 'aset': (198.7, 357.5), 'kurang': (513.6, 330.9)}
-AKTOR_LETAK = {'P': ('T', 0.51), 'A': ('L', 0.448), 'H': ('B', 0.343), 'O': ('R', 0.512), 'K': ('B', 0.45)}
+# Hasil DARI_TERSIMPAN=1 SEED=43 T0=2 SIG0=22 LANGKAH=60000 --cari dari tata letak sebelumnya, 38 use case di kanvas 880 pt.
+TATA_LETAK = {'revisi': (177.0, 159.7), 'kunci': (640.4, 241.0), 'putfee': (428.3, 211.7), 'ajulepas': (160.5, 123.0), 'lapor': (184.7, 360.1), 'dist': (398.9, 332.3), 'draf': (310.9, 142.2), 'setgaji': (714.7, 122.8), 'setjp': (538.4, 125.7), 'setinv': (690.9, 157.5), 'presensi': (449.1, 424.1), 'balik': (709.9, 286.2), 'pengguna': (757.0, 88.0), 'ajujp': (125.0, 397.3), 'cepat': (123.1, 88.0), 'lap': (502.6, 88.1), 'katakun': (604.2, 194.7), 'sisa': (261.1, 319.5), 'susut': (288.1, 180.2), 'cetakslip': (337.0, 99.2), 'cetak': (645.2, 87.5), 'gaji': (430.7, 388.9), 'setlepas': (559.0, 159.9), 'kartu': (443.0, 174.7), 'karyawan': (665.4, 425.4), 'dash': (300.5, 373.5), 'msdm': (242.0, 421.7), 'mkonv': (147.0, 308.8), 'posting': (413.3, 297.6), 'nilai': (638.7, 390.8), 'invkas': (550.8, 301.6), 'event': (756.6, 389.1), 'masuk': (300.2, 242.0), 'slipfee': (412.8, 261.8), 'upah': (528.2, 252.5), 'drafjp': (189.1, 215.5), 'aset': (628.3, 337.9), 'kurang': (510.4, 335.8)}
+AKTOR_LETAK = {'P': ('T', 0.515), 'A': ('L', 0.457), 'H': ('B', 0.338), 'O': ('R', 0.51), 'K': ('B', 0.45)}
 
 
 def cek_izin():

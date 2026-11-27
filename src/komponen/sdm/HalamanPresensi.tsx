@@ -24,6 +24,7 @@ import PilihPeriode from "./PilihPeriode";
 import FormPresensi, { type NilaiFormPresensi } from "./FormPresensi";
 import AksiPresensi from "./AksiPresensi";
 import type { Absensi } from "@/generated/prisma/enums";
+import { belumDiAtas } from "@/lib/inti/urut";
 
 const ALAMAT = "/sdm/presensi";
 const WARNA_ABSENSI: Record<Absensi, "hijau" | "merah" | "kuning" | "biru"> = { HADIR: "hijau", ALPA: "merah", SAKIT: "kuning", IZIN: "kuning", CUTI: "biru" };
@@ -121,7 +122,8 @@ export default async function HalamanPresensi({ cari }: { cari: CariPresensi }) 
                 </tr>
               </thead>
               <tbody>
-                {rekap.map((r) => (
+                {/* Karyawan yang gajinya belum diajukan (presensi belum terkunci) tampil di atas. */}
+                {belumDiAtas(rekap, (r) => !r.terkunci).map((r) => (
                   <tr key={r.kode}>
                     <td>
                       {r.nama} <span className="kode">{r.kode}</span>

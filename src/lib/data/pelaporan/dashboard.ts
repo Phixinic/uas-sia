@@ -9,6 +9,7 @@ import { dariDate, denganPeriode, hariIni, keDate, labelPeriode, periodeIni, tam
 import { rupiah } from "@/lib/format";
 import type { Peran } from "@/lib/peran";
 import { LABEL_JENIS_NOMINAL } from "@/lib/inti/nominal";
+import { belumDiAtas, belumDiputuskan, jurnalDikembalikan } from "@/lib/inti/urut";
 
 export type Tindakan = { judul: string; uraian: string; href: string; peran: Peran[] };
 
@@ -113,6 +114,18 @@ export async function dataDashboard(periode: string) {
   for (const e of eventDitolak) tindakan.push({ judul: `Laporan event ${e.nama} ditolak Owner`, uraian: `${e.kode}: periksa data kehadiran bila perlu; kapten menilai ulang lalu mengirim lagi.`, href: `/fee-event/event?lihat=${e.kode}`, peran: ["HRD"] });
   for (const a of garansi) tindakan.push({ judul: `Garansi ${a.nama} habis ${dariDate(a.garansiSampai)}`, uraian: `${a.kode}: cek kondisi sebelum garansi berakhir.`, href: `/konversi/kartu-aset?aset=${a.kode}`, peran: ["ADMIN"] });
 
+  const dikembalikan = jurnalDikembalikan(
+    terbaru.filter((j) => j.sumberTipe === "OPNAME").map((j) => ({ no: j.no, periode: j.periodeId, status: j.status })),
+    new Set(opnameKembali.map((o) => o.periodeId)),
+  );
+  // Dipilih enam yang terakhir dibuat; yang belum diputuskan di atas, lalu dari tanggal paling lama.
+  const terbaruTampil = belumDiAtas(
+    terbaru
+      .map((j) => ({ no: j.no, tanggal: dariDate(j.tanggal), keterangan: j.keterangan, jenis: j.jenis, status: j.status, jumlah: j.detail.reduce((s, d) => s + d.debit, 0) }))
+      .sort((a, b) => a.tanggal.localeCompare(b.tanggal) || a.no.localeCompare(b.no)),
+    (j) => belumDiputuskan(j.status) || dikembalikan.has(j.no),
+  );
+
   return {
     kas,
     totalAset,
@@ -133,6 +146,6 @@ export async function dataDashboard(periode: string) {
     },
     statusPeriode: statusP ? ("TERKUNCI" as const) : ("TERBUKA" as const),
     tindakan,
-    terbaru: terbaru.map((j) => ({ no: j.no, tanggal: dariDate(j.tanggal), keterangan: j.keterangan, jenis: j.jenis, status: j.status, jumlah: j.detail.reduce((s, d) => s + d.debit, 0) })),
+    terbaru: terbaruTampil,
   };
 }

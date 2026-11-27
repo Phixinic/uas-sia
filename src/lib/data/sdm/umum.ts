@@ -37,5 +37,5 @@ export async function opsiPeriodeSdm(terpilih: string): Promise<string[]> {
   presensi.forEach((x) => semua.add(x.p));
   slip.forEach((x) => semua.add(x.periodeId));
   gaji.forEach((x) => semua.add(x.periodeId));
-  return [...semua].sort().reverse();
+  return [...semua].sort();
 }

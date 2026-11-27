@@ -76,7 +76,7 @@ export async function ambilAset(kode: string) {
 export async function dataPelepasan() {
   const [aktif, daftar] = await Promise.all([
     db.aset.findMany({ where: { status: "AKTIF" }, orderBy: { kode: "asc" }, include: sisipanJadwal }),
-    db.pelepasan.findMany({ orderBy: [{ dibuatPada: "desc" }, { no: "desc" }], include: { aset: { select: { nama: true, akunAsetKode: true, akunAkumulasiKode: true } }, dibuatOleh: { select: { nama: true } }, disetujuiOleh: { select: { nama: true } }, jurnal: { select: { no: true, detail: { orderBy: { noUrut: "asc" }, select: { akunKode: true, debit: true, kredit: true } } } } } }),
+    db.pelepasan.findMany({ orderBy: [{ tanggal: "asc" }, { no: "asc" }], include: { aset: { select: { nama: true, akunAsetKode: true, akunAkumulasiKode: true } }, dibuatOleh: { select: { nama: true } }, disetujuiOleh: { select: { nama: true } }, jurnal: { select: { no: true, detail: { orderBy: { noUrut: "asc" }, select: { akunKode: true, debit: true, kredit: true } } } } } }),
   ]);
   const diajukan = new Set(daftar.filter((p) => p.status === "DIAJUKAN").map((p) => p.asetKode));
   return {
