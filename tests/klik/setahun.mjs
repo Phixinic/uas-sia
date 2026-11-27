@@ -139,7 +139,7 @@ try {
     const k = kapten2.p;
     await k.goto("/kapten");
     await k.getByRole("row", { name: /Malam Tahun Baru/ }).getByRole("link", { name: "Nilai crew" }).first().click().catch(async () => {
-      await k.getByRole("link", { name: "Nilai crew" }).first().click();
+      await k.getByRole("link", { name: "Nilai crew" }).last().click();
     });
     await k.waitForURL(/lihat=EVT-/);
     for (let putaran = 0; putaran < 12; putaran++) {

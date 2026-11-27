@@ -17,6 +17,7 @@ import Peringatan from "@/komponen/ui/Peringatan";
 import KeadaanKosong from "@/komponen/ui/KeadaanKosong";
 import Rupiah from "@/komponen/ui/Rupiah";
 import AksiJurnal from "@/komponen/pelaporan/AksiJurnal";
+import { belumDiAtas, belumDiputuskan } from "@/lib/inti/urut";
 
 type Sumber = "penyusutan" | "opname";
 
@@ -90,7 +91,7 @@ export function PanelStatusJurnal({ j, sumber, penggunaId, peran, judul }: { j: 
 }
 
 /** Tabel riwayat jurnal satu sumber, dengan status, jejak, alasan tolak, dan tombol keputusan per baris. */
-export function TabelRiwayatJurnal({ riwayat, sumber, alamat, penggunaId, peran, judul, kolomTambahan, tombolDiAtas }: {
+export function TabelRiwayatJurnal({ riwayat, sumber, alamat, penggunaId, peran, judul, kolomTambahan, tombolDiAtas, dikembalikan }: {
   riwayat: JurnalPersetujuan[];
   sumber: Sumber;
   /** Alamat halaman untuk tautan periode. */
@@ -101,6 +102,8 @@ export function TabelRiwayatJurnal({ riwayat, sumber, alamat, penggunaId, peran,
   kolomTambahan?: { judul: string; isi: (j: JurnalPersetujuan) => ReactNode };
   /** Nomor jurnal yang tombolnya sudah tampil di panel status di atas (tidak diulang di tabel). */
   tombolDiAtas?: string | null;
+  /** Nomor jurnal yang dikembalikan Owner dan belum diajukan ulang; ikut ditampilkan di atas. */
+  dikembalikan?: ReadonlySet<string>;
 }) {
   return (
     <Kartu rapat label={judul}>
@@ -127,7 +130,8 @@ export function TabelRiwayatJurnal({ riwayat, sumber, alamat, penggunaId, peran,
             </tr>
           </thead>
           <tbody>
-            {riwayat.map((j) => (
+            {/* Data datang terbaru dulu (dipakai jurnalPeriode); tabel menampilkan yang belum diputuskan di atas, lalu dari yang paling lama. */}
+            {belumDiAtas([...riwayat].reverse(), (j) => belumDiputuskan(j.status) || !!dikembalikan?.has(j.no)).map((j) => (
               <tr key={j.no}>
                 <td>
                   <div className="kode">{j.no}</div>

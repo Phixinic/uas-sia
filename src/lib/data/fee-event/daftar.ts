@@ -25,7 +25,7 @@ export type RingkasEvent = {
 
 export async function daftarEvent(): Promise<RingkasEvent[]> {
   const d = await db.event.findMany({
-    orderBy: [{ tanggalMulai: "desc" }, { kode: "desc" }],
+    orderBy: [{ tanggalMulai: "asc" }, { kode: "asc" }],
     include: {
       sesi: { select: { kehadiran: { select: { penilaian: true, karyawanKode: true } } } },
       penugasan: { select: { karyawanKode: true, karyawan: { select: { nama: true } }, jabatan: { select: { peranEvent: true } } } },
@@ -115,9 +115,9 @@ const ringkasLaporan = (l: LaporanDb): RingkasLaporan => ({
   diputuskanPada: l.diputuskanPada?.toISOString() ?? null,
 });
 
-/** Semua laporan, yang menunggu keputusan di atas. */
+/** Semua laporan, yang menunggu keputusan di atas; di tiap kelompok yang paling lama dikirim lebih dulu. */
 export async function daftarLaporan(): Promise<RingkasLaporan[]> {
-  const d = await db.laporanFee.findMany({ orderBy: [{ diajukanPada: "desc" }, { no: "desc" }], include: sertaiLaporan });
+  const d = await db.laporanFee.findMany({ orderBy: [{ diajukanPada: "asc" }, { no: "asc" }], include: sertaiLaporan });
   return d.map(ringkasLaporan).sort((a, b) => Number(b.status === "DIAJUKAN") - Number(a.status === "DIAJUKAN"));
 }
 
@@ -126,7 +126,7 @@ export async function ambilLaporan(no: string): Promise<RingkasLaporan | null> {
   return l ? ringkasLaporan(l) : null;
 }
 
-/** Riwayat laporan satu event (termasuk yang ditolak), terbaru dulu. */
+/** Riwayat laporan satu event (termasuk yang ditolak), terbaru dulu; halaman membaliknya untuk tampilan. */
 export async function riwayatLaporanEvent(eventKode: string): Promise<RingkasLaporan[]> {
   const d = await db.laporanFee.findMany({ where: { eventKode }, orderBy: [{ diajukanPada: "desc" }, { no: "desc" }], include: sertaiLaporan });
   return d.map(ringkasLaporan);

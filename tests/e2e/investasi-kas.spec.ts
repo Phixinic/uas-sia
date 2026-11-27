@@ -237,7 +237,7 @@ test("potret biaya: Gaji Bulanan, slip gaji layar dan cetak, slip fee, ringkasan
     await tungguToast(o, /FEE-2026-0001 disetujui/);
     await o.goto("/fee-event/keputusan");
   }
-  const lihat = o.getByRole("table", { name: /laporan/i }).getByRole("row", { name: /Disetujui/ }).first().getByRole("link", { name: /Lihat|Buka/ });
+  const lihat = o.getByRole("table", { name: /laporan/i }).getByRole("row", { name: /Disetujui/ }).last().getByRole("link", { name: /Lihat|Buka/ });
   const href = await lihat.getAttribute("href");
   await o.goto(`${href}&slip=semua`);
   const sf = o.getByRole("article", { name: /^Slip fee / }).first();

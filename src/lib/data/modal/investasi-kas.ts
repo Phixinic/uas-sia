@@ -26,7 +26,7 @@ export type DataSetoran = {
 
 export async function daftarSetoran(klien: DbAtauTx = db): Promise<DataSetoran[]> {
   const daftar = await klien.investasiKas.findMany({
-    orderBy: [{ tanggal: "desc" }, { no: "desc" }],
+    orderBy: [{ tanggal: "asc" }, { no: "asc" }],
     include: { dibuatOleh: { select: { nama: true } }, diputuskanOleh: { select: { nama: true } } },
   });
   return daftar.map((s) => ({

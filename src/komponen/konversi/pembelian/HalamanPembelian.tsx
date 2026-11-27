@@ -25,6 +25,7 @@ import { formKosong, type NilaiAwalForm } from "./nilai-awal";
 import AksiPembelian from "./AksiPembelian";
 import DetailPembelian from "./DetailPembelian";
 import type { JenisPembelian } from "@/generated/prisma/enums";
+import { belumDiAtas, belumDiputuskan } from "@/lib/inti/urut";
 
 export default async function HalamanPembelian({ jenis, cari }: { jenis: JenisPembelian; cari: { form?: string; lihat?: string } }) {
   const pengguna = await wajibMasuk();
@@ -121,7 +122,7 @@ export default async function HalamanPembelian({ jenis, cari }: { jenis: JenisPe
               </tr>
             </thead>
             <tbody>
-              {daftar.map((b) => (
+              {belumDiAtas(daftar, (b) => belumDiputuskan(b.status)).map((b) => (
                 <tr key={b.no} className={cari.lihat === b.no ? "bg-aksen-lembut/50" : ""}>
                   <td className="kode">{b.no}</td>
                   <td className="whitespace-nowrap">{labelTanggal(b.tanggal)}</td>

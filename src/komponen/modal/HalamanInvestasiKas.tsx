@@ -25,6 +25,7 @@ import { DaftarHP, KartuHP, RincianHP, TabelLebar } from "@/komponen/fee-event/R
 import FormInvestasiKas from "./FormInvestasiKas";
 import AksiInvestasiKas from "./AksiInvestasiKas";
 import RingkasanKasModal from "./RingkasanKasModal";
+import { belumDiAtas, belumDiputuskan } from "@/lib/inti/urut";
 
 const ALAMAT = "/modal/investasi-kas";
 
@@ -39,6 +40,7 @@ export default async function HalamanInvestasiKas({ cari }: { cari: { form?: str
   const tampilForm = cari.form === "baru" && bolehCatat;
   const menunggu = setoran.filter((s) => s.status === "DIAJUKAN");
   const disetujui = setoran.filter((s) => s.status === "DISETUJUI");
+  const setoranTampil = belumDiAtas(setoran, (s) => belumDiputuskan(s.status));
   const totalDisetujui = disetujui.reduce((s, x) => s + x.jumlah, 0);
   // Buku besar untuk pembanding: periode terpilih, atau periode terakhir yang dikenal untuk kumulatif.
   const periodeBuku = periode ?? semua.at(-1) ?? periodeIni();
@@ -79,7 +81,7 @@ export default async function HalamanInvestasiKas({ cari }: { cari: { form?: str
         ) : (
           <>
             <DaftarHP label="Daftar setoran">
-              {setoran.map((s) => (
+              {setoranTampil.map((s) => (
                 <KartuHP key={s.no} judul={<span className="kode text-[13px]! text-slate-900!">{s.no}</span>} sub={labelTanggal(s.tanggal)} kanan={<Rupiah nilai={s.jumlah} className="font-semibold" />}>
                   <p className="text-[13px] break-words text-slate-700">{s.keterangan}</p>
                   <RincianHP isi={[["Status", status(s)], ["Dicatat", s.dibuatOleh], ...(s.diputuskanOleh ? [["Diputuskan", s.diputuskanOleh] as [string, string]] : [])]} />
@@ -101,7 +103,7 @@ export default async function HalamanInvestasiKas({ cari }: { cari: { form?: str
                   </tr>
                 </thead>
                 <tbody>
-                  {setoran.map((s) => (
+                  {setoranTampil.map((s) => (
                     <tr key={s.no}>
                       <td className="kode">{s.no}</td>
                       <td className="whitespace-nowrap">{labelTanggal(s.tanggal)}</td>

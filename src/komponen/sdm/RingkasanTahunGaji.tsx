@@ -1,6 +1,8 @@
 /*
  * Ringkasan penggajian per tahun (komponen server) di Gaji Bulanan: tiap bulan statusnya belum ada presensi, belum
  * diajukan, dikembalikan Owner, menunggu Owner, atau dibayar, beserta total THP. Bulan yang dipilih ditandai.
+ * Bulan berdata yang belum dibayar tampil di atas. Bulan yang belum diajukan menampilkan estimasi biaya tetap, dan
+ * angka estimasi itu tidak dijumlahkan ke total THP.
  */
 import Link from "next/link";
 import Kartu, { KepalaKartu } from "@/komponen/ui/Kartu";
@@ -8,6 +10,7 @@ import Tabel from "@/komponen/ui/Tabel";
 import Rupiah from "@/komponen/ui/Rupiah";
 import { DaftarHP, KartuHP, TabelLebar } from "@/komponen/fee-event/Ringkas";
 import { denganPeriode, namaBulan, tahunDari } from "@/lib/inti/tanggal";
+import { belumDiAtas } from "@/lib/inti/urut";
 import { ringkasanTahunGaji, type RingkasBulanGaji } from "@/lib/data/sdm/gaji";
 import { alamatPresensi, TandaStatus } from "./StatusGaji";
 
@@ -33,22 +36,33 @@ function rincian(r: RingkasBulanGaji) {
 export default async function RingkasanTahunGaji({ periode, alamat }: { periode: string; alamat: string }) {
   const tahun = tahunDari(periode);
   const daftar = await ringkasanTahunGaji(tahun);
-  const total = daftar.reduce((s, r) => s + r.thp, 0);
+  const urut = belumDiAtas(daftar, (r) => r.status !== "DIBAYAR" && r.status !== "KOSONG");
+  const total = daftar.reduce((s, r) => s + (r.estimasi === null ? r.thp : 0), 0);
+  const berestimasi = daftar.filter((r) => r.estimasi !== null);
+  const totalEstimasi = berestimasi.reduce((s, r) => s + (r.estimasi ?? 0), 0);
+  const labelEstimasi = `Estimasi biaya tetap ${berestimasi.length} bulan belum diajukan (di luar total THP)`;
   const dibayar = daftar.filter((r) => r.status === "DIBAYAR").length;
   return (
     <Kartu rapat>
       <KepalaKartu judul={`Ringkasan penggajian · Tahun: ${tahun}`} keterangan={`${dibayar} bulan sudah dibayar penuh. Pilih bulan untuk membuka slipnya.`} />
       <DaftarHP label="Ringkasan penggajian per bulan">
-        {daftar.map((r) => (
+        {urut.map((r) => (
           <KartuHP
             key={r.periode}
             judul={<Link className="underline" href={denganPeriode(alamat, r.periode)} aria-current={r.periode === periode ? "page" : undefined}>{namaBulan(r.periode)}{r.periode === periode ? " (dipilih)" : ""}</Link>}
             sub={rincian(r)}
             kanan={<StatusBulan r={r} />}
           >
-            {r.thp > 0 && <div className="text-xs text-slate-600">Total THP <span className="font-semibold text-slate-900"><Rupiah nilai={r.thp} /></span></div>}
+            {r.estimasi !== null ? (
+              <div className="text-xs text-slate-600">Estimasi biaya tetap <span className="font-semibold text-slate-900"><Rupiah nilai={r.estimasi} /></span></div>
+            ) : (
+              r.thp > 0 && <div className="text-xs text-slate-600">Total THP <span className="font-semibold text-slate-900"><Rupiah nilai={r.thp} /></span></div>
+            )}
           </KartuHP>
         ))}
+        <KartuHP judul={`Total THP tahun ${tahun}`} kanan={<span className="text-sm font-semibold"><Rupiah nilai={total} /></span>}>
+          {berestimasi.length > 0 && <div className="text-xs text-slate-600">{labelEstimasi}: <span className="font-semibold text-slate-900"><Rupiah nilai={totalEstimasi} /></span></div>}
+        </KartuHP>
       </DaftarHP>
       <TabelLebar>
         <Tabel label="Ringkasan penggajian per bulan">
@@ -61,14 +75,18 @@ export default async function RingkasanTahunGaji({ periode, alamat }: { periode:
             </tr>
           </thead>
           <tbody>
-            {daftar.map((r) => (
+            {urut.map((r) => (
               <tr key={r.periode} className={r.periode === periode ? "bg-aksen-lembut/60" : undefined}>
                 <td>
                   <Link className="font-medium hover:underline" href={denganPeriode(alamat, r.periode)} aria-current={r.periode === periode ? "page" : undefined}>{namaBulan(r.periode)}</Link>
                 </td>
                 <td><StatusBulan r={r} /></td>
                 <td className="text-[13px] text-slate-600">{rincian(r)}</td>
-                <td className="kolom-angka">{r.thp ? <Rupiah nilai={r.thp} polos /> : "-"}</td>
+                <td className="kolom-angka">
+                  {r.estimasi !== null ? (
+                    <><Rupiah nilai={r.estimasi} polos /><span className="block text-[11px] font-normal text-slate-500">estimasi biaya tetap</span></>
+                  ) : r.thp ? <Rupiah nilai={r.thp} polos /> : "-"}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -77,6 +95,12 @@ export default async function RingkasanTahunGaji({ periode, alamat }: { periode:
               <td colSpan={3}>Total THP tahun {tahun}</td>
               <td className="kolom-angka"><Rupiah nilai={total} polos /></td>
             </tr>
+            {berestimasi.length > 0 && (
+              <tr>
+                <td colSpan={3}>{labelEstimasi}</td>
+                <td className="kolom-angka"><Rupiah nilai={totalEstimasi} polos /></td>
+              </tr>
+            )}
           </tfoot>
         </Tabel>
       </TabelLebar>

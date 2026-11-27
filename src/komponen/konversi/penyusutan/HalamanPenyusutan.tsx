@@ -25,6 +25,7 @@ import PemilihPeriode from "@/komponen/konversi/umum/PemilihPeriode";
 import { PanelStatusJurnal, TabelRiwayatJurnal } from "@/komponen/konversi/umum/StatusJurnal";
 import TombolProses from "./TombolProses";
 import type { StatusPersetujuan } from "@/generated/prisma/enums";
+import { belumDiAtas } from "@/lib/inti/urut";
 
 const ALAMAT = "/konversi/penyusutan";
 
@@ -108,7 +109,7 @@ export default async function HalamanPenyusutan({ cari }: { cari: { periode?: st
               </tr>
             </thead>
             <tbody>
-              {d.baris.map((r) => (
+              {belumDiAtas(d.baris, (r) => !r.jurnalNo || r.statusJurnal !== "DISETUJUI").map((r) => (
                 <tr key={r.asetKode}>
                   <td>
                     <Link className="kode hover:underline" href={`/konversi/kartu-aset?aset=${r.asetKode}`}>{r.asetKode}</Link> {r.nama}
