@@ -172,14 +172,14 @@ export default function FormSettingGaji({ opsi, bahan, terkunci, sekarang, perio
         <fieldset className="space-y-2">
           <legend className="label">Berlaku mulai<span className="text-rose-600"> *</span></legend>
           <div className="grid grid-cols-2 gap-4 sm:max-w-md">
-            <Bidang label="Bulan" htmlFor={`${id}-bulan`} galat={galat.bulan}>
-              <Pilihan id={`${id}-bulan`} value={nilai.bulan} galat={!!galat.bulan} onChange={(e) => ubah("bulan", e.target.value)}>
-                {NAMA_BULAN.map((b, i) => (bulanDiTahun.includes(i + 1) || String(i + 1) === nilai.bulan ? <option key={b} value={String(i + 1)}>{b}</option> : null))}
-              </Pilihan>
-            </Bidang>
             <Bidang label="Tahun" htmlFor={`${id}-tahun`} galat={galat.tahun && galat.tahun !== galat.bulan ? galat.tahun : undefined}>
               <Pilihan id={`${id}-tahun`} value={nilai.tahun} galat={!!galat.tahun} onChange={(e) => gantiTahun(e.target.value)}>
                 {opsiTahun.map((t) => <option key={t} value={String(t)}>{t}</option>)}
+              </Pilihan>
+            </Bidang>
+            <Bidang label="Bulan" htmlFor={`${id}-bulan`} galat={galat.bulan}>
+              <Pilihan id={`${id}-bulan`} value={nilai.bulan} galat={!!galat.bulan} onChange={(e) => ubah("bulan", e.target.value)}>
+                {NAMA_BULAN.map((b, i) => (bulanDiTahun.includes(i + 1) || String(i + 1) === nilai.bulan ? <option key={b} value={String(i + 1)}>{b}</option> : null))}
               </Pilihan>
             </Bidang>
           </div>
