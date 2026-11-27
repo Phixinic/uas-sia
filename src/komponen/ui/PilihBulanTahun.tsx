@@ -6,8 +6,11 @@
  * ditangani halamannya dengan keadaan kosong. Pilihan Tahun diturunkan dari `tersedia` (periode, jurnal, pembelian)
  * ditambah tahun berjalan dan tahun yang sedang dipilih. Mengganti tahun mempertahankan bulan yang dipilih.
  * `semua` menambah pilihan "Semua" di Tahun (?tahun=semua), dan Bulan dinonaktifkan selama pilihan itu aktif.
+ * Tombol di kiri dan kanan Tahun pindah ke tahun terdekat di daftar itu.
  */
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import Tombol from "@/komponen/ui/Tombol";
 import { NAMA_BULAN, bulanDari, periodeIni, tahunDari } from "@/lib/inti/tanggal";
 
 export default function PilihBulanTahun({ periode, tersedia, semua, labelBulan = "Bulan", labelTahun = "Tahun", pertahankan = true, idAwalan = "pilih", keteranganTahun }: {
@@ -36,6 +39,10 @@ export default function PilihBulanTahun({ periode, tersedia, semua, labelBulan =
   const tahunData = new Set([...tersedia.map(tahunDari), tahunDari(periodeIni())]);
   if (tahun !== null) tahunData.add(tahun);
   const daftarTahun = [...tahunData].sort((a, b) => b - a);
+  // Daftar urut menurun: tahun sebelumnya ada sesudah posisi terpilih, tahun berikutnya sebelum posisi itu.
+  const posisi = tahun === null ? -1 : daftarTahun.indexOf(tahun);
+  const tahunSebelum = posisi < 0 ? undefined : daftarTahun[posisi + 1];
+  const tahunBerikut = posisi < 0 ? undefined : daftarTahun[posisi - 1];
 
   const pergi = (b: number | null, t: number | "semua") => {
     const p = new URLSearchParams(pertahankan ? cari.toString() : "");
@@ -55,8 +62,13 @@ export default function PilihBulanTahun({ periode, tersedia, semua, labelBulan =
     pergi(bulan ?? bulanDari(periodeIni()), Number(nilai));
   };
 
+  const tombolTahun = (label: string, t: number | undefined, Ikon: typeof ChevronLeft) => (
+    <Tombol className="w-9 shrink-0 px-0" aria-label={label} title={label} disabled={t === undefined} onClick={() => gantiTahun(String(t))} ikon={<Ikon className="size-4" aria-hidden />} />
+  );
+
+  // Mulai lebar sm, Bulan dan Tahun tetap sebaris supaya kepala halaman tidak menyusutkan grup ini.
   return (
-    <div className="flex flex-wrap items-end gap-2" role="group" aria-label="Periode">
+    <div className="flex flex-wrap items-end gap-2 sm:flex-nowrap" role="group" aria-label="Periode">
       <div className="bidang min-w-36">
         <label className="label" htmlFor={`${idAwalan}-bulan`}>{labelBulan}</label>
         <select
@@ -76,14 +88,18 @@ export default function PilihBulanTahun({ periode, tersedia, semua, labelBulan =
       </div>
       <div className="bidang min-w-28">
         <label className="label" htmlFor={`${idAwalan}-tahun`}>{labelTahun}</label>
-        <select id={`${idAwalan}-tahun`} className="isian" value={pilihSemua ? "semua" : String(tahun)} onChange={(e) => gantiTahun(e.target.value)}>
-          {adaSemua && <option value="semua">{semua}</option>}
-          {daftarTahun.map((t) => (
-            <option key={t} value={String(t)}>
-              {t}{keteranganTahun?.[t] ? ` ${keteranganTahun[t]}` : ""}
-            </option>
-          ))}
-        </select>
+        <div className="flex gap-1">
+          {tombolTahun("Tahun sebelumnya", tahunSebelum, ChevronLeft)}
+          <select id={`${idAwalan}-tahun`} className="isian" value={pilihSemua ? "semua" : String(tahun)} onChange={(e) => gantiTahun(e.target.value)}>
+            {adaSemua && <option value="semua">{semua}</option>}
+            {daftarTahun.map((t) => (
+              <option key={t} value={String(t)}>
+                {t}{keteranganTahun?.[t] ? ` ${keteranganTahun[t]}` : ""}
+              </option>
+            ))}
+          </select>
+          {tombolTahun("Tahun berikutnya", tahunBerikut, ChevronRight)}
+        </div>
       </div>
     </div>
   );
