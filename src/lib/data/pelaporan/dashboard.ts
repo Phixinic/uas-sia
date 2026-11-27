@@ -133,6 +133,9 @@ export async function dataDashboard(periode: string) {
     },
     statusPeriode: statusP ? ("TERKUNCI" as const) : ("TERBUKA" as const),
     tindakan,
-    terbaru: terbaru.map((j) => ({ no: j.no, tanggal: dariDate(j.tanggal), keterangan: j.keterangan, jenis: j.jenis, status: j.status, jumlah: j.detail.reduce((s, d) => s + d.debit, 0) })),
+    // Dipilih enam yang terakhir dibuat, ditampilkan dari tanggal paling lama.
+    terbaru: terbaru
+      .map((j) => ({ no: j.no, tanggal: dariDate(j.tanggal), keterangan: j.keterangan, jenis: j.jenis, status: j.status, jumlah: j.detail.reduce((s, d) => s + d.debit, 0) }))
+      .sort((a, b) => a.tanggal.localeCompare(b.tanggal) || a.no.localeCompare(b.no)),
   };
 }

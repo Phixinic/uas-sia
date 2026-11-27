@@ -162,7 +162,10 @@ export async function dataSettingGaji(sekarang = periodeIni()) {
     ]),
   );
 
-  return { baris, pengajuan, riwayat: [...tampil.values()], bahanForm, sekarang, periodeBerlaku };
+  // Urutan tampil riwayat: per karyawan, bulan berlaku paling lama lebih dulu. Kueri di atas tetap menurun karena `berikut` bergantung padanya.
+  const riwayat = [...tampil.values()].sort((a, b) => a.karyawanKode.localeCompare(b.karyawanKode) || a.berlakuMulai.localeCompare(b.berlakuMulai) || a.diajukanPada.localeCompare(b.diajukanPada));
+
+  return { baris, pengajuan, riwayat, bahanForm, sekarang, periodeBerlaku };
 }
 
 /** Jumlah pengajuan setting gaji yang menunggu keputusan Owner (dashboard dan lencana menu). */

@@ -90,7 +90,7 @@ export type DataPeriode = {
 };
 
 /**
- * Periode terbaru lebih dulu. Daftar periksa hanya dihitung untuk periode yang masih terbuka.
+ * `maks` periode terakhir, paling lama lebih dulu. Daftar periksa hanya dihitung untuk periode yang masih terbuka.
  * Periode terbuka paling lama selalu ikut ditampilkan walau lebih lama dari `maks` periode terakhir,
  * karena periode itulah yang harus dikunci berikutnya.
  */
@@ -101,12 +101,12 @@ export async function dataTutupPeriode(maks = 12): Promise<DataPeriode[]> {
   ]);
   const terkunci = statusSemua.filter((p) => p.status === "TERKUNCI").map((p) => p.id);
   const terbukaPertama = statusSemua.find((p) => p.status === "TERBUKA" && p.id <= periodeIni())?.id;
-  const ids = semua.reverse().slice(0, maks);
-  if (terbukaPertama && !ids.includes(terbukaPertama)) ids.push(terbukaPertama);
+  const ids = semua.slice(-maks);
+  if (terbukaPertama && !ids.includes(terbukaPertama)) ids.unshift(terbukaPertama);
   const [baris, buku] = await Promise.all([
     db.periode.findMany({
       where: { id: { in: ids } },
-      include: { pengunci: { select: { nama: true } }, riwayat: { orderBy: { waktu: "desc" }, include: { oleh: { select: { nama: true } } } } },
+      include: { pengunci: { select: { nama: true } }, riwayat: { orderBy: { waktu: "asc" }, include: { oleh: { select: { nama: true } } } } },
     }),
     muatJurnalBuku(db),
   ]);

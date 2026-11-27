@@ -39,7 +39,7 @@ const sertakan = {
 
 type BarisDb = Awaited<ReturnType<typeof ambilBaris>>[number];
 const ambilBaris = (where: Prisma.JurnalWhereInput) =>
-  db.jurnal.findMany({ where, orderBy: [{ tanggal: "desc" }, { no: "desc" }], include: sertakan });
+  db.jurnal.findMany({ where, orderBy: [{ tanggal: "asc" }, { no: "asc" }], include: sertakan });
 
 function petakan(j: BarisDb, rincian: RincianJurnal[] = []): DataJurnal {
   return {

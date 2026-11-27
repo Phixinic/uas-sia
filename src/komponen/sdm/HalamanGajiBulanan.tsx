@@ -71,7 +71,8 @@ export default async function HalamanGajiBulanan({ cari }: { cari: CariGajiBulan
   const penutup = kunciPenutup(periode, terkunci);
   const menunggu = paket.find((p) => p.status === "DIAJUKAN") ?? null;
   const ditolak = !menunggu && paket[0]?.status === "DITOLAK" ? paket[0] : null;
-  const dibayar = paket.filter((p) => p.status === "DISETUJUI");
+  // paket[0] = paket terbaru; nomor yang sudah dibayar ditulis dari yang paling lama.
+  const dibayar = paket.filter((p) => p.status === "DISETUJUI").reverse();
   const kas = menunggu && bolehPutuskan ? await saldoAkun(db, AKUN.KAS) : null;
 
   const tanpaSetting = kesiapan.filter((k) => !k.adaSetting);

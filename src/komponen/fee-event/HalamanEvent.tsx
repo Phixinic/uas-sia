@@ -147,6 +147,8 @@ async function DetailEvent({ kode, cari, bolehKelola }: { kode: string; cari: Ca
   const kapten = b.orang.filter((o) => o.peranEvent === "KAPTEN");
   const semuaKehadiran = b.orang.flatMap((o) => o.kehadiran);
   const kurang = semuaKehadiran.filter((k) => k.penilaian === "KURANG").length;
+  // riwayat[0] = laporan terbaru (tautan di peringatan); tabel menampilkannya dari yang paling lama.
+  const riwayatNaik = [...riwayat].reverse();
 
   const form = kelola ? await formDetail(b, cari, dasar) : null;
 
@@ -324,7 +326,7 @@ async function DetailEvent({ kode, cari, bolehKelola }: { kode: string; cari: Ca
           <KepalaKartu judul="Riwayat laporan kapten" keterangan={`${riwayat.length} laporan`} />
           <>
 <DaftarHP label="Riwayat laporan">
-            {riwayat.map((l) => (
+            {riwayatNaik.map((l) => (
               <KartuHP key={l.no} judul={<span className="kode">{l.no}</span>} sub={`${labelWaktu(l.diajukanPada)} · ${l.diajukanOleh}`} kanan={<LencanaStatus jenis="persetujuan" status={l.status} />}>
                 <div className="text-[13px] break-words">{l.alasanTolak ? <span className="text-rose-700">Ditolak: {l.alasanTolak}</span> : l.jurnalNo ? `Jurnal ${l.jurnalNo}` : l.catatanKapten || "-"}</div>
                 <TautanTombol href={`/fee-event/keputusan?lihat=${l.no}`} kecil>Buka</TautanTombol>
@@ -335,7 +337,7 @@ async function DetailEvent({ kode, cari, bolehKelola }: { kode: string; cari: Ca
 <Tabel label="Riwayat laporan">
             <thead><tr><th>No.</th><th>Dikirim</th><th>Oleh</th><th>Status</th><th>Keterangan</th><th className="text-right" /></tr></thead>
             <tbody>
-              {riwayat.map((l) => (
+              {riwayatNaik.map((l) => (
                 <tr key={l.no}>
                   <td className="kode">{l.no}</td>
                   <td className="whitespace-nowrap">{labelWaktu(l.diajukanPada)}</td>

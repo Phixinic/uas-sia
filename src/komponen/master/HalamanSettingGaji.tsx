@@ -245,7 +245,7 @@ export default async function HalamanSettingGaji({ cari }: { cari: CariSettingGa
         <Kartu rapat>
           <KepalaKartu
             judul={namaRiwayat ? `Riwayat setting gaji ${namaRiwayat}` : "Riwayat setting gaji semua karyawan"}
-            keterangan={`${riwayat.length} versi, terbaru di atas. Rincian tunjangan dan alasan muncul saat kursor di atas baris.`}
+            keterangan={`${riwayat.length} versi, urut per karyawan, bulan berlaku paling lama di atas. Rincian tunjangan dan alasan muncul saat kursor di atas baris.`}
             aksi={cari.riwayat ? <Link className="text-[13px] font-semibold text-aksen hover:underline" href={`${ALAMAT_SETTING_GAJI}#riwayat`}>Tampilkan semua</Link> : undefined}
           />
           {riwayat.length === 0 ? (

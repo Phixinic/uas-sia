@@ -175,7 +175,7 @@ test("potret status persetujuan: Proses Penyusutan (Admin, Owner) dan Nilai Sisa
     await buka(p, "/konversi/penyusutan?periode=2026-11");
     const panel = p.getByRole("region", { name: "Jurnal penyusutan November 2026" });
     await expect(panel).toContainText("Disetujui");
-    await expect(p.getByRole("region", { name: "Riwayat proses penyusutan" }).getByRole("row", { name: /Disetujui/ }).first()).toContainText("Diproses");
+    await expect(p.getByRole("region", { name: "Riwayat proses penyusutan" }).getByRole("row", { name: /Disetujui/ }).last()).toContainText("Diproses");
     await potret(p, `penyusutan-status-${peran}`);
   }
   for (const peran of ["admin", "owner"] as const) {

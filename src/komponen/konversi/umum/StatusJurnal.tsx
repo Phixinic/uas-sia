@@ -127,7 +127,8 @@ export function TabelRiwayatJurnal({ riwayat, sumber, alamat, penggunaId, peran,
             </tr>
           </thead>
           <tbody>
-            {riwayat.map((j) => (
+            {/* Data datang terbaru dulu (dipakai jurnalPeriode); tabel menampilkannya dari yang paling lama. */}
+            {[...riwayat].reverse().map((j) => (
               <tr key={j.no}>
                 <td>
                   <div className="kode">{j.no}</div>

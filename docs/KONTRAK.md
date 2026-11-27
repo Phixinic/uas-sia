@@ -176,6 +176,7 @@ Di klien: `useAksi()` untuk menjalankan aksi (memuat, toast, refresh), atau `Tom
 - Keadaan halaman (periode terpilih, form terbuka, dokumen yang dilihat) disimpan di query string, contoh `?bulan=10&tahun=2026`, `?form=baru`, `?lihat=BP-2026-0001`. Pemilih periode memakai `PilihBulanTahun`, server membaca `periodeDariCari`, tautan dibuat dengan `denganPeriode`.
 - Pakai komponen `src/komponen/ui`: `KepalaHalaman`, `Kartu`/`KepalaKartu`, `KartuRingkasan`, `Tabel`/`BarisKosong`, `Bidang`/`Isian`/`Pilihan`/`AreaTeks`/`IsianRupiah`, `Tombol`/`TautanTombol`, `TombolAksi`, `DialogKonfirmasi`, `LencanaStatus`, `Rupiah`, `TabelJurnal`, `Peringatan`, `KeadaanKosong`. Jangan menulis gaya baru kalau komponennya sudah ada; kalau butuh komponen bersama baru, minta ke koordinator.
 - Teks UI dan komentar berbahasa Indonesia. Hindari tanda pisah panjang di teks.
+- Daftar, tabel, kartu HP, riwayat, dan pilihan data tampil menaik: tanggal atau periode paling lama di atas, nomor atau kode terkecil di atas. Daftar berbatas (misalnya enam jurnal terbaru di dashboard) tetap berisi data terbaru, hanya ditampilkan menaik. Kueri `desc` untuk logika (versi berlaku, nomor terakhir) tetap boleh; urutannya dibalik di titik tampil. Pengelompokan yang didahulukan tetap ada (laporan kapten yang menunggu keputusan, akun pengguna aktif), dengan isi tiap kelompok menaik.
 
 ## 7. Format nomor dokumen
 

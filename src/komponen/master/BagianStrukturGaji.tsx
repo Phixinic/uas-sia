@@ -232,7 +232,7 @@ export default async function BagianStrukturGaji({ peran, cari }: { peran: Peran
               <tr><th>Versi</th><th>Nominal</th><th>Berlaku mulai</th><th>Status</th><th>Alasan</th><th>Diajukan</th><th>Diputuskan</th></tr>
             </thead>
             <tbody>
-              {(d.riwayat[jenisForm][riwayatItem.kode] ?? []).slice().reverse().map((v) => (
+              {(d.riwayat[jenisForm][riwayatItem.kode] ?? []).map((v) => (
                 <tr key={v.kode}>
                   <td className="kode">{v.kode}</td>
                   <td className="whitespace-nowrap font-medium">{v.teks}</td>

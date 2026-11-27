@@ -8,7 +8,7 @@ import type { JenisPembelian } from "@/generated/prisma/enums";
 export async function daftarPembelian(jenis: JenisPembelian) {
   const daftar = await db.pembelian.findMany({
     where: { jenis },
-    orderBy: [{ tanggal: "desc" }, { no: "desc" }],
+    orderBy: [{ tanggal: "asc" }, { no: "asc" }],
     include: {
       supplier: { select: { nama: true } },
       detail: { orderBy: { noUrut: "asc" }, include: { peralatan: { select: { nama: true } }, perlengkapan: { select: { nama: true } } } },
